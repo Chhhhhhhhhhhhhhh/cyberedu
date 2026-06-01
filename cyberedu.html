@@ -13,6 +13,15 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-c.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/theme/material-darker.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/mode/python/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/mode/clike/clike.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/mode/shell/shell.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/addon/edit/closebrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/addon/edit/matchbrackets.min.js"></script>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -56,6 +65,7 @@
     <input class="nav-search" placeholder="搜索..." id="navSearchInput" readonly onclick="openSearch()">
   </div>
   <span class="nav-shortcut">CTRL+K</span>
+  <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="切换主题" aria-label="切换亮色/暗色主题">☀</button>
 </nav>
 <canvas id="nav-glitch-canvas"></canvas>
 
@@ -177,7 +187,7 @@
 
     <!-- PROGRESS -->
     <div id="view-progress" class="view">
-      <div class="view-header"><div class="breadcrumb">个人中心</div><div class="view-title">学习进度仪表盘</div></div>
+      <div class="view-header"><div class="breadcrumb">个人中心</div><div class="view-title" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">学习进度仪表盘<span style="margin-left:auto;display:flex;gap:8px"><button class="run-btn" onclick="exportProgress()" style="font-size:10px;padding:4px 14px">↓ 导出进度</button><button class="run-btn" onclick="importProgress()" style="font-size:10px;padding:4px 14px">↑ 导入进度</button></span></div></div>
       <div class="stats-grid" id="progress-stats"></div>
       <div class="charts-row">
         <div class="chart-card"><div class="chart-title">// 各模块掌握度</div><canvas id="radar-chart" style="max-height:260px"></canvas></div>
@@ -205,8 +215,10 @@
 </div>
 
 <!-- ============================================================
-     GLOSSARY DATA & ALL JS → script.js
+     CONTENT DATA → content.js (section content, glossary, modules, CTF, practices)
+     APP LOGIC → script.js (routing, rendering, tools, animations, etc.)
      ============================================================ -->
+<script src="content.js"></script>
 <script src="script.js"></script>
 </body>
 </html>
