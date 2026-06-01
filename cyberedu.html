@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CyberEdu — 网络空间安全综合学习站</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-c.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- MATRIX CANVAS -->
+<canvas id="matrix-canvas"></canvas>
+
+<!-- INTRO SCREEN -->
+<div id="intro-screen">
+  <canvas id="intro-noise"></canvas>
+  <div id="intro-scanlines"></div>
+  <div id="intro-vignette"></div>
+  <div id="intro-bg-grid"></div>
+  <div id="intro-glitch-blocks"></div>
+  <div id="intro-terminal"><div id="intro-log"></div></div>
+  <div id="intro-center">
+    <div id="intro-logo" data-text="CYBEREDU">CYBEREDU</div>
+    <div id="intro-sub">NETWORK SECURITY LEARNING PLATFORM</div>
+    <div id="intro-bar-wrap">
+      <div id="intro-bar"><div id="intro-bar-fill"></div></div>
+      <div id="intro-pct">0%</div>
+    </div>
+    <div id="intro-status">INITIALIZING NEURAL INTERFACE...</div>
+  </div>
+  <div id="intro-skip">[ PRESS ANY KEY TO SKIP ]</div>
+  <div id="intro-flash"></div>
+</div>
+<!-- TOP NAV -->
+<nav id="topnav" role="navigation" aria-label="主导航">
+  <div class="nav-logo">CYBER<span>EDU</span></div>
+  <div class="nav-links">
+    <button class="nav-link" onclick="navigate('home')">◈ 首页</button>
+    <button class="nav-link" onclick="navigate('hub')">▸ 学习中心</button>
+    <button class="nav-link" onclick="navigate('practice')">⌨ 练习题</button>
+    <button class="nav-link" onclick="navigate('ctf')">🚩 CTF挑战</button>
+    <button class="nav-link" onclick="navigate('progress')">◉ 进度</button>
+    <button class="nav-link" onclick="navigate('tools')">⚙ 工具箱</button>
+  </div>
+  <div class="nav-search-wrap">
+    <span class="nav-search-icon">⌕</span>
+    <input class="nav-search" placeholder="搜索..." id="navSearchInput" readonly onclick="openSearch()">
+  </div>
+  <span class="nav-shortcut">CTRL+K</span>
+</nav>
+<canvas id="nav-glitch-canvas"></canvas>
+
+<!-- SEARCH OVERLAY -->
+<div id="search-overlay" onclick="closeSearchIfBackdrop(event)" role="dialog" aria-label="搜索" aria-modal="true">
+  <div class="search-box">
+    <div class="search-input-row">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input id="search-input" placeholder="搜索模块、章节、术语..." autocomplete="off" oninput="doSearch(this.value)">
+      <span class="search-esc">ESC</span>
+    </div>
+    <div class="search-results" id="search-results"><div class="search-empty">输入关键词开始搜索…</div></div>
+  </div>
+</div>
+
+<!-- TOOLTIP -->
+<div id="tooltip"></div>
+
+<!-- APP SHELL -->
+<div id="app-shell">
+  <aside id="sidebar" role="navigation" aria-label="模块导航"><canvas id="glitch-canvas"></canvas><button id="sidebar-toggle" onclick="toggleSidebar()" title="收起侧边栏" aria-label="收起侧边栏">«</button><div id="sidebar-content"></div></aside>
+  <main id="main-content">
+
+    <!-- HOME -->
+    <div id="view-home" class="view">
+      <section class="hero">
+        <div class="hero-eyebrow">// Comprehensive Cybersecurity Learning</div>
+        <h1 class="hero-title">
+          Break the <span class="hl-green">Surface</span>, find the <span class="hl-cyan">Truth</span><br>
+          Every <span class="glitch" data-text="vulnerability">vulnerability</span> has a story
+        </h1>
+        <div id="typewriter"></div>
+        <div class="hero-ctas">
+          <button class="btn-primary" onclick="navigate('hub')">ENTER ▸</button>
+          <button class="btn-outline" onclick="navigate('progress')">查看进度</button>
+        </div>
+        <div class="hero-stats">
+          <div class="hero-stat"><span class="hero-stat-num" id="stat-chapters">71</span><span class="hero-stat-label">知识章节</span></div>
+          <div class="hero-stat"><span class="hero-stat-num" id="stat-exercises">10</span><span class="hero-stat-label">练习题目</span></div>
+          <div class="hero-stat"><span class="hero-stat-num" id="stat-ctf">16</span><span class="hero-stat-label">CTF挑战</span></div>
+          <div class="hero-stat"><span class="hero-stat-num" id="stat-tools">6</span><span class="hero-stat-label">安全工具</span></div>
+        </div>
+      </section>
+      <section class="modules-section">
+        <div class="section-header"><h2 class="cyber-text">七大核心方向</h2></div>
+        <div class="modules-grid" id="modules-grid"></div>
+      </section>
+      <!-- LEARNING PATH -->
+      <section class="modules-section" style="border-top:1px solid var(--border-subtle);padding-top:60px">
+        <div class="section-header"><h2 class="cyber-text">推荐学习路线</h2></div>
+        <div id="learning-path" style="max-width:820px;margin:0 auto"></div>
+      </section>
+    </div>
+
+    <!-- HUB -->
+    <div id="view-hub" class="view">
+      <div class="view-header">
+        <div class="breadcrumb" id="hub-breadcrumb">学习中心</div>
+        <div class="view-title" id="hub-title">选择一个模块开始学习</div>
+      </div>
+      <div class="article-content" id="article-body">
+        <p style="color:var(--text-muted)">请从左侧边栏选择章节开始学习。</p>
+      </div>
+    </div>
+
+    <!-- PRACTICE -->
+    <div id="view-practice" class="view">
+      <div class="practice-header"><div class="breadcrumb">互动练习</div><div class="view-title" id="practice-title">练习题</div><div class="practice-top-nav"><span class="badge cyan" id="practice-counter">第 1/10 题</span><button class="nav-btn" id="btn-prev-top" onclick="prevPractice()" style="display:none">← 上一题</button><button class="nav-btn next-btn" id="btn-next-top" onclick="nextPractice()">下一题 →</button></div></div>
+      <div class="practice-meta" id="practice-meta"></div>
+      <div class="practice-question" id="practice-question"></div>
+      <div class="practice-layout">
+        <div class="editor-wrap">
+          <div class="editor-header"><span id="editor-lang">Python</span><span style="font-size:10px;color:var(--text-muted)">输入你的代码或答案</span></div>
+          <textarea class="editor-area" id="code-editor" spellcheck="false" placeholder="# 在此输入你的代码..."></textarea>
+        </div>
+        <div class="output-wrap">
+          <div class="output-header"><span>输出</span><button class="run-btn" style="padding:3px 12px;font-size:10px" onclick="runCode()">▶ RUN</button></div>
+          <div class="output-body" id="code-output">点击 RUN 查看结果...</div>
+        </div>
+      </div>
+      <div class="practice-actions">
+        <button class="run-btn" onclick="runCode()">▶ 运行代码</button>
+        <button class="hint-btn" onclick="showPracticeHint()">? 提示</button>
+        <span class="badge" style="margin-left:auto" id="practice-counter-btm">第 1/10 题</span>
+      </div>
+      <div id="practice-hint-box" class="callout info" style="display:none;margin:0 40px 20px"></div>
+    </div>
+
+    <!-- CTF -->
+    <div id="view-ctf" class="view">
+      <div class="view-header"><div class="breadcrumb">CTF 在线挑战</div><div class="view-title">CTF 挑战题库</div></div>
+      <div class="ctf-filters" id="ctf-filters">
+        <button class="filter-btn active" onclick="filterCTF('all',this)">ALL</button>
+        <button class="filter-btn" onclick="filterCTF('Crypto',this)">Crypto</button>
+        <button class="filter-btn" onclick="filterCTF('Web',this)">Web</button>
+        <button class="filter-btn" onclick="filterCTF('Misc',this)">Misc</button>
+        <button class="filter-btn" onclick="filterCTF('Reverse',this)">Reverse</button>
+        <button class="filter-btn" onclick="filterCTF('Forensics',this)">Forensics</button>
+      </div>
+      <div class="ctf-grid" id="ctf-grid"></div>
+    </div>
+
+    <!-- CTF MODAL -->
+    <div class="modal-backdrop" id="ctf-modal" role="dialog" aria-label="CTF 挑战" aria-modal="true">
+      <div class="modal">
+        <button class="modal-close" onclick="closeCTFModal()">✕</button>
+        <div class="modal-title" id="modal-title"></div>
+        <div class="modal-meta" id="modal-meta" style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap"></div>
+        <div class="modal-desc" id="modal-desc"></div>
+        <div class="modal-hint" id="modal-hint"></div>
+        <button class="show-hint-btn" id="show-hint-btn" onclick="toggleHint()">? 查看提示</button>
+        <div class="flag-input-row" style="margin-top:16px">
+          <input class="flag-input" id="flag-input" placeholder="flag{...}" autocomplete="off">
+          <button class="submit-flag-btn" onclick="submitFlag()">SUBMIT</button>
+        </div>
+        <div id="flag-feedback" style="font-size:12px;margin-top:10px;min-height:20px;font-family:var(--font-mono)"></div>
+      </div>
+    </div>
+
+    <!-- PROGRESS -->
+    <div id="view-progress" class="view">
+      <div class="view-header"><div class="breadcrumb">个人中心</div><div class="view-title">学习进度仪表盘</div></div>
+      <div class="stats-grid" id="progress-stats"></div>
+      <div class="charts-row">
+        <div class="chart-card"><div class="chart-title">// 各模块掌握度</div><canvas id="radar-chart" style="max-height:260px"></canvas></div>
+        <div class="chart-card"><div class="chart-title">// 学习进度一览</div><div class="module-progress-list" id="module-prog-list"></div></div>
+      </div>
+      <div class="timeline-section"><div class="timeline-title">// 最近学习记录</div><div class="timeline" id="timeline"></div></div>
+    </div>
+
+    <!-- TOOLS -->
+    <div id="view-tools" class="view">
+      <div class="view-header"><div class="breadcrumb">安全工具</div><div class="view-title">内置安全工具箱</div></div>
+      <div class="tools-grid" id="tools-grid"></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- STATUS BAR -->
+<div id="statusbar">
+  <div class="statusbar-item"><div class="status-dot"></div>LOCAL</div>
+  <div class="statusbar-item" id="status-loc">HOME</div>
+  <div class="statusbar-item">CTRL+K SEARCH &nbsp; ESC CLOSE</div>
+  <div style="flex:1"></div>
+  <div class="statusbar-item" id="status-progress">PROGRESS: 0%</div>
+</div>
+
+<!-- ============================================================
+     GLOSSARY DATA & ALL JS → script.js
+     ============================================================ -->
+<script src="script.js"></script>
+</body>
+</html>

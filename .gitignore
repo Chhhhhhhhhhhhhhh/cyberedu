@@ -1,0 +1,15 @@
+# WorkBuddy internal
+.workbuddy/
+
+# GitHub CLI tool
+tools/
+
+# Backups
+*_backup*.html
+
+# Build scripts and data
+build_expanded.py
+convert_content.py
+check_expand_output.txt
+content_m*.py
+content_m*.json
