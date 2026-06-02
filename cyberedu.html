@@ -215,10 +215,52 @@
 </div>
 
 <!-- ============================================================
+     AI CHAT FLOATING WINDOW
+     ============================================================ -->
+<div id="ai-fab" class="ai-fab" onclick="toggleAIChat()" title="AI 导师">
+  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+</div>
+
+<div id="ai-chat-panel" class="ai-chat-panel hidden">
+  <div class="ai-chat-header">
+    <span class="ai-chat-title">AI 导师</span>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="ai-chat-btn" onclick="toggleAISettings()" title="设置">⚙</button>
+      <button class="ai-chat-btn" onclick="clearAIChat()" title="清空">✕</button>
+      <button class="ai-chat-btn" onclick="toggleAIChat()" title="关闭">—</button>
+    </div>
+  </div>
+
+  <!-- Settings panel -->
+  <div id="ai-settings" class="ai-settings hidden">
+    <label>API URL</label>
+    <input type="text" id="ai-api-url" class="ai-input" placeholder="https://api.openai.com/v1/chat/completions">
+    <label>API Key</label>
+    <input type="password" id="ai-api-key" class="ai-input" placeholder="sk-...">
+    <label>模型</label>
+    <input type="text" id="ai-model" class="ai-input" placeholder="gpt-3.5-turbo">
+    <button class="ai-save-btn" onclick="saveAISettings()">保存设置</button>
+    <button class="ai-save-btn" onclick="loadAISettings()" style="background:transparent;border-color:var(--border-mid);margin-left:6px">加载已保存</button>
+  </div>
+
+  <!-- Messages -->
+  <div id="ai-messages" class="ai-messages">
+    <div class="ai-msg ai-msg-system">你好！我是你的 AI 网安导师。点击 ⚙ 配置 API 后即可开始提问。</div>
+  </div>
+
+  <!-- Input -->
+  <div class="ai-chat-input-area">
+    <textarea id="ai-input" class="ai-input-area" placeholder="输入你的问题…" rows="1" onkeydown="handleAIKeydown(event)"></textarea>
+    <button id="ai-send-btn" class="ai-send-btn" onclick="sendAIMessage()">→</button>
+  </div>
+</div>
+
+<!-- ============================================================
      CONTENT DATA → content.js (section content, glossary, modules, CTF, practices)
      APP LOGIC → script.js (routing, rendering, tools, animations, etc.)
      ============================================================ -->
 <script src="content.js"></script>
 <script src="script.js"></script>
 </body>
+</html>
 </html>

@@ -905,7 +905,6 @@ function spawnConfetti() {
 // ============================================================
 // PRACTICE
 // ============================================================
-let currentPracticeIdx = 0;
 let cmEditor = null;
 const CM_MODE_MAP = { 'Python': 'python', 'JavaScript': 'javascript', 'C': 'text/x-csrc', 'Bash': 'shell', 'SQL': 'text/x-sql' };
 
@@ -1586,6 +1585,205 @@ function initTheme(){
 }
 
 // ============================================================
+// AI CHAT
+// ============================================================
+let aiMessages = [];
+let aiIsStreaming = false;
+let aiAbortController = null;
+
+function toggleAIChat() {
+  const panel = document.getElementById('ai-chat-panel');
+  const fab = document.getElementById('ai-fab');
+  panel.classList.toggle('hidden');
+  if (!panel.classList.contains('hidden')) {
+    fab.style.display = 'none';
+    document.getElementById('ai-input').focus();
+  } else {
+    fab.style.display = 'flex';
+  }
+}
+
+function toggleAISettings() {
+  document.getElementById('ai-settings').classList.toggle('hidden');
+}
+
+function saveAISettings() {
+  const url = document.getElementById('ai-api-url').value.trim();
+  const key = document.getElementById('ai-api-key').value.trim();
+  const model = document.getElementById('ai-model').value.trim();
+  if (!url || !key || !model) { alert('请填写完整的 API URL、Key 和模型名'); return; }
+  try {
+    localStorage.setItem('cyberedu_ai_url', url);
+    localStorage.setItem('cyberedu_ai_key', key);
+    localStorage.setItem('cyberedu_ai_model', model);
+  } catch(e) {}
+  document.getElementById('ai-settings').classList.add('hidden');
+  addAIMsg('system', '设置已保存。你可以开始提问了。');
+}
+
+function loadAISettings() {
+  try {
+    const url = localStorage.getItem('cyberedu_ai_url') || '';
+    const key = localStorage.getItem('cyberedu_ai_key') || '';
+    const model = localStorage.getItem('cyberedu_ai_model') || '';
+    document.getElementById('ai-api-url').value = url;
+    document.getElementById('ai-api-key').value = key;
+    document.getElementById('ai-model').value = model;
+  } catch(e) {}
+}
+
+function getAIConfig() {
+  return {
+    apiUrl: (document.getElementById('ai-api-url').value.trim() || localStorage.getItem('cyberedu_ai_url') || '').trim(),
+    apiKey: (document.getElementById('ai-api-key').value.trim() || localStorage.getItem('cyberedu_ai_key') || '').trim(),
+    model: (document.getElementById('ai-model').value.trim() || localStorage.getItem('cyberedu_ai_model') || '').trim(),
+  };
+}
+
+function addAIMsg(role, content) {
+  const box = document.getElementById('ai-messages');
+  const div = document.createElement('div');
+  const cls = role === 'user' ? 'ai-msg-user' : role === 'error' ? 'ai-msg-error' : 'ai-msg-ai';
+  div.className = 'ai-msg ' + cls;
+  div.innerHTML = formatAIContent(content);
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+  return div;
+}
+
+function formatAIContent(text) {
+  // Basic markdown: code blocks, inline code, bold
+  let html = text
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\n/g, '<br>');
+  return html;
+}
+
+function handleAIKeydown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendAIMessage();
+  }
+}
+
+async function sendAIMessage() {
+  if (aiIsStreaming) return;
+
+  const input = document.getElementById('ai-input');
+  const text = input.value.trim();
+  if (!text) return;
+
+  const config = getAIConfig();
+  if (!config.apiUrl || !config.apiKey || !config.model) {
+    toggleAISettings();
+    addAIMsg('system', '请先配置 API 设置');
+    return;
+  }
+
+  // Add user message
+  addAIMsg('user', text);
+  aiMessages.push({ role: 'user', content: text });
+  input.value = '';
+  input.style.height = 'auto';
+
+  // Create AI response bubble with cursor
+  const aiDiv = addAIMsg('ai', '<span class="ai-cursor"></span>');
+  aiIsStreaming = true;
+  document.getElementById('ai-send-btn').disabled = true;
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        apiUrl: config.apiUrl,
+        apiKey: config.apiKey,
+        model: config.model,
+        messages: aiMessages,
+      }),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error('API returned ' + res.status + ': ' + errText);
+    }
+
+    // Parse SSE stream
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let aiText = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      const chunk = decoder.decode(value, { stream: true });
+      const lines = chunk.split('\n');
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const data = line.slice(6).trim();
+        if (data === '[DONE]') continue;
+
+        try {
+          const parsed = JSON.parse(data);
+          const delta = parsed.choices?.[0]?.delta?.content;
+          if (delta) {
+            aiText += delta;
+            aiDiv.innerHTML = formatAIContent(aiText) + '<span class="ai-cursor"></span>';
+            const box = document.getElementById('ai-messages');
+            box.scrollTop = box.scrollHeight;
+          }
+        } catch(e) { /* skip non-JSON lines */ }
+      }
+    }
+
+    // Finalize
+    aiDiv.innerHTML = formatAIContent(aiText);
+    aiMessages.push({ role: 'assistant', content: aiText });
+
+    // Keep message history manageable (last 20 messages)
+    if (aiMessages.length > 20) {
+      aiMessages = aiMessages.slice(-20);
+    }
+
+  } catch(e) {
+    aiDiv.className = 'ai-msg ai-msg-error';
+    aiDiv.innerHTML = 'Error: ' + e.message;
+  }
+
+  aiIsStreaming = false;
+  document.getElementById('ai-send-btn').disabled = false;
+  document.getElementById('ai-input').focus();
+}
+
+function clearAIChat() {
+  aiMessages = [];
+  const box = document.getElementById('ai-messages');
+  box.innerHTML = '<div class="ai-msg ai-msg-system">对话已清空。</div>';
+}
+
+function initAIChat() {
+  loadAISettings();
+  // Auto-open settings if not configured
+  const config = getAIConfig();
+  if (!config.apiUrl || !config.apiKey || !config.model) {
+    // Settings will show when user first tries to send
+  }
+  // Auto-resize textarea
+  const input = document.getElementById('ai-input');
+  if (input) {
+    input.addEventListener('input', function() {
+      this.style.height = 'auto';
+      this.style.height = Math.min(this.scrollHeight, 80) + 'px';
+    });
+  }
+}
+
+// ============================================================
 // INIT
 // ============================================================
 function initApp() {
@@ -1599,6 +1797,7 @@ function initApp() {
     }
     initTheme();
     initCodeMirror();
+    initAIChat();
     initMatrix();
     renderHome();
     renderCTF();
