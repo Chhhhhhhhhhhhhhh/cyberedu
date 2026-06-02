@@ -1303,7 +1303,7 @@ function initMatrix(){
   function draw(){
     ctx.fillStyle='rgba(6,6,9,0.05)';
     ctx.fillRect(0,0,c.width,c.height);
-    ctx.fillStyle='rgba(0,229,255,0.12)';
+    ctx.fillStyle='rgba(0,229,255,0.45)';
     ctx.font=fontSize+'px "'+getComputedStyle(document.body).getPropertyValue('--font-mono').split(',')[0].replace(/['"]/g,'').trim()+'"';
     for(let i=0;i<drops.length;i++){
       const text=chars[Math.floor(Math.random()*chars.length)];
