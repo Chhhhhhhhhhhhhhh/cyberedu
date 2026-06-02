@@ -6,32 +6,67 @@
 
 - **7大核心模块**：编程基础、密码学、网络基础、Web安全、渗透测试、恶意软件分析、CTF竞赛
 - **分级学习**：按零基础、入门、中级、高级四个难度层级组织内容
-- **代码高亮**：集成 Prism.js 实现语法高亮
+- **代码编辑器**：集成 CodeMirror 5，支持 Python/JS/C/Bash 语法高亮与实时编辑
+- **深色/浅色主题**：一键切换，状态持久保存
+- **学习进度管理**：自动记录进度，支持导出/导入备份
+- **AI 导师对话**：内置 AI 聊天助手，支持 DeepSeek/OpenAI/Qwen/Ollama 等模型
+- **历史会话**：多轮对话自动保存，侧边栏快速切换与恢复
 - **响应式设计**：适配桌面端和移动端
 
 ## 项目结构
 
 ```
-├── cyberedu.html      # 主页面（单文件架构）
-├── script.js          # 交互逻辑与模块切换
+├── cyberedu.html      # 主页面
+├── content.js         # 内容数据（模块/章节/练习/CTF挑战）
+├── script.js          # 交互逻辑
 ├── style.css          # 样式表
-├── versions/           # 历史版本归档
-│   ├── CHANGELOG.md
-│   ├── cyberedu_v1.0.html
-│   ├── cyberedu_v2.0.html
-│   ├── script_v2.0.js
-│   └── style_v2.0.css
+├── server.js          # 本地 Node.js 服务器（AI 聊天代理）
+├── restart_server.bat # Windows 一键重启服务器脚本
+├── versions/          # 历史版本归档
 └── .gitignore
 ```
 
 ## 使用方式
 
-直接在浏览器中打开 `cyberedu.html` 即可使用，无需服务器或构建步骤。
+### 方式一：纯静态浏览（无 AI 聊天）
+
+直接在浏览器中打开 `cyberedu.html` 即可，代码高亮、主题切换、进度管理等功能正常使用。
+
+### 方式二：本地服务器（启用 AI 聊天）
+
+需要 [Node.js](https://nodejs.org/) 环境（v16+）：
+
+1. 打开终端，进入项目目录
+2. 启动服务器：
+   ```bash
+   node server.js
+   ```
+3. 浏览器访问 `http://localhost:8000`
+4. 点击右下角绿色悬浮按钮打开 AI 聊天面板
+5. 点击 ⚙ 配置你的 API：
+   - **API Base URL**：如 `https://api.deepseek.com`
+   - **API Key**：你的密钥（`sk-...`）
+   - **模型**：如 `deepseek-chat`、`deepseek-reasoner`
+6. 可选：调整温度、最大 Token 数、是否启用思考模式
+
+> 如需重启服务器，双击 `restart_server.bat`（Windows）或在终端中 `Ctrl+C` 后重新运行 `node server.js`。
+
+## 支持的 AI 模型
+
+| 提供商 | API Base URL | 模型示例 |
+|--------|-------------|---------|
+| DeepSeek | `https://api.deepseek.com` | `deepseek-chat`, `deepseek-reasoner` |
+| OpenAI | `https://api.openai.com/v1` | `gpt-4o`, `gpt-4o-mini` |
+| 通义千问 | `https://dashscope.aliyuncs.com/compatible-mode/v1` | `qwen-plus`, `qwen-max` |
+| Ollama（本地） | `http://localhost:11434` | `llama3`, `qwen2` |
 
 ## 技术栈
 
 - HTML5 / CSS3 / JavaScript
-- [Prism.js](https://prismjs.com/) v1.29.0（代码高亮）
+- [Prism.js](https://prismjs.com/) v1.29.0（内容代码高亮）
+- [CodeMirror 5](https://codemirror.net/)（代码编辑器）
+- Node.js 内置 `http` 模块（零依赖本地服务器）
+- SSE（Server-Sent Events）流式输出
 
 ## License
 
