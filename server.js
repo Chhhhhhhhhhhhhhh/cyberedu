@@ -114,8 +114,11 @@ function proxyChat(req, res) {
 
 // Main HTTP server
 const server = http.createServer((req, res) => {
-  // API proxy endpoint
-  if (req.method === 'POST' && req.url === '/api/chat') {
+  // Debug log
+  console.log('[Request]', req.method, req.url);
+
+  // API proxy endpoint (flexible matching)
+  if (req.method === 'POST' && req.url.startsWith('/api/chat')) {
     proxyChat(req, res);
     return;
   }
