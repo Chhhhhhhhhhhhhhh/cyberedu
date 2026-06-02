@@ -1,9 +1,9 @@
-// CyberEdu Local Server
-// Usage: node server.js
-// Opens browser at http://localhost:8000
+// CyberEdu Local Server v2.1 - AI Chat Enhanced
+// Usage: node server.js   (serves F:\workspace on port 8000)
+// Browser opens at http://localhost:8000
 
 const http = require('http');
-const fs = require('fs');
+const fs   = require('fs');
 const path = require('path');
 const https = require('https');
 const { URL } = require('url');
@@ -11,139 +11,188 @@ const { URL } = require('url');
 const PORT = 8000;
 const ROOT = __dirname;
 
-// MIME types
+// ── MIME types ───────────────────────────────────────────────
 const MIME = {
   '.html': 'text/html; charset=utf-8',
-  '.css': 'text/css; charset=utf-8',
-  '.js': 'application/javascript; charset=utf-8',
+  '.css':  'text/css; charset=utf-8',
+  '.js':   'application/javascript; charset=utf-8',
   '.json': 'application/json; charset=utf-8',
-  '.png': 'image/png',
-  '.jpg': 'image/jpeg',
-  '.svg': 'image/svg+xml',
-  '.ico': 'image/x-icon',
-  '.woff2': 'font/woff2',
+  '.png':  'image/png',
+  '.jpg':  'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.svg':  'image/svg+xml',
+  '.ico':  'image/x-icon',
+  '.woff2':'font/woff2',
   '.woff': 'font/woff',
+  '.mp4':  'video/mp4',
+  '.webm': 'video/webm',
 };
 
-// Simple MIME lookup
 function getMime(filePath) {
-  const ext = path.extname(filePath).toLowerCase();
-  return MIME[ext] || 'application/octet-stream';
+  return MIME[path.extname(filePath).toLowerCase()] || 'application/octet-stream';
 }
 
-// Proxy AI chat request (streaming SSE)
+// ── DeepSeek / OpenAI error status → Chinese message ──────────
+const ERR_ZH = {
+  400: '请求格式错误，请检查参数。',
+  401: 'API Key 无效或已过期，请检查设置。',
+  402: '账户余额不足，请前往 DeepSeek 平台充值。',
+  422: '请求参数不合法，请检查模型名称或参数。',
+  429: '请求速率超限（RPM/TPM 已达上限），请稍后重试。',
+  500: 'DeepSeek 服务器内部错误，请稍后重试。',
+  503: 'DeepSeek 服务器繁忙，请稍后重试。',
+};
+
+// ── Proxy /api/chat  →  upstream AI API (SSE streaming) ─────
 function proxyChat(req, res) {
   let body = '';
-  req.on('data', chunk => { body += chunk; });
+  req.on('data',  chunk => { body += chunk; });
   req.on('end', () => {
     let parsed;
-    try { parsed = JSON.parse(body); } catch (e) {
-      res.writeHead(400, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Invalid JSON' }));
-      return;
+    try { parsed = JSON.parse(body); } catch {
+      res.writeHead(400, jsonHdrs());
+      return res.end(JSON.stringify({ error: '请求体 JSON 格式错误。' }));
     }
 
-    const { apiKey, apiUrl, model, messages } = parsed;
+    const { apiKey, apiUrl, model, messages,
+            temperature, max_tokens, top_p, stop,
+            thinking, stream_options } = parsed;
 
     if (!apiKey || !apiUrl || !messages || !Array.isArray(messages)) {
-      res.writeHead(400, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Missing required fields: apiKey, apiUrl, messages' }));
-      return;
+      res.writeHead(400, jsonHdrs());
+      return res.end(JSON.stringify({ error: '缺少必要参数：apiKey / apiUrl / messages' }));
     }
 
-    // Parse the target API URL
+    // ── Build upstream URL ──────────────────────────────────
     let targetUrl;
-    try { targetUrl = new URL(apiUrl); } catch (e) {
-      res.writeHead(400, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Invalid API URL' }));
-      return;
+    try { targetUrl = new URL(apiUrl); } catch {
+      res.writeHead(400, jsonHdrs());
+      return res.end(JSON.stringify({ error: 'API URL 格式无效。' }));
     }
+    // Auto-append /chat/completions (DeepSeek / OpenAI / Qwen / Ollama)
+    if (!targetUrl.pathname.endsWith('/chat/completions')) {
+      targetUrl.pathname = targetUrl.pathname.replace(/\/+$/, '') + '/chat/completions';
+    }
+    console.log(`  [Proxy] → ${targetUrl.href}`);
 
-    // Build OpenAI-compatible request body
-    const requestBody = JSON.stringify({
-      model: model || 'gpt-3.5-turbo',
-      messages: messages,
+    // ── Build request body (pass through all OpenAI-compatible params) ──
+    const upstreamBody = JSON.stringify({
+      model:  model || 'deepseek-chat',
+      messages,
       stream: true,
+      ...(temperature != null && { temperature }),
+      ...(max_tokens != null && { max_tokens }),
+      ...(top_p      != null && { top_p }),
+      ...(stop       != null && { stop }),
+      ...(thinking   != null && { thinking }),
+      stream_options: stream_options || { include_usage: true },
     });
 
-    const isHttps = targetUrl.protocol === 'https:';
-    const lib = isHttps ? https : http;
-
-    const options = {
+    const isHttps  = targetUrl.protocol === 'https:';
+    const lib      = isHttps ? https : http;
+    const options  = {
       hostname: targetUrl.hostname,
-      port: targetUrl.port || (isHttps ? 443 : 80),
-      path: targetUrl.pathname + targetUrl.search,
-      method: 'POST',
+      port:     targetUrl.port || (isHttps ? 443 : 80),
+      path:     targetUrl.pathname + targetUrl.search,
+      method:    'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + apiKey,
-        'Content-Length': Buffer.byteLength(requestBody),
+        'Content-Type':   'application/json',
+        'Authorization':  'Bearer ' + apiKey,
+        'Content-Length': Buffer.byteLength(upstreamBody),
       },
+      timeout: 60000,   // 60 s upstream timeout
     };
 
-    const proxyReq = lib.request(options, (proxyRes) => {
-      // Set CORS headers + content type for streaming
-      res.writeHead(proxyRes.statusCode, {
-        'Content-Type': 'text/event-stream',
+    const proxyReq = lib.request(options, (upRes) => {
+      // ── Non-200: read error body, forward as JSON ─────────
+      if (upRes.statusCode !== 200) {
+        let errBuf = '';
+        upRes.on('data', c => { errBuf += c; });
+        upRes.on('end', () => {
+          let errMsg = ERR_ZH[upRes.statusCode] || `API 错误 ${upRes.statusCode}`;
+          try {
+            const j = JSON.parse(errBuf);
+            if (j.error?.message) errMsg = j.error.message;
+          } catch {}
+          res.writeHead(upRes.statusCode, jsonHdrs());
+          res.end(JSON.stringify({ error: errMsg, status: upRes.statusCode }));
+        });
+        return;
+      }
+
+      // ── 200: pipe SSE stream to client ────────────────────
+      res.writeHead(200, {
+        'Content-Type':  'text/event-stream',
         'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
+        'Connection':    'keep-alive',
         'Access-Control-Allow-Origin': '*',
+        'X-Accel-Buffering': 'no',   // disable nginx proxy buffering
       });
 
-      // Pipe SSE stream directly to client
-      proxyRes.on('data', chunk => {
-        res.write(chunk);
-      });
-      proxyRes.on('end', () => {
-        res.end();
-      });
+      upRes.on('data', chunk => res.write(chunk));
+      upRes.on('end', ()   => res.end());
     });
 
     proxyReq.on('error', (e) => {
-      console.error('[Proxy Error]', e.message);
+      console.error('[Proxy] request error:', e.message);
       if (!res.headersSent) {
-        res.writeHead(502, { 'Content-Type': 'application/json' });
+        res.writeHead(502, jsonHdrs());
       }
-      res.end(JSON.stringify({ error: 'Proxy error: ' + e.message }));
+      res.end(JSON.stringify({ error: '代理请求失败：' + e.message }));
     });
 
-    proxyReq.write(requestBody);
+    proxyReq.on('timeout', () => {
+      proxyReq.destroy();
+      console.error('[Proxy] upstream timeout');
+      if (!res.headersSent) {
+        res.writeHead(504, jsonHdrs());
+      }
+      res.end(JSON.stringify({ error: '请求超时，上游服务无响应。' }));
+    });
+
+    proxyReq.write(upstreamBody);
     proxyReq.end();
   });
 }
 
-// Main HTTP server
-const server = http.createServer((req, res) => {
-  // Debug log
-  console.log('[Request]', req.method, req.url);
+function jsonHdrs() {
+  return { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' };
+}
 
-  // API proxy endpoint (flexible matching)
-  if (req.method === 'POST' && req.url.startsWith('/api/chat')) {
-    proxyChat(req, res);
-    return;
+// ── Main HTTP server ─────────────────────────────────────────
+const server = http.createServer((req, res) => {
+
+  // CORS preflight
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204, {
+      'Access-Control-Allow-Origin':  '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    });
+    return res.end();
   }
 
-  // Static file serving
-  let filePath = req.url === '/' ? '/cyberedu.html' : req.url;
+  const ts = new Date().toISOString().slice(11, 23);
+  console.log(`[${ts}] ${req.method} ${req.url}`);
+
+  // ── API proxy ─────────────────────────────────────────────
+  if (req.method === 'POST' && req.url.startsWith('/api/chat')) {
+    return proxyChat(req, res);
+  }
+
+  // ── Static files ───────────────────────────────────────────
+  let filePath = req.url === '/' ? '/cyberedu.html' : req.url.split('?')[0];
   filePath = path.join(ROOT, filePath);
 
-  // Security: prevent directory traversal
+  // Directory traversal guard
   if (!filePath.startsWith(ROOT)) {
-    res.writeHead(403);
-    res.end('Forbidden');
-    return;
+    res.writeHead(403); return res.end('Forbidden');
   }
 
   fs.readFile(filePath, (err, data) => {
     if (err) {
-      if (err.code === 'ENOENT') {
-        res.writeHead(404);
-        res.end('Not Found');
-      } else {
-        res.writeHead(500);
-        res.end('Internal Server Error');
-      }
-      return;
+      if (err.code === 'ENOENT') { res.writeHead(404); return res.end('Not Found'); }
+      res.writeHead(500); return res.end('Internal Server Error');
     }
     res.writeHead(200, { 'Content-Type': getMime(filePath) });
     res.end(data);
@@ -152,15 +201,17 @@ const server = http.createServer((req, res) => {
 
 server.listen(PORT, () => {
   console.log('');
-  console.log('  CyberEdu Server running at http://localhost:' + PORT);
-  console.log('  Press Ctrl+C to stop');
+  console.log('  ╔══════════════════════════════════════════════╗');
+  console.log('  ║   CyberEdu Server  v2.1  (AI Chat Enhanced)  ║');
+  console.log('  ║   http://localhost:' + PORT + '                     ║');
+  console.log('  ╚══════════════════════════════════════════════╝');
   console.log('');
 
   // Auto-open browser
-  const open = (url) => {
-    const cmd = process.platform === 'win32' ? 'start' :
-                process.platform === 'darwin' ? 'open' : 'xdg-open';
-    require('child_process').exec(cmd + ' "' + url + '"');
-  };
-  try { open('http://localhost:' + PORT); } catch (e) { /* ignore */ }
+  try {
+    const url = 'http://localhost:' + PORT;
+    const cp  = require('child_process');
+    const cmd = process.platform === 'win32' ? 'start ""' : process.platform === 'darwin' ? 'open' : 'xdg-open';
+    cp.exec(cmd + ' "' + url + '"');
+  } catch {}
 });

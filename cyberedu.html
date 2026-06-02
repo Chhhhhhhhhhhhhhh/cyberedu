@@ -223,22 +223,41 @@
 
 <div id="ai-chat-panel" class="ai-chat-panel hidden">
   <div class="ai-chat-header">
-    <span class="ai-chat-title">AI 导师</span>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="ai-chat-btn" onclick="toggleAIHistory()" title="历史会话" id="ai-history-btn">☰</button>
+      <span class="ai-chat-title">AI 导师</span>
+    </div>
     <div style="display:flex;gap:8px;align-items:center">
       <button class="ai-chat-btn" onclick="toggleAISettings()" title="设置">⚙</button>
-      <button class="ai-chat-btn" onclick="clearAIChat()" title="清空">✕</button>
+      <button class="ai-chat-btn" onclick="clearAIChat()" title="新对话" style="font-size:16px;font-weight:700">+</button>
       <button class="ai-chat-btn" onclick="toggleAIChat()" title="关闭">—</button>
     </div>
   </div>
 
+  <!-- History sidebar -->
+  <div id="ai-history" class="ai-history hidden">
+    <div class="ai-history-header">
+      <span>历史会话</span>
+      <button class="ai-history-new-btn" onclick="newAIChat()">+ 新对话</button>
+    </div>
+    <div id="ai-history-list" class="ai-history-list"></div>
+  </div>
+
   <!-- Settings panel -->
   <div id="ai-settings" class="ai-settings hidden">
-    <label>API URL</label>
-    <input type="text" id="ai-api-url" class="ai-input" placeholder="https://api.openai.com/v1/chat/completions">
+    <label>API Base URL</label>
+    <input type="text" id="ai-api-url" class="ai-input" placeholder="https://api.deepseek.com">
     <label>API Key</label>
     <input type="password" id="ai-api-key" class="ai-input" placeholder="sk-...">
     <label>模型</label>
-    <input type="text" id="ai-model" class="ai-input" placeholder="gpt-3.5-turbo">
+    <input type="text" id="ai-model" class="ai-input" placeholder="deepseek-chat">
+    <label>温度 Temperature <span id="ai-temp-val">0.7</span></label>
+    <input type="range" id="ai-temperature" class="ai-range" min="0" max="2" step="0.1" value="0.7">
+    <label>最大 Token 数</label>
+    <input type="number" id="ai-max-tokens" class="ai-input" placeholder="4096" min="1" max="65536" value="4096">
+    <label class="ai-checkbox-label">
+      <input type="checkbox" id="ai-thinking" checked> 启用思考模式（Thinking）
+    </label>
     <button class="ai-save-btn" onclick="saveAISettings()">保存设置</button>
     <button class="ai-save-btn" onclick="loadAISettings()" style="background:transparent;border-color:var(--border-mid);margin-left:6px">加载已保存</button>
   </div>

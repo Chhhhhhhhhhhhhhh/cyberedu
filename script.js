@@ -1590,6 +1590,110 @@ function initTheme(){
 let aiMessages = [];
 let aiIsStreaming = false;
 let aiAbortController = null;
+let aiCurrentSessionId = null; // null = unsaved new session
+
+// ── History helpers ──
+const AI_HIST_KEY = 'cyberedu_ai_history';
+
+function _histLoad() {
+  try { return JSON.parse(localStorage.getItem(AI_HIST_KEY)) || []; }
+  catch(e) { return []; }
+}
+function _histSave(list) {
+  try { localStorage.setItem(AI_HIST_KEY, JSON.stringify(list)); }
+  catch(e) {}
+}
+function _genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+// ── Session persistence ──
+function _saveCurrentSession() {
+  if (!aiMessages.length) return;
+  const id = aiCurrentSessionId || _genId();
+  const title = aiMessages[0]?.content?.slice(0, 30) || '新对话';
+  const list = _histLoad();
+  const idx = list.findIndex(s => s.id === id);
+  const entry = { id, title, messages: aiMessages, time: Date.now() };
+  if (idx >= 0) list[idx] = entry; else list.unshift(entry);
+  // Keep max 50 sessions
+  while (list.length > 50) list.pop();
+  _histSave(list);
+  aiCurrentSessionId = id;
+}
+
+function _loadSession(id) {
+  const list = _histLoad();
+  const session = list.find(s => s.id === id);
+  if (!session) return;
+  aiCurrentSessionId = id;
+  aiMessages = session.messages.slice(); // deep copy references
+  // Rebuild UI messages
+  const box = document.getElementById('ai-messages');
+  box.innerHTML = '';
+  for (const m of aiMessages) {
+    if (m.role === 'system') continue; // skip system messages in display
+    addAIMsg(m.role, m.content);
+  }
+  _renderHistoryList();
+}
+
+function _deleteSession(id) {
+  const list = _histLoad().filter(s => s.id !== id);
+  _histSave(list);
+  if (aiCurrentSessionId === id) {
+    newAIChat();
+  }
+  _renderHistoryList();
+}
+
+// ── History list rendering ──
+function _renderHistoryList() {
+  const container = document.getElementById('ai-history-list');
+  const list = _histLoad();
+  if (!list.length) {
+    container.innerHTML = '<div class="ai-history-empty">暂无历史会话</div>';
+    return;
+  }
+  let html = '';
+  for (const s of list) {
+    const active = s.id === aiCurrentSessionId ? ' active' : '';
+    const date = _fmtDate(s.time);
+    html += '<div class="ai-history-item' + active + '" onclick="_loadSession(\'' + s.id + '\')">'
+      + '<span class="ai-history-item-title">' + _escHtml(s.title) + '</span>'
+      + '<span class="ai-history-item-date">' + date + '</span>'
+      + '<span class="ai-history-item-del" onclick="event.stopPropagation();_deleteSession(\'' + s.id + '\')">✕</span>'
+      + '</div>';
+  }
+  container.innerHTML = html;
+}
+
+function _fmtDate(ts) {
+  const d = new Date(ts);
+  const now = new Date();
+  if (d.toDateString() === now.toDateString()) return d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+  return (d.getMonth()+1) + '/' + d.getDate();
+}
+
+function _escHtml(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Toggle history sidebar ──
+function toggleAIHistory() {
+  const hist = document.getElementById('ai-history');
+  hist.classList.toggle('hidden');
+  if (!hist.classList.contains('hidden')) _renderHistoryList();
+}
+
+// ── New chat (clear + start fresh) ──
+function newAIChat() {
+  // Auto-save current if there are messages
+  if (aiMessages.length) _saveCurrentSession();
+  aiMessages = [];
+  aiCurrentSessionId = null;
+  const box = document.getElementById('ai-messages');
+  box.innerHTML = '<div class="ai-msg ai-msg-system">新对话已开始。</div>';
+  _renderHistoryList();
+}
 
 function toggleAIChat() {
   const panel = document.getElementById('ai-chat-panel');
@@ -1608,58 +1712,93 @@ function toggleAISettings() {
 }
 
 function saveAISettings() {
-  const url = document.getElementById('ai-api-url').value.trim();
-  const key = document.getElementById('ai-api-key').value.trim();
+  const url   = document.getElementById('ai-api-url').value.trim();
+  const key   = document.getElementById('ai-api-key').value.trim();
   const model = document.getElementById('ai-model').value.trim();
   if (!url || !key || !model) { alert('请填写完整的 API URL、Key 和模型名'); return; }
   try {
-    localStorage.setItem('cyberedu_ai_url', url);
-    localStorage.setItem('cyberedu_ai_key', key);
-    localStorage.setItem('cyberedu_ai_model', model);
+    localStorage.setItem('cyberedu_ai_url',        url);
+    localStorage.setItem('cyberedu_ai_key',         key);
+    localStorage.setItem('cyberedu_ai_model',       model);
+    localStorage.setItem('cyberedu_ai_temp',        document.getElementById('ai-temperature').value);
+    localStorage.setItem('cyberedu_ai_max_tokens',  document.getElementById('ai-max-tokens').value.trim());
+    localStorage.setItem('cyberedu_ai_thinking',     document.getElementById('ai-thinking').checked ? '1' : '0');
   } catch(e) {}
   document.getElementById('ai-settings').classList.add('hidden');
-  addAIMsg('system', '设置已保存。你可以开始提问了。');
+  addAIMsg('system', '设置已保存 ✓');
 }
 
 function loadAISettings() {
   try {
-    const url = localStorage.getItem('cyberedu_ai_url') || '';
-    const key = localStorage.getItem('cyberedu_ai_key') || '';
-    const model = localStorage.getItem('cyberedu_ai_model') || '';
-    document.getElementById('ai-api-url').value = url;
-    document.getElementById('ai-api-key').value = key;
-    document.getElementById('ai-model').value = model;
+    const url   = localStorage.getItem('cyberedu_ai_url')        || '';
+    const key   = localStorage.getItem('cyberedu_ai_key')         || '';
+    const model = localStorage.getItem('cyberedu_ai_model')       || '';
+    const temp  = localStorage.getItem('cyberedu_ai_temp')        || '0.7';
+    const mt    = localStorage.getItem('cyberedu_ai_max_tokens')  || '4096';
+    const think = localStorage.getItem('cyberedu_ai_thinking')   || '1';
+    document.getElementById('ai-api-url').value     = url;
+    document.getElementById('ai-api-key').value     = key;
+    document.getElementById('ai-model').value       = model;
+    document.getElementById('ai-temperature').value = temp;
+    document.getElementById('ai-max-tokens').value  = mt;
+    document.getElementById('ai-thinking').checked   = (think === '1');
+    document.getElementById('ai-temp-val').textContent = temp;
   } catch(e) {}
 }
 
 function getAIConfig() {
   return {
-    apiUrl: (document.getElementById('ai-api-url').value.trim() || localStorage.getItem('cyberedu_ai_url') || '').trim(),
-    apiKey: (document.getElementById('ai-api-key').value.trim() || localStorage.getItem('cyberedu_ai_key') || '').trim(),
-    model: (document.getElementById('ai-model').value.trim() || localStorage.getItem('cyberedu_ai_model') || '').trim(),
+    apiUrl:    (document.getElementById('ai-api-url').value.trim()    || localStorage.getItem('cyberedu_ai_url')   || '').trim(),
+    apiKey:    (document.getElementById('ai-api-key').value.trim()    || localStorage.getItem('cyberedu_ai_key')   || '').trim(),
+    model:     (document.getElementById('ai-model').value.trim()      || localStorage.getItem('cyberedu_ai_model') || '').trim(),
+    temperature: parseFloat(document.getElementById('ai-temperature').value)   || 0.7,
+    max_tokens: parseInt(document.getElementById('ai-max-tokens').value, 10)    || 4096,
+    thinking:   document.getElementById('ai-thinking').checked,
   };
 }
 
 function addAIMsg(role, content) {
   const box = document.getElementById('ai-messages');
   const div = document.createElement('div');
-  const cls = role === 'user' ? 'ai-msg-user' : role === 'error' ? 'ai-msg-error' : 'ai-msg-ai';
+  const cls = role === 'user' ? 'ai-msg-user'
+            : role === 'error' ? 'ai-msg-error'
+            : role === 'thinking' ? 'ai-msg-thinking'
+            : 'ai-msg-ai';
   div.className = 'ai-msg ' + cls;
-  div.innerHTML = formatAIContent(content);
+  div.innerHTML = (role === 'thinking')
+    ? '<details class="ai-thinking-details"><summary>🧠 思考中...</summary><div class="ai-thinking-body"></div></details>'
+    : formatAIContent(content || '');
   box.appendChild(div);
   box.scrollTop = box.scrollHeight;
   return div;
 }
 
 function formatAIContent(text) {
-  // Basic markdown: code blocks, inline code, bold
-  let html = text
+  if (!text) return '';
+  let h = text
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>')
-    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    // Code blocks
+    .replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code class="lang-$1">$2</code></pre>')
+    // Inline code
+    .replace(/`([^`\n]+)`/g, '<code>$1</code>')
+    // Headings
+    .replace(/^#### (.+)$/gm, '<h4>$1</h4>')
+    .replace(/^### (.+)$/gm,  '<h3>$1</h3>')
+    .replace(/^## (.+)$/gm,   '<h2>$1</h2>')
+    // Bold & italic
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    // Strikethrough
+    .replace(/~~(.+?)~~/g, '<del>$1</del>')
+    // Blockquote
+    .replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>')
+    // Unordered list items
+    .replace(/^[\s]*[-*] (.+)$/gm, '<li>$1</li>')
+    // Horizontal rule
+    .replace(/^[-*]{3,}$/gm, '<hr>')
+    // Line breaks
     .replace(/\n/g, '<br>');
-  return html;
+  return h;
 }
 
 function handleAIKeydown(e) {
@@ -1669,90 +1808,167 @@ function handleAIKeydown(e) {
   }
 }
 
+// System prompt for the AI tutor
+const AI_SYS_PROMPT = '你是一位专业的网络安全学习导师，精通编程基础、密码学、网络协议、Web安全、渗透测试、恶意软件分析和CTF竞赛。\n请用简明准确的中文回答学生的问题：\n- 由浅入深，适合初学者理解\n- 必要时提供代码示例（Python / Bash / C）\n- 标注相关风险和法律边界\n- 不直接给出CTF flag，而是引导解题思路';
+
 async function sendAIMessage() {
   if (aiIsStreaming) return;
-
   const input = document.getElementById('ai-input');
-  const text = input.value.trim();
+  const text  = input.value.trim();
   if (!text) return;
 
   const config = getAIConfig();
   if (!config.apiUrl || !config.apiKey || !config.model) {
     toggleAISettings();
-    addAIMsg('system', '请先配置 API 设置');
+    addAIMsg('system', '请先配置 API 设置（点击 ⚙）');
     return;
   }
 
-  // Add user message
+  // ── Build messages with system prompt + context ──
+  const sysPrompt = AI_SYS_PROMPT.slice();
+  const curTitle = document.querySelector('.module-card.active h3, .section-card.active h3');
+  if (curTitle) sysPrompt += '\n当前学习章节：' + curTitle.textContent.trim();
+
+  const msgsForApi = [{ role: 'system', content: sysPrompt }];
+  for (const m of aiMessages) msgsForApi.push(m);
+  msgsForApi.push({ role: 'user', content: text });
+
+  // ── UI: user message + AI placeholder ──
   addAIMsg('user', text);
   aiMessages.push({ role: 'user', content: text });
   input.value = '';
   input.style.height = 'auto';
 
-  // Create AI response bubble with cursor
-  const aiDiv = addAIMsg('ai', '<span class="ai-cursor"></span>');
+  // Container: thinking div comes BEFORE aiDiv in DOM
+  const box = document.getElementById('ai-messages');
+  const wrapper = document.createElement('div');
+  wrapper.className = 'ai-response-wrapper';
+  box.appendChild(wrapper);
+
+  let thinkDiv = null;
+  const aiDiv = document.createElement('div');
+  aiDiv.className = 'ai-msg ai-msg-ai';
+  aiDiv.innerHTML = '<span class="ai-thinking-hint">正在思考</span>';
+  wrapper.appendChild(aiDiv);
+
   aiIsStreaming = true;
   document.getElementById('ai-send-btn').disabled = true;
+
+  let aiText = '';
+  let thinkText = '';
+  let usageInfo = null;
+  let buf = '';
+  let contentStarted = false;
 
   try {
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        apiUrl: config.apiUrl,
-        apiKey: config.apiKey,
-        model: config.model,
-        messages: aiMessages,
+        apiUrl:     config.apiUrl,
+        apiKey:      config.apiKey,
+        model:       config.model,
+        messages:    msgsForApi,
+        temperature: config.temperature,
+        max_tokens:  config.max_tokens,
+        thinking:    config.thinking ? { type: 'enabled' } : { type: 'disabled' },
       }),
     });
 
     if (!res.ok) {
-      const errText = await res.text();
-      throw new Error('API returned ' + res.status + ': ' + errText);
+      const errJ = await res.json().catch(() => ({}));
+      throw new Error(errJ.error || ('HTTP ' + res.status));
     }
 
-    // Parse SSE stream
-    const reader = res.body.getReader();
+    // ── Read SSE stream ──
+    const reader  = res.body.getReader();
     const decoder = new TextDecoder();
-    let aiText = '';
 
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
 
-      const chunk = decoder.decode(value, { stream: true });
-      const lines = chunk.split('\n');
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split('\n');
+      buf = lines.pop() || ''; // keep incomplete line in buffer
 
       for (const line of lines) {
         if (!line.startsWith('data: ')) continue;
-        const data = line.slice(6).trim();
-        if (data === '[DONE]') continue;
+        const payload = line.slice(6).trim();
+        if (payload === '[DONE]') continue;
 
         try {
-          const parsed = JSON.parse(data);
-          const delta = parsed.choices?.[0]?.delta?.content;
-          if (delta) {
-            aiText += delta;
-            aiDiv.innerHTML = formatAIContent(aiText) + '<span class="ai-cursor"></span>';
-            const box = document.getElementById('ai-messages');
+          const chunk  = JSON.parse(payload);
+          const choice = chunk.choices?.[0];
+          const delta  = choice?.delta || {};
+
+          // ── Thinking / reasoning ──
+          if (delta.reasoning_content) {
+            thinkText += delta.reasoning_content;
+            if (!thinkDiv) {
+              thinkDiv = document.createElement('div');
+              thinkDiv.className = 'ai-msg ai-msg-thinking';
+              thinkDiv.innerHTML = '<details class="ai-thinking-details" open><summary>🧠 思考中...</summary><div class="ai-thinking-body"></div></details>';
+              wrapper.insertBefore(thinkDiv, aiDiv);
+            }
+            const body = thinkDiv.querySelector('.ai-thinking-body');
+            if (body) body.innerHTML = formatAIContent(thinkText);
             box.scrollTop = box.scrollHeight;
           }
-        } catch(e) { /* skip non-JSON lines */ }
+
+          // ── Main content ──
+          if (delta.content) {
+            if (!contentStarted) {
+              contentStarted = true;
+              // Collapse thinking once answer starts
+              if (thinkDiv) {
+                const details = thinkDiv.querySelector('.ai-thinking-details');
+                if (details) details.removeAttribute('open');
+              }
+            }
+            aiText += delta.content;
+            aiDiv.innerHTML = formatAIContent(aiText) + '<span class="ai-cursor"></span>';
+            box.scrollTop = box.scrollHeight;
+          }
+
+          // ── Usage stats (final chunk) ──
+          if (chunk.usage) usageInfo = chunk.usage;
+        } catch (e) { /* skip */ }
       }
     }
 
-    // Finalize
+    // ── Finalize response ──
     aiDiv.innerHTML = formatAIContent(aiText);
-    aiMessages.push({ role: 'assistant', content: aiText });
 
-    // Keep message history manageable (last 20 messages)
-    if (aiMessages.length > 20) {
-      aiMessages = aiMessages.slice(-20);
+    if (thinkDiv && thinkText) {
+      const rTokens = usageInfo?.completion_tokens_details?.reasoning_tokens;
+      thinkDiv.querySelector('summary').textContent =
+        '🧠 思考过程（点击展开' + (rTokens ? ' · ' + rTokens + ' tokens' : '') + '）';
+    } else if (thinkDiv) {
+      thinkDiv.remove();
     }
 
-  } catch(e) {
+    // Token usage tag
+    if (usageInfo) {
+      const tag = document.createElement('span');
+      tag.className = 'ai-usage-tag';
+      const r = usageInfo.completion_tokens_details?.reasoning_tokens;
+      tag.textContent = '输入 ' + usageInfo.prompt_tokens + ' · 输出 ' + usageInfo.completion_tokens
+        + (r ? '（思考 ' + r + '）' : '');
+      aiDiv.appendChild(tag);
+    }
+
+    aiMessages.push({ role: 'assistant', content: aiText });
+    if (aiMessages.length > 20) aiMessages = aiMessages.slice(-20);
+
+    // Auto-save to history
+    _saveCurrentSession();
+    _renderHistoryList();
+
+  } catch (e) {
     aiDiv.className = 'ai-msg ai-msg-error';
-    aiDiv.innerHTML = 'Error: ' + e.message;
+    aiDiv.innerHTML = '⚠ ' + e.message;
+    if (thinkDiv) thinkDiv.remove();
   }
 
   aiIsStreaming = false;
@@ -1761,24 +1977,29 @@ async function sendAIMessage() {
 }
 
 function clearAIChat() {
-  aiMessages = [];
-  const box = document.getElementById('ai-messages');
-  box.innerHTML = '<div class="ai-msg ai-msg-system">对话已清空。</div>';
+  newAIChat();
 }
 
 function initAIChat() {
   loadAISettings();
-  // Auto-open settings if not configured
-  const config = getAIConfig();
-  if (!config.apiUrl || !config.apiKey || !config.model) {
-    // Settings will show when user first tries to send
+  // Restore last session
+  const list = _histLoad();
+  if (list.length) {
+    _loadSession(list[0].id); // load most recent
+  }
+  // Temperature slider → live display
+  const tempSlider = document.getElementById('ai-temperature');
+  if (tempSlider) {
+    tempSlider.addEventListener('input', function() {
+      document.getElementById('ai-temp-val').textContent = this.value;
+    });
   }
   // Auto-resize textarea
   const input = document.getElementById('ai-input');
   if (input) {
     input.addEventListener('input', function() {
       this.style.height = 'auto';
-      this.style.height = Math.min(this.scrollHeight, 80) + 'px';
+      this.style.height = Math.min(this.scrollHeight, 120) + 'px';
     });
   }
 }
