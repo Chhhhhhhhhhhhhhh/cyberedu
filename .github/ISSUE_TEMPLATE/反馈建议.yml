@@ -1,0 +1,28 @@
+name: 反馈建议
+description: 提出改进建议、报告问题或内容纠错
+title: "[反馈] "
+labels: [enhancement]
+body:
+  - type: checkboxes
+    attributes:
+      label: 类型
+      options:
+        - label: 🐛 问题报告（Bug）
+        - label: 💡 功能建议
+        - label: 📝 内容纠错
+        - label: 🌐 翻译改进
+        - label: 💬 其他
+  - type: input
+    attributes:
+      label: 所在章节（如果是内容问题）
+      placeholder: 例如：密码学 > RSA 原理深度解析
+  - type: textarea
+    attributes:
+      label: 描述
+      description: 请简要说明
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 期望效果（功能建议）
+      description: 你期望它怎样工作？
