@@ -35,6 +35,13 @@ function getMime(filePath) {
   return MIME[path.extname(filePath).toLowerCase()] || 'application/octet-stream';
 }
 
+// ── Runtime detection ──────────────────────────────────────
+const { execSync } = require('child_process');
+function checkRuntime(name, command) {
+  try { execSync(command, { stdio: 'ignore', timeout: 3000 }); return true; }
+  catch { return false; }
+}
+
 // ── DeepSeek / OpenAI error status → Chinese message ──────────
 const ERR_ZH = {
   400: '请求格式错误，请检查参数。',
@@ -198,7 +205,7 @@ function handleRunCode(req, res) {
           cleanup([tmpFile, outFile]);
           res.writeHead(200, jsonHdrs());
           if (err.code === 'ENOENT') {
-            return res.end(JSON.stringify({ error: 'C 编译器 (gcc) 未安装。\n请安装 MinGW-w64 或 Visual Studio Build Tools。\n\n当前练习题可通过对比预期输出进行自测。' }));
+            return res.end(JSON.stringify({ error: 'GCC (C compiler) is not installed on this server.\n\nInstall it to run C exercises:\n  • Windows: https://winlibs.com/ or MinGW-w64\n  • macOS: xcode-select --install\n  • Linux: sudo apt install gcc\n\nIn the meantime, use the Self-Test mode to compare your output with the expected result.' }));
           }
           return res.end(JSON.stringify({ error: '编译失败:\n' + stderr }));
         }
@@ -208,13 +215,22 @@ function handleRunCode(req, res) {
           res.end(JSON.stringify({ stdout: stdout2, stderr: stderr2, exitCode: err2 ? 1 : 0 }));
         });
       });
+    } else if (lang === 'Bash') {
+      execFile('bash', [tmpFile], { timeout: RUN_TIMEOUT, maxBuffer: 1024 * 1024 }, (err, stdout, stderr) => {
+        cleanup([tmpFile]);
+        res.writeHead(200, jsonHdrs());
+        if (err && err.code === 'ENOENT') {
+          return res.end(JSON.stringify({ error: 'Bash is not installed on this server.\n\nInstall it to run shell exercises:\n  • Windows: Git Bash (https://git-scm.com) or WSL\n  • macOS/Linux: already installed\n\nIn the meantime, use the Self-Test mode.' }));
+        }
+        res.end(JSON.stringify({ stdout, stderr, exitCode: err ? 1 : 0 }));
+      });
     } else {
       const cmd = lang === 'Python' ? 'python' : process.execPath;
       execFile(cmd, [tmpFile], { timeout: RUN_TIMEOUT, maxBuffer: 1024 * 1024 }, (err, stdout, stderr) => {
         cleanup([tmpFile]);
         res.writeHead(200, jsonHdrs());
         if (err && err.code === 'ENOENT') {
-          return res.end(JSON.stringify({ error: lang + ' 运行时未找到，请确认已安装并加入 PATH。' }));
+          return res.end(JSON.stringify({ error: 'Python is not installed on this server.\n\nInstall Python 3 to run exercises:\n  • https://python.org/downloads/\n\nIn the meantime, use the Self-Test mode to compare your output with the expected result.' }));
         }
         res.end(JSON.stringify({ stdout, stderr, exitCode: err ? 1 : 0 }));
       });
@@ -403,12 +419,24 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PORT, () => {
+  const hasPython = checkRuntime('python', 'python --version');
+  const hasGCC = checkRuntime('gcc', 'gcc --version');
   console.log('');
   console.log('  ╔══════════════════════════════════════════════╗');
-  console.log('  ║   CyberEdu Server  v2.1  (AI Chat Enhanced)  ║');
+  console.log('  ║   CyberEdu Server  v2.2  (AI Chat Enhanced)  ║');
   console.log('  ║   http://localhost:' + PORT + '                     ║');
   console.log('  ╚══════════════════════════════════════════════╝');
   console.log('');
+  console.log('  Runtime detection for practice exercises:');
+  console.log('    Python  ' + (hasPython ? '✓ found' : '✗ NOT FOUND — Python exercises will show errors'));
+  console.log('    GCC     ' + (hasGCC ? '✓ found' : '✗ NOT FOUND — C exercises will show errors'));
+  console.log('');
+  if (!hasPython || !hasGCC) {
+    console.log('  To enable code execution, install:');
+    if (!hasPython) console.log('    Python 3:  https://python.org/downloads/');
+    if (!hasGCC) console.log('    GCC:       https://winlibs.com/  or  MinGW-w64');
+    console.log('');
+  }
 
   // Auto-open browser
   try {
