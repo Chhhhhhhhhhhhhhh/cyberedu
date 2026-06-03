@@ -2,11 +2,11 @@
 // CyberEdu i18n — Internationalization System
 // ============================================================
 let currentLang = 'en';
-try { currentLang = localStorage.getItem('cyberedu_lang') || 'en'; } catch(e) { currentLang = 'en'; }
+try { currentLang = localStorage.getItem('cyberedu_lang_v2') || 'en'; } catch(e) { currentLang = 'en'; }
 
 function setLang(lang) {
   currentLang = lang;
-  localStorage.setItem('cyberedu_lang', lang);
+  localStorage.setItem('cyberedu_lang_v2', lang);
   document.documentElement.lang = lang === 'en' ? 'en' : 'zh-CN';
   // Update toggle button
   const btn = document.getElementById('lang-toggle');
