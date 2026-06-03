@@ -2244,10 +2244,10 @@ function initApp() {
     updateStatusBar();
     initCyberLetters();
     setTimeout(tickTypewriter,2800);
-    navigate('home');
     setTimeout(triggerCountUp, 4500);
   } catch(e) { console.error('Init error:', e); }
-  // Always run these even if earlier init steps failed
+  // Always navigate to home and init cyber letters
+  try { navigate('home'); } catch(e) {}
   try { initCyberLetters(); } catch(e) { console.error('CyberLetters error:', e); }
   playIntro();
 }
