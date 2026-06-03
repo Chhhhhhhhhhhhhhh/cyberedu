@@ -1474,23 +1474,13 @@ function tickTypewriter(){
 // CYBER LETTER HOVER EFFECT
 // ============================================================
 function initCyberLetters(){
+  // Ensure letters are wrapped (hero title is static, may need re-wrap after language switch)
+  if(!document.querySelector('.hero-title .cyber-letter')) wrapCyberLetters();
   const corruptChars='!@#$%^&*01ABCDEF<>{}[]|/\\~';
-  function wrapNode(node){
-    if(node.nodeType===1&&node.classList.contains('glitch'))return;
-    if(node.nodeType===3){
-      const t=node.textContent;if(!t.trim())return;
-      const frag=document.createDocumentFragment();
-      for(const ch of t){
-        if(ch===' '){frag.appendChild(document.createTextNode(' '))}
-        else{const s=document.createElement('span');s.className='cyber-letter';s.dataset.orig=ch;s.textContent=ch;frag.appendChild(s)}
-      }
-      node.parentNode.replaceChild(frag,node);
-    }else if(node.nodeType===1){Array.from(node.childNodes).forEach(wrapNode)}
-  }
   // Event delegation on document for all cyber-letter hovers
   document.addEventListener('mouseover',function(e){
     const letter=e.target.closest('.cyber-letter');
-    if(!letter)return;
+    if(!letter||!letter.dataset.orig) return;
     const orig=letter.dataset.orig;
     let n=0;
     const iv=setInterval(()=>{
