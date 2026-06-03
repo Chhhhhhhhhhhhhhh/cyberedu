@@ -1094,6 +1094,7 @@ const CM_MODE_MAP = { 'Python': 'python', 'JavaScript': 'javascript', 'C': 'text
 function initCodeMirror() {
   const ta = document.getElementById('code-editor');
   if (!ta || typeof CodeMirror === 'undefined') return;
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
   cmEditor = CodeMirror.fromTextArea(ta, {
     lineNumbers: true,
     matchBrackets: true,
@@ -1102,7 +1103,7 @@ function initCodeMirror() {
     tabSize: 4,
     indentWithTabs: false,
     lineWrapping: false,
-    theme: 'material-darker',
+    theme: isLight ? 'eclipse' : 'material-darker',
     extraKeys: { Tab: function(cm) { cm.replaceSelection('    ', 'end'); } }
   });
   cmEditor.setSize('100%', 'auto');
@@ -1798,7 +1799,7 @@ function toggleTheme(){
   const isLight=html.getAttribute('data-theme')==='light';
   html.setAttribute('data-theme',isLight?'':'light');
   document.getElementById('theme-toggle').textContent=isLight?'☀':'☾';
-  if(cmEditor) cmEditor.setOption('theme', isLight?'default':'material-darker');
+  if(cmEditor) cmEditor.setOption('theme', isLight?'eclipse':'material-darker');
   try{localStorage.setItem('cyberedu_theme',isLight?'dark':'light')}catch(e){}
 }
 function initTheme(){
