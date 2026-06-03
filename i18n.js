@@ -1,8 +1,8 @@
 // ============================================================
 // CyberEdu i18n — Internationalization System
 // ============================================================
-let currentLang = 'zh';
-try { currentLang = localStorage.getItem('cyberedu_lang') || 'zh'; } catch(e) { currentLang = 'zh'; }
+let currentLang = 'en';
+try { currentLang = localStorage.getItem('cyberedu_lang') || 'en'; } catch(e) { currentLang = 'en'; }
 
 function setLang(lang) {
   currentLang = lang;
