@@ -1,6 +1,40 @@
 # cyberedu 版本记录
 
-## v2.0 — 2026-06-01
+## v2.2 — 2026-06-03
+
+**文件**:
+- `content.js` (2.4MB) — 中英文双语教学内容（SECTION_CONTENT + SECTION_CONTENT_EN）
+- `i18n.js` — 中英文切换系统（~140 翻译键值对）
+- `script.js` / `style.css` — 排版优化 + 语言切换逻辑
+
+### 🌐 英文全文翻译
+- **52 个章节完整英文翻译**，覆盖全部 7 个模块（SECTION_CONTENT_EN）
+- UI 界面中英文双语：导航、搜索、按钮、提示全部支持切换
+- 章节导航按钮（上一节/下一节/标记完成）中英文自动切换
+- 练习题代码注释同步翻译（starterEn 字段）
+- 侧边栏模块标题、章节标题中英文切换
+- 语言偏好通过 localStorage 持久保存
+
+### 📝 教学内容质量审查
+- 4 位审查 agent 并行审查全部 52 个章节
+- **修复 22 处事实性错误**：
+  - 🔴 严重：RSA 专利年份（1997→2000）、Yahoo 泄露（2012→2013-14）、Knuth 引用归属（→David Wheeler）、虚构工具名（prepivot→Impacket, jurukit→CrackMapExec, lazwat→laZagne）、Volatility 版本混淆
+  - 🟡 中等：Python 2→3 语法导入、YARA 属性名、HTTP/0.9 状态码描述
+  - 🟢 轻微：Wireshark 拼写、SageMath 名称等
+
+### 🐛 Bug 修复
+- 修复切换语言后章节正文不刷新（`rerenderCurrentView` 对 hub 视图补充 `loadSection` 调用）
+- 修复 sectionId 与 SECTION_CONTENT_EN key 不匹配导致英文内容不显示（新增 `contentKey` 属性，52处精确映射）
+- 修复 Windows 路径反斜杠（`C:\temp\...`）在 JS 模板字面量中引发 `SyntaxError`
+
+### 🎨 排版优化
+- 学习中心文章区间距增大：边距/行高/标题间距 增大约 15-30%
+- 文章区最大宽度：940px（侧边栏展开）→ 1140px（收起）→ 1180px（无侧边栏），自动填充右侧空间
+- Callout 提示框内边距增大、完成按钮居中加宽
+
+---
+
+## v2.1 — 2026-06-02
 
 **文件**:
 - `versions/cyberedu_v2.0.html` (11KB) — 纯 HTML 结构
