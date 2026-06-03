@@ -1504,6 +1504,7 @@ function wrapCyberLetters(){
   document.querySelectorAll('.hero-title, .cyber-text').forEach(el=>{
     Array.from(el.childNodes).forEach(function wrapNode(node){
       if(node.nodeType===1&&node.classList.contains('glitch'))return;
+      if(node.nodeType===1&&node.classList.contains('cyber-letter'))return;
       if(node.nodeType===3){
         const t=node.textContent;if(!t.trim())return;
         const frag=document.createDocumentFragment();
