@@ -2247,7 +2247,8 @@ function initApp() {
     navigate('home');
     setTimeout(triggerCountUp, 4500);
   } catch(e) { console.error('Init error:', e); }
-  // Always run playIntro regardless of other errors
+  // Always run these even if earlier init steps failed
+  try { initCyberLetters(); } catch(e) { console.error('CyberLetters error:', e); }
   playIntro();
 }
 // Run init when DOM is ready
