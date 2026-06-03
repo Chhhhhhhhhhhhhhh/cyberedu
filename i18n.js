@@ -2,11 +2,11 @@
 // CyberEdu i18n — Internationalization System
 // ============================================================
 let currentLang = 'en';
-try { currentLang = localStorage.getItem('cyberedu_lang_v2') || 'en'; } catch(e) { currentLang = 'en'; }
+try { currentLang = localStorage.getItem('cyberedu_lang_v3') || 'en'; } catch(e) { currentLang = 'en'; }
 
 function setLang(lang) {
   currentLang = lang;
-  localStorage.setItem('cyberedu_lang_v2', lang);
+  localStorage.setItem('cyberedu_lang_v3', lang);
   document.documentElement.lang = lang === 'en' ? 'en' : 'zh-CN';
   // Update toggle button
   const btn = document.getElementById('lang-toggle');
@@ -450,9 +450,9 @@ const LANG = {
   }
 };
 
-// Apply saved language on page load — setLang will be called by initApp in script.js
-// Here we just need to update static HTML elements before script.js runs
-if (currentLang !== 'zh') {
+// Always update static elements and title on page load
+document.title = (LANG[currentLang] || LANG.zh)['head.title'] || document.title;
+{
   document.querySelectorAll('[data-i18n]').forEach(el => {
     var val = (LANG[currentLang] || LANG.zh)[el.dataset.i18n];
     if (val) el.textContent = val;
