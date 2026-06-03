@@ -287,7 +287,7 @@ input,textarea{font-family:var(--font-mono)}
 /* ===== SIDEBAR ===== */
 #sidebar{
   width:var(--sidebar-w);flex-shrink:0;position:fixed;
-  top:var(--nav-h);bottom:0;left:0;overflow-y:scroll;z-index:100;
+  top:var(--nav-h);bottom:0;left:0;overflow-y:auto;z-index:100;
   background:rgba(6,6,9,0.7);backdrop-filter:blur(16px);
   border-right:1px solid var(--border-subtle);padding:12px 0;
   transition:transform var(--transition);overflow-y:scroll;
@@ -820,8 +820,8 @@ input,textarea{font-family:var(--font-mono)}
 /* Buttons: neon pulse on hover */
 .btn-primary:hover,.btn-outline:hover{animation:neon-pulse 1.8s ease-in-out infinite}
 /* Sidebar items: glitch text on hover */
-.sidebar-chapter-btn:hover{animation:glitch-text-hover 0.3s ease;text-shadow:0 0 8px rgba(0,255,65,0.5)}
-.sidebar-module-btn:hover{animation:glitch-text-hover 0.3s ease;text-shadow:0 0 8px rgba(0,229,255,0.5)}
+.sidebar-chapter-btn:hover{color:var(--text-main);text-shadow:0 0 8px rgba(0,255,65,0.5)}
+.sidebar-module-btn:hover{color:var(--text-main);text-shadow:0 0 8px rgba(0,229,255,0.5)}
 /* Glossary terms: cyan glow */
 .glossary:hover{text-shadow:0 0 10px var(--color-cyan),0 0 20px rgba(0,229,255,0.3)}
 /* Code blocks: scanline overlay on hover */
