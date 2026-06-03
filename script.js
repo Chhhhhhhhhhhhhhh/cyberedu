@@ -1799,7 +1799,7 @@ function toggleTheme(){
   const isLight=html.getAttribute('data-theme')==='light';
   html.setAttribute('data-theme',isLight?'':'light');
   document.getElementById('theme-toggle').textContent=isLight?'☀':'☾';
-  if(cmEditor) cmEditor.setOption('theme', isLight?'eclipse':'material-darker');
+  if(cmEditor) cmEditor.setOption('theme', isLight?'material-darker':'eclipse');
   try{localStorage.setItem('cyberedu_theme',isLight?'dark':'light')}catch(e){}
 }
 function initTheme(){
