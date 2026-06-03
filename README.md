@@ -1,84 +1,94 @@
-# CyberEdu - 网络安全学习平台
+# CyberEdu — Cybersecurity Learning Platform
 
-一个涵盖网络安全基础知识的交互式学习网站，面向零基础到高级的学习者。
+An interactive cybersecurity learning website, from absolute beginner to advanced practitioner.
 
-## 功能特色
+[中文版](README_zh.md) | [Live Demo](https://chhhhhhhhhhhhhhh.github.io/cyberedu/) | [Changelog](versions/CHANGELOG.md)
 
-- **中英文双语**：52 个章节完整英文翻译，UI 一键切换（i18n）
-- **分级学习**：按零基础、入门、中级、高级四个难度层级组织内容
-- **代码编辑器**：集成 CodeMirror 5，支持 Python/JS/C/Bash 语法高亮与实时编辑
-- **深色/浅色主题**：一键切换，状态持久保存
-- **学习进度管理**：自动记录进度，支持导出/导入备份
-- **AI 导师对话**：内置 AI 聊天助手，支持 DeepSeek/OpenAI/Qwen/Ollama 等模型
-- **历史会话**：多轮对话自动保存，侧边栏快速切换与恢复
-- **响应式设计**：适配桌面端和移动端
+## Features
 
-## 项目结构
+- **Bilingual (EN/ZH)**: Full English translation of 52 chapters + one-click UI language switch
+- **7 Core Modules**: Programming, Cryptography, Networking, Web Security, Pentesting, Malware Analysis, CTF
+- **4 Difficulty Tiers**: Beginner → Intermediate → Advanced → Expert
+- **Built-in Code Editor**: CodeMirror 5 with Python/JS/C/Bash syntax highlighting
+- **Dark/Light Theme**: One-click toggle, persisted to localStorage
+- **Learning Progress**: Auto-tracked with JSON export/import backup
+- **AI Tutor**: Built-in AI chat assistant (DeepSeek/OpenAI/Qwen/Ollama), streaming SSE responses
+- **Session History**: Multi-turn conversations auto-saved, sidebar switching
+- **Global Search**: Ctrl+K to search modules, chapters, and terminology
+- **Practice Exercises**: 10 coding challenges with expected output validation
+- **CTF Arena**: 16 challenges covering Crypto, Web, Misc, Reverse, Forensics, and PWN
+
+## Project Structure
 
 ```
-├── cyberedu.html      # 主页面
-├── content.js         # 内容数据（中英双语：模块/章节/练习/CTF挑战）
-├── script.js          # 交互逻辑
-├── style.css          # 样式表
-├── i18n.js            # 中英文切换系统（~140 翻译键值对）
-├── server.js          # 本地 Node.js 服务器（AI 聊天代理）
-├── restart_server.bat # Windows 一键重启服务器脚本
-├── versions/          # 历史版本归档
-└── .gitignore
+├── cyberedu.html      # Main page
+├── content.js         # Content data (bilingual: modules/chapters/exercises/CTF)
+├── script.js          # Interactive logic
+├── style.css          # Stylesheet
+├── i18n.js            # EN/ZH localization (~140 translation pairs)
+├── server.js          # Local Node.js server (AI chat proxy)
+├── versions/          # Historical version archives
+└── .github/           # Issue templates
 ```
 
-## 使用方式
+## Getting Started
 
-### 方式一：纯静态浏览（无 AI 聊天）
+### Quick Start (no AI chat)
 
-直接在浏览器中打开 `cyberedu.html` 即可，代码高亮、主题切换、进度管理等功能正常使用。
+Open `cyberedu.html` directly in your browser. Code highlighting, theme switching, and progress tracking all work without a server.
 
-### 方式二：本地服务器（启用 AI 聊天）
+### Local Server (enables AI chat + code execution)
 
-需要 [Node.js](https://nodejs.org/) 环境（v16+）：
+Requires [Node.js](https://nodejs.org/) v16+:
 
-1. 打开终端，进入项目目录
-2. 启动服务器：
-   ```bash
-   node server.js
-   ```
-3. 浏览器访问 `http://localhost:8000`
-4. 点击右下角绿色悬浮按钮打开 AI 聊天面板
-5. 点击 ⚙ 配置你的 API：
-   - **API Base URL**：如 `https://api.deepseek.com`
-   - **API Key**：你的密钥（`sk-...`）
-   - **模型**：如 `deepseek-chat`、`deepseek-reasoner`
-6. 可选：调整温度、最大 Token 数、是否启用思考模式
+```bash
+node server.js
+# Then open http://localhost:8000
+```
 
-> 如需重启服务器，双击 `restart_server.bat`（Windows）或在终端中 `Ctrl+C` 后重新运行 `node server.js`。
+Click the green floating button (bottom-right) to open the AI chat panel. Click ⚙ to configure:
 
-## 支持的 AI 模型
+| Field | Example |
+|-------|---------|
+| API Base URL | `https://api.deepseek.com` |
+| API Key | `sk-...` |
+| Model | `deepseek-chat`, `deepseek-reasoner` |
 
-| 提供商 | API Base URL | 模型示例 |
-|--------|-------------|---------|
+Optional: adjust temperature, max tokens, and thinking mode.
+
+> On Windows, double-click `restart_server.bat` to restart the server.
+
+## Supported AI Models
+
+| Provider | API Base URL | Models |
+|----------|-------------|--------|
 | DeepSeek | `https://api.deepseek.com` | `deepseek-chat`, `deepseek-reasoner` |
 | OpenAI | `https://api.openai.com/v1` | `gpt-4o`, `gpt-4o-mini` |
-| 通义千问 | `https://dashscope.aliyuncs.com/compatible-mode/v1` | `qwen-plus`, `qwen-max` |
-| Ollama（本地） | `http://localhost:11434` | `llama3`, `qwen2` |
+| Qwen (Tongyi) | `https://dashscope.aliyuncs.com/compatible-mode/v1` | `qwen-plus`, `qwen-max` |
+| Ollama (local) | `http://localhost:11434` | `llama3`, `qwen2` |
 
-## 技术栈
+## Tech Stack
 
-- HTML5 / CSS3 / JavaScript
-- [Prism.js](https://prismjs.com/) v1.29.0（内容代码高亮）
-- [CodeMirror 5](https://codemirror.net/)（代码编辑器）
-- Node.js 内置 `http` 模块（零依赖本地服务器）
-- SSE（Server-Sent Events）流式输出
+- HTML5 / CSS3 / Vanilla JavaScript (zero dependencies client-side)
+- [Prism.js](https://prismjs.com/) v1.29.0 — content code highlighting
+- [CodeMirror 5](https://codemirror.net/) — interactive code editor
+- Node.js built-in `http` module — zero-dependency local server
+- SSE (Server-Sent Events) — streaming AI responses
 
-## 更新日志
+## What's New
 
-### v2.2（2026-06-03）
+### v2.2 (2026-06-03)
 
-- 🌐 **英文全文翻译**：52 个章节完整翻译 + UI 中英文切换
-- 📝 **内容质量审查**：4 位审查 agent 修复 22 处事实性错误
-- 🎨 **排版优化**：间距增大 15-30%，侧边栏收起时内容自动填充宽度
-- 🐛 修复：语言切换后章节不刷新、英文正文不显示、模板字面量转义错误
+- 🌐 **Full English translation** — all 52 chapters + bilingual UI
+- 📝 **Content audit** — 22 factual errors fixed across all modules
+- 🎨 **Layout improvements** — 15-30% more spacing, auto-expanding content on sidebar collapse
+- 🐛 Bug fixes: language-switch chapter refresh, content-key mapping, template literal escaping
 
-> 📋 [查看完整版本历史 →](versions/CHANGELOG.md)
+> 📋 [Full changelog →](versions/CHANGELOG.md)
+
+## Feedback
+
+Found a bug or have a suggestion? [Open an issue →](https://github.com/Chhhhhhhhhhhhhhh/cyberedu/issues/new/choose)
 
 ## License
 
