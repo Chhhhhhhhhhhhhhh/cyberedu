@@ -287,10 +287,10 @@ input,textarea{font-family:var(--font-mono)}
 /* ===== SIDEBAR ===== */
 #sidebar{
   width:var(--sidebar-w);flex-shrink:0;position:fixed;
-  top:var(--nav-h);bottom:0;left:0;overflow-y:auto;z-index:100;
+  top:var(--nav-h);bottom:0;left:0;overflow-y:scroll;z-index:100;
   background:rgba(6,6,9,0.7);backdrop-filter:blur(16px);
   border-right:1px solid var(--border-subtle);padding:12px 0;
-  transition:transform var(--transition);
+  transition:transform var(--transition);overflow-y:scroll;
 }
 #sidebar.hidden{transform:translateX(-100%)}
 #sidebar.hidden #sidebar-toggle{display:none}
