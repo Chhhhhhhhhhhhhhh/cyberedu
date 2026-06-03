@@ -2,19 +2,46 @@
 // ============================================================
 // STATE & PROGRESS
 // ============================================================
-let userProgress = JSON.parse(localStorage.getItem('cyberedu_v2_progress')) || {
-  completedSections: [],
-  ctfSolved: [],
-  moduleProgress: {},
-  timeline: [],
-  streak: 1,
-  lastVisit: new Date().toISOString().split('T')[0]
-};
+let userProgress = null;
+const PROGRESS_KEY = 'cyberedu_v2_progress';
+
+function defaultProgress() {
+  return {
+    completedSections: [],
+    ctfSolved: [],
+    moduleProgress: {},
+    timeline: [],
+    streak: 1,
+    lastVisit: new Date().toISOString().split('T')[0]
+  };
+}
+
+function initProgress() {
+  const local = JSON.parse(localStorage.getItem(PROGRESS_KEY));
+  fetch('/api/progress').then(r => r.json()).then(server => {
+    if (server && server.completedSections) {
+      userProgress = server;
+    } else if (local) {
+      userProgress = local;
+    } else {
+      userProgress = defaultProgress();
+    }
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify(userProgress));
+    recalcModuleProgress();
+    updateStatusBar();
+    updateSidebar();
+  }).catch(() => {
+    userProgress = local || defaultProgress();
+    recalcModuleProgress();
+  });
+}
+initProgress();
 
 function saveProgress() {
   userProgress.moduleProgress = {};
   recalcModuleProgress();
-  localStorage.setItem('cyberedu_v2_progress', JSON.stringify(userProgress));
+  localStorage.setItem(PROGRESS_KEY, JSON.stringify(userProgress));
+  fetch('/api/progress', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(userProgress) }).catch(() => {});
 }
 function getSectionDone(id) { return userProgress.completedSections.includes(id); }
 function setSectionDone(id) {
@@ -25,15 +52,27 @@ function setSectionDone(id) {
       userProgress.streak++;
       userProgress.lastVisit = today;
     }
-    userProgress.timeline.unshift({ date: today, text: '完成: ' + (getSecTitle(id) || id) });
+    userProgress.timeline.unshift({ date: today, text: t('timeline.completed') + (getSecTitle(id) || id) });
     userProgress.timeline = userProgress.timeline.slice(0, 50);
     recalcModuleProgress();
     saveProgress();
   }
 }
 function getSecTitle(id) {
-  for (const m of MODULES) for (const c of m.chapters) for (const s of c.sections) if (s.id === id) return s.title;
+  for (const m of MODULES) for (const c of m.chapters) for (const s of c.sections) if (s.id === id) return currentLang === 'en' && s.titleEn ? s.titleEn : s.title;
   return null;
+}
+function getModField(m, field) {
+  const enField = field + 'En';
+  return currentLang === 'en' && m[enField] ? m[enField] : m[field];
+}
+function getChapterField(c, field) {
+  const enField = field + 'En';
+  return currentLang === 'en' && c[enField] ? c[enField] : c[field];
+}
+function getSectionField(s, field) {
+  const enField = field + 'En';
+  return currentLang === 'en' && s[enField] ? s[enField] : s[field];
 }
 function recalcModuleProgress() {
   for (const m of MODULES) {
@@ -60,7 +99,7 @@ function navigate(view, moduleId, sectionId) {
       sidebar.classList.remove('hidden'); main.classList.remove('no-sidebar');
       const collapsed = sidebar.classList.contains('collapsed');
       document.getElementById('sidebar-toggle').textContent = collapsed ? '»' : '«';
-      document.getElementById('sidebar-toggle').title = collapsed ? '展开侧边栏' : '收起侧边栏';
+      document.getElementById('sidebar-toggle').title = collapsed ? t('hub.sidebarExpand') : t('hub.sidebarToggle');
     }
 
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -474,7 +513,7 @@ function collapseGlitch() {
       sidebar.classList.remove('glitching');
       sidebar.classList.add('collapsed');
       toggle.textContent = '»';
-      toggle.title = '展开侧边栏';
+      toggle.title = t('hub.sidebarExpand');
       localStorage.setItem('sidebar_collapsed', '1');
     }
   }
@@ -633,10 +672,10 @@ function renderHome() {
     const stars = '★'.repeat(diff) + '☆'.repeat(5-diff);
     return `<div class="module-card reveal" onclick="loadModule('${m.id}')">
       <div class="module-card-icon">${m.icon}</div>
-      <h3>${m.title}</h3>
-      <p>${m.desc}</p>
+      <h3>${getModField(m,'title')}</h3>
+      <p>${getModField(m,'desc')}</p>
       <div class="module-card-meta">
-        <span class="badge">${m.chapters.length} 章</span>
+        <span class="badge">${m.chapters.length} ${t('ctf.chapters')}</span>
         <span class="badge cyan">${stars}</span>
       </div>
       <div class="card-prog-mini"><div class="card-prog-mini-fill" style="width:${prog}%"></div></div>
@@ -649,20 +688,20 @@ function renderHome() {
 
 function renderLearningPath() {
   const stages = [
-    { label: 'STAGE 1 — 基础夯实', color: '#00ff41', items: [
-      { icon: '⌨', title: '编程基础', desc: 'Python/C/Shell — 所有安全技能的地基', id: 'programming' },
-      { icon: '🌐', title: '计算机网络', desc: 'TCP/IP、HTTP、DNS — 理解网络通信原理', id: 'network' }
+    { label: t('path.stage1'), color: '#00ff41', items: [
+      { icon: '⌨', title: getModField(MODULES[0],'title'), desc: currentLang==='en'?'Python/C/Shell — foundation for all security skills':'Python/C/Shell — 所有安全技能的地基', id: 'programming' },
+      { icon: '🌐', title: getModField(MODULES[2],'title'), desc: currentLang==='en'?'TCP/IP, HTTP, DNS — understand network communication':'TCP/IP、HTTP、DNS — 理解网络通信原理', id: 'network' }
     ]},
-    { label: 'STAGE 2 — 安全原理', color: '#00e5ff', items: [
-      { icon: '🔐', title: '密码学', desc: '古典到现代密码体系 — 理论基础', id: 'cryptography' },
-      { icon: '🕸', title: 'Web 安全', desc: 'OWASP Top 10 — 最常见的安全漏洞', id: 'websec' }
+    { label: t('path.stage2'), color: '#00e5ff', items: [
+      { icon: '🔐', title: getModField(MODULES[1],'title'), desc: currentLang==='en'?'Classical to modern crypto — theoretical foundation':'古典到现代密码体系 — 理论基础', id: 'cryptography' },
+      { icon: '🕸', title: getModField(MODULES[3],'title'), desc: currentLang==='en'?'OWASP Top 10 — most common vulnerabilities':'OWASP Top 10 — 最常见的安全漏洞', id: 'websec' }
     ]},
-    { label: 'STAGE 3 — 实战进阶', color: '#ffd54f', items: [
-      { icon: '☠', title: '恶意软件分析', desc: '静态/动态分析 + YARA 规则', id: 'malware' },
-      { icon: '🎯', title: '渗透测试', desc: '信息收集→漏洞利用→提权→后渗透', id: 'pentest' }
+    { label: t('path.stage3'), color: '#ffd54f', items: [
+      { icon: '☠', title: getModField(MODULES[5],'title'), desc: currentLang==='en'?'Static/dynamic analysis + YARA rules':'静态/动态分析 + YARA 规则', id: 'malware' },
+      { icon: '🎯', title: getModField(MODULES[4],'title'), desc: currentLang==='en'?'Recon → Exploitation → Privilege Escalation':'信息收集→漏洞利用→提权→后渗透', id: 'pentest' }
     ]},
-    { label: 'STAGE 4 — 综合对抗', color: '#ff4466', items: [
-      { icon: '🚩', title: 'CTF 实战', desc: 'Crypto/Web/PWN/Reverse/Forensics', id: 'ctf-guide' }
+    { label: t('path.stage4'), color: '#ff4466', items: [
+      { icon: '🚩', title: getModField(MODULES[6],'title'), desc: 'Crypto/Web/PWN/Reverse/Forensics', id: 'ctf-guide' }
     ]}
   ];
   document.getElementById('learning-path').innerHTML = stages.map((stage, si) => {
@@ -695,12 +734,14 @@ function updateSidebar() {
 
   // 练习模式：显示题目列表侧边栏
   if (currentView === 'practice') {
-    let html = '<div class="sidebar-section"><div class="sidebar-practice-header">📝 练习题目</div>';
+    let html = '<div class="sidebar-section"><div class="sidebar-practice-header">' + t('sidebar.practice') + '</div>';
     PRACTICES.forEach((p, i) => {
       const stars = '★'.repeat(p.difficulty) + '☆'.repeat(5 - p.difficulty);
+      const cat = currentLang==='en' && p.categoryEn ? p.categoryEn : p.category;
+      const title = currentLang==='en' && p.titleEn ? p.titleEn : p.title;
       html += `<button class="sidebar-chapter-btn ${i === currentPracticeIdx ? 'active' : ''}" onclick="switchPractice(${i})">
-        <span class="sidebar-prac-num">${i + 1}.</span> ${p.title}
-        <span class="sidebar-prac-meta">${p.category} · ${stars}</span>
+        <span class="sidebar-prac-num">${i + 1}.</span> ${title}
+        <span class="sidebar-prac-meta">${cat} · ${stars}</span>
       </button>`;
     });
     html += '</div>';
@@ -713,7 +754,7 @@ function updateSidebar() {
     const isActive = currentModuleId === m.id;
     html += `<div class="sidebar-section">
       <button class="sidebar-module-btn ${isActive?'active':''}" onclick="loadModule('${m.id}')">
-        <span class="sidebar-module-icon">${m.icon}</span>${m.title}
+        <span class="sidebar-module-icon">${m.icon}</span>${getModField(m,'title')}
       </button>
       <div class="sidebar-chapters ${isActive?'open':''}">
         <div class="sidebar-progress"><div class="sidebar-progress-fill" style="width:${prog}%"></div></div>
@@ -721,8 +762,9 @@ function updateSidebar() {
     for (const c of m.chapters) {
       for (const s of c.sections) {
         const done = getSectionDone(s.id);
+        const sTitle = getSectionField(s,'title');
         html += `<button class="sidebar-chapter-btn ${s.id===currentSectionId?'active':''} ${done?'done':''}"
-          onclick="loadSection('${m.id}','${s.id}')">${s.title}${done?'<span class="sidebar-chap-done">✓</span>':''}</button>`;
+          onclick="loadSection('${m.id}','${s.id}')">${sTitle}${done?'<span class="sidebar-chap-done">✓</span>':''}</button>`;
       }
     }
     html += '</div></div>';
@@ -758,8 +800,8 @@ function loadSection(moduleId, sectionId) {
   document.getElementById('sidebar').classList.remove('hidden');
   document.getElementById('main-content').classList.remove('no-sidebar');
 
-  document.getElementById('hub-breadcrumb').innerHTML = `学习中心 / <span>${m.title}</span>`;
-  document.getElementById('hub-title').textContent = sec.title;
+  document.getElementById('hub-breadcrumb').innerHTML = `${t('hub.breadcrumb')} / <span>${getModField(m,'title')}</span>`;
+  document.getElementById('hub-title').textContent = getSectionField(sec,'title');
 
   const allSections = MODULES.flatMap(mod => mod.chapters.flatMap(c => c.sections));
   const idx = allSections.findIndex(s => s.id === sectionId);
@@ -769,17 +811,20 @@ function loadSection(moduleId, sectionId) {
   if (nextSec) nextMod = MODULES.find(mod => mod.chapters.some(c => c.sections.some(s => s.id === nextSec.id)));
 
   const done = getSectionDone(sectionId);
-  const contentWithGlossary = injectGlossary(sec.content);
+  const contentSource = (typeof currentLang !== 'undefined' && currentLang === 'en' && sec.contentKey && typeof SECTION_CONTENT_EN !== 'undefined' && SECTION_CONTENT_EN[sec.contentKey])
+    ? SECTION_CONTENT_EN[sec.contentKey]
+    : sec.content;
+  const contentWithGlossary = injectGlossary(contentSource);
 
   document.getElementById('article-body').innerHTML = `
     ${contentWithGlossary}
     <div class="separator"></div>
     <button class="complete-btn ${done?'done':''}" onclick="markDone('${sectionId}',this)">
-      ${done?'✓ COMPLETED':'○ MARK AS COMPLETED'}
+      ${done ? t('section.completed') : t('section.markDone')}
     </button>
     <div class="section-nav">
-      ${prevSec ? `<button class="nav-btn" onclick="loadSection('${prevMod?.id}','${prevSec.id}')">← PREV: ${prevSec.title}</button>` : ''}
-      ${nextSec ? `<button class="nav-btn next-btn" onclick="loadSection('${nextMod?.id}','${nextSec.id}')">NEXT: ${nextSec.title} →</button>` : ''}
+      ${prevSec ? `<button class="nav-btn" onclick="loadSection('${prevMod?.id}','${prevSec.id}')">${t('section.prev')}${getSectionField(prevSec,'title')}</button>` : ''}
+      ${nextSec ? `<button class="nav-btn next-btn" onclick="loadSection('${nextMod?.id}','${nextSec.id}')">${t('section.next')}${getSectionField(nextSec,'title')}</button>` : ''}
     </div>`;
 
   setTimeout(() => { if (window.Prism) Prism.highlightAll(); bindGlossaryEvents(); }, 80);
@@ -790,7 +835,7 @@ function loadSection(moduleId, sectionId) {
 
 function markDone(sectionId, btn) {
   setSectionDone(sectionId);
-  btn.textContent = '✓ COMPLETED';
+  btn.textContent = t('section.completed');
   btn.classList.add('done');
   updateStatusBar();
   updateSidebar();
@@ -830,7 +875,7 @@ function renderCTF() {
     const solved = userProgress.ctfSolved.includes(c.id);
     const stars = Array.from({length:5}, (_,i) => `<span class="${i<c.difficulty?'f':''}">★</span>`).join('');
     return `<div class="ctf-card ${solved?'solved':''}" onclick="openCTF('${c.id}')">
-      <div class="ctf-title">${c.title}</div>
+      <div class="ctf-title">${c.title}${(c.codeable||c.category==='Crypto')?' <span style="font-size:9px;opacity:0.5;margin-left:4px">⌨</span>':''}${(c.simulated||c.category==='Web')?' <span style="font-size:9px;opacity:0.5;margin-left:4px">⌐</span>':''}</div>
       <div class="ctf-meta">
         <span class="badge">${c.category}</span>
         <span class="badge cyan diff-stars">${stars}</span>
@@ -845,35 +890,168 @@ function filterCTF(cat, btn) {
   btn.classList.add('active');
   renderCTF();
 }
+// ── CTF state ──
+let ctfHintLevel = 0;
+let ctfCurrentChallenge = null;
+
 function openCTF(id) {
   currentCTFId = id;
-  const c = CTF_CHALLENGES.find(x => x.id === id);
+  ctfHintLevel = 0;
+  ctfCurrentChallenge = CTF_CHALLENGES.find(x => x.id === id);
+  const c = ctfCurrentChallenge;
   if (!c) return;
+
+  // Header
   document.getElementById('modal-title').textContent = c.title;
   const stars = Array.from({length:5}, (_,i) => `<span style="color:${i<c.difficulty?'var(--color-green)':'var(--text-muted)'}">★</span>`).join('');
-  document.getElementById('modal-meta').innerHTML = `<span class="badge">${c.category}</span><span>${stars}</span><span class="badge green">${c.points} pts</span>`;
-  document.getElementById('modal-desc').textContent = c.desc;
-  document.getElementById('modal-hint').style.display = 'none';
-  document.getElementById('modal-hint').textContent = c.hints[0] || '';
-  document.getElementById('show-hint-btn').textContent = '? 查看提示';
+  const cTags = currentLang==='en' && c.tagsEn ? c.tagsEn : (c.tags||[]);
+  const tagBadges = cTags.map(t => `<span style="font-size:10px;padding:2px 8px;background:rgba(255,255,255,0.04);border:1px solid var(--border-subtle);border-radius:3px;color:var(--text-muted)">${t}</span>`).join('');
+  document.getElementById('modal-meta').innerHTML = `<span class="badge">${c.category}</span><span>${stars}</span><span class="badge green">${c.points} pts</span>${tagBadges}`;
+
+  // Description
+  document.getElementById('modal-desc').textContent = currentLang==='en' && c.descEn ? c.descEn : c.desc;
+
+  // Hints: progressive
+  const hintsEl = document.getElementById('modal-hints');
+  const hints = c.hints || [];
+  if (hints.length > 0) {
+    hintsEl.innerHTML = `<button class="show-hint-btn" onclick="revealCTFHint()">${t('ctf.showHint').replace('{n}', hints.length)}</button><div id="ctf-hints-list"></div>`;
+  } else {
+    hintsEl.innerHTML = '';
+  }
+
+  // Writeup (hidden until solved)
+  const writeupEl = document.getElementById('modal-writeup');
+  writeupEl.style.display = 'none';
+  const writeupText = currentLang==='en' && c.writeupEn ? c.writeupEn : c.writeup;
+  if (writeupText) {
+    writeupEl.innerHTML = `<div class="ctf-writeup-title">// WRITEUP - ${c.title}</div><div style="white-space:pre-wrap">${esc(writeupText)}</div>`;
+    if (userProgress.ctfSolved.includes(c.id)) writeupEl.style.display = 'block';
+  } else {
+    writeupEl.innerHTML = '';
+  }
+
+  // Tabs visibility
+  const hasCode = c.codeable || c.category === 'Crypto';
+  const hasTerm = c.simulated || c.category === 'Web';
+  document.getElementById('ctf-tab-code').style.display = hasCode ? '' : 'none';
+  document.getElementById('ctf-tab-terminal').style.display = hasTerm ? '' : 'none';
+
+  // Reset to desc tab
+  switchCTFTab('desc');
+
+  // Code editor init
+  if (hasCode) {
+    const editor = document.getElementById('ctf-code-editor');
+    editor.value = c.starterCode || '# 在这里写你的 Python 代码\nprint("Hello CTF")\n';
+    document.getElementById('ctf-code-output').textContent = '';
+  }
+
+  // Terminal init
+  if (hasTerm) {
+    const term = document.getElementById('ctf-terminal');
+    term.innerHTML = c.termWelcome || `<span style="color:#666">${c.title} - ${currentLang==='en'?'Simulated Environment':'模拟环境'}</span>\n<span style="color:#666">${currentLang==='en'?'Enter payload to attack the target.':'输入 payload 来攻击目标。可用的靶机在模拟环境中运行。'}</span>\n\n`;
+  }
+
+  // Flag input
   document.getElementById('flag-input').value = '';
   document.getElementById('flag-feedback').textContent = '';
   document.getElementById('ctf-modal').classList.add('open');
 }
-function closeCTFModal() { document.getElementById('ctf-modal').classList.remove('open'); }
-function toggleHint() {
-  const h = document.getElementById('modal-hint');
-  if (h.style.display === 'block') { h.style.display = 'none'; document.getElementById('show-hint-btn').textContent = '? 查看提示'; }
-  else { h.style.display = 'block'; document.getElementById('show-hint-btn').textContent = '? 隐藏提示'; }
+
+function revealCTFHint() {
+  const hints = currentLang==='en' && ctfCurrentChallenge?.hintsEn ? ctfCurrentChallenge.hintsEn : (ctfCurrentChallenge?.hints || []);
+  if (ctfHintLevel < hints.length) {
+    ctfHintLevel++;
+    const list = document.getElementById('ctf-hints-list');
+    const div = document.createElement('div');
+    div.className = 'ctf-hint-item';
+    div.setAttribute('data-hint', ctfHintLevel);
+    div.textContent = hints[ctfHintLevel - 1];
+    list.appendChild(div);
+    const btn = document.querySelector('#modal-hints .show-hint-btn');
+    if (ctfHintLevel >= hints.length) {
+      btn.textContent = t('ctf.allHintsShown');
+      btn.disabled = true;
+      btn.style.opacity = '0.5';
+    } else {
+      btn.textContent = t('ctf.nextHint').replace('{n}', ctfHintLevel).replace('{t}', hints.length);
+    }
+  }
 }
+
+function switchCTFTab(tab) {
+  document.querySelectorAll('.ctf-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  document.getElementById('ctf-panel-desc').style.display = tab === 'desc' ? '' : 'none';
+  document.getElementById('ctf-panel-code').style.display = tab === 'code' ? '' : 'none';
+  document.getElementById('ctf-panel-terminal').style.display = tab === 'terminal' ? '' : 'none';
+  if (tab === 'terminal') document.getElementById('ctf-term-input').focus();
+}
+
+function runCTFCode() {
+  const code = document.getElementById('ctf-code-editor').value;
+  const output = document.getElementById('ctf-code-output');
+  output.innerHTML = '<span style="color:var(--color-cyan)">' + t('code.ctfCompiling') + '</span>';
+  fetch('/api/run', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code, lang: ctfCurrentChallenge?.lang || 'Python' })
+  }).then(r => r.json()).then(data => {
+    if (data.error) {
+      output.innerHTML = `<span style="color:var(--color-red)">// Error:</span>\n${esc(data.error)}`;
+    } else {
+      let text = '';
+      if (data.stdout) text += esc(data.stdout);
+      if (data.stderr) text += (text ? '\n' : '') + `<span style="color:var(--color-yellow)">// stderr:</span>\n${esc(data.stderr)}`;
+      output.innerHTML = text || '<span style="color:var(--text-muted)">' + t('code.noOutput') + '</span>';
+    }
+  }).catch(() => { output.textContent = t('code.serverError'); });
+}
+
+function resetCTFCode() {
+  if (ctfCurrentChallenge) {
+    document.getElementById('ctf-code-editor').value = ctfCurrentChallenge.starterCode || (currentLang==='en'?'# Write your Python code here\n':'# 在这里写你的 Python 代码\n');
+    document.getElementById('ctf-code-output').textContent = '';
+  }
+}
+
+async function sendCTFTerminal() {
+  const input = document.getElementById('ctf-term-input');
+  const term = document.getElementById('ctf-terminal');
+  const cmd = input.value.trim();
+  if (!cmd) return;
+  input.value = '';
+
+  term.innerHTML += `<span style="color:var(--color-cyan)">$ ${esc(cmd)}</span>\n`;
+
+  try {
+    const resp = await fetch('/api/ctf-sim', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ challengeId: currentCTFId, input: cmd })
+    });
+    const data = await resp.json();
+    if (data.output) {
+      term.innerHTML += data.output + '\n';
+    } else {
+      term.innerHTML += `<span style="color:var(--color-red)">${esc(data.error || 'Unknown error')}</span>\n`;
+    }
+  } catch {
+    term.innerHTML += '<span style="color:var(--color-red)">' + t('ctf.simError') + '</span>\n';
+  }
+  term.scrollTop = term.scrollHeight;
+}
+
+function closeCTFModal() { document.getElementById('ctf-modal').classList.remove('open'); }
+
 function submitFlag() {
   const input = document.getElementById('flag-input').value.trim();
   const fb = document.getElementById('flag-feedback');
-  if (!input) { fb.textContent = '> 请输入 flag'; fb.style.color = 'var(--color-red)'; return; }
+  if (!input) { fb.textContent = t('ctf.enterFlag'); fb.style.color = 'var(--color-red)'; return; }
   const c = CTF_CHALLENGES.find(x => x.id === currentCTFId);
   if (!c) return;
   if (input.toLowerCase().replace(/\s/g,'') === c.flag.toLowerCase().replace(/\s/g,'')) {
-    fb.textContent = '✓ CORRECT! 恭喜你解出了这道题！';
+    fb.textContent = t('ctf.correct');
     fb.style.color = 'var(--color-green)';
     if (!userProgress.ctfSolved.includes(c.id)) {
       userProgress.ctfSolved.push(c.id);
@@ -881,11 +1059,16 @@ function submitFlag() {
       userProgress.timeline = userProgress.timeline.slice(0, 50);
       saveProgress();
     }
+    // Show writeup if available
+    if (c.writeup) {
+      document.getElementById('modal-writeup').style.display = 'block';
+      switchCTFTab('desc');
+    }
     spawnConfetti();
     renderCTF();
     updateStatusBar();
   } else {
-    fb.textContent = '✗ WRONG! 再想想...';
+    fb.textContent = t('ctf.wrong');
     fb.style.color = 'var(--color-red)';
     document.getElementById('flag-input').style.animation = 'none';
     document.getElementById('flag-input').offsetHeight;
@@ -929,24 +1112,28 @@ function renderPractice(idx) {
   currentPracticeIdx = idx;
   const p = PRACTICES[idx];
   if (!p) return;
-  document.getElementById('practice-title').textContent = p.title;
-  document.getElementById('practice-counter').textContent = `第 ${idx + 1}/${PRACTICES.length} 题`;
-  document.getElementById('practice-counter-btm').textContent = `第 ${idx + 1}/${PRACTICES.length} 题`;
+  const pTitle = currentLang==='en' && p.titleEn ? p.titleEn : p.title;
+  const pCat = currentLang==='en' && p.categoryEn ? p.categoryEn : p.category;
+  const pQ = currentLang==='en' && p.questionEn ? p.questionEn : p.question;
+  document.getElementById('practice-title').textContent = pTitle;
+  document.getElementById('practice-counter').textContent = t('practice.counter').replace('{n}', idx + 1).replace('{t}', PRACTICES.length);
+  document.getElementById('practice-counter-btm').textContent = t('practice.counter').replace('{n}', idx + 1).replace('{t}', PRACTICES.length);
   // 控制翻题按钮可见性（仅顶部）
   const isFirst = idx === 0, isLast = idx === PRACTICES.length - 1;
   document.getElementById('btn-prev-top').style.display = isFirst ? 'none' : '';
   document.getElementById('btn-next-top').style.display = isLast ? 'none' : '';
-  document.getElementById('practice-meta').innerHTML = `<span class="badge">${p.category}</span><span class="badge cyan">难度: ${'★'.repeat(p.difficulty)}${'☆'.repeat(5-p.difficulty)}</span>`;
-  document.getElementById('practice-question').textContent = p.question;
+  document.getElementById('practice-meta').innerHTML = `<span class="badge">${pCat}</span><span class="badge cyan">${t('practice.difficulty')}: ${'★'.repeat(p.difficulty)}${'☆'.repeat(5-p.difficulty)}</span>`;
+  document.getElementById('practice-question').textContent = pQ;
+  const starterCode = currentLang==='en' && p.starterEn ? p.starterEn : p.starter;
   if (cmEditor) {
     cmEditor.setOption('mode', CM_MODE_MAP[p.lang] || 'python');
-    cmEditor.setValue(p.starter);
+    cmEditor.setValue(starterCode);
     setTimeout(() => cmEditor.refresh(), 50);
   } else {
-    document.getElementById('code-editor').value = p.starter;
+    document.getElementById('code-editor').value = starterCode;
   }
   document.getElementById('editor-lang').textContent = p.lang;
-  document.getElementById('code-output').textContent = '点击 RUN 查看结果...';
+  document.getElementById('code-output').textContent = t('practice.clickRun');
   document.getElementById('practice-hint-box').style.display = 'none';
   updateSidebar();
 }
@@ -954,18 +1141,51 @@ function runCode() {
   const output = document.getElementById('code-output');
   const p = PRACTICES[currentPracticeIdx];
   if (!p) return;
-  const tests = PRACTICE_TESTS[p.id];
-  output.innerHTML = '<div style="margin-bottom:8px;color:var(--color-cyan);font-weight:600">// 自测验证模式</div>' +
-    '<div style="color:var(--text-dim);margin-bottom:10px;font-size:12px">在本地 ' + (p.lang||'Python') + ' 环境中运行你的代码，<br>将输出与下方预期结果对比：</div>' +
-    '<div style="color:var(--color-green);margin-bottom:4px;font-size:12px">// 预期输出：</div>' +
-    '<div style="color:var(--text-main);padding:8px 12px;background:rgba(0,255,65,0.05);border:1px solid var(--border-subtle);font-size:12px;margin-bottom:12px;white-space:pre-wrap">' + (tests?.expected || p.expected || '运行代码后对比输出') + '</div>' +
-    (tests?.cases?.length ? '<div style="color:var(--color-yellow);margin-bottom:4px;font-size:12px">// 测试用例：</div>' +
-      tests.cases.map((tc, i) => '<div style="padding:4px 0;font-size:12px;color:var(--text-dim)"><span style="color:var(--color-cyan)">Case ' + (i+1) + ':</span> 输入 <code style="color:var(--color-green)">' + (tc.input||'') + '</code> → ' + (tc.output||tc.hint||'') + '</div>').join('') : '');
+  const code = cmEditor ? cmEditor.getValue() : document.getElementById('code-editor').value;
+  const lang = p.lang || 'Python';
+  output.innerHTML = '<div style="color:var(--color-cyan);font-size:12px">' + t('code.compiling') + '<span class="spin">...</span></div>';
+
+  fetch('/api/run', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code, lang })
+  }).then(r => r.json()).then(data => {
+    if (data.error) {
+      output.innerHTML = '<div style="color:var(--color-red);font-size:12px">' + t('code.runError') + '</div><pre style="color:var(--color-red);font-size:12px;white-space:pre-wrap;margin:4px 0;font-family:var(--font-mono)">' + esc(data.error) + '</pre>';
+      const tests = PRACTICE_TESTS[p.id];
+      if (tests?.expected) output.innerHTML += '<div style="color:var(--color-yellow);font-size:12px;margin-top:8px">' + t('code.expectedRef') + '</div><pre style="font-size:12px;white-space:pre-wrap;margin:4px 0;color:var(--text-dim);font-family:var(--font-mono)">' + esc(tests.expected) + '</pre>';
+    } else {
+      let html = '';
+      if (data.stdout) html += '<pre style="color:var(--color-green);font-size:12px;white-space:pre-wrap;margin:4px 0;font-family:var(--font-mono)">' + esc(data.stdout) + '</pre>';
+      if (data.stderr) html += '<div style="color:var(--color-yellow);font-size:11px;margin-top:2px">// stderr:</div><pre style="color:var(--text-dim);font-size:11px;white-space:pre-wrap;margin:4px 0;font-family:var(--font-mono)">' + esc(data.stderr) + '</pre>';
+      const tests = PRACTICE_TESTS[p.id];
+      if (tests?.expected && data.stdout) {
+        const trimmed = data.stdout.trim();
+        const expected = tests.expected.trim();
+        if (trimmed === expected || tests.cases?.some(c => trimmed === c.output)) {
+          html += '<div style="color:var(--color-green);font-size:12px;margin-top:8px;font-weight:500">' + t('code.matchOk') + '</div>';
+        } else {
+          html += '<div style="color:var(--color-yellow);font-size:12px;margin-top:8px">' + t('code.expectedRef') + '</div><pre style="font-size:12px;white-space:pre-wrap;margin:4px 0;color:var(--text-dim);font-family:var(--font-mono)">' + esc(expected) + '</pre>';
+        }
+      }
+      output.innerHTML = html || '<div style="color:var(--text-dim);font-size:12px">' + t('code.noOutput') + '</div>';
+    }
+  }).catch(() => {
+    const tests = PRACTICE_TESTS[p.id];
+    output.innerHTML = '<div style="color:var(--color-cyan);font-weight:600;font-size:12px">' + t('code.selfTest') + '</div>' +
+      '<div style="color:var(--text-dim);font-size:12px;margin-bottom:8px">' + t('code.selfTestDesc').replace('{lang}', lang) + '</div>' +
+      '<div style="color:var(--color-green);font-size:12px;margin-bottom:4px">' + t('code.expectedOutput') + '</div>' +
+      '<pre style="color:var(--text-main);padding:8px;background:rgba(0,255,65,0.05);border:1px solid var(--border-subtle);font-size:12px;margin-bottom:12px;white-space:pre-wrap;font-family:var(--font-mono)">' + esc(tests?.expected || p.expected || t('code.runCodeCompare')) + '</pre>' +
+      (tests?.cases?.length ? '<div style="color:var(--color-yellow);font-size:12px;margin-bottom:4px">' + t('code.testCases') + '</div>' +
+        tests.cases.map((tc, i) => '<div style="padding:4px 0;font-size:12px;color:var(--text-dim)"><span style="color:var(--color-cyan)">' + t('code.case').replace('{n}', i+1) + ':</span> ' + t('code.input') + ' <code style="color:var(--color-green)">' + esc(tc.input||'') + '</code> → ' + esc(tc.output||tc.hint||'') + '</div>').join('') : '');
+  });
 }
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 function showPracticeHint() {
   const box = document.getElementById('practice-hint-box');
   const p = PRACTICES[currentPracticeIdx];
-  box.innerHTML = '<strong>提示：</strong>' + (p?.hint || '暂无提示');
+  const pHint = currentLang==='en' && p?.hintEn ? p.hintEn : (p?.hint || t('practice.noHint'));
+  box.innerHTML = '<strong>' + t('practice.hintLabel') + '</strong>' + pHint;
   box.style.display = 'block';
 }
 function switchPractice(idx) { renderPractice(idx); }
@@ -983,14 +1203,14 @@ function renderProgress() {
   const pct = total ? Math.round(done / total * 100) : 0;
 
   document.getElementById('progress-stats').innerHTML = `
-    <div class="stat-card"><div class="stat-card-label">已完成章节</div><div class="stat-card-value" style="color:var(--color-green)">${done}</div><div class="stat-card-sub">共 ${total} 节</div></div>
-    <div class="stat-card"><div class="stat-card-label">整体进度</div><div class="stat-card-value" style="color:var(--color-cyan)">${pct}%</div><div class="stat-card-sub">综合完成率</div></div>
-    <div class="stat-card"><div class="stat-card-label">CTF 已解题</div><div class="stat-card-value" style="color:var(--color-green)">${userProgress.ctfSolved.length}</div><div class="stat-card-sub">共 ${CTF_CHALLENGES.length} 题</div></div>
-    <div class="stat-card"><div class="stat-card-label">连续学习</div><div class="stat-card-value" style="color:var(--color-yellow)">${userProgress.streak}</div><div class="stat-card-sub">天</div></div>`;
+    <div class="stat-card"><div class="stat-card-label">${t('progress.completed')}</div><div class="stat-card-value" style="color:var(--color-green)">${done}</div><div class="stat-card-sub">${t('progress.total').replace('{n}', total)}</div></div>
+    <div class="stat-card"><div class="stat-card-label">${t('progress.overall')}</div><div class="stat-card-value" style="color:var(--color-cyan)">${pct}%</div><div class="stat-card-sub">${t('progress.overallSub')}</div></div>
+    <div class="stat-card"><div class="stat-card-label">${t('progress.ctfSolved')}</div><div class="stat-card-value" style="color:var(--color-green)">${userProgress.ctfSolved.length}</div><div class="stat-card-sub">${t('progress.ctfTotal').replace('{n}', CTF_CHALLENGES.length)}</div></div>
+    <div class="stat-card"><div class="stat-card-label">${t('progress.streak')}</div><div class="stat-card-value" style="color:var(--color-yellow)">${userProgress.streak}</div><div class="stat-card-sub">${t('progress.days')}</div></div>`;
 
   document.getElementById('module-prog-list').innerHTML = MODULES.map(m => {
     const p = userProgress.moduleProgress[m.id] || 0;
-    return `<div><div class="prog-item-label"><span>${m.icon} ${m.title}</span><span>${p}%</span></div>
+    return `<div><div class="prog-item-label"><span>${m.icon} ${getModField(m,'title')}</span><span>${p}%</span></div>
     <div class="prog-bar"><div class="prog-fill" style="width:${p}%"></div></div></div>`;
   }).join('');
 
@@ -999,9 +1219,9 @@ function renderProgress() {
   radarChart = new Chart(canvas, {
     type: 'radar',
     data: {
-      labels: MODULES.map(m => m.title),
+      labels: MODULES.map(m => getModField(m,'title')),
       datasets: [{
-        label: '掌握度',
+        label: t('progress.proficiency'),
         data: MODULES.map(m => userProgress.moduleProgress[m.id] || 0),
         backgroundColor: 'rgba(0,255,65,0.08)',
         borderColor: 'rgba(0,255,65,0.6)',
@@ -1019,7 +1239,7 @@ function renderProgress() {
 
   const tl = document.getElementById('timeline');
   if (!userProgress.timeline.length) {
-    tl.innerHTML = '<div class="empty-state">还没有学习记录。开始学习吧！</div>';
+    tl.innerHTML = '<div class="empty-state">' + t('progress.emptyTimeline') + '</div>';
   } else {
     tl.innerHTML = userProgress.timeline.slice(0, 12).map(item => `
       <div class="timeline-item"><span class="timeline-date">${item.date}</span><div class="timeline-dot"></div><span class="timeline-text">${item.text}</span></div>`).join('');
@@ -1028,8 +1248,8 @@ function renderProgress() {
 
 function exportProgress() {
   try {
-    const data = localStorage.getItem('cyberedu_v2_progress');
-    if (!data) { alert('暂无进度数据可导出'); return; }
+    const data = localStorage.getItem(PROGRESS_KEY);
+    if (!data) { alert(t('progress.exportConfirm')); return; }
     const blob = new Blob([data], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -1037,7 +1257,7 @@ function exportProgress() {
     a.download = 'cyberedu_progress_' + new Date().toISOString().slice(0,10) + '.json';
     a.click();
     URL.revokeObjectURL(url);
-  } catch(e) { alert('导出失败: ' + e.message); }
+  } catch(e) { alert(t('progress.exportError') + e.message); }
 }
 
 function importProgress() {
@@ -1052,17 +1272,17 @@ function importProgress() {
       try {
         const data = JSON.parse(ev.target.result);
         if (!data.completedSections && !data.moduleProgress && !data.ctfSolved) {
-          alert('文件格式不正确，不是有效的进度数据'); return;
+          alert(t('progress.importError')); return;
         }
-        if (!confirm('导入将覆盖当前进度，确定继续？')) return;
-        localStorage.setItem('cyberedu_v2_progress', JSON.stringify(data));
+        if (!confirm(t('progress.importConfirm'))) return;
+        localStorage.setItem(PROGRESS_KEY, JSON.stringify(data));
         userProgress = data;
         recalcModuleProgress();
         renderProgress();
         updateStatusBar();
         updateSidebar();
-        alert('进度导入成功！');
-      } catch(err) { alert('导入失败: ' + err.message); }
+        alert(t('progress.importSuccess'));
+      } catch(err) { alert(t('progress.importFail') + err.message); }
     };
     reader.readAsText(file);
   };
@@ -1084,28 +1304,29 @@ let toolModes = {};
 TOOLS.forEach(t => { if (t.modes) toolModes[t.id] = t.modes[0]; });
 
 function renderTools() {
-  document.getElementById('tools-grid').innerHTML = TOOLS.map(t => {
-    if (t.id === 'caesar') {
+  const _t = t; // preserve global t() translation function
+  document.getElementById('tools-grid').innerHTML = TOOLS.map(tool => {
+    if (tool.id === 'caesar') {
       return `<div class="tool-card" id="tool-caesar">
-        <div class="tool-name">🔄 Caesar / ROT13</div>
-        <div class="tool-desc">凯撒密码加解密，ROT13 是移位 13 的特例</div>
+        <div class="tool-name">${tool.icon} ${_t('tool.caesar')}</div>
+        <div class="tool-desc">${_t('tool.caesar.subtitle')}</div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
           <label style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono)">SHIFT:</label>
           <input type="number" id="caesar-shift" value="13" min="0" max="25" style="width:56px;background:var(--bg-input);border:1px solid var(--border-subtle);color:var(--text-main);font-family:var(--font-mono);padding:4px 8px;font-size:12px;outline:none" oninput="updateCaesar()">
         </div>
-        <textarea class="tool-input" id="caesar-in" placeholder="输入文本..." oninput="updateCaesar()" rows="2"></textarea>
+        <textarea class="tool-input" id="caesar-in" placeholder="${_t('tool.caesarInputPlaceholder')}" oninput="updateCaesar()" rows="2"></textarea>
         <div class="tool-arrow">↓</div>
-        <textarea class="tool-output" id="caesar-out" placeholder="加密结果..." readonly rows="2"></textarea>
+        <textarea class="tool-output" id="caesar-out" placeholder="${_t('tool.caesarOutputPlaceholder')}" readonly rows="2"></textarea>
       </div>`;
     }
-    const tabs = t.modes ? `<div class="tool-tabs">${t.modes.map(m => `<button class="tool-tab ${m===toolModes[t.id]?'active':''}" onclick="setToolMode('${t.id}','${m}',this)">${m}</button>`).join('')}</div>` : '';
-    return `<div class="tool-card" id="tool-${t.id}">
-      <div class="tool-name">${t.icon} ${t.name}</div>
-      <div class="tool-desc">${t.desc}</div>
+    const tabs = tool.modes ? `<div class="tool-tabs">${tool.modes.map(m => `<button class="tool-tab ${m===toolModes[tool.id]?'active':''}" onclick="setToolMode('${tool.id}','${m}',this)">${m}</button>`).join('')}</div>` : '';
+    return `<div class="tool-card" id="tool-${tool.id}">
+      <div class="tool-name">${tool.icon} ${_t('tool.'+tool.id) || tool.name}</div>
+      <div class="tool-desc">${_t('tool.'+tool.id+'.desc') || tool.desc}</div>
       ${tabs}
-      <textarea class="tool-input" id="${t.id}-in" placeholder="输入..." oninput="runTool('${t.id}')" rows="2"></textarea>
+      <textarea class="tool-input" id="${tool.id}-in" placeholder="${_t('tool.inputPlaceholder')}" oninput="runTool('${tool.id}')" rows="2"></textarea>
       <div class="tool-arrow">↓</div>
-      <textarea class="tool-output" id="${t.id}-out" placeholder="结果..." readonly rows="2"></textarea>
+      <textarea class="tool-output" id="${tool.id}-out" placeholder="${_t('tool.outputPlaceholder')}" readonly rows="2"></textarea>
     </div>`;
   }).join('');
   bindHashTool();
@@ -1140,7 +1361,7 @@ function updateCaesar() {
 async function runHashTool(id,input){
   const mode=toolModes[id];const out=document.getElementById(id+'-out');
   try{const buf=await crypto.subtle.digest(mode,new TextEncoder().encode(input));out.value=Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('')}
-  catch(e){out.value='计算失败'}
+  catch(e){out.value=t('tool.fail')}
 }
 function bindHashTool(){
   const inp=document.getElementById('hash-in');
@@ -1150,23 +1371,28 @@ function bindHashTool(){
 // ============================================================
 // SEARCH
 // ============================================================
-const SEARCH_INDEX = [];
-MODULES.forEach(m => {
-  SEARCH_INDEX.push({ type:'模块', title:m.title, sub:m.desc, action:()=>navigate('hub',m.id) });
-  m.chapters.forEach(c => c.sections.forEach(s => {
-    SEARCH_INDEX.push({ type:'章节', title:s.title, sub:m.title+' › '+c.title, action:()=>loadSection(m.id,s.id) });
-  }));
-});
-CTF_CHALLENGES.forEach(c => {
-  SEARCH_INDEX.push({ type:'CTF', title:c.title, sub:c.category+' · '+c.points+' pts', action:()=>{navigate('ctf');setTimeout(()=>openCTF(c.id),200)} });
-});
-TOOLS.forEach(t => {
-  SEARCH_INDEX.push({ type:'工具', title:t.name, sub:t.desc, action:()=>navigate('tools') });
-});
-// Add glossary terms to search
-for (const [term, def] of Object.entries(GLOSSARY)) {
-  SEARCH_INDEX.push({ type:'术语', title:term, sub:def.slice(0,60)+'...', action:()=>{} });
+let SEARCH_INDEX = [];
+
+function buildSearchIndex() {
+  SEARCH_INDEX = [
+    ...MODULES.flatMap(m => [
+      { type: t('search.type.module'), title: getModField(m,'title'), sub: getModField(m,'desc'), action:()=>navigate('hub',m.id) },
+      ...m.chapters.flatMap(c => c.sections.map(s => ({
+        type: t('search.type.chapter'), title: getSectionField(s,'title'), sub: getModField(m,'title')+' › '+getChapterField(c,'title'), action:()=>loadSection(m.id,s.id)
+      })))
+    ]),
+    ...CTF_CHALLENGES.map(c => ({
+      type: 'CTF', title: currentLang==='en'&&c.titleEn?c.titleEn:c.title, sub: c.category+' · '+c.points+' pts', action:()=>{navigate('ctf');setTimeout(()=>openCTF(c.id),200)}
+    })),
+    ...TOOLS.map(tool => ({
+      type: t('search.type.tool'), title: t('tool.'+tool.id) || tool.name, sub: t('tool.'+tool.id+'.desc') || tool.desc, action:()=>navigate('tools')
+    })),
+    ...Object.entries(GLOSSARY).map(([term, def]) => ({
+      type: t('search.type.term'), title: term, sub: def.slice(0,60)+'...', action:()=>{}
+    }))
+  ];
 }
+buildSearchIndex();
 
 function openSearch() {
   document.getElementById('search-overlay').classList.add('open');
@@ -1175,15 +1401,15 @@ function openSearch() {
 function closeSearch() {
   document.getElementById('search-overlay').classList.remove('open');
   document.getElementById('search-input').value='';
-  document.getElementById('search-results').innerHTML='<div class="search-empty">输入关键词开始搜索…</div>';
+  document.getElementById('search-results').innerHTML='<div class="search-empty">' + t('search.empty') + '</div>';
 }
 function closeSearchIfBackdrop(e){if(e.target===document.getElementById('search-overlay'))closeSearch()}
 function doSearch(q) {
   const res=document.getElementById('search-results');
-  if(!q.trim()){res.innerHTML='<div class="search-empty">输入关键词开始搜索…</div>';return}
+  if(!q.trim()){res.innerHTML='<div class="search-empty">' + t('search.empty') + '</div>';return}
   const ql=q.toLowerCase();
   const hits=SEARCH_INDEX.filter(x=>(x.title+x.sub).toLowerCase().includes(ql)).slice(0,12);
-  if(!hits.length){res.innerHTML='<div class="search-empty">没有找到相关内容</div>';return}
+  if(!hits.length){res.innerHTML='<div class="search-empty">' + t('search.noResult') + '</div>';return}
   // Highlight matching keywords in results
   function hl(text){return text.replace(new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi'),'<mark style="background:rgba(0,255,65,0.18);color:var(--color-green);padding:0 2px;border-radius:1px">$1</mark>')}
   res.innerHTML=hits.map((h,i)=>`<div class="search-result-item" onclick="searchGo(${i})">
@@ -1233,7 +1459,7 @@ function updateStatusBar(){
 // ============================================================
 // TYPEWRITER
 // ============================================================
-const TW_LINES=['> Break the surface, own the stack','> 71 chapters. Zero to hero.','> 16 CTF challenges. Real exploits.','> 4-stage learning path. Start now.'];
+const TW_LINES=['> Break the surface, own the stack','> 71 chapters. Zero to hero.','> 28 CTF challenges. Real exploits.','> 4-stage learning path. Start now.'];
 let twIdx=0,twChar=0,twDel=false;
 function tickTypewriter(){
   const el=document.getElementById('typewriter');
@@ -1650,7 +1876,7 @@ function _renderHistoryList() {
   const container = document.getElementById('ai-history-list');
   const list = _histLoad();
   if (!list.length) {
-    container.innerHTML = '<div class="ai-history-empty">暂无历史会话</div>';
+    container.innerHTML = '<div class="ai-history-empty">' + t('ai.noHistory') + '</div>';
     return;
   }
   let html = '';
@@ -1691,7 +1917,7 @@ function newAIChat() {
   aiMessages = [];
   aiCurrentSessionId = null;
   const box = document.getElementById('ai-messages');
-  box.innerHTML = '<div class="ai-msg ai-msg-system">新对话已开始。</div>';
+  box.innerHTML = '<div class="ai-msg ai-msg-system">' + t('ai.newStarted') + '</div>';
   _renderHistoryList();
 }
 
@@ -1715,7 +1941,7 @@ function saveAISettings() {
   const url   = document.getElementById('ai-api-url').value.trim();
   const key   = document.getElementById('ai-api-key').value.trim();
   const model = document.getElementById('ai-model').value.trim();
-  if (!url || !key || !model) { alert('请填写完整的 API URL、Key 和模型名'); return; }
+  if (!url || !key || !model) { alert(t('ai.configError')); return; }
   try {
     localStorage.setItem('cyberedu_ai_url',        url);
     localStorage.setItem('cyberedu_ai_key',         key);
@@ -1725,7 +1951,7 @@ function saveAISettings() {
     localStorage.setItem('cyberedu_ai_thinking',     document.getElementById('ai-thinking').checked ? '1' : '0');
   } catch(e) {}
   document.getElementById('ai-settings').classList.add('hidden');
-  addAIMsg('system', '设置已保存 ✓');
+  addAIMsg('system', t('ai.saved'));
 }
 
 function loadAISettings() {
@@ -1766,7 +1992,7 @@ function addAIMsg(role, content) {
             : 'ai-msg-ai';
   div.className = 'ai-msg ' + cls;
   div.innerHTML = (role === 'thinking')
-    ? '<details class="ai-thinking-details"><summary>🧠 思考中...</summary><div class="ai-thinking-body"></div></details>'
+    ? '<details class="ai-thinking-details"><summary>' + t('ai.thinkingDetail') + '</summary><div class="ai-thinking-body"></div></details>'
     : formatAIContent(content || '');
   box.appendChild(div);
   box.scrollTop = box.scrollHeight;
@@ -1820,7 +2046,7 @@ async function sendAIMessage() {
   const config = getAIConfig();
   if (!config.apiUrl || !config.apiKey || !config.model) {
     toggleAISettings();
-    addAIMsg('system', '请先配置 API 设置（点击 ⚙）');
+    addAIMsg('system', t('ai.noApi'));
     return;
   }
 
@@ -1908,7 +2134,7 @@ async function sendAIMessage() {
             if (!thinkDiv) {
               thinkDiv = document.createElement('div');
               thinkDiv.className = 'ai-msg ai-msg-thinking';
-              thinkDiv.innerHTML = '<details class="ai-thinking-details" open><summary>🧠 思考中...</summary><div class="ai-thinking-body"></div></details>';
+              thinkDiv.innerHTML = '<details class="ai-thinking-details" open><summary>' + t('ai.thinkingDetail') + '</summary><div class="ai-thinking-body"></div></details>';
               wrapper.insertBefore(thinkDiv, aiDiv);
             }
             const body = thinkDiv.querySelector('.ai-thinking-body');
@@ -1943,7 +2169,7 @@ async function sendAIMessage() {
     if (thinkDiv && thinkText) {
       const rTokens = usageInfo?.completion_tokens_details?.reasoning_tokens;
       thinkDiv.querySelector('summary').textContent =
-        '🧠 思考过程（点击展开' + (rTokens ? ' · ' + rTokens + ' tokens' : '') + '）';
+        '🧠 ' + t('ai.thinkingProcess') + (rTokens ? ' · ' + rTokens + ' tokens' : '') + t('ai.tokens') + '</summary>';
     } else if (thinkDiv) {
       thinkDiv.remove();
     }
@@ -1953,8 +2179,8 @@ async function sendAIMessage() {
       const tag = document.createElement('span');
       tag.className = 'ai-usage-tag';
       const r = usageInfo.completion_tokens_details?.reasoning_tokens;
-      tag.textContent = '输入 ' + usageInfo.prompt_tokens + ' · 输出 ' + usageInfo.completion_tokens
-        + (r ? '（思考 ' + r + '）' : '');
+      tag.textContent = t('ai.inputTokens') + usageInfo.prompt_tokens + ' · ' + t('ai.outputTokens') + usageInfo.completion_tokens
+        + (r ? t('ai.thinkingTokens') + r + t('ai.tokens') : '');
       aiDiv.appendChild(tag);
     }
 

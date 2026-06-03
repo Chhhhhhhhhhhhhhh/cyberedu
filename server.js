@@ -5,11 +5,14 @@
 const http = require('http');
 const fs   = require('fs');
 const path = require('path');
+const { execFile } = require('child_process');
+const os = require('os');
 const https = require('https');
 const { URL } = require('url');
 
 const PORT = 8000;
 const ROOT = __dirname;
+const PROGRESS_FILE = path.join(ROOT, 'progress.json');
 
 // ── MIME types ───────────────────────────────────────────────
 const MIME = {
@@ -159,6 +162,175 @@ function jsonHdrs() {
   return { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' };
 }
 
+// ── Code execution handler ────────────────────────────────────
+const RUN_TIMEOUT = 8000;
+
+function handleRunCode(req, res) {
+  let body = '';
+  req.on('data', chunk => body += chunk);
+  req.on('end', () => {
+    let parsed;
+    try { parsed = JSON.parse(body); } catch {
+      res.writeHead(400, jsonHdrs());
+      return res.end(JSON.stringify({ error: 'JSON 格式错误' }));
+    }
+
+    const { code, lang } = parsed;
+    if (!code || !lang) {
+      res.writeHead(400, jsonHdrs());
+      return res.end(JSON.stringify({ error: '缺少 code 或 lang 参数' }));
+    }
+
+    const langMap = { Python: '.py', JavaScript: '.js', C: '.c' };
+    const ext = langMap[lang];
+    if (!ext) {
+      res.writeHead(400, jsonHdrs());
+      return res.end(JSON.stringify({ error: '不支持的语言: ' + lang + '。支持: Python, JavaScript, C' }));
+    }
+
+    const tmpFile = path.join(os.tmpdir(), 'cyberedu_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8) + ext);
+    fs.writeFileSync(tmpFile, code, 'utf-8');
+
+    if (lang === 'C') {
+      const outFile = tmpFile.replace(/\.c$/, '.exe');
+      execFile('gcc', [tmpFile, '-o', outFile, '-lm'], { timeout: RUN_TIMEOUT }, (err, stdout, stderr) => {
+        if (err) {
+          cleanup([tmpFile, outFile]);
+          res.writeHead(200, jsonHdrs());
+          if (err.code === 'ENOENT') {
+            return res.end(JSON.stringify({ error: 'C 编译器 (gcc) 未安装。\n请安装 MinGW-w64 或 Visual Studio Build Tools。\n\n当前练习题可通过对比预期输出进行自测。' }));
+          }
+          return res.end(JSON.stringify({ error: '编译失败:\n' + stderr }));
+        }
+        execFile(outFile, [], { timeout: RUN_TIMEOUT }, (err2, stdout2, stderr2) => {
+          cleanup([tmpFile, outFile]);
+          res.writeHead(200, jsonHdrs());
+          res.end(JSON.stringify({ stdout: stdout2, stderr: stderr2, exitCode: err2 ? 1 : 0 }));
+        });
+      });
+    } else {
+      const cmd = lang === 'Python' ? 'python' : process.execPath;
+      execFile(cmd, [tmpFile], { timeout: RUN_TIMEOUT, maxBuffer: 1024 * 1024 }, (err, stdout, stderr) => {
+        cleanup([tmpFile]);
+        res.writeHead(200, jsonHdrs());
+        if (err && err.code === 'ENOENT') {
+          return res.end(JSON.stringify({ error: lang + ' 运行时未找到，请确认已安装并加入 PATH。' }));
+        }
+        res.end(JSON.stringify({ stdout, stderr, exitCode: err ? 1 : 0 }));
+      });
+    }
+
+    function cleanup(files) {
+      files.forEach(f => { try { fs.unlinkSync(f); } catch {} });
+    }
+  });
+}
+
+// ── CTF simulated terminal handler ───────────────────────────
+const CTF_SIM = {
+  'ctf-003': { // Login Bypass (SQL Injection)
+    welcome: 'SQL Injection Login Bypass - 模拟环境\n目标：绕过登录验证，以 admin 身份登录。\n后端 SQL: SELECT * FROM users WHERE user=\'[INPUT]\' AND pass=\'[PASS]\'\n\n示例输入: admin\' OR \'1\'=\'1\n',
+    respond(input) {
+      const user = input.replace(/'/g, "''");
+      const fakePass = 's3cur3_p@ss';
+      const query = `SELECT * FROM users WHERE user='${user}' AND pass='${fakePass}'`;
+      if (/\bOR\b/i.test(query) && (/'1'\s*=\s*'1/i.test(query) || /1\s*=\s*1/i.test(query)) || (/'\s*OR\s*'/i.test(query))) {
+        return { output: '<span style="color:#0f0">[SQL] ' + query + '</span>\n<span style="color:#0f0">Query returned 1 row(s)</span>\n<span style="color:#ff0">✓ Login successful! Welcome admin.</span>\n<span style="color:#0f0">flag{sql1_1nj3ct1on_m4st3r}</span>' };
+      }
+      return { output: '<span style="color:#888">[SQL] ' + query + '</span>\n<span style="color:#888">Query returned 0 row(s)</span>\n<span style="color:#f44">✗ Login failed. Invalid credentials.</span>' };
+    }
+  },
+  'ctf-008': { // Command Injection
+    welcome: 'Command Injection 101 - 模拟环境\n目标：通过 ping 工具执行任意命令。\n后端代码: os.system("ping -c 3 " + user_input)\n\n示例输入: 127.0.0.1;ls\n',
+    respond(input) {
+      const parts = input.split(/[;|&\n]/);
+      const ip = parts[0].trim();
+      let result = '';
+      if (/^\d{1,3}(\.\d{1,3}){3}$/.test(ip) || ip === 'localhost') {
+        result += `<span style="color:#888">PING ${ip}: 3 packets transmitted, 3 received, 0% loss</span>\n`;
+      } else if (ip) {
+        result += `<span style="color:#f44">ping: ${escHtml(ip)}: not a valid address</span>\n`;
+      }
+      for (let i = 1; i < parts.length; i++) {
+        const cmd = parts[i].trim();
+        if (!cmd) continue;
+        if (/ls/i.test(cmd) && !/\/etc/i.test(cmd)) result += '<span style="color:#0ff">flag.txt  index.html  README.md</span>\n';
+        else if (/cat\s+flag/i.test(cmd)) result += '<span style="color:#0f0">flag{c0mm4nd_1nj3ct10n_3z}</span>\n';
+        else if (/whoami/i.test(cmd)) result += '<span style="color:#0ff">www-data</span>\n';
+        else if (/id/i.test(cmd)) result += '<span style="color:#0ff">uid=33(www-data) gid=33(www-data)</span>\n';
+        else if (/pwd/i.test(cmd)) result += '<span style="color:#0ff">/var/www/html</span>\n';
+        else if (/uname/i.test(cmd)) result += '<span style="color:#0ff">Linux target 5.4.0 x86_64</span>\n';
+        else result += `<span style="color:#888">${escHtml(cmd)}: simulated output</span>\n`;
+      }
+      return { output: result || '<span style="color:#888">No output.</span>' };
+    }
+  },
+  'ctf-016': { // PHP Type Juggling
+    welcome: 'PHP Type Juggling - 模拟环境\n目标：绕过 md5() 弱类型比较。\n后端代码: if (md5($input) == "0e123456789...") grant_access();\n\nPHP 的 == 在比较时会将 "0e123..." 视为科学计数法 0×10^n = 0\n所以任何 md5 值也是 "0e..." 开头的输入都能通过。\n\n示例输入: QNKCDZO (md5 = 0e830400451993494058024219903391)\n',
+    respond(input) {
+      const md5s = { 'QNKCDZO': '0e830400451993494058024219903391', '240610708': '0e462097431906509019562988736854', 'aabg7XSs': '0e087386482136013740957780965295' };
+      const hash = md5s[input] || 'a1b2c3d4e5f6';
+      if (hash.startsWith('0e') && /^[0-9]+$/.test(hash.slice(2))) {
+        return { output: `<span style="color:#888">md5("${escHtml(input)}") = "${hash}"</span>\n<span style="color:#888">Comparing: "${hash}" == "0e123456789012345678901234567890"</span>\n<span style="color:#ff0">PHP == comparison: 0 == 0 → TRUE</span>\n<span style="color:#0f0">✓ Access granted! Authentication bypassed.</span>\n<span style="color:#0f0">flag{php_l00s3_c0mp4r1s0n}</span>` };
+      }
+      return { output: `<span style="color:#888">md5("${escHtml(input)}") = "${hash}"</span>\n<span style="color:#888">Comparing: "${hash}" == "0e123456789..."</span>\n<span style="color:#f44">PHP == comparison: string ≠ scientific → FALSE</span>\n<span style="color:#f44">✗ Access denied.</span>` };
+    }
+  },
+  'ctf-004': { // XSS Hunter
+    welcome: 'XSS Hunter - 模拟环境\n目标：构造反射型 XSS Payload 弹出 alert(1)。\n后端代码: document.getElementById("result").textContent = location.search.split("q=")[1]\n\n注意：使用 textContent 回显，不是 innerHTML。需要换一种思路。\n提示：试试 onchange/oninput 事件配合 URL hash。\n\n示例输入: " autofocus onfocus=alert(1) x="\n',
+    respond(input) {
+      const lower = input.toLowerCase();
+      if (/on(?:focus|blur|click|mouseover|load|error)\s*=/i.test(input) || /javascript:/i.test(input) || /<svg/i.test(input) || /<img/i.test(input) || /<iframe/i.test(input)) {
+        return { output: `<span style="color:#888">[Rendered HTML]:</span>\n<span style="color:#888">&lt;div id="result"&gt;${escHtml(input)}&lt;/div&gt;</span>\n\n<span style="color:#0f0">✓ XSS triggered! alert(1) fired.</span>\n<span style="color:#0f0">flag{xss_r3fl3ct3d_g0t_m3}</span>` };
+      }
+      return { output: `<span style="color:#888">[Rendered HTML]:</span>\n<span style="color:#888">&lt;div id="result"&gt;${escHtml(input)}&lt;/div&gt;</span>\n\n<span style="color:#f44">No XSS triggered. The input was safely rendered.</span>` };
+    }
+  },
+  'ctf-012': { // SSTI Detective
+    welcome: 'SSTI Detective - 模拟环境\n目标：利用 Flask/Jinja2 模板注入读取系统信息。\n后端代码: render_template_string("Hello {{ " + name + " }}")\n\n示例输入: {{7*7}}\n',
+    respond(input) {
+      const lower = input.toLowerCase();
+      if (/{{.*?7\s*\*\s*7.*?}}/.test(input) || /{{.*?config.*?}}/.test(input)) {
+        return { output: `<span style="color:#888">[Template]: Hello ${input}</span>\n<span style="color:#0ff">[Rendered]: Hello 49</span>\n\n<span style="color:#ff0">⚠ Template injection confirmed! Expression evaluated.</span>\n<span style="color:#888">Try chaining: {{ config.items() }} or {{ "".__class__.__mro__ }}</span>` };
+      }
+      if (/__class__/i.test(input) || /__mro__/i.test(input) || /__subclasses__/i.test(input) || /__builtins__/i.test(input) || /popen/i.test(input)) {
+        return { output: `<span style="color:#888">[Template]: Hello ${escHtml(input)}</span>\n<span style="color:#0f0">[Rendered]: Hello &lt;class 'object'&gt;...</span>\n\n<span style="color:#0f0">✓ SSTI chain executed! You got access to __builtins__.</span>\n<span style="color:#0f0">flag{j1nj4_2_t3mpl4t3_1nj3ct10n}</span>` };
+      }
+      if (/{{/.test(input) && /}}/.test(input)) {
+        return { output: `<span style="color:#888">[Template]: Hello ${escHtml(input)}</span>\n<span style="color:#888">[Rendered]: Hello ${escHtml(input)}</span>\n\n<span style="color:#ff0">Template syntax detected but no evaluation. Keep exploring...</span>` };
+      }
+      return { output: `<span style="color:#888">[Template]: Hello ${escHtml(input)}</span>\n<span style="color:#888">[Rendered]: Hello ${escHtml(input)}</span>\n\n<span style="color:#888">Normal text output. No template injection detected.</span>` };
+    }
+  }
+};
+
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function handleCTFSim(req, res) {
+  let body = '';
+  req.on('data', chunk => body += chunk);
+  req.on('end', () => {
+    let parsed;
+    try { parsed = JSON.parse(body); } catch {
+      res.writeHead(400, jsonHdrs());
+      return res.end(JSON.stringify({ error: 'JSON 格式错误' }));
+    }
+    const { challengeId, input: userInput } = parsed;
+    if (!challengeId || !userInput) {
+      res.writeHead(400, jsonHdrs());
+      return res.end(JSON.stringify({ error: '缺少 challengeId 或 input' }));
+    }
+    const sim = CTF_SIM[challengeId];
+    if (!sim) {
+      res.writeHead(200, jsonHdrs());
+      return res.end(JSON.stringify({ error: '该题目暂不支持模拟环境。请根据题目描述在本地或远程环境中操作。' }));
+    }
+    const result = sim.respond(userInput);
+    res.writeHead(200, jsonHdrs());
+    res.end(JSON.stringify(result));
+  });
+}
+
 // ── Main HTTP server ─────────────────────────────────────────
 const server = http.createServer((req, res) => {
 
@@ -174,6 +346,37 @@ const server = http.createServer((req, res) => {
 
   const ts = new Date().toISOString().slice(11, 23);
   console.log(`[${ts}] ${req.method} ${req.url}`);
+
+  // ── API: progress persistence ───────────────────────────────
+  if (req.url === '/api/progress') {
+    if (req.method === 'GET') {
+      if (!fs.existsSync(PROGRESS_FILE)) return res.end('{}');
+      return fs.readFile(PROGRESS_FILE, (err, data) => {
+        res.writeHead(200, jsonHdrs());
+        res.end(err ? '{}' : data);
+      });
+    }
+    if (req.method === 'POST') {
+      let body = '';
+      req.on('data', chunk => body += chunk);
+      req.on('end', () => {
+        fs.writeFileSync(PROGRESS_FILE, body, 'utf-8');
+        res.writeHead(200, jsonHdrs());
+        res.end(JSON.stringify({ ok: true }));
+      });
+      return;
+    }
+  }
+
+  // ── API: run code ──────────────────────────────────────────
+  if (req.method === 'POST' && req.url === '/api/run') {
+    return handleRunCode(req, res);
+  }
+
+  // ── API: CTF simulated terminal ─────────────────────────────
+  if (req.method === 'POST' && req.url === '/api/ctf-sim') {
+    return handleCTFSim(req, res);
+  }
 
   // ── API proxy ─────────────────────────────────────────────
   if (req.method === 'POST' && req.url.startsWith('/api/chat')) {
