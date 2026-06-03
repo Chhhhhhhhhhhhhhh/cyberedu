@@ -28,6 +28,8 @@ function setLang(lang) {
   if (typeof buildSearchIndex === 'function') buildSearchIndex();
   updateStatusBar();
   updateSidebar();
+  // Update document title
+  document.title = t('head.title');
   // Re-render current view using the shared helper
   rerenderCurrentView();
 }
@@ -74,6 +76,9 @@ function rerenderCurrentView() {
 // ============================================================
 const LANG = {
   zh: {
+    // Head
+    'head.title': 'CyberEdu — 网络空间安全综合学习站',
+
     // Nav
     'nav.home': '◈ 首页',
     'nav.hub': '▸ 学习中心',
@@ -258,6 +263,9 @@ const LANG = {
   },
 
   en: {
+    // Head
+    'head.title': 'CyberEdu — Cybersecurity Learning Platform',
+
     // Nav
     'nav.home': '◈ Home',
     'nav.hub': '▸ Learning Hub',
