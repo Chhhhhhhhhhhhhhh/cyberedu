@@ -2,7 +2,8 @@
 
 An interactive cybersecurity learning website, from absolute beginner to advanced practitioner.
 
-[中文版](README_zh.md) | [Live Demo](https://chhhhhhhhhhhhhhh.github.io/cyberedu/) | [Changelog](versions/CHANGELOG.md)
+[中文](README_zh.md)
+[Live Demo](https://chhhhhhhhhhhhhhh.github.io/cyberedu/) | [Changelog](versions/CHANGELOG.md)
 
 ## Features
 
