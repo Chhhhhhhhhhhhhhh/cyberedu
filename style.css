@@ -820,8 +820,9 @@ input,textarea{font-family:var(--font-mono)}
 /* Buttons: neon pulse on hover */
 .btn-primary:hover,.btn-outline:hover{animation:neon-pulse 1.8s ease-in-out infinite}
 /* Sidebar items: glitch text on hover */
-.sidebar-chapter-btn:hover{animation:glitch-text-hover 0.3s ease;text-shadow:0 0 6px rgba(0,255,65,0.35)}
-.sidebar-module-btn:hover{animation:glitch-text-hover 0.3s ease;text-shadow:0 0 6px rgba(0,229,255,0.35)}
+.sidebar-chapter-btn,.sidebar-module-btn{will-change:transform;contain:layout style}
+.sidebar-chapter-btn:hover{animation:glitch-text-hover 0.2s ease;text-shadow:0 0 6px rgba(0,255,65,0.35)}
+.sidebar-module-btn:hover{animation:glitch-text-hover 0.2s ease;text-shadow:0 0 6px rgba(0,229,255,0.35)}
 /* Glossary terms: cyan glow */
 .glossary:hover{text-shadow:0 0 10px var(--color-cyan),0 0 20px rgba(0,229,255,0.3)}
 /* Code blocks: scanline overlay on hover */
