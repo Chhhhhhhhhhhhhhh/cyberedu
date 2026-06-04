@@ -61,12 +61,16 @@ Optional: adjust temperature, max tokens, and thinking mode.
 
 ## Supported AI Models
 
-| Provider | API Base URL | Models |
+| Provider | API Base URL | Model Examples |
 |----------|-------------|--------|
+| **OpenAI Compatible** |||
 | DeepSeek | `https://api.deepseek.com` | `deepseek-chat`, `deepseek-reasoner` |
 | OpenAI | `https://api.openai.com/v1` | `gpt-4o`, `gpt-4o-mini` |
 | Qwen (Tongyi) | `https://dashscope.aliyuncs.com/compatible-mode/v1` | `qwen-plus`, `qwen-max` |
 | Ollama (local) | `http://localhost:11434` | `llama3`, `qwen2` |
+| Groq | `https://api.groq.com/openai/v1` | `llama-3.1-70b` |
+| **Anthropic** |||
+| Claude | `https://api.anthropic.com` | `claude-sonnet-4-20250514`, `claude-haiku-3-5` |
 
 ## Tech Stack
 

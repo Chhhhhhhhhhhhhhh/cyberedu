@@ -284,6 +284,11 @@
 
   <!-- Settings panel -->
   <div id="ai-settings" class="ai-settings hidden">
+    <label>API Type</label>
+    <select id="ai-api-type" class="ai-input" style="padding:8px 10px;cursor:pointer;appearance:auto;background:var(--bg-input);color:var(--text-main);border:1px solid var(--border-subtle);border-radius:var(--radius);font-family:var(--font-mono);font-size:13px">
+      <option value="openai">OpenAI Compatible (DeepSeek / OpenAI / Qwen / Groq / Ollama)</option>
+      <option value="anthropic">Anthropic (Claude)</option>
+    </select>
     <label>API Base URL</label>
     <input type="text" id="ai-api-url" class="ai-input" placeholder="https://api.deepseek.com">
     <label>API Key</label>

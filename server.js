@@ -165,6 +165,169 @@ function proxyChat(req, res) {
   });
 }
 
+// ── Anthropic Messages API proxy ──────────────────────────────
+let ANTHROPIC_SEQ = 0;
+function proxyAnthropic(req, res) {
+  let body = '';
+  req.on('data', chunk => { body += chunk; });
+  req.on('end', () => {
+    let parsed;
+    try { parsed = JSON.parse(body); } catch {
+      res.writeHead(400, jsonHdrs());
+      return res.end(JSON.stringify({ error: 'Invalid JSON' }));
+    }
+
+    const { apiKey, apiUrl, model, messages,
+            temperature, max_tokens, system } = parsed;
+
+    if (!apiKey || !apiUrl || !messages || !Array.isArray(messages)) {
+      res.writeHead(400, jsonHdrs());
+      return res.end(JSON.stringify({ error: 'Missing required fields: apiKey / apiUrl / messages' }));
+    }
+
+    // Build upstream URL (auto-append /messages)
+    let targetUrl;
+    try { targetUrl = new URL(apiUrl); } catch {
+      res.writeHead(400, jsonHdrs());
+      return res.end(JSON.stringify({ error: 'Invalid API URL' }));
+    }
+    if (!targetUrl.pathname.endsWith('/messages')) {
+      targetUrl.pathname = targetUrl.pathname.replace(/\/+$/, '') + '/messages';
+    }
+    console.log(`  [Anthropic] → ${targetUrl.href}`);
+
+    // Find system message and separate from conversation
+    let systemPrompt = '';
+    const convMessages = [];
+    for (const m of messages) {
+      if (m.role === 'system') {
+        systemPrompt = m.content;
+      } else if (m.role === 'user' || m.role === 'assistant') {
+        convMessages.push({ role: m.role, content: m.content });
+      }
+    }
+    if (system) systemPrompt = system;
+
+    const upstreamBody = JSON.stringify({
+      model: model || 'claude-sonnet-4-20250514',
+      messages: convMessages,
+      stream: true,
+      max_tokens: max_tokens || 4096,
+      ...(temperature != null && { temperature }),
+      ...(systemPrompt && { system: systemPrompt }),
+    });
+
+    const isHttps = targetUrl.protocol === 'https:';
+    const lib = isHttps ? https : http;
+    const options = {
+      hostname: targetUrl.hostname,
+      port:     targetUrl.port || (isHttps ? 443 : 80),
+      path:     targetUrl.pathname + targetUrl.search,
+      method:   'POST',
+      headers: {
+        'Content-Type':      'application/json',
+        'x-api-key':         apiKey,
+        'anthropic-version': '2023-06-01',
+        'Content-Length':    Buffer.byteLength(upstreamBody),
+      },
+      timeout: 60000,
+    };
+
+    ANTHROPIC_SEQ++;
+    const proxyReq = lib.request(options, (upRes) => {
+      if (upRes.statusCode !== 200) {
+        let errBuf = '';
+        upRes.on('data', c => { errBuf += c; });
+        upRes.on('end', () => {
+          let errMsg = `Anthropic error ${upRes.statusCode}`;
+          try {
+            const j = JSON.parse(errBuf);
+            if (j.error?.message) errMsg = j.error.message;
+          } catch {}
+          res.writeHead(upRes.statusCode, jsonHdrs());
+          res.end(JSON.stringify({ error: errMsg }));
+        });
+        return;
+      }
+
+      // Pipe SSE stream, transform Anthropic format to OpenAI-compatible
+      res.writeHead(200, {
+        'Content-Type':       'text/event-stream',
+        'Cache-Control':      'no-cache',
+        'Connection':         'keep-alive',
+        'Access-Control-Allow-Origin': '*',
+      });
+
+      let buf = '';
+      upRes.on('data', chunk => {
+        buf += chunk.toString();
+        const lines = buf.split('\n');
+        buf = lines.pop() || '';
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          const payload = line.slice(6).trim();
+          if (!payload) continue;
+          try {
+            const event = JSON.parse(payload);
+            // Convert Anthropic SSE event to OpenAI-compatible format
+            const openaiChunk = anthropicToOpenAI(event, model);
+            if (openaiChunk) {
+              res.write(`data: ${JSON.stringify(openaiChunk)}\n\n`);
+            }
+          } catch {}
+        }
+      });
+      upRes.on('end', () => {
+        res.write('data: [DONE]\n\n');
+        res.end();
+      });
+    });
+
+    proxyReq.on('error', (e) => {
+      console.error('[Anthropic] request error:', e.message);
+      if (!res.headersSent) {
+        res.writeHead(502, jsonHdrs());
+      }
+      res.end(JSON.stringify({ error: 'Proxy error: ' + e.message }));
+    });
+
+    proxyReq.on('timeout', () => {
+      proxyReq.destroy();
+      console.error('[Anthropic] upstream timeout');
+      if (!res.headersSent) {
+        res.writeHead(504, jsonHdrs());
+      }
+      res.end(JSON.stringify({ error: 'Upstream timeout' }));
+    });
+
+    proxyReq.write(upstreamBody);
+    proxyReq.end();
+  });
+}
+
+// Convert Anthropic streaming event to OpenAI-compatible chunk
+function anthropicToOpenAI(event, model) {
+  const t = event.type;
+  if (t === 'message_start') {
+    return { id: 'ant-' + ANTHROPIC_SEQ, object: 'chat.completion.chunk', created: Date.now(), model: model, choices: [{ index: 0, delta: { role: 'assistant', content: '' }, finish_reason: null }] };
+  }
+  if (t === 'content_block_delta' && event.delta?.type === 'text_delta') {
+    return { id: 'ant-' + ANTHROPIC_SEQ, object: 'chat.completion.chunk', created: Date.now(), model: model, choices: [{ index: 0, delta: { content: event.delta.text }, finish_reason: null }] };
+  }
+  if (t === 'content_block_delta' && event.delta?.type === 'thinking_delta') {
+    return { id: 'ant-' + ANTHROPIC_SEQ, object: 'chat.completion.chunk', created: Date.now(), model: model, choices: [{ index: 0, delta: { reasoning_content: event.delta.thinking }, finish_reason: null }] };
+  }
+  if (t === 'message_delta' && event.delta?.stop_reason) {
+    const reason = event.delta.stop_reason === 'end_turn' ? 'stop' : 'length';
+    return { id: 'ant-' + ANTHROPIC_SEQ, object: 'chat.completion.chunk', created: Date.now(), model: model, choices: [{ index: 0, delta: {}, finish_reason: reason }] };
+  }
+  if (t === 'message_stop') {
+    // Extract usage from message_stop if available
+    return event.usage ? { id: 'ant-' + ANTHROPIC_SEQ, object: 'chat.completion.chunk', created: Date.now(), model: model, choices: [{ index: 0, delta: {}, finish_reason: 'stop' }], usage: { prompt_tokens: event.usage.input_tokens, completion_tokens: event.usage.output_tokens, total_tokens: (event.usage.input_tokens || 0) + (event.usage.output_tokens || 0) } } : null;
+  }
+  return null;
+}
+
 function jsonHdrs() {
   return { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' };
 }
@@ -395,6 +558,9 @@ const server = http.createServer((req, res) => {
   }
 
   // ── API proxy ─────────────────────────────────────────────
+  if (req.method === 'POST' && req.url === '/api/chat/anthropic') {
+    return proxyAnthropic(req, res);
+  }
   if (req.method === 'POST' && req.url.startsWith('/api/chat')) {
     return proxyChat(req, res);
   }

@@ -1930,17 +1930,19 @@ function toggleAISettings() {
 }
 
 function saveAISettings() {
-  const url   = document.getElementById('ai-api-url').value.trim();
-  const key   = document.getElementById('ai-api-key').value.trim();
-  const model = document.getElementById('ai-model').value.trim();
+  const url    = document.getElementById('ai-api-url').value.trim();
+  const key    = document.getElementById('ai-api-key').value.trim();
+  const model  = document.getElementById('ai-model').value.trim();
+  const apiType = document.getElementById('ai-api-type').value;
   if (!url || !key || !model) { alert(t('ai.configError')); return; }
   try {
-    localStorage.setItem('cyberedu_ai_url',        url);
-    localStorage.setItem('cyberedu_ai_key',         key);
-    localStorage.setItem('cyberedu_ai_model',       model);
-    localStorage.setItem('cyberedu_ai_temp',        document.getElementById('ai-temperature').value);
-    localStorage.setItem('cyberedu_ai_max_tokens',  document.getElementById('ai-max-tokens').value.trim());
-    localStorage.setItem('cyberedu_ai_thinking',     document.getElementById('ai-thinking').checked ? '1' : '0');
+    localStorage.setItem('cyberedu_ai_type',        apiType);
+    localStorage.setItem('cyberedu_ai_url',         url);
+    localStorage.setItem('cyberedu_ai_key',          key);
+    localStorage.setItem('cyberedu_ai_model',        model);
+    localStorage.setItem('cyberedu_ai_temp',         document.getElementById('ai-temperature').value);
+    localStorage.setItem('cyberedu_ai_max_tokens',   document.getElementById('ai-max-tokens').value.trim());
+    localStorage.setItem('cyberedu_ai_thinking',      document.getElementById('ai-thinking').checked ? '1' : '0');
   } catch(e) {}
   document.getElementById('ai-settings').classList.add('hidden');
   addAIMsg('system', t('ai.saved'));
@@ -1948,24 +1950,28 @@ function saveAISettings() {
 
 function loadAISettings() {
   try {
-    const url   = localStorage.getItem('cyberedu_ai_url')        || '';
-    const key   = localStorage.getItem('cyberedu_ai_key')         || '';
-    const model = localStorage.getItem('cyberedu_ai_model')       || '';
-    const temp  = localStorage.getItem('cyberedu_ai_temp')        || '0.7';
-    const mt    = localStorage.getItem('cyberedu_ai_max_tokens')  || '4096';
-    const think = localStorage.getItem('cyberedu_ai_thinking')   || '1';
+    const apiType = localStorage.getItem('cyberedu_ai_type')      || 'openai';
+    const url     = localStorage.getItem('cyberedu_ai_url')       || '';
+    const key     = localStorage.getItem('cyberedu_ai_key')       || '';
+    const model   = localStorage.getItem('cyberedu_ai_model')     || '';
+    const temp    = localStorage.getItem('cyberedu_ai_temp')      || '0.7';
+    const mt      = localStorage.getItem('cyberedu_ai_max_tokens') || '4096';
+    const think   = localStorage.getItem('cyberedu_ai_thinking')  || '1';
+    const typeSel = document.getElementById('ai-api-type');
+    if (typeSel) typeSel.value = apiType;
     document.getElementById('ai-api-url').value     = url;
     document.getElementById('ai-api-key').value     = key;
     document.getElementById('ai-model').value       = model;
     document.getElementById('ai-temperature').value = temp;
     document.getElementById('ai-max-tokens').value  = mt;
-    document.getElementById('ai-thinking').checked   = (think === '1');
+    document.getElementById('ai-thinking').checked  = (think === '1');
     document.getElementById('ai-temp-val').textContent = temp;
   } catch(e) {}
 }
 
 function getAIConfig() {
   return {
+    apiType:   document.getElementById('ai-api-type')?.value || 'openai',
     apiUrl:    (document.getElementById('ai-api-url').value.trim()    || localStorage.getItem('cyberedu_ai_url')   || '').trim(),
     apiKey:    (document.getElementById('ai-api-key').value.trim()    || localStorage.getItem('cyberedu_ai_key')   || '').trim(),
     model:     (document.getElementById('ai-model').value.trim()      || localStorage.getItem('cyberedu_ai_model') || '').trim(),
@@ -2079,11 +2085,13 @@ async function sendAIMessage() {
   let contentStarted = false;
 
   try {
-    const res = await fetch('/api/chat', {
+    const endpoint = config.apiType === 'anthropic' ? '/api/chat/anthropic' : '/api/chat';
+    const res = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         apiUrl:     config.apiUrl,
+        apiType:    config.apiType || 'openai',
         apiKey:      config.apiKey,
         model:       config.model,
         messages:    msgsForApi,

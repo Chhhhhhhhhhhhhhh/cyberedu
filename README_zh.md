@@ -59,10 +59,14 @@
 
 | 提供商 | API Base URL | 模型示例 |
 |--------|-------------|---------|
+| **OpenAI 兼容** |||
 | DeepSeek | `https://api.deepseek.com` | `deepseek-chat`, `deepseek-reasoner` |
 | OpenAI | `https://api.openai.com/v1` | `gpt-4o`, `gpt-4o-mini` |
 | 通义千问 | `https://dashscope.aliyuncs.com/compatible-mode/v1` | `qwen-plus`, `qwen-max` |
 | Ollama（本地） | `http://localhost:11434` | `llama3`, `qwen2` |
+| Groq | `https://api.groq.com/openai/v1` | `llama-3.1-70b` |
+| **Anthropic** |||
+| Claude | `https://api.anthropic.com` | `claude-sonnet-4-20250514`, `claude-haiku-3-5` |
 
 ## 技术栈
 
