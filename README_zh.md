@@ -1,7 +1,7 @@
 # CyberEdu - 网络安全学习平台
 
 [English](README.md)
-[更新日志](versions/CHANGELOG.md)
+[Live Demo](https://chhhhhhhhhhhhhhh.github.io/cyberedu/) | [更新日志](versions/CHANGELOG.md)
 
 一个涵盖网络安全基础知识的交互式学习网站，面向零基础到高级的学习者。
 
