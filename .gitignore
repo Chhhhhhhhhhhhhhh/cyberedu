@@ -7,9 +7,16 @@ tools/
 # Backups
 *_backup*.html
 
-# Build scripts and data
-build_expanded.py
-convert_content.py
-check_expand_output.txt
-content_m*.py
-content_m*.json
+# Build scripts and data (moved to build/)
+build/
+
+# Review and translation artifacts
+_review/
+_translations/
+
+# Backups and temp
+*.bak
+cyberedu_backup.html
+cyberedu_current_backup.html
+# Progress data (runtime)
+progress.json
