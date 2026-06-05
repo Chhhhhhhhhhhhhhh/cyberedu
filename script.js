@@ -1409,10 +1409,22 @@ function doSearch(q) {
   const res=document.getElementById('search-results');
   if(!q.trim()){res.innerHTML='<div class="search-empty">' + t('search.empty') + '</div>';return}
   const ql=q.toLowerCase();
-  const hits=SEARCH_INDEX.filter(x=>(x.title+x.sub).toLowerCase().includes(ql)).slice(0,12);
+  // Token-based fuzzy search: split query into words, each must match somewhere
+  const tokens = ql.split(/\s+/).filter(t => t.length > 0);
+  const hits=SEARCH_INDEX.filter(x => {
+    const text = (x.title + ' ' + x.sub).toLowerCase();
+    return tokens.every(token => text.includes(token));
+  }).slice(0,12);
   if(!hits.length){res.innerHTML='<div class="search-empty">' + t('search.noResult') + '</div>';return}
-  // Highlight matching keywords in results
-  function hl(text){return text.replace(new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi'),'<mark style="background:rgba(0,255,65,0.18);color:var(--color-green);padding:0 2px;border-radius:1px">$1</mark>')}
+  // Highlight matching keywords in results (highlight each token)
+  function hl(text){
+    let out = text;
+    tokens.forEach(tok => {
+      out = out.replace(new RegExp('('+tok.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi'),
+        '<mark style="background:rgba(0,255,65,0.18);color:var(--color-green);padding:0 2px;border-radius:1px">$1</mark>');
+    });
+    return out;
+  }
   res.innerHTML=hits.map((h,i)=>`<div class="search-result-item" onclick="searchGo(${i})">
     <span class="sr-type">${h.type}</span>
     <div><div class="sr-title">${hl(h.title)}</div><div class="sr-sub">${hl(h.sub)}</div></div>
