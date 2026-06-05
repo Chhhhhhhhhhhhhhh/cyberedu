@@ -82,6 +82,15 @@ Optional: adjust temperature, max tokens, and thinking mode.
 
 ## What's New
 
+### v2.3 (2026-06-05)
+
+- 🤖 **Multi-model AI** — Claude/Anthropic API support alongside OpenAI-compatible models (DeepSeek, OpenAI, Qwen, Groq, Ollama)
+- 📱 **Mobile responsive** — sidebar overlay, compact navigation, responsive typography
+- 🔍 **Enhanced search** — token-based fuzzy matching with per-word highlighting
+- 🌐 **i18n** — AI settings panel fully bilingual (EN/ZH), site defaults to English
+- ⚡ **Performance** — deferred script loading with loading overlay
+- 📝 **Open source ready** — CONTRIBUTING.md, SEO meta tags, project cleanup
+
 ### v2.2 (2026-06-03)
 
 - 🌐 **Full English translation** — all 52 chapters + bilingual UI

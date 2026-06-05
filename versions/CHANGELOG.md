@@ -1,5 +1,45 @@
 # cyberedu 版本记录
 
+## v2.3 — 2026-06-05
+
+**文件**: `server.js`, `script.js`, `style.css`, `i18n.js`, `cyberedu.html`
+**仓库**: 公开 / GitHub Pages / Issue 模板 / CONTRIBUTING.md
+
+### 🤖 多模型 AI 代理
+- 新增 Anthropic (Claude) API 支持，设置面板增加 API Type 下拉选择器
+- Anthropic SSE 事件格式自动转换为 OpenAI 兼容格式
+- 支持 system prompt、thinking/reasoning 内容和 token 用量统计
+- 配置文件新增 `cyberedu_ai_type` 存储，支持 OpenAI Compatible / Anthropic 切换
+- 扩展支持：Groq、Ollama (已支持)，Claude 系列 (新增)
+
+### 📱 移动端响应式优化
+- 侧边栏：小屏改为覆盖层模式 (z-index:200)，导航后自动关闭
+- 导航栏：紧凑布局，横向滚动，搜索框隐藏
+- 文章区：字号/间距/表格/代码块全面适配小屏
+- 首页/CTF/练习/工具/模态框：网格单列布局，间距优化
+- 移动端禁用 scroll-reveal 动画
+
+### 🔍 搜索增强
+- 支持分词模糊匹配（"RSA crypto" → 同时匹配含 RSA 和 cryptography 的条目）
+- 高亮改为每个 token 分别标记
+- 匹配要求：每个词都必须在标题或描述中出现
+
+### 🌐 国际化与默认语言
+- AI 设置面板所有标签改为 i18n 支持（EN/ZH 自动切换）
+- 网站默认语言改为英文
+- 浏览器标签标题跟随语言切换
+- localStorage 键名升级为 v3，避免旧缓存干扰
+
+### ⚡ 性能优化
+- content.js / i18n.js / script.js 添加 defer 属性，不阻塞页面渲染
+- 加载中显示 CyberEdu 启动动画遮罩
+
+### 📝 开源配套
+- 新增 CONTRIBUTING.md 贡献指南（英语）
+- 添加 SEO meta 标签（description / Open Graph / Twitter Card）
+- 项目目录清理：构建脚本移入 build/，中间产物加入 .gitignore
+- 仓库版本号统一 v2.3 (server.js + 启动日志)
+
 ## v2.2 — 2026-06-03
 
 **文件**:
