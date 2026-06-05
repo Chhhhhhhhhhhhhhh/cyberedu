@@ -1,4 +1,4 @@
-// CyberEdu Local Server v2.1 - AI Chat Enhanced
+// CyberEdu Local Server v2.3 - Multi-Model AI Proxy
 // Usage: node server.js   (serves F:\workspace on port 8000)
 // Browser opens at http://localhost:8000
 
@@ -589,7 +589,7 @@ server.listen(PORT, () => {
   const hasGCC = checkRuntime('gcc', 'gcc --version');
   console.log('');
   console.log('  ╔══════════════════════════════════════════════╗');
-  console.log('  ║   CyberEdu Server  v2.2  (AI Chat Enhanced)  ║');
+  console.log('  ║   CyberEdu Server  v2.3  (Multi-Model AI)  ║');
   console.log('  ║   http://localhost:' + PORT + '                     ║');
   console.log('  ╚══════════════════════════════════════════════╝');
   console.log('');
