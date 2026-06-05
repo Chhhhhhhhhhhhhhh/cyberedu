@@ -91,13 +91,6 @@ Optional: adjust temperature, max tokens, and thinking mode.
 - ⚡ **Performance** — deferred script loading with loading overlay
 - 📝 **Open source ready** — CONTRIBUTING.md, SEO meta tags, project cleanup
 
-### v2.2 (2026-06-03)
-
-- 🌐 **Full English translation** — all 52 chapters + bilingual UI
-- 📝 **Content audit** — 22 factual errors fixed across all modules
-- 🎨 **Layout improvements** — 15-30% more spacing, auto-expanding content on sidebar collapse
-- 🐛 Bug fixes: language-switch chapter refresh, content-key mapping, template literal escaping
-
 > 📋 [Full changelog →](versions/CHANGELOG.md)
 
 ## Feedback
