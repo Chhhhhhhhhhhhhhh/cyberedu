@@ -329,8 +329,18 @@
      APP LOGIC → script.js (routing, rendering, tools, animations, etc.)
      I18N       → i18n.js   (translation dictionary & language switching)
      ============================================================ -->
-<script src="i18n.js"></script>
-<script src="content.js"></script>
-<script src="script.js"></script>
+<script src="i18n.js" defer></script>
+<script src="content.js" defer></script>
+<script src="script.js" defer></script>
+<!-- Loading overlay (shown until scripts load) -->
+<div id="loading-overlay" style="position:fixed;inset:0;z-index:99998;background:#050508;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;font-family:var(--font-mono);color:var(--color-green);transition:opacity 0.4s ease">
+  <div style="font-size:18px;letter-spacing:2px">CyberEdu</div>
+  <div style="width:60px;height:1px;background:var(--color-green);animation:pulse-bar 1.2s ease-in-out infinite"></div>
+  <div style="font-size:11px;opacity:0.5;animation:fade-dot 1.5s ease-in-out infinite">Initializing</div>
+</div>
+<style>
+@keyframes pulse-bar{0%,100%{opacity:0.3;transform:scaleX(1)}50%{opacity:1;transform:scaleX(1.5)}}
+@keyframes fade-dot{0%,100%{opacity:0.3}50%{opacity:0.8}}
+</style>
 </body>
 </html>

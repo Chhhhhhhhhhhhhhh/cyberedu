@@ -123,6 +123,11 @@ function navigate(view, moduleId, sectionId) {
     updateSidebar();
     updateStatusBar();
     scrollReveal();
+    // Auto-close sidebar on mobile after navigation
+    if (window.innerWidth <= 768) {
+      const sidebar = document.getElementById('sidebar');
+      if (!sidebar.classList.contains('hidden')) sidebar.classList.add('hidden');
+    }
   }, view);
 }
 
@@ -2246,6 +2251,9 @@ function initAIChat() {
 // INIT
 // ============================================================
 function initApp() {
+  // Hide loading overlay
+  const loadingOverlay = document.getElementById('loading-overlay');
+  if (loadingOverlay) { loadingOverlay.style.opacity = '0'; setTimeout(() => loadingOverlay.remove(), 500); }
   try {
     // restore sidebar state
     if (localStorage.getItem('sidebar_collapsed') === '1') {
