@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-v2.3-00ff41?style=flat-square" alt="Version">
+  <img src="https://img.shields.io/badge/version-v2.4-00ff41?style=flat-square" alt="Version">
   <img src="https://img.shields.io/badge/license-MIT-00e5ff?style=flat-square" alt="License">
   <img src="https://img.shields.io/github/last-commit/Chhhhhhhhhhhhhhh/cyberedu?style=flat-square&color=00ff41" alt="Last Commit">
   <img src="https://img.shields.io/github/repo-size/Chhhhhhhhhhhhhhh/cyberedu?style=flat-square&color=00e5ff" alt="Repo Size">
@@ -126,14 +126,12 @@ Optional: adjust temperature, max tokens, and thinking/reasoning mode.
 
 ## 📋 What's New
 
-### v2.3 (2026-06-05)
+### v2.4 (2026-06-22)
 
-- 🤖 **Multi-model AI** — Claude/Anthropic API support alongside OpenAI-compatible models
-- 📱 **Mobile responsive** — sidebar overlay, compact navigation, responsive typography
-- 🔍 **Enhanced search** — token-based fuzzy matching with per-word highlighting
-- 🌐 **i18n** — AI settings panel fully bilingual (EN/ZH), site defaults to English
-- ⚡ **Performance** — deferred script loading with loading overlay
-- 📝 **Open source ready** — CONTRIBUTING.md, SEO meta tags, project cleanup
+- 📚 **Content rewrite** — All 52 chapters rewritten with scenario-driven teaching, 203 interactive quiz checkpoints, reading time indicators
+- 🐛 **Bug fixes** — Sidebar collapse animation crash, sidebar overlap with statusbar, toolbox calculation errors (URL/Hex/Binary)
+- 📝 **Docs overhaul** — README badges, feature showcase images, enhanced SEO meta tags
+- 🖼️ **Image cleanup** — Removed AI-generated watermarks from documentation screenshots
 
 > 📋 [Full changelog →](versions/CHANGELOG.md)
 

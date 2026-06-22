@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/版本-v2.3-00ff41?style=flat-square" alt="版本">
+  <img src="https://img.shields.io/badge/版本-v2.4-00ff41?style=flat-square" alt="版本">
   <img src="https://img.shields.io/badge/许可证-MIT-00e5ff?style=flat-square" alt="许可证">
   <img src="https://img.shields.io/github/last-commit/Chhhhhhhhhhhhhhh/cyberedu?style=flat-square&color=00ff41&label=最近更新" alt="最近更新">
   <img src="https://img.shields.io/github/repo-size/Chhhhhhhhhhhhhhh/cyberedu?style=flat-square&color=00e5ff&label=仓库大小" alt="仓库大小">
@@ -126,14 +126,12 @@ node server.js
 
 ## 📋 更新日志
 
-### v2.3（2026-06-05）
+### v2.4（2026-06-22）
 
-- 🤖 **多模型 AI** — 支持 Claude/Anthropic API，兼容 OpenAI 系列模型
-- 📱 **移动端适配** — 侧边栏覆盖层、紧凑导航、全响应式布局
-- 🔍 **搜索增强** — 分词模糊匹配，多词分别高亮
-- 🌐 **国际化** — AI 设置面板完整双语，网站默认英文
-- ⚡ **性能优化** — defer 脚本加载 + 加载动画
-- 📝 **开源配套** — CONTRIBUTING.md、SEO 标签、项目目录清理
+- 📚 **内容全面重写** — 52 个章节采用场景驱动教学，嵌入 203 道交互式自测题，新增阅读时间指示器
+- 🐛 **Bug 修复** — 侧边栏折叠动画崩溃、侧边栏被状态栏遮挡、工具箱计算错误（URL/Hex/Binary）
+- 📝 **文档改版** — README 徽章、功能展示图、SEO 增强 meta 标签
+- 🖼️ **图片清理** — 移除文档截图中的 AI 生成水印
 
 > 📋 [查看完整版本历史 →](versions/CHANGELOG.md)
 

@@ -1,5 +1,38 @@
 # cyberedu 版本记录
 
+## v2.4 — 2026-06-22
+
+**文件**: `content.js`, `script.js`, `style.css`, `i18n.js`, `server.js`, `README.md`, `README_zh.md`
+
+### 📚 全量内容重写
+- **52 个章节全部重写**，采用场景驱动教学风格（案例引入 → 原理剖析 → 实操验证 → 防御总结）
+- 新增章节间过渡引导，学习路径更连贯
+- 嵌入 **203 道交互式自测题**（Quiz Checkpoints），边学边练
+- 每章新增阅读时间指示器（estimated reading time）
+- 每章末尾新增关联练习链接，快速跳转实操
+
+### 🐛 Bug 修复
+- **侧边栏折叠动画卡死**：`drawGlitchShift` 中 `getImageData` 在 `gy` 接近 canvas 高度时抛出 `IndexSizeError`，导致 rAF 循环中断；改用 `Math.max(1, ...)` 钳制切片高度 + try-catch 安全网
+- **侧边栏底部被状态栏遮挡**：`bottom: 0` → `bottom: 32px`，确保最后几项可完整滚动显示
+- **工具箱计算错误**：
+  - URL 解码正确处理 `+` 为空格
+  - Hex→Text 自动去除 `0x` 前缀，支持冒号/逗号分隔格式
+  - Binary 工具支持负数（32 位二进制补码）
+
+### 🌐 国际化
+- 新增 Binary 工具的 i18n 翻译键（`tool.binary` / `tool.binary.desc`）
+
+### 📝 文档与资源
+- README.md 全面改版：新增 badge 徽章、功能展示图、SEO 增强 meta 标签
+- README_zh.md 同步更新中文版
+- 文档截图（features-showcase.png / og-image.png）清理 AI 生成水印
+
+### ⚙️ 工程
+- server.js 版本号同步 v2.4
+- HTML 状态栏版本号同步 v2.4
+
+---
+
 ## v2.3 — 2026-06-05
 
 **文件**: `server.js`, `script.js`, `style.css`, `i18n.js`, `cyberedu.html`
