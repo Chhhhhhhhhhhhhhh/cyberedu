@@ -283,10 +283,8 @@ function cyberNavTransition(callback, targetView) {
 function toggleSidebar() {
   const sidebar = document.getElementById('sidebar');
   if (sidebar.classList.contains('collapsed')) {
-    // Expand: cyberpunk glitch animation
     expandGlitch();
   } else if (!sidebar.classList.contains('glitching')) {
-    // Collapse: cyberpunk glitch animation
     collapseGlitch();
   }
 }
@@ -382,11 +380,13 @@ function collapseGlitch() {
     // Horizontal displacement of random horizontal bands
     const bands = Math.floor(3 + intensity * 12);
     for (let i = 0; i < bands; i++) {
-      const gy = rng(frame * 31 + i * 7) * h;
+      const gy = Math.floor(rng(frame * 31 + i * 7) * h);
       const gh = 8 + rng(frame * 37 + i * 9) * 40;
       const shift = (rng(frame * 41 + i * 11) - 0.5) * intensity * 60;
+      // Clamp slice height to valid canvas bounds
+      const sliceH = Math.max(1, Math.min(Math.floor(gh), h - gy));
       // Capture a slice of background+content, shift it
-      const slice = ctx.getImageData(0, gy, w, Math.min(gh, h - gy));
+      const slice = ctx.getImageData(0, gy, w, sliceH);
       ctx.putImageData(slice, shift, gy);
       // Redraw edge damage
       if (shift > 0) ctx.fillStyle = 'rgba(6,6,9,0.9)'; else ctx.fillStyle = 'rgba(6,6,9,0.9)';
@@ -457,6 +457,7 @@ function collapseGlitch() {
 
   // ---- Main animation loop ----
   function animate(ts) {
+    try {
     if (!startTime) startTime = ts;
     const elapsed = ts - startTime;
     const progress = Math.min(elapsed / DURATION, 1);
@@ -519,6 +520,15 @@ function collapseGlitch() {
       sidebar.classList.add('collapsed');
       toggle.textContent = '»';
       toggle.title = t('hub.sidebarExpand');
+      localStorage.setItem('sidebar_collapsed', '1');
+    }
+    } catch(err) {
+      console.error('[Sidebar] collapse animation error:', err);
+      // Force completion on error to prevent stuck sidebar
+      canvas.style.cssText = 'display:none';
+      sidebar.classList.remove('glitching');
+      sidebar.classList.add('collapsed');
+      toggle.textContent = '»';
       localStorage.setItem('sidebar_collapsed', '1');
     }
   }
@@ -793,6 +803,82 @@ function loadModule(moduleId, sectionId) {
   navigate('hub', moduleId, sectionId);
 }
 
+// ============================================================
+// CHECKPOINT QUIZ SYSTEM
+// ============================================================
+function renderCheckpoints(sectionContentKey) {
+  if (typeof SECTION_CHECKPOINTS === 'undefined') return;
+  const checkpoints = SECTION_CHECKPOINTS[sectionContentKey];
+  if (!checkpoints || !checkpoints.length) return;
+
+  document.querySelectorAll('.checkpoint[data-cp]').forEach(el => {
+    const idx = parseInt(el.dataset.cp);
+    const cp = checkpoints[idx];
+    if (!cp) return;
+    const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+    el.outerHTML = `
+      <div class="checkpoint-card" id="cp-${sectionContentKey}-${idx}">
+        <div class="checkpoint-header">
+          <div class="checkpoint-icon">?</div>
+          <div class="checkpoint-title">CHECKPOINT ${idx + 1}</div>
+        </div>
+        <div class="checkpoint-question">${cp.question}</div>
+        <div class="checkpoint-options">
+          ${cp.options.map((opt, i) => `
+            <button class="checkpoint-option" data-cp-key="${sectionContentKey}" data-cp-idx="${idx}" data-opt="${i}" onclick="handleCheckpointAnswer(this)">
+              <span class="opt-letter">${letters[i]}</span>
+              <span>${opt}</span>
+            </button>`).join('')}
+        </div>
+      </div>`;
+  });
+}
+
+function handleCheckpointAnswer(btn) {
+  const card = btn.closest('.checkpoint-card');
+  const key = btn.dataset.cpKey, idx = parseInt(btn.dataset.cpIdx), opt = parseInt(btn.dataset.opt);
+  if (typeof SECTION_CHECKPOINTS === 'undefined') return;
+  const cp = SECTION_CHECKPOINTS[key]?.[idx];
+  if (!cp) return;
+
+  const allOpts = card.querySelectorAll('.checkpoint-option');
+  const isCorrect = opt === cp.answer;
+  const icon = card.querySelector('.checkpoint-icon');
+
+  // Disable all options
+  allOpts.forEach(o => o.classList.add('disabled'));
+
+  if (isCorrect) {
+    btn.classList.add('correct');
+    card.classList.add('answered-correct');
+    icon.textContent = '✓';
+  } else {
+    btn.classList.add('wrong');
+    allOpts[cp.answer].classList.add('correct');
+    card.classList.add('answered-wrong');
+    icon.textContent = '✗';
+  }
+
+  // Show explanation
+  const expDiv = document.createElement('div');
+  expDiv.className = `checkpoint-explanation${isCorrect ? '' : ' wrong-exp'}`;
+  expDiv.innerHTML = isCorrect
+    ? `<strong>✓ 正确！</strong> ${cp.explanation}`
+    : `<strong>✗ 不对哦</strong> — 正确答案是 ${['A','B','C','D','E','F'][cp.answer]}。${cp.explanation}`;
+  card.appendChild(expDiv);
+
+  // Allow retry on wrong answer after 2s
+  if (!isCorrect) {
+    setTimeout(() => {
+      allOpts.forEach(o => { o.classList.remove('disabled','wrong'); });
+      card.classList.remove('answered-wrong');
+      icon.textContent = '?';
+      card.querySelector('.checkpoint-title').textContent = `CHECKPOINT ${idx + 1}`;
+      expDiv.remove();
+    }, 2500);
+  }
+}
+
 function loadSection(moduleId, sectionId) {
   currentModuleId = moduleId;
   currentSectionId = sectionId;
@@ -821,7 +907,15 @@ function loadSection(moduleId, sectionId) {
     : sec.content;
   const contentWithGlossary = injectGlossary(contentSource);
 
+  // Reading time estimate (Chinese ~500 chars/min, English ~250 words/min)
+  const plainText = contentSource.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+  const readMin = Math.max(1, Math.round(plainText.length / 500));
+
   document.getElementById('article-body').innerHTML = `
+    <div class="reading-time">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      ${readMin} min read
+    </div>
     ${contentWithGlossary}
     <div class="separator"></div>
     <button class="complete-btn ${done?'done':''}" onclick="markDone('${sectionId}',this)">
@@ -832,7 +926,11 @@ function loadSection(moduleId, sectionId) {
       ${nextSec ? `<button class="nav-btn next-btn" onclick="loadSection('${nextMod?.id}','${nextSec.id}')">${t('section.next')}${getSectionField(nextSec,'title')}</button>` : ''}
     </div>`;
 
-  setTimeout(() => { if (window.Prism) Prism.highlightAll(); bindGlossaryEvents(); }, 80);
+  setTimeout(() => {
+    if (window.Prism) Prism.highlightAll();
+    bindGlossaryEvents();
+    renderCheckpoints(sec.contentKey);
+  }, 80);
   updateSidebar();
   updateStatusBar();
   window.scrollTo({ top: 0 });
@@ -1302,9 +1400,9 @@ const TOOLS = [
   { id: 'base64', name: 'Base64 编解码', icon: '📦', desc: 'Base64 编码与解码，支持 Unicode', modes: ['ENCODE','DECODE'], fn: { 'ENCODE': v => { try { return btoa(unescape(encodeURIComponent(v))); } catch(e) { return 'Encode failed'; } }, 'DECODE': v => { try { return decodeURIComponent(escape(atob(v))); } catch(e) { return 'Decode failed'; } } } },
   { id: 'hash', name: 'Hash 计算', icon: '#️⃣', desc: 'SHA-256/SHA-1 哈希（浏览器 SubtleCrypto）', modes: ['SHA-256','SHA-1'], fn: null, async: true },
   { id: 'caesar', name: 'Caesar / ROT13', icon: '🔄', desc: '凯撒密码加解密，自定义位移（0-25）', modes: null, extra: true },
-  { id: 'url', name: 'URL 编解码', icon: '🔗', desc: 'encodeURIComponent / decodeURIComponent', modes: ['ENCODE','DECODE'], fn: { 'ENCODE': v => encodeURIComponent(v), 'DECODE': v => { try { return decodeURIComponent(v); } catch(e) { return 'Decode failed'; } } } },
-  { id: 'hex', name: 'Hex / ASCII', icon: '🔣', desc: '十六进制与文本互转', modes: ['Text→Hex','Hex→Text'], fn: { 'Text→Hex': v => Array.from(new TextEncoder().encode(v)).map(b => b.toString(16).padStart(2,'0')).join(' '), 'Hex→Text': v => { try { const clean = v.replace(/\s/g,''); return new TextDecoder().decode(new Uint8Array(clean.match(/.{1,2}/g).map(b => parseInt(b,16)))); } catch(e) { return '转换失败'; } } } },
-  { id: 'binary', name: '进制转换', icon: '💻', desc: '二进制/十进制/十六进制互转', modes: ['Dec→Bin','Bin→Dec','Dec→Hex','Hex→Dec'], fn: { 'Dec→Bin': v => { const n=parseInt(v); return isNaN(n)?'Invalid':n.toString(2); }, 'Bin→Dec': v => { const n=parseInt(v,2); return isNaN(n)?'Invalid':n.toString(10); }, 'Dec→Hex': v => { const n=parseInt(v); return isNaN(n)?'Invalid':'0x'+n.toString(16).toUpperCase(); }, 'Hex→Dec': v => { const n=parseInt(v.replace('0x',''),16); return isNaN(n)?'Invalid':n.toString(10); } } }
+  { id: 'url', name: 'URL 编解码', icon: '🔗', desc: 'URL 编解码，支持 + 号解码为空格', modes: ['ENCODE','DECODE'], fn: { 'ENCODE': v => encodeURIComponent(v), 'DECODE': v => { try { return decodeURIComponent(v.replace(/\+/g, '%20')); } catch(e) { return 'Decode failed'; } } } },
+  { id: 'hex', name: 'Hex / ASCII', icon: '🔣', desc: '十六进制与文本互转，支持 0x 前缀', modes: ['Text→Hex','Hex→Text'], fn: { 'Text→Hex': v => Array.from(new TextEncoder().encode(v)).map(b => b.toString(16).padStart(2,'0')).join(' '), 'Hex→Text': v => { try { let clean = v.replace(/0x/gi,'').replace(/[\s,:]/g,''); if (clean.length % 2) clean = '0' + clean; if (!/^[0-9a-f]+$/i.test(clean)) return 'Invalid hex'; return new TextDecoder().decode(new Uint8Array(clean.match(/.{2}/g).map(b => parseInt(b,16)))); } catch(e) { return '转换失败'; } } } },
+  { id: 'binary', name: '进制转换', icon: '💻', desc: '二进制/十进制/十六进制互转', modes: ['Dec→Bin','Bin→Dec','Dec→Hex','Hex→Dec'], fn: { 'Dec→Bin': v => { const n=parseInt(v,10); if(isNaN(n)) return 'Invalid'; return n<0?(n>>>0).toString(2):n.toString(2); }, 'Bin→Dec': v => { const clean=v.replace(/^0b/i,''); const n=parseInt(clean,2); if(isNaN(n)) return 'Invalid'; return clean.length===32&&clean[0]==='1'?String(n|0):n.toString(10); }, 'Dec→Hex': v => { const n=parseInt(v,10); if(isNaN(n)) return 'Invalid'; return n<0?'0x'+((n>>>0).toString(16).toUpperCase()):'0x'+n.toString(16).toUpperCase(); }, 'Hex→Dec': v => { const clean=v.replace(/^0x/i,''); const n=parseInt(clean,16); if(isNaN(n)) return 'Invalid'; return clean.length===8&&parseInt(clean[0],16)>=8?String(n|0):n.toString(10); } } }
 ];
 let toolModes = {};
 TOOLS.forEach(t => { if (t.modes) toolModes[t.id] = t.modes[0]; });

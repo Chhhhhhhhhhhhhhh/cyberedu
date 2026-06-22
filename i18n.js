@@ -258,6 +258,8 @@ const LANG = {
     'tool.url.desc': 'encodeURIComponent / decodeURIComponent',
     'tool.hex': 'Hex / ASCII',
     'tool.hex.desc': '十六进制与文本互转',
+    'tool.binary': '进制转换',
+    'tool.binary.desc': '二进制/十进制/十六进制互转，支持负数补码',
     'tool.morse': '摩尔斯电码',
     'tool.morse.desc': '摩尔斯电码编解码',
 
@@ -452,6 +454,8 @@ const LANG = {
     'tool.url.desc': 'encodeURIComponent / decodeURIComponent',
     'tool.hex': 'Hex / ASCII',
     'tool.hex.desc': 'Hexadecimal and text conversion',
+    'tool.binary': 'Radix Conversion',
+    'tool.binary.desc': 'Binary/decimal/hex conversion with two\'s complement',
     'tool.morse': 'Morse Code',
     'tool.morse.desc': 'Morse code encode and decode',
 
