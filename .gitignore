@@ -20,3 +20,22 @@ cyberedu_backup.html
 cyberedu_current_backup.html
 # Progress data (runtime)
 progress.json
+
+# Dependencies
+node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment
+.env
+.env.local

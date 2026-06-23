@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-v2.4-00ff41?style=flat-square" alt="Version">
+  <img src="https://img.shields.io/badge/version-v2.5-00ff41?style=flat-square" alt="Version">
   <img src="https://img.shields.io/badge/license-MIT-00e5ff?style=flat-square" alt="License">
   <img src="https://img.shields.io/github/last-commit/Chhhhhhhhhhhhhhh/cyberedu?style=flat-square&color=00ff41" alt="Last Commit">
   <img src="https://img.shields.io/github/repo-size/Chhhhhhhhhhhhhhh/cyberedu?style=flat-square&color=00e5ff" alt="Repo Size">
@@ -42,7 +42,7 @@
 | 🌐 **Bilingual** | Full EN/ZH translation · one-click UI language switch |
 | 🤖 **AI Tutor** | Built-in chat assistant · streaming SSE · supports DeepSeek, OpenAI, Qwen, Claude, Ollama |
 | 💻 **Code Editor** | CodeMirror 5 · Python / JS / C / Bash syntax highlighting |
-| 🚩 **CTF Arena** | 16 challenges · Crypto, Web, Misc, Reverse, Forensics, PWN |
+| 🚩 **CTF Arena** | 28 challenges · Crypto, Web, Misc, Reverse, Forensics, PWN |
 | ⌨️ **Practice** | 10 coding challenges with expected output validation |
 | 🔍 **Search** | Ctrl+K global search · token-based fuzzy matching |
 | 📱 **Responsive** | Full mobile support · sidebar overlay · compact navigation |
@@ -61,11 +61,18 @@ Programming · Cryptography · Networking · Web Security · Pentesting · Malwa
 cyberedu/
 ├── cyberedu.html          # Main page (entry point)
 ├── content.js             # Content data (bilingual: modules/chapters/exercises/CTF)
-├── script.js              # Interactive logic
-├── style.css              # Stylesheet (Neo-Brutalist Terminal design)
-├── i18n.js                # EN/ZH localization (~140 translation pairs)
-├── server.js              # Local Node.js server (AI chat proxy)
+├── script.js              # Application logic (navigation, views, sidebar, AI chat, effects)
+├── style.css              # Stylesheet (Neo-Brutalist Terminal design, WCAG AA compliant)
+├── i18n.js                # EN/ZH localization (~140+ translation pairs)
+├── server.js              # Local Node.js server (AI chat proxy, CTF verify, rate limiter)
+├── package.json           # Scripts: npm start, npm test
 ├── favicon.svg            # Site icon
+├── tests/                 # Zero-dependency test suite
+│   ├── test-runner.js     # Custom test runner (Node.js assert + ANSI colors)
+│   ├── server.test.js     # Server security & API tests
+│   └── utils.test.js      # Client utility & WCAG contrast tests
+├── scripts/               # Migration & maintenance scripts
+│   └── remove-client-flags.js  # Remove CTF flags from content.js (security migration)
 ├── docs/                  # Documentation assets (screenshots, OG images)
 ├── versions/              # Historical version archives + CHANGELOG
 ├── .github/               # Issue & feature request templates
@@ -100,6 +107,15 @@ Optional: adjust temperature, max tokens, and thinking/reasoning mode.
 
 > 💡 On Windows, double-click `restart_server.bat` to restart the server.
 
+### Run Tests
+
+```bash
+npm test
+# or: node tests/test-runner.js
+```
+
+Zero-dependency test suite — no `npm install` needed. Tests cover server security (directory traversal, rate limiting, CTF flag verification, input validation), client utilities (HTML escaping, URL validation, progress data), and WCAG AA contrast compliance.
+
 ## 🤖 Supported AI Models
 
 | Provider | API Base URL | Model Examples |
@@ -125,6 +141,15 @@ Optional: adjust temperature, max tokens, and thinking/reasoning mode.
 | Fonts | JetBrains Mono + Noto Sans SC + Space Mono |
 
 ## 📋 What's New
+
+### v2.5 (2026-06-23)
+
+- 🔒 **Security hardening** — CTF flag verification moved server-side (flags no longer exposed in client code), rate limiting, API URL whitelisting, input validation
+- ⚡ **Performance** — gzip compression, ETag caching, security headers (X-Frame-Options, X-XSS-Protection, Permissions-Policy)
+- ♿ **Accessibility** — WCAG AA contrast ratios, skip-to-content link, ARIA labels, `prefers-reduced-motion` support
+- 🧪 **Test suite** — Zero-dependency test runner with 50+ test cases covering server security, client utilities, and WCAG contrast verification
+- 📊 **SEO & meta** — Open Graph, Twitter Cards, structured data (JSON-LD), canonical/hreflang tags, SRI integrity checks on CDN scripts
+- 🌐 **i18n** — New translation keys for server-side verification flow
 
 ### v2.4 (2026-06-22)
 

@@ -1,5 +1,5 @@
-// CyberEdu Local Server v2.4 - Multi-Model AI Proxy
-// Usage: node server.js   (serves F:\workspace on port 8000)
+// CyberEdu Local Server v2.5 - Multi-Model AI Proxy
+// Usage: node server.js   (serves on port 8000)
 // Browser opens at http://localhost:8000
 
 const http = require('http');
@@ -9,10 +9,54 @@ const { execFile } = require('child_process');
 const os = require('os');
 const https = require('https');
 const { URL } = require('url');
+const zlib = require('zlib');
 
-const PORT = 8000;
+process.on('uncaughtException', (err) => {
+  console.error('[FATAL] Uncaught exception:', err.message);
+  if (err.code === 'EADDRINUSE') {
+    console.error('Port 8000 is in use. Run: netstat -ano | findstr :8000');
+  }
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('[WARN] Unhandled rejection:', reason);
+});
+
+const PORT = process.env.CYBEREDU_PORT || 8000;
 const ROOT = __dirname;
 const PROGRESS_FILE = path.join(ROOT, 'progress.json');
+
+// ── Simple Rate Limiter ──────────────────────────────
+const rateLimits = new Map();
+const RATE_WINDOW = 60000; // 1 minute
+const RATE_MAX = 30; // max requests per window
+
+function checkRateLimit(ip) {
+  const now = Date.now();
+  let entry = rateLimits.get(ip);
+  if (!entry || now - entry.start > RATE_WINDOW) {
+    entry = { start: now, count: 0 };
+    rateLimits.set(ip, entry);
+  }
+  entry.count++;
+  // Clean up old entries periodically
+  if (entry.count === 1 && rateLimits.size > 100) {
+    for (const [k, v] of rateLimits) {
+      if (now - v.start > RATE_WINDOW) rateLimits.delete(k);
+    }
+  }
+  return entry.count <= RATE_MAX;
+}
+
+// ── API URL Whitelist ─────────────────────────────────
+const ALLOWED_API_HOSTS = [
+  'api.openai.com',
+  'api.deepseek.com',
+  'dashscope.aliyuncs.com',
+  'api.anthropic.com',
+  'api.groq.com',
+  'localhost',
+  '127.0.0.1',
+];
 
 // ── MIME types ───────────────────────────────────────────────
 const MIME = {
@@ -82,6 +126,11 @@ function proxyChat(req, res) {
     // Auto-append /chat/completions (DeepSeek / OpenAI / Qwen / Ollama)
     if (!targetUrl.pathname.endsWith('/chat/completions')) {
       targetUrl.pathname = targetUrl.pathname.replace(/\/+$/, '') + '/chat/completions';
+    }
+    // Validate upstream URL against allowed hosts
+    if (!ALLOWED_API_HOSTS.includes(targetUrl.hostname)) {
+      res.writeHead(403, jsonHdrs());
+      return res.end(JSON.stringify({ error: '不允许的 API 地址。仅支持已知的 AI 服务提供商。' }));
     }
     console.log(`  [Proxy] → ${targetUrl.href}`);
 
@@ -193,6 +242,11 @@ function proxyAnthropic(req, res) {
     }
     if (!targetUrl.pathname.endsWith('/messages')) {
       targetUrl.pathname = targetUrl.pathname.replace(/\/+$/, '') + '/messages';
+    }
+    // Validate upstream URL against allowed hosts
+    if (!ALLOWED_API_HOSTS.includes(targetUrl.hostname)) {
+      res.writeHead(403, jsonHdrs());
+      return res.end(JSON.stringify({ error: 'API host not allowed. Only known AI service providers are supported.' }));
     }
     console.log(`  [Anthropic] → ${targetUrl.href}`);
 
@@ -510,6 +564,63 @@ function handleCTFSim(req, res) {
   });
 }
 
+// ── CTF Flag Verification (server-side only) ──────────────────
+const CTF_FLAGS = {
+  'ctf-001': 'flag{c4s4r_1s_n0t_s3cur3}',
+  'ctf-002': 'flag{b4s3_s1xtyf0ur_1s_n0t_3ncrypt10n}',
+  'ctf-003': 'flag{sql1_1nj3ct1on_m4st3r}',
+  'ctf-004': 'flag{xss_r3fl3ct3d_g0t_m3}',
+  'ctf-005': 'flag{md5_c0ll1s1on_2004}',
+  'ctf-006': 'flag{w1ner_w1ner_ch1cken_d1nner}',
+  'ctf-007': 'flag{r0t13_1s_n0t_encryption}',
+  'ctf-008': 'flag{c0mm4nd_1nj3ct10n_3z}',
+  'ctf-009': 'flag{d1r_tr4v3rs4l_pwn3d}',
+  'ctf-010': 'flag{h1dd3n_1n_pl41n_s1ght}',
+  'ctf-011': 'flag{buff3r_0v3rfl0w_101}',
+  'ctf-012': 'flag{j1nj4_2_t3mpl4t3_1nj3ct10n}',
+  'ctf-013': 'flag{pc4p_sh0w_m3_th3_fl4g}',
+  'ctf-014': 'flag{str1ngs_4r3_y0ur_fr13nd}',
+  'ctf-015': 'flag{f0r3ns1cs_m4st3r}',
+  'ctf-016': 'flag{php_l00s3_c0mp4r1s0n}',
+  'ctf-017': 'flag{r4ns0mw4r3_4n4lys1s}',
+  'ctf-018': 'flag{c0oki3_m0nst3r}',
+  'ctf-019': 'flag{pr1v1l3g3_3sc4l4t10n}',
+  'ctf-020': 'flag{z1p_sl1p_4tt4ck}',
+  'ctf-021': 'flag{rsa_sm4ll_3}',
+  'ctf-022': 'flag{csrf_t0k3n_byb4ss}',
+  'ctf-023': 'flag{r3v3rs3_sh3ll_g0t}',
+  'ctf-024': 'flag{v0l4t1l1ty_m3m_f0r3ns1cs}',
+  'ctf-025': 'flag{h34p_spr4y_pwn}',
+  'ctf-026': 'flag{st3g4n0_lsb_h1dd3n}',
+  'ctf-027': 'flag{m4lw4r3_p4ck3r_unp4ck}',
+  'ctf-028': 'flag{z3r0_d4y_3xpl01t}',
+};
+
+function handleCTFVerify(req, res) {
+  let body = '';
+  req.on('data', chunk => body += chunk);
+  req.on('end', () => {
+    let parsed;
+    try { parsed = JSON.parse(body); } catch {
+      res.writeHead(400, jsonHdrs());
+      return res.end(JSON.stringify({ error: 'JSON 格式错误' }));
+    }
+    const { challengeId, flag } = parsed;
+    if (!challengeId || !flag) {
+      res.writeHead(400, jsonHdrs());
+      return res.end(JSON.stringify({ error: '缺少 challengeId 或 flag' }));
+    }
+    const expected = CTF_FLAGS[challengeId];
+    if (!expected) {
+      res.writeHead(404, jsonHdrs());
+      return res.end(JSON.stringify({ error: '题目不存在' }));
+    }
+    const isCorrect = flag.trim().toLowerCase() === expected.trim().toLowerCase();
+    res.writeHead(200, jsonHdrs());
+    res.end(JSON.stringify({ correct: isCorrect }));
+  });
+}
+
 // ── Main HTTP server ─────────────────────────────────────────
 const server = http.createServer((req, res) => {
 
@@ -526,6 +637,13 @@ const server = http.createServer((req, res) => {
   const ts = new Date().toISOString().slice(11, 23);
   console.log(`[${ts}] ${req.method} ${req.url}`);
 
+  // Rate limit check for POST requests
+  const clientIp = req.socket.remoteAddress;
+  if (req.method === 'POST' && !checkRateLimit(clientIp)) {
+    res.writeHead(429, jsonHdrs());
+    return res.end(JSON.stringify({ error: '请求过于频繁，请稍后重试。' }));
+  }
+
   // ── API: progress persistence ───────────────────────────────
   if (req.url === '/api/progress') {
     if (req.method === 'GET') {
@@ -537,8 +655,29 @@ const server = http.createServer((req, res) => {
     }
     if (req.method === 'POST') {
       let body = '';
-      req.on('data', chunk => body += chunk);
+      let size = 0;
+      const MAX_SIZE = 1024 * 100; // 100KB max
+      req.on('data', chunk => {
+        size += chunk.length;
+        if (size > MAX_SIZE) {
+          res.writeHead(413, jsonHdrs());
+          res.end(JSON.stringify({ error: '数据过大' }));
+          req.destroy();
+          return;
+        }
+        body += chunk;
+      });
       req.on('end', () => {
+        if (res.writableEnded) return;
+        try {
+          const data = JSON.parse(body);
+          if (typeof data !== 'object' || data === null || Array.isArray(data)) {
+            throw new Error('Invalid format');
+          }
+        } catch {
+          res.writeHead(400, jsonHdrs());
+          return res.end(JSON.stringify({ error: '无效的进度数据格式' }));
+        }
         fs.writeFileSync(PROGRESS_FILE, body, 'utf-8');
         res.writeHead(200, jsonHdrs());
         res.end(JSON.stringify({ ok: true }));
@@ -555,6 +694,11 @@ const server = http.createServer((req, res) => {
   // ── API: CTF simulated terminal ─────────────────────────────
   if (req.method === 'POST' && req.url === '/api/ctf-sim') {
     return handleCTFSim(req, res);
+  }
+
+  // ── API: CTF flag verification ──────────────────────────────
+  if (req.method === 'POST' && req.url === '/api/ctf-verify') {
+    return handleCTFVerify(req, res);
   }
 
   // ── API proxy ─────────────────────────────────────────────
@@ -579,8 +723,47 @@ const server = http.createServer((req, res) => {
       if (err.code === 'ENOENT') { res.writeHead(404); return res.end('Not Found'); }
       res.writeHead(500); return res.end('Internal Server Error');
     }
-    res.writeHead(200, { 'Content-Type': getMime(filePath) });
-    res.end(data);
+
+    const mime = getMime(filePath);
+    const etag = '"' + data.length + '-' + fs.statSync(filePath).mtimeMs + '"';
+    const acceptEncoding = req.headers['accept-encoding'] || '';
+    const compressible = /\.(html|css|js|json|svg|xml|txt)$/i.test(filePath);
+
+    // Cache headers
+    const headers = {
+      'Content-Type': mime,
+      'ETag': etag,
+      'Cache-Control': /\.(html|css|js)$/i.test(filePath) ? 'no-cache' : 'public, max-age=3600',
+      'X-Content-Type-Options': 'nosniff',
+      'X-Frame-Options': 'DENY',
+      'Referrer-Policy': 'strict-origin-when-cross-origin',
+          'X-XSS-Protection': '1; mode=block',
+          'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), interest-cohort=()',
+    };
+
+    // Check If-None-Match for 304
+    if (req.headers['if-none-match'] === etag) {
+      res.writeHead(304, headers);
+      return res.end();
+    }
+
+    // Gzip compression for compressible files
+    if (compressible && acceptEncoding.includes('gzip')) {
+      zlib.gzip(data, (err, compressed) => {
+        if (err) {
+          // Fallback to uncompressed
+          res.writeHead(200, headers);
+          res.end(data);
+        } else {
+          headers['Content-Encoding'] = 'gzip';
+          res.writeHead(200, headers);
+          res.end(compressed);
+        }
+      });
+    } else {
+      res.writeHead(200, headers);
+      res.end(data);
+    }
   });
 });
 
@@ -589,7 +772,7 @@ server.listen(PORT, () => {
   const hasGCC = checkRuntime('gcc', 'gcc --version');
   console.log('');
   console.log('  ╔══════════════════════════════════════════════╗');
-  console.log('  ║   CyberEdu Server  v2.4  (Multi-Model AI)  ║');
+  console.log('  ║   CyberEdu Server  v2.5  (Multi-Model AI)  ║');
   console.log('  ║   http://localhost:' + PORT + '                     ║');
   console.log('  ╚══════════════════════════════════════════════╝');
   console.log('');

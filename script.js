@@ -1,8 +1,7 @@
-
 // ============================================================
 // STATE & PROGRESS
 // ============================================================
-let userProgress = null;
+let userProgress = defaultProgress();
 const PROGRESS_KEY = 'cyberedu_v2_progress';
 
 function defaultProgress() {
@@ -20,18 +19,27 @@ function initProgress() {
   const local = JSON.parse(localStorage.getItem(PROGRESS_KEY));
   fetch('/api/progress').then(r => r.json()).then(server => {
     if (server && server.completedSections) {
-      userProgress = server;
+      userProgress = Object.assign(defaultProgress(), server);
     } else if (local) {
-      userProgress = local;
+      userProgress = Object.assign(defaultProgress(), local);
     } else {
       userProgress = defaultProgress();
     }
+    // Ensure critical array properties are actually arrays
+    ['completedSections','ctfSolved','timeline'].forEach(k => {
+      if (!Array.isArray(userProgress[k])) userProgress[k] = [];
+    });
+    if (typeof userProgress.streak !== 'number') userProgress.streak = 1;
+    if (!userProgress.moduleProgress) userProgress.moduleProgress = {};
     localStorage.setItem(PROGRESS_KEY, JSON.stringify(userProgress));
     recalcModuleProgress();
     updateStatusBar();
     updateSidebar();
   }).catch(() => {
-    userProgress = local || defaultProgress();
+    userProgress = local ? Object.assign(defaultProgress(), local) : defaultProgress();
+    ['completedSections','ctfSolved','timeline'].forEach(k => {
+      if (!Array.isArray(userProgress[k])) userProgress[k] = [];
+    });
     recalcModuleProgress();
   });
 }
@@ -699,6 +707,13 @@ function renderHome() {
   // Render learning path
   renderLearningPath();
   wrapCyberLetters();
+
+  // Update hero stats
+  const totalSections = MODULES.flatMap(m => m.chapters.flatMap(c => c.sections)).length;
+  document.getElementById('stat-chapters').textContent = totalSections;
+  document.getElementById('stat-exercises').textContent = (typeof PRACTICES !== 'undefined') ? PRACTICES.length : 0;
+  document.getElementById('stat-ctf').textContent = (typeof CTF_CHALLENGES !== 'undefined') ? CTF_CHALLENGES.length : 0;
+  document.getElementById('stat-tools').textContent = (typeof TOOLS !== 'undefined') ? TOOLS.length : 0;
 }
 
 function renderLearningPath() {
@@ -879,6 +894,8 @@ function handleCheckpointAnswer(btn) {
   }
 }
 
+// injectGlossary is defined in content.js (sophisticated version with i18n support)
+
 function loadSection(moduleId, sectionId) {
   currentModuleId = moduleId;
   currentSectionId = sectionId;
@@ -891,7 +908,7 @@ function loadSection(moduleId, sectionId) {
   document.getElementById('sidebar').classList.remove('hidden');
   document.getElementById('main-content').classList.remove('no-sidebar');
 
-  document.getElementById('hub-breadcrumb').innerHTML = `${t('hub.breadcrumb')} / <span>${getModField(m,'title')}</span>`;
+  document.getElementById('hub-breadcrumbs').innerHTML = `${t('hub.breadcrumb')} / <span>${getModField(m,'title')}</span>`;
   document.getElementById('hub-title').textContent = getSectionField(sec,'title');
 
   const allSections = MODULES.flatMap(mod => mod.chapters.flatMap(c => c.sections));
@@ -1320,7 +1337,8 @@ function renderProgress() {
 
   const canvas = document.getElementById('radar-chart');
   if (radarChart) { radarChart.destroy(); radarChart = null; }
-  radarChart = new Chart(canvas, {
+  if (typeof Chart !== 'undefined') {
+    radarChart = new Chart(canvas, {
     type: 'radar',
     data: {
       labels: MODULES.map(m => getModField(m,'title')),
@@ -1340,12 +1358,14 @@ function renderProgress() {
       plugins: { legend: { display: false } }
     }
   });
+  }
 
   const tl = document.getElementById('timeline');
-  if (!userProgress.timeline.length) {
+  const timeline = Array.isArray(userProgress.timeline) ? userProgress.timeline : [];
+  if (!timeline.length) {
     tl.innerHTML = '<div class="empty-state">' + t('progress.emptyTimeline') + '</div>';
   } else {
-    tl.innerHTML = userProgress.timeline.slice(0, 12).map(item => `
+    tl.innerHTML = timeline.slice(0, 12).map(item => `
       <div class="timeline-item"><span class="timeline-date">${item.date}</span><div class="timeline-dot"></div><span class="timeline-text">${item.text}</span></div>`).join('');
   }
 }
@@ -2383,4 +2403,3 @@ if (document.readyState === 'loading') {
 } else {
   initApp();
 }
-

@@ -1,5 +1,61 @@
 # cyberedu 版本记录
 
+## v2.5 — 2026-06-23
+
+**文件**: `script.js`, `cyberedu.html`, `style.css`, `server.js`, `content.js`, `i18n.js`, `tests/*.js`, `scripts/*.js`, `README.md`, `package.json`, `robots.txt`, `sitemap.xml`
+
+### 🔒 安全加固
+- **CTF Flag 服务端验证**：所有 28 个 CTF flag 从客户端 `content.js` 迁移至 `server.js`，新增 `/api/ctf-verify` 端点，大小写不敏感 + 空白字符修剪比对
+- **速率限制**：POST 请求 30 次/分钟/IP，超出返回 429，内存 Map 自动清理过期条目
+- **API URL 白名单**：代理请求仅允许 7 个已知 AI API 主机（OpenAI/DeepSeek/Anthropic/Qwen/Groq/localhost），阻止 SSRF
+- **进度数据验证**：`/api/progress` POST 校验 JSON 格式、非数组、100KB 大小上限
+- **安全响应头**：新增 `X-Content-Type-Options`、`X-Frame-Options: DENY`、`Referrer-Policy`、`X-XSS-Protection`、`Permissions-Policy`
+- **CDN 完整性校验**：所有外部脚本/样式添加 `integrity="sha384-..."` SRI 哈希 + `crossorigin="anonymous"` + `referrerpolicy="no-referrer"`
+- **客户端 flag 迁移脚本**：`scripts/remove-client-flags.js` 自动从 content.js 移除 flag 属性并创建备份
+
+### ⚡ 性能优化
+- **gzip 压缩**：HTML/CSS/JS/JSON/SVG/XML/TXT 等可压缩文件自动 gzip，减少传输体积
+- **ETag 缓存**：基于文件大小 + mtime 生成 ETag，支持 304 Not Modified 响应
+- **Cache-Control 策略**：HTML/CSS/JS 设为 `no-cache`（始终验证），其他静态资源 `max-age=3600`
+- **全局错误捕获**：`uncaughtException` / `unhandledRejection` 防止服务器崩溃
+
+### ♿ 无障碍 (Accessibility)
+- **WCAG AA 对比度**：修复 `--text-muted` 颜色（#5a6070 → #8890a0），确保暗色主题下 ≥ 4.5:1
+- **Skip-to-content**：键盘用户可直接跳过导航直达主内容
+- **ARIA 标签**：所有交互元素添加适当的 `role`、`aria-label`、`aria-pressed`、`aria-expanded`
+- **prefers-reduced-motion**：尊重系统动画偏好设置，禁用所有动画和 canvas 效果
+- **prefers-color-scheme**：自动跟随系统亮/暗色主题
+- **语义化 HTML**：`<header>`、`<main>`、`<nav>`、`<aside>` 正确嵌套，导航改为 `<ul>/<li>` 列表结构
+
+### 📊 SEO 优化
+- **Open Graph** 完整 meta 标签（title/description/type/url/image/locale）
+- **Twitter Cards**：`summary_large_image` 卡片类型
+- **结构化数据**：JSON-LD `Course` schema（名称/描述/提供方/教育级别/语言）
+- **Canonical + hreflang**：多语言页面正确指示
+- **robots meta**：`index, follow` + `robots.txt` + `sitemap.xml`
+
+### 🧪 自动化测试
+- **零依赖测试框架**：`tests/test-runner.js` 使用 Node.js 原生 `assert` + ANSI 彩色输出
+- **2 个测试文件、50+ 测试用例**：
+  - `tests/server.test.js` — 静态文件服务、目录遍历防护、CTF flag 验证、速率限制、API 白名单、进度数据验证
+  - `tests/utils.test.js` — HTML 转义、URL 验证、JSON 安全解析、字符串工具、进度数据合并、WCAG 对比度验证
+- **运行方式**：`npm test` 或 `node tests/test-runner.js`
+
+### 🛡️ 代码健壮性
+- **进度数据防御**：`initProgress()` 使用 `Object.assign(defaultProgress(), server/local)` 合并，确保新增字段不丢失
+- **数组类型检查**：`completedSections`/`ctfSolved`/`timeline` 强制 `Array.isArray()` 校验
+- **Chart.js 防御**：`typeof Chart !== 'undefined'` 检查避免 CDN 加载失败时崩溃
+- **CSS 浏览器兼容**：所有 `clip-path` 添加 `-webkit-clip-path` 前缀（12 处），`backdrop-filter` 添加 `-webkit-backdrop-filter`（3 处）
+
+### 🌐 国际化
+- 新增翻译键：`ctf.verifyError`、`a11y.skipToContent`、`sidebar.collapse/expand`、`checkpoint.*`、`ai.systemPrompt`、`typewriter.*` 等（中/英双语）
+
+### 🎨 UI 改进
+- **Hero 统计数据动态更新**：首页章节数/练习数/CTF 数/工具数从数据源自动计算
+- **CTF 题目扩充**：新增 12 道挑战（ctf-017 ~ ctf-028），总数从 16 增至 28
+
+---
+
 ## v2.4 — 2026-06-22
 
 **文件**: `content.js`, `script.js`, `style.css`, `i18n.js`, `server.js`, `README.md`, `README_zh.md`
@@ -28,144 +84,3 @@
 - 文档截图（features-showcase.png / og-image.png）清理 AI 生成水印
 
 ### ⚙️ 工程
-- server.js 版本号同步 v2.4
-- HTML 状态栏版本号同步 v2.4
-
----
-
-## v2.3 — 2026-06-05
-
-**文件**: `server.js`, `script.js`, `style.css`, `i18n.js`, `cyberedu.html`
-**仓库**: 公开 / GitHub Pages / Issue 模板 / CONTRIBUTING.md
-
-### 🤖 多模型 AI 代理
-- 新增 Anthropic (Claude) API 支持，设置面板增加 API Type 下拉选择器
-- Anthropic SSE 事件格式自动转换为 OpenAI 兼容格式
-- 支持 system prompt、thinking/reasoning 内容和 token 用量统计
-- 配置文件新增 `cyberedu_ai_type` 存储，支持 OpenAI Compatible / Anthropic 切换
-- 扩展支持：Groq、Ollama (已支持)，Claude 系列 (新增)
-
-### 📱 移动端响应式优化
-- 侧边栏：小屏改为覆盖层模式 (z-index:200)，导航后自动关闭
-- 导航栏：紧凑布局，横向滚动，搜索框隐藏
-- 文章区：字号/间距/表格/代码块全面适配小屏
-- 首页/CTF/练习/工具/模态框：网格单列布局，间距优化
-- 移动端禁用 scroll-reveal 动画
-
-### 🔍 搜索增强
-- 支持分词模糊匹配（"RSA crypto" → 同时匹配含 RSA 和 cryptography 的条目）
-- 高亮改为每个 token 分别标记
-- 匹配要求：每个词都必须在标题或描述中出现
-
-### 🌐 国际化与默认语言
-- AI 设置面板所有标签改为 i18n 支持（EN/ZH 自动切换）
-- 网站默认语言改为英文
-- 浏览器标签标题跟随语言切换
-- localStorage 键名升级为 v3，避免旧缓存干扰
-
-### ⚡ 性能优化
-- content.js / i18n.js / script.js 添加 defer 属性，不阻塞页面渲染
-- 加载中显示 CyberEdu 启动动画遮罩
-
-### 📝 开源配套
-- 新增 CONTRIBUTING.md 贡献指南（英语）
-- 添加 SEO meta 标签（description / Open Graph / Twitter Card）
-- 项目目录清理：构建脚本移入 build/，中间产物加入 .gitignore
-- 仓库版本号统一 v2.3 (server.js + 启动日志)
-
-## v2.2 — 2026-06-03
-
-**文件**:
-- `content.js` (2.4MB) — 中英文双语教学内容（SECTION_CONTENT + SECTION_CONTENT_EN）
-- `i18n.js` — 中英文切换系统（~140 翻译键值对）
-- `script.js` / `style.css` — 排版优化 + 语言切换逻辑
-
-### 🌐 英文全文翻译
-- **52 个章节完整英文翻译**，覆盖全部 7 个模块（SECTION_CONTENT_EN）
-- UI 界面中英文双语：导航、搜索、按钮、提示全部支持切换
-- 章节导航按钮（上一节/下一节/标记完成）中英文自动切换
-- 练习题代码注释同步翻译（starterEn 字段）
-- 侧边栏模块标题、章节标题中英文切换
-- 语言偏好通过 localStorage 持久保存
-
-### 📝 教学内容质量审查
-- 4 位审查 agent 并行审查全部 52 个章节
-- **修复 22 处事实性错误**：
-  - 🔴 严重：RSA 专利年份（1997→2000）、Yahoo 泄露（2012→2013-14）、Knuth 引用归属（→David Wheeler）、虚构工具名（prepivot→Impacket, jurukit→CrackMapExec, lazwat→laZagne）、Volatility 版本混淆
-  - 🟡 中等：Python 2→3 语法导入、YARA 属性名、HTTP/0.9 状态码描述
-  - 🟢 轻微：Wireshark 拼写、SageMath 名称等
-
-### 🐛 Bug 修复
-- 修复切换语言后章节正文不刷新（`rerenderCurrentView` 对 hub 视图补充 `loadSection` 调用）
-- 修复 sectionId 与 SECTION_CONTENT_EN key 不匹配导致英文内容不显示（新增 `contentKey` 属性，52处精确映射）
-- 修复 Windows 路径反斜杠（`C:\temp\...`）在 JS 模板字面量中引发 `SyntaxError`
-
-### 🎨 排版优化
-- 学习中心文章区间距增大：边距/行高/标题间距 增大约 15-30%
-- 文章区最大宽度：940px（侧边栏展开）→ 1140px（收起）→ 1180px（无侧边栏），自动填充右侧空间
-- Callout 提示框内边距增大、完成按钮居中加宽
-
----
-
-## v2.1 — 2026-06-02
-
-**文件**:
-- `versions/cyberedu_v2.0.html` (11KB) — 纯 HTML 结构
-- `versions/style_v2.0.css` (42KB) — 全部 CSS 样式
-- `versions/script_v2.0.js` (257KB) — 全部 JS 逻辑 + 内容数据
-
-### 架构变更
-- 从单文件拆分为三文件架构（HTML + CSS + JS），便于维护
-- 7 个知识模块，71 个章节（较 v1.0 新增 23 章）
-
-| 模块 | 章节数 | 覆盖主题 |
-|------|--------|---------|
-| 编程基础 | 11 | C/指针/缓冲区/Python/正则/Bash/SQL/Linux |
-| 密码学 | 10 | 古典密码/对称加密/RSA/哈希/PKI/量子密码 |
-| 网络 | 6 | OSI/DNS/HTTP/TLS/WiFi/防火墙 |
-| Web安全 | 9 | SQL注入/XSS/CSRF/文件上传/反序列化/SSTI/JWT/CORS |
-| 渗透测试 | 5 | 信息收集/提权/Metasploit/AD攻击/后渗透 |
-| 恶意软件 | 4 | 分类/静态动态分析/YARA规则/**Stuxnet案例**/**沙箱与自动化** |
-| CTF实战 | 6 | CTF入门/PWN/逆向/题型速通/**数字取证**/**CTF工具链** |
-
-### 新增功能
-- **学习路线系统**：首页 4 阶段学习路径（基础夯实→安全原理→实战进阶→综合对抗）
-- **自测系统**：练习题支持期望输出对比 + 测试用例验证
-- **搜索高亮**：搜索结果关键词绿色高亮显示
-- **赛博朋克字母交互**：首页标题/章节标题/学习路线标签 hover 数据腐蚀闪烁 + 霓虹光效
-- **术语悬浮优化**：修复短词误匹配（如 DIV 中的 IV）
-- **无障碍改进**：ARIA 标签、对比度增强
-
-### Bug 修复
-- 修复新增内容字符串使用单引号跨行导致页面卡在 0% 加载（改用模板字面量）
-- 修复赛博字母效果未应用到动态渲染的 STAGE 标签（调整渲染顺序 + 事件委托）
-
----
-
-## v1.0 — 2026-06-01
-
-**文件**: `versions/cyberedu_v1.0.html` (257KB)
-
-### 内容架构
-- 7 个知识模块，48 个章节，全部采用"建房子"式渐进教学法
-- 每章包含：背景故事 → 核心概念 → 代码示例 → 防御方法 → 要点总结
-
-| 模块 | 章节数 | 覆盖主题 |
-|------|--------|---------|
-| 编程基础 | 11 | C/指针/缓冲区/Python/正则/Bash/SQL/Linux |
-| 密码学 | 10 | 古典密码/对称加密/RSA/哈希/PKI/量子密码 |
-| 网络 | 6 | OSI/DNS/HTTP/TLS/WiFi/防火墙 |
-| Web安全 | 9 | SQL注入/XSS/CSRF/文件上传/反序列化/SSTI/JWT/CORS |
-| 渗透测试 | 5 | 信息收集/提权/Metasploit/AD攻击/后渗透 |
-| 恶意软件 | 3 | 分类/静态动态分析/YARA规则 |
-| CTF实战 | 4 | CTF入门/PWN/逆向/题型速通 |
-
-### 功能特性
-- Prism.js 代码高亮 (cdnjs v1.29.0)
-- 学习进度追踪 (localStorage)
-- 全局搜索 (CTRL+K)
-- 练习题系统 (10道题，在线代码编辑+运行)
-- 练习题侧边栏 (显示全部题目，点击切换)
-- 模块侧边栏折叠按钮 (状态持久化到 localStorage)
-- 768px 以下侧边栏保持可见 (220px宽)
-- CTF 挑战题库 / 学习进度看板 / 工具箱

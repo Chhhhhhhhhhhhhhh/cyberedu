@@ -178,6 +178,7 @@ const LANG = {
     'ctf.wrong': '✗ WRONG! 再想想...',
     'ctf.enterFlag': '> 请输入 flag',
     'ctf.simError': '服务器连接失败',
+    'ctf.verifyError': 'Flag 验证失败，请稍后重试',
     'ctf.chapters': '章',
 
     // Progress
@@ -269,6 +270,37 @@ const LANG = {
     'tool.caesarOutputPlaceholder': '加密结果...',
     'tool.outputPlaceholder': '结果...',
     'tool.fail': '计算失败',
+
+    // Accessibility
+    'a11y.skipToContent': '跳至正文',
+
+    // Sidebar
+    'sidebar.collapse': '收起侧边栏',
+    'sidebar.expand': '展开侧边栏',
+
+    // Checkpoint quiz
+    'checkpoint.correct': '✓ 正确！',
+    'checkpoint.wrong': '✗ 不对哦，再想想',
+    'checkpoint.explanation': '解析：',
+    'checkpoint.retry': '↺ 重试',
+
+    // AI system prompt
+    'ai.systemPrompt': '你是 CyberEdu 的 AI 网络安全导师。你的任务是帮助用户理解网络安全概念、解答疑问、引导学习方向。规则：1) 不要直接给出 CTF flag 答案 2) 用引导性问题帮助用户自己思考 3) 回答要简洁准确 4) 使用中文回答',
+
+    // Typewriter lines
+    'typewriter.line1': '> 在数字世界的每个角落，漏洞都在等待被发现...',
+    'typewriter.line2': '> 从基础编程到高级渗透，系统化学习路径...',
+    'typewriter.line3': '> 52个章节 · 28个CTF挑战 · AI智能辅导...',
+    'typewriter.line4': '> 打破表象，寻找真相。每一次攻击都有故事...',
+
+    // CTF
+    'ctf.solved': '✓ 已解出',
+    'ctf.starterCode.python': '# 在这里写你的 Python 代码\nprint("Hello CTF")\n',
+    'ctf.starterCode.javascript': '// 在这里写你的 JavaScript 代码\nconsole.log("Hello CTF");\n',
+
+    // Misc
+    'app.loading': '正在加载...',
+    'app.offlineCdn': '部分 CDN 资源加载失败，某些功能可能受限。',
   },
 
   en: {
@@ -374,6 +406,7 @@ const LANG = {
     'ctf.wrong': '✗ WRONG! Try again...',
     'ctf.enterFlag': '> Please enter a flag',
     'ctf.simError': 'Connection failed',
+    'ctf.verifyError': 'Flag verification failed, please try again',
     'ctf.chapters': 'ch',
 
     // Progress
@@ -465,6 +498,37 @@ const LANG = {
     'tool.caesarOutputPlaceholder': 'Encrypted result...',
     'tool.outputPlaceholder': 'Result...',
     'tool.fail': 'Calculation failed',
+
+    // Accessibility
+    'a11y.skipToContent': 'Skip to content',
+
+    // Sidebar
+    'sidebar.collapse': 'Collapse sidebar',
+    'sidebar.expand': 'Expand sidebar',
+
+    // Checkpoint quiz
+    'checkpoint.correct': '✓ Correct!',
+    'checkpoint.wrong': '✗ Incorrect, try again',
+    'checkpoint.explanation': 'Explanation: ',
+    'checkpoint.retry': '↺ Retry',
+
+    // AI system prompt
+    'ai.systemPrompt': 'You are CyberEdu\'s AI cybersecurity tutor. Your role is to help users understand cybersecurity concepts, answer questions, and guide learning. Rules: 1) Never give CTF flag answers directly 2) Use guiding questions to help users think 3) Keep answers concise and accurate 4) Respond in English',
+
+    // Typewriter lines
+    'typewriter.line1': '> In every corner of the digital world, vulnerabilities await discovery...',
+    'typewriter.line2': '> From basic programming to advanced penetration, a systematic learning path...',
+    'typewriter.line3': '> 52 chapters · 28 CTF challenges · AI-powered tutoring...',
+    'typewriter.line4': '> Break the surface, find the truth. Every attack has a story...',
+
+    // CTF
+    'ctf.solved': '✓ Solved',
+    'ctf.starterCode.python': '# Write your Python code here\nprint("Hello CTF")\n',
+    'ctf.starterCode.javascript': '// Write your JavaScript code here\nconsole.log("Hello CTF");\n',
+
+    // Misc
+    'app.loading': 'Loading...',
+    'app.offlineCdn': 'Some CDN resources failed to load. Some features may be limited.',
   }
 };
 
