@@ -151,13 +151,6 @@ Zero-dependency test suite — no `npm install` needed. Tests cover server secur
 - 📊 **SEO & meta** — Open Graph, Twitter Cards, structured data (JSON-LD), canonical/hreflang tags, SRI integrity checks on CDN scripts
 - 🌐 **i18n** — New translation keys for server-side verification flow
 
-### v2.4 (2026-06-22)
-
-- 📚 **Content rewrite** — All 52 chapters rewritten with scenario-driven teaching, 203 interactive quiz checkpoints, reading time indicators
-- 🐛 **Bug fixes** — Sidebar collapse animation crash, sidebar overlap with statusbar, toolbox calculation errors (URL/Hex/Binary)
-- 📝 **Docs overhaul** — README badges, feature showcase images, enhanced SEO meta tags
-- 🖼️ **Image cleanup** — Removed AI-generated watermarks from documentation screenshots
-
 > 📋 [Full changelog →](versions/CHANGELOG.md)
 
 ## 🤝 Contributing
