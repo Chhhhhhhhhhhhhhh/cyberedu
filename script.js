@@ -1650,7 +1650,7 @@ function initMatrix(){
   const c=document.getElementById('matrix-canvas');
   const ctx=c.getContext('2d');
   c.width=window.innerWidth;c.height=window.innerHeight;
-  const chars='アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789:;<=>?@';
+  const chars='`1234567890-=~!@#$%^&*()_+qwertyuiop[]\\QWERTYUIOP{}|asdfghjkl;\'ASDFGHJKL:"zxcvbnm,./ZXCVBNM<>?';
   const fontSize=14,columns=Math.floor(c.width/fontSize);
   const drops=Array(columns).fill(1);
   function draw(){
