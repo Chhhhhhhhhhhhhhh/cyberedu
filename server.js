@@ -1,6 +1,14 @@
-// CyberEdu Local Server v2.5 - Multi-Model AI Proxy
-// Usage: node server.js   (serves on port 8000)
-// Browser opens at http://localhost:8000
+// CyberEdu Local Server v2.6 - Multi-Model AI Proxy
+// Usage: node server.js   (serves on http://127.0.0.1:8000)
+//
+// Security model (v2.6):
+//   • Binds to 127.0.0.1 by default — never exposes code execution to the LAN.
+//     Override deliberately with CYBEREDU_HOST=0.0.0.0 if you know what you need.
+//   • Host header allow-list blocks DNS-rebinding from hostile websites.
+//   • No CORS headers: the page is always served same-origin, so browsers are
+//     no longer able to drive these APIs from third-party sites.
+//   • Static file serving uses a block-list (repo internals, tests, git data).
+//   • CTF answers verified as SHA-256 digests only (see flags-hash.js).
 
 const http = require('http');
 const fs   = require('fs');
@@ -10,20 +18,84 @@ const os = require('os');
 const https = require('https');
 const { URL } = require('url');
 const zlib = require('zlib');
+const crypto = require('crypto');
 
 process.on('uncaughtException', (err) => {
   console.error('[FATAL] Uncaught exception:', err.message);
   if (err.code === 'EADDRINUSE') {
-    console.error('Port 8000 is in use. Run: netstat -ano | findstr :8000');
+    console.error('Port ' + PORT + ' is in use. Run: netstat -ano | findstr :' + PORT);
   }
 });
 process.on('unhandledRejection', (reason) => {
   console.error('[WARN] Unhandled rejection:', reason);
 });
 
-const PORT = process.env.CYBEREDU_PORT || 8000;
-const ROOT = __dirname;
+const PORT      = parseInt(process.env.CYBEREDU_PORT, 10) || 8000;
+const BIND_HOST = process.env.CYBEREDU_HOST || '127.0.0.1';
+const ROOT      = __dirname;
 const PROGRESS_FILE = path.join(ROOT, 'progress.json');
+const AUTO_OPEN = process.env.CYBEREDU_NO_OPEN !== '1';
+
+// ── Content-Security-Policy ──────────────────────────────────
+// Sent as a header here and mirrored as a <meta> tag in cyberedu.html so the
+// policy also applies to GitHub Pages / offline usage where this server is not
+// involved. The sha256-… entry whitelists the page's inline JSON-LD block.
+const CSP =
+  "default-src 'self'; " +
+  "script-src 'self' cdnjs.cloudflare.com 'sha256-gZvMHtWytt7MrvpMQQn6tIbyqzV5jz1AoQY2AxxYBdg='; " +
+  "style-src 'self' 'unsafe-inline' cdnjs.cloudflare.com fonts.googleapis.com; " +
+  "font-src 'self' cdnjs.cloudflare.com fonts.gstatic.com; " +
+  "img-src 'self' data: https:; " +
+  "connect-src 'self'; " +
+  "object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'";
+
+function securityHeaders(extra) {
+  return Object.assign({
+    'Content-Security-Policy':   CSP,
+    'X-Content-Type-Options':    'nosniff',
+    'X-Frame-Options':           'DENY',
+    'Referrer-Policy':           'strict-origin-when-cross-origin',
+    'Permissions-Policy':        'camera=(), microphone=(), geolocation=(), interest-cohort=()',
+  }, extra || {});
+}
+
+function jsonHdrs() {
+  return securityHeaders({ 'Content-Type': 'application/json; charset=utf-8' });
+}
+
+// ── Host header validation (anti DNS-rebinding) ─────────────
+// Only meaningful while bound to loopback; when an operator rebinds to another
+// interface we assume intentional LAN exposure and stop enforcing.
+const HOST_ALLOWED = new Set(['localhost:' + PORT, '127.0.0.1:' + PORT, '[::1]:' + PORT]);
+function hostIsAllowed(hostHeader) {
+  return !hostHeader || HOST_ALLOWED.has(String(hostHeader).toLowerCase());
+}
+
+// ── Request body reader with hard size cap ───────────────────
+function readJsonBody(req, res, maxBytes, cb) {
+  let body = '';
+  let size = 0;
+  req.on('data', chunk => {
+    size += chunk.length;
+    if (size > maxBytes) {
+      res.writeHead(413, jsonHdrs());
+      res.end(JSON.stringify({ error: '请求体过大' }));
+      req.destroy();
+      return;
+    }
+    body += chunk;
+  });
+  req.on('end', () => {
+    if (res.writableEnded) return;
+    let parsed;
+    try { parsed = JSON.parse(body); }
+    catch {
+      res.writeHead(400, jsonHdrs());
+      return res.end(JSON.stringify({ error: 'JSON 格式错误' }));
+    }
+    cb(parsed);
+  });
+}
 
 // ── Simple Rate Limiter ──────────────────────────────
 const rateLimits = new Map();
@@ -38,14 +110,16 @@ function checkRateLimit(ip) {
     rateLimits.set(ip, entry);
   }
   entry.count++;
-  // Clean up old entries periodically
-  if (entry.count === 1 && rateLimits.size > 100) {
-    for (const [k, v] of rateLimits) {
-      if (now - v.start > RATE_WINDOW) rateLimits.delete(k);
-    }
-  }
   return entry.count <= RATE_MAX;
 }
+// Unconditional periodic sweep instead of piggy-backing cleanup on request
+// flow — stale entries can no longer accumulate under skewed traffic.
+setInterval(() => {
+  const now = Date.now();
+  for (const [k, v] of rateLimits) {
+    if (now - v.start > RATE_WINDOW) rateLimits.delete(k);
+  }
+}, RATE_WINDOW).unref();
 
 // ── API URL Whitelist ─────────────────────────────────
 const ALLOWED_API_HOSTS = [
@@ -73,6 +147,9 @@ const MIME = {
   '.woff': 'font/woff',
   '.mp4':  'video/mp4',
   '.webm': 'video/webm',
+  '.txt':  'text/plain; charset=utf-8',
+  '.xml':  'application/xml; charset=utf-8',
+  '.md':   'text/markdown; charset=utf-8',
 };
 
 function getMime(filePath) {
@@ -80,10 +157,10 @@ function getMime(filePath) {
 }
 
 // ── Runtime detection ──────────────────────────────────────
-const { execSync } = require('child_process');
-function checkRuntime(name, command) {
-  try { execSync(command, { stdio: 'ignore', timeout: 3000 }); return true; }
-  catch { return false; }
+function checkRuntime(name, args) {
+  return new Promise((resolve) => {
+    execFile(name, args, { timeout: 3000, stdio: 'ignore' }, () => resolve(true));
+  });
 }
 
 // ── DeepSeek / OpenAI error status → Chinese message ──────────
@@ -99,15 +176,7 @@ const ERR_ZH = {
 
 // ── Proxy /api/chat  →  upstream AI API (SSE streaming) ─────
 function proxyChat(req, res) {
-  let body = '';
-  req.on('data',  chunk => { body += chunk; });
-  req.on('end', () => {
-    let parsed;
-    try { parsed = JSON.parse(body); } catch {
-      res.writeHead(400, jsonHdrs());
-      return res.end(JSON.stringify({ error: '请求体 JSON 格式错误。' }));
-    }
-
+  readJsonBody(req, res, 256 * 1024, (parsed) => {
     const { apiKey, apiUrl, model, messages,
             temperature, max_tokens, top_p, stop,
             thinking, stream_options } = parsed;
@@ -180,13 +249,12 @@ function proxyChat(req, res) {
       }
 
       // ── 200: pipe SSE stream to client ────────────────────
-      res.writeHead(200, {
+      res.writeHead(200, securityHeaders({
         'Content-Type':  'text/event-stream',
         'Cache-Control': 'no-cache',
         'Connection':    'keep-alive',
-        'Access-Control-Allow-Origin': '*',
         'X-Accel-Buffering': 'no',   // disable nginx proxy buffering
-      });
+      }));
 
       upRes.on('data', chunk => res.write(chunk));
       upRes.on('end', ()   => res.end());
@@ -217,15 +285,7 @@ function proxyChat(req, res) {
 // ── Anthropic Messages API proxy ──────────────────────────────
 let ANTHROPIC_SEQ = 0;
 function proxyAnthropic(req, res) {
-  let body = '';
-  req.on('data', chunk => { body += chunk; });
-  req.on('end', () => {
-    let parsed;
-    try { parsed = JSON.parse(body); } catch {
-      res.writeHead(400, jsonHdrs());
-      return res.end(JSON.stringify({ error: 'Invalid JSON' }));
-    }
-
+  readJsonBody(req, res, 256 * 1024, (parsed) => {
     const { apiKey, apiUrl, model, messages,
             temperature, max_tokens, system } = parsed;
 
@@ -305,12 +365,11 @@ function proxyAnthropic(req, res) {
       }
 
       // Pipe SSE stream, transform Anthropic format to OpenAI-compatible
-      res.writeHead(200, {
+      res.writeHead(200, securityHeaders({
         'Content-Type':       'text/event-stream',
         'Cache-Control':      'no-cache',
         'Connection':         'keep-alive',
-        'Access-Control-Allow-Origin': '*',
-      });
+      }));
 
       let buf = '';
       upRes.on('data', chunk => {
@@ -382,74 +441,65 @@ function anthropicToOpenAI(event, model) {
   return null;
 }
 
-function jsonHdrs() {
-  return { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' };
-}
-
 // ── Code execution handler ────────────────────────────────────
+// NOTE: runs submitted code unsandboxed **on purpose** (offline teaching tool).
+// This is exactly why the server must stay on 127.0.0.1 (see top of file).
 const RUN_TIMEOUT = 8000;
 
 function handleRunCode(req, res) {
-  let body = '';
-  req.on('data', chunk => body += chunk);
-  req.on('end', () => {
-    let parsed;
-    try { parsed = JSON.parse(body); } catch {
-      res.writeHead(400, jsonHdrs());
-      return res.end(JSON.stringify({ error: 'JSON 格式错误' }));
-    }
-
+  readJsonBody(req, res, 256 * 1024, (parsed) => {
     const { code, lang } = parsed;
     if (!code || !lang) {
       res.writeHead(400, jsonHdrs());
       return res.end(JSON.stringify({ error: '缺少 code 或 lang 参数' }));
     }
 
-    const langMap = { Python: '.py', JavaScript: '.js', C: '.c' };
+    const langMap = { Python: '.py', JavaScript: '.js', C: '.c', Bash: '.sh' };
     const ext = langMap[lang];
     if (!ext) {
       res.writeHead(400, jsonHdrs());
-      return res.end(JSON.stringify({ error: '不支持的语言: ' + lang + '。支持: Python, JavaScript, C' }));
+      return res.end(JSON.stringify({ error: '不支持的语言: ' + lang + '。支持: Python, JavaScript, C, Bash' }));
     }
 
     const tmpFile = path.join(os.tmpdir(), 'cyberedu_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8) + ext);
     fs.writeFileSync(tmpFile, code, 'utf-8');
+
+    function respond(payload) {
+      res.writeHead(200, jsonHdrs());
+      res.end(JSON.stringify(payload));
+    }
 
     if (lang === 'C') {
       const outFile = tmpFile.replace(/\.c$/, '.exe');
       execFile('gcc', [tmpFile, '-o', outFile, '-lm'], { timeout: RUN_TIMEOUT }, (err, stdout, stderr) => {
         if (err) {
           cleanup([tmpFile, outFile]);
-          res.writeHead(200, jsonHdrs());
           if (err.code === 'ENOENT') {
-            return res.end(JSON.stringify({ error: 'GCC (C compiler) is not installed on this server.\n\nInstall it to run C exercises:\n  • Windows: https://winlibs.com/ or MinGW-w64\n  • macOS: xcode-select --install\n  • Linux: sudo apt install gcc\n\nIn the meantime, use the Self-Test mode to compare your output with the expected result.' }));
+            return respond({ error: 'GCC (C compiler) is not installed on this server.\n\nInstall it to run C exercises:\n  • Windows: https://winlibs.com/ or MinGW-w64\n  • macOS: xcode-select --install\n  • Linux: sudo apt install gcc\n\nIn the meantime, use the Self-Test mode to compare your output with the expected result.' });
           }
-          return res.end(JSON.stringify({ error: '编译失败:\n' + stderr }));
+          return respond({ error: '编译失败:\n' + stderr });
         }
         execFile(outFile, [], { timeout: RUN_TIMEOUT }, (err2, stdout2, stderr2) => {
           cleanup([tmpFile, outFile]);
-          res.writeHead(200, jsonHdrs());
-          res.end(JSON.stringify({ stdout: stdout2, stderr: stderr2, exitCode: err2 ? 1 : 0 }));
+          respond({ stdout: stdout2, stderr: stderr2, exitCode: err2 ? 1 : 0 });
         });
       });
     } else if (lang === 'Bash') {
       execFile('bash', [tmpFile], { timeout: RUN_TIMEOUT, maxBuffer: 1024 * 1024 }, (err, stdout, stderr) => {
         cleanup([tmpFile]);
-        res.writeHead(200, jsonHdrs());
         if (err && err.code === 'ENOENT') {
-          return res.end(JSON.stringify({ error: 'Bash is not installed on this server.\n\nInstall it to run shell exercises:\n  • Windows: Git Bash (https://git-scm.com) or WSL\n  • macOS/Linux: already installed\n\nIn the meantime, use the Self-Test mode.' }));
+          return respond({ error: 'Bash is not installed on this server.\n\nInstall it to run shell exercises:\n  • Windows: Git Bash (https://git-scm.com) or WSL\n  • macOS/Linux: already installed\n\nIn the meantime, use the Self-Test mode.' });
         }
-        res.end(JSON.stringify({ stdout, stderr, exitCode: err ? 1 : 0 }));
+        respond({ stdout, stderr, exitCode: err ? 1 : 0 });
       });
     } else {
       const cmd = lang === 'Python' ? 'python' : process.execPath;
       execFile(cmd, [tmpFile], { timeout: RUN_TIMEOUT, maxBuffer: 1024 * 1024 }, (err, stdout, stderr) => {
         cleanup([tmpFile]);
-        res.writeHead(200, jsonHdrs());
         if (err && err.code === 'ENOENT') {
-          return res.end(JSON.stringify({ error: 'Python is not installed on this server.\n\nInstall Python 3 to run exercises:\n  • https://python.org/downloads/\n\nIn the meantime, use the Self-Test mode to compare your output with the expected result.' }));
+          return respond({ error: 'Python is not installed on this server.\n\nInstall Python 3 to run exercises:\n  • https://python.org/downloads/\n\nIn the meantime, use the Self-Test mode to compare your output with the expected result.' });
         }
-        res.end(JSON.stringify({ stdout, stderr, exitCode: err ? 1 : 0 }));
+        respond({ stdout, stderr, exitCode: err ? 1 : 0 });
       });
     }
 
@@ -460,6 +510,9 @@ function handleRunCode(req, res) {
 }
 
 // ── CTF simulated terminal handler ───────────────────────────
+// The five challenges below award their answer INSIDE the simulation itself —
+// i.e. obtaining the flag requires performing the demonstrated technique.
+// That is by design: their answers are inherently derivable through play.
 const CTF_SIM = {
   'ctf-003': { // Login Bypass (SQL Injection)
     welcome: 'SQL Injection Login Bypass - 模拟环境\n目标：绕过登录验证，以 admin 身份登录。\n后端 SQL: SELECT * FROM users WHERE user=\'[INPUT]\' AND pass=\'[PASS]\'\n\n示例输入: admin\' OR \'1\'=\'1\n',
@@ -512,7 +565,6 @@ const CTF_SIM = {
   'ctf-004': { // XSS Hunter
     welcome: 'XSS Hunter - 模拟环境\n目标：构造反射型 XSS Payload 弹出 alert(1)。\n后端代码: document.getElementById("result").textContent = location.search.split("q=")[1]\n\n注意：使用 textContent 回显，不是 innerHTML。需要换一种思路。\n提示：试试 onchange/oninput 事件配合 URL hash。\n\n示例输入: " autofocus onfocus=alert(1) x="\n',
     respond(input) {
-      const lower = input.toLowerCase();
       if (/on(?:focus|blur|click|mouseover|load|error)\s*=/i.test(input) || /javascript:/i.test(input) || /<svg/i.test(input) || /<img/i.test(input) || /<iframe/i.test(input)) {
         return { output: `<span style="color:#888">[Rendered HTML]:</span>\n<span style="color:#888">&lt;div id="result"&gt;${escHtml(input)}&lt;/div&gt;</span>\n\n<span style="color:#0f0">✓ XSS triggered! alert(1) fired.</span>\n<span style="color:#0f0">flag{xss_r3fl3ct3d_g0t_m3}</span>` };
       }
@@ -522,9 +574,8 @@ const CTF_SIM = {
   'ctf-012': { // SSTI Detective
     welcome: 'SSTI Detective - 模拟环境\n目标：利用 Flask/Jinja2 模板注入读取系统信息。\n后端代码: render_template_string("Hello {{ " + name + " }}")\n\n示例输入: {{7*7}}\n',
     respond(input) {
-      const lower = input.toLowerCase();
       if (/{{.*?7\s*\*\s*7.*?}}/.test(input) || /{{.*?config.*?}}/.test(input)) {
-        return { output: `<span style="color:#888">[Template]: Hello ${input}</span>\n<span style="color:#0ff">[Rendered]: Hello 49</span>\n\n<span style="color:#ff0">⚠ Template injection confirmed! Expression evaluated.</span>\n<span style="color:#888">Try chaining: {{ config.items() }} or {{ "".__class__.__mro__ }}</span>` };
+        return { output: `<span style="color:#888">[Template]: Hello ${escHtml(input)}</span>\n<span style="color:#0ff">[Rendered]: Hello 49</span>\n\n<span style="color:#ff0">⚠ Template injection confirmed! Expression evaluated.</span>\n<span style="color:#888">Try chaining: {{ config.items() }} or {{ "".__class__.__mro__ }}</span>` };
       }
       if (/__class__/i.test(input) || /__mro__/i.test(input) || /__subclasses__/i.test(input) || /__builtins__/i.test(input) || /popen/i.test(input)) {
         return { output: `<span style="color:#888">[Template]: Hello ${escHtml(input)}</span>\n<span style="color:#0f0">[Rendered]: Hello &lt;class 'object'&gt;...</span>\n\n<span style="color:#0f0">✓ SSTI chain executed! You got access to __builtins__.</span>\n<span style="color:#0f0">flag{j1nj4_2_t3mpl4t3_1nj3ct10n}</span>` };
@@ -540,14 +591,7 @@ const CTF_SIM = {
 function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 function handleCTFSim(req, res) {
-  let body = '';
-  req.on('data', chunk => body += chunk);
-  req.on('end', () => {
-    let parsed;
-    try { parsed = JSON.parse(body); } catch {
-      res.writeHead(400, jsonHdrs());
-      return res.end(JSON.stringify({ error: 'JSON 格式错误' }));
-    }
+  readJsonBody(req, res, 64 * 1024, (parsed) => {
     const { challengeId, input: userInput } = parsed;
     if (!challengeId || !userInput) {
       res.writeHead(400, jsonHdrs());
@@ -564,73 +608,140 @@ function handleCTFSim(req, res) {
   });
 }
 
-// ── CTF Flag Verification (server-side only) ──────────────────
-const CTF_FLAGS = {
-  'ctf-001': 'flag{c4s4r_1s_n0t_s3cur3}',
-  'ctf-002': 'flag{b4s3_s1xtyf0ur_1s_n0t_3ncrypt10n}',
-  'ctf-003': 'flag{sql1_1nj3ct1on_m4st3r}',
-  'ctf-004': 'flag{xss_r3fl3ct3d_g0t_m3}',
-  'ctf-005': 'flag{md5_c0ll1s1on_2004}',
-  'ctf-006': 'flag{w1ner_w1ner_ch1cken_d1nner}',
-  'ctf-007': 'flag{r0t13_1s_n0t_encryption}',
-  'ctf-008': 'flag{c0mm4nd_1nj3ct10n_3z}',
-  'ctf-009': 'flag{d1r_tr4v3rs4l_pwn3d}',
-  'ctf-010': 'flag{h1dd3n_1n_pl41n_s1ght}',
-  'ctf-011': 'flag{buff3r_0v3rfl0w_101}',
-  'ctf-012': 'flag{j1nj4_2_t3mpl4t3_1nj3ct10n}',
-  'ctf-013': 'flag{pc4p_sh0w_m3_th3_fl4g}',
-  'ctf-014': 'flag{str1ngs_4r3_y0ur_fr13nd}',
-  'ctf-015': 'flag{f0r3ns1cs_m4st3r}',
-  'ctf-016': 'flag{php_l00s3_c0mp4r1s0n}',
-  'ctf-017': 'flag{r4ns0mw4r3_4n4lys1s}',
-  'ctf-018': 'flag{c0oki3_m0nst3r}',
-  'ctf-019': 'flag{pr1v1l3g3_3sc4l4t10n}',
-  'ctf-020': 'flag{z1p_sl1p_4tt4ck}',
-  'ctf-021': 'flag{rsa_sm4ll_3}',
-  'ctf-022': 'flag{csrf_t0k3n_byb4ss}',
-  'ctf-023': 'flag{r3v3rs3_sh3ll_g0t}',
-  'ctf-024': 'flag{v0l4t1l1ty_m3m_f0r3ns1cs}',
-  'ctf-025': 'flag{h34p_spr4y_pwn}',
-  'ctf-026': 'flag{st3g4n0_lsb_h1dd3n}',
-  'ctf-027': 'flag{m4lw4r3_p4ck3r_unp4ck}',
-  'ctf-028': 'flag{z3r0_d4y_3xpl01t}',
-};
+// ── CTF Flag Verification (SHA-256 digests only) ─────────────
+// Plaintext answers never live on the server. See flags-hash.js +
+// scripts/gen-flag-hashes.js for how digests are produced/rotated.
+const { FLAG_HASHES, normalizeFlagInput } = require('./flags-hash.js');
+
+function verifyFlag(challengeId, flag) {
+  const expectedHash = FLAG_HASHES[challengeId];
+  if (!expectedHash) return null;               // unknown challenge
+  const got = crypto.createHash('sha256')
+    .update(normalizeFlagInput(flag), 'utf8').digest('hex');
+  return got === expectedHash;
+}
 
 function handleCTFVerify(req, res) {
-  let body = '';
-  req.on('data', chunk => body += chunk);
-  req.on('end', () => {
-    let parsed;
-    try { parsed = JSON.parse(body); } catch {
-      res.writeHead(400, jsonHdrs());
-      return res.end(JSON.stringify({ error: 'JSON 格式错误' }));
-    }
+  readJsonBody(req, res, 16 * 1024, (parsed) => {
     const { challengeId, flag } = parsed;
     if (!challengeId || !flag) {
       res.writeHead(400, jsonHdrs());
       return res.end(JSON.stringify({ error: '缺少 challengeId 或 flag' }));
     }
-    const expected = CTF_FLAGS[challengeId];
-    if (!expected) {
+    const result = verifyFlag(challengeId, flag);
+    if (result === null) {
       res.writeHead(404, jsonHdrs());
       return res.end(JSON.stringify({ error: '题目不存在' }));
     }
-    const isCorrect = flag.trim().toLowerCase() === expected.trim().toLowerCase();
     res.writeHead(200, jsonHdrs());
-    res.end(JSON.stringify({ correct: isCorrect }));
+    res.end(JSON.stringify({ correct: result }));
+  });
+}
+
+// ── Static files ─────────────────────────────────────────────
+// Block-list of paths that must never be served over HTTP. The app itself
+// needs none of these; they exist for developers, CI and git.
+const STATIC_BLOCK_RULES = [
+  /^\/\.git/i, /^\/\.github/i, /^\/\.mailmap$/i, /^\/\.gitignore$/i,
+  /^\/server\.js$/i, /^\/progress\.json$/i, /^\/package(-lock)?\.json$/i,
+  /^\/restart_server\.bat$/i,
+  /^\/(tests|scripts|versions)\//i,
+];
+function isBlockedStatic(urlPath) {
+  if (/(^|\/)\./.test(path.posix.basename(urlPath))) return true;       // dotfiles
+  if (/\.(bak|bat|cmd|log|env|lock)$/i.test(urlPath)) return true;      // junk/env
+  return STATIC_BLOCK_RULES.some(re => re.test(urlPath));
+}
+
+// Small FIFO cache of gzipped payloads keyed by path+size+mtime, so repeat
+// requests don't recompress multi-MB assets (content.js is ~3.6 MB).
+const GZIP_CACHE_MAX = 24;
+const gzipCache = new Map();
+
+function serveStatic(req, res, urlPath) {
+  // Block-list enforced twice: on the raw URL and on its decoded form, so
+  // neither direct paths nor percent-encoding tricks can reach repo internals.
+  if (isBlockedStatic(urlPath)) {
+    res.writeHead(403, securityHeaders()); return res.end('Forbidden');
+  }
+  // Decode once; malformed encodings are rejected outright.
+  let decoded;
+  try { decoded = decodeURIComponent(urlPath); }
+  catch {
+    res.writeHead(400, securityHeaders()); return res.end('Bad Request');
+  }
+  if (decoded.includes('\0') || /(^|[\\/])\.\.($|[\\/])/.test(decoded)) {
+    res.writeHead(403, securityHeaders()); return res.end('Forbidden');
+  }
+  if (isBlockedStatic(decoded)) {
+    res.writeHead(403, securityHeaders()); return res.end('Forbidden');
+  }
+
+  const resolved = path.resolve(ROOT, '.' + decoded.replace(/\//g, path.sep));
+  if (path.relative(ROOT, resolved).startsWith('..') || path.isAbsolute(path.relative(ROOT, resolved))) {
+    res.writeHead(403, securityHeaders()); return res.end('Forbidden');
+  }
+
+  fs.stat(resolved, (statErr, st) => {
+    if (statErr || !st.isFile()) {
+      res.writeHead(404, securityHeaders()); return res.end('Not Found');
+    }
+
+    fs.readFile(resolved, (readErr, data) => {
+      if (readErr) {
+        res.writeHead(500, securityHeaders()); return res.end('Internal Server Error');
+      }
+
+      const etag = '"' + st.size + '-' + st.mtimeMs + '"';
+      const headers = securityHeaders({
+        'Content-Type': getMime(resolved),
+        'ETag': etag,
+        'Cache-Control': /\.(html|css|js)$/i.test(resolved) ? 'no-cache' : 'public, max-age=3600',
+        'Vary': 'Accept-Encoding',
+      });
+
+      if (req.headers['if-none-match'] === etag) {
+        res.writeHead(304, headers);
+        return res.end();
+      }
+
+      const compressible = /\.(html|css|js|json|svg|xml|txt|md)$/i.test(resolved);
+      const wantsGzip = (req.headers['accept-encoding'] || '').includes('gzip');
+
+      if (compressible && wantsGzip) {
+        const cacheKey = resolved + '|' + st.size + '|' + st.mtimeMs;
+        let packed = gzipCache.get(cacheKey);
+        if (!packed) {
+          packed = zlib.gzipSync(data);
+          gzipCache.set(cacheKey, packed);
+          if (gzipCache.size > GZIP_CACHE_MAX) {
+            gzipCache.delete(gzipCache.keys().next().value);
+          }
+        }
+        headers['Content-Encoding'] = 'gzip';
+        res.writeHead(200, headers);
+        return res.end(packed);
+      }
+
+      res.writeHead(200, headers);
+      res.end(data);
+    });
   });
 }
 
 // ── Main HTTP server ─────────────────────────────────────────
 const server = http.createServer((req, res) => {
 
-  // CORS preflight
+  // Host header gate (DNS rebinding): applied before anything else.
+  if (!(BIND_HOST === '127.0.0.1' ? hostIsAllowed(req.headers.host) : true)) {
+    res.writeHead(403, jsonHdrs());
+    return res.end(JSON.stringify({ error: 'Forbidden host' }));
+  }
+
+  // CORS preflight — kept for local dev convenience; deliberately grants NO
+  // cross-origin privileges (no Access-Control-Allow-Origin anywhere).
   if (req.method === 'OPTIONS') {
-    res.writeHead(204, {
-      'Access-Control-Allow-Origin':  '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-    });
+    res.writeHead(204, securityHeaders({ Allow: 'GET, POST, OPTIONS' }));
     return res.end();
   }
 
@@ -644,136 +755,68 @@ const server = http.createServer((req, res) => {
     return res.end(JSON.stringify({ error: '请求过于频繁，请稍后重试。' }));
   }
 
+  const urlOnly = (req.url.split('?')[0]) || '/';
+
   // ── API: progress persistence ───────────────────────────────
-  if (req.url === '/api/progress') {
+  if (urlOnly === '/api/progress') {
     if (req.method === 'GET') {
-      if (!fs.existsSync(PROGRESS_FILE)) return res.end('{}');
+      if (!fs.existsSync(PROGRESS_FILE)) {
+        res.writeHead(200, jsonHdrs());
+        return res.end('{}');
+      }
       return fs.readFile(PROGRESS_FILE, (err, data) => {
         res.writeHead(200, jsonHdrs());
         res.end(err ? '{}' : data);
       });
     }
     if (req.method === 'POST') {
-      let body = '';
-      let size = 0;
-      const MAX_SIZE = 1024 * 100; // 100KB max
-      req.on('data', chunk => {
-        size += chunk.length;
-        if (size > MAX_SIZE) {
-          res.writeHead(413, jsonHdrs());
-          res.end(JSON.stringify({ error: '数据过大' }));
-          req.destroy();
-          return;
-        }
-        body += chunk;
-      });
-      req.on('end', () => {
-        if (res.writableEnded) return;
-        try {
-          const data = JSON.parse(body);
-          if (typeof data !== 'object' || data === null || Array.isArray(data)) {
-            throw new Error('Invalid format');
-          }
-        } catch {
+      return readJsonBody(req, res, 1024 * 100, (data) => {
+        if (typeof data !== 'object' || data === null || Array.isArray(data)) {
           res.writeHead(400, jsonHdrs());
           return res.end(JSON.stringify({ error: '无效的进度数据格式' }));
         }
-        fs.writeFileSync(PROGRESS_FILE, body, 'utf-8');
+        // Re-serialize the validated object rather than storing raw input.
+        fs.writeFileSync(PROGRESS_FILE, JSON.stringify(data), 'utf-8');
         res.writeHead(200, jsonHdrs());
         res.end(JSON.stringify({ ok: true }));
       });
-      return;
     }
   }
 
   // ── API: run code ──────────────────────────────────────────
-  if (req.method === 'POST' && req.url === '/api/run') {
+  if (req.method === 'POST' && urlOnly === '/api/run') {
     return handleRunCode(req, res);
   }
 
   // ── API: CTF simulated terminal ─────────────────────────────
-  if (req.method === 'POST' && req.url === '/api/ctf-sim') {
+  if (req.method === 'POST' && urlOnly === '/api/ctf-sim') {
     return handleCTFSim(req, res);
   }
 
   // ── API: CTF flag verification ──────────────────────────────
-  if (req.method === 'POST' && req.url === '/api/ctf-verify') {
+  if (req.method === 'POST' && urlOnly === '/api/ctf-verify') {
     return handleCTFVerify(req, res);
   }
 
   // ── API proxy ─────────────────────────────────────────────
-  if (req.method === 'POST' && req.url === '/api/chat/anthropic') {
+  if (req.method === 'POST' && urlOnly === '/api/chat/anthropic') {
     return proxyAnthropic(req, res);
   }
-  if (req.method === 'POST' && req.url.startsWith('/api/chat')) {
+  if (req.method === 'POST' && urlOnly.startsWith('/api/chat')) {
     return proxyChat(req, res);
   }
 
   // ── Static files ───────────────────────────────────────────
-  let filePath = req.url === '/' ? '/cyberedu.html' : req.url.split('?')[0];
-  filePath = path.join(ROOT, filePath);
-
-  // Directory traversal guard
-  if (!filePath.startsWith(ROOT)) {
-    res.writeHead(403); return res.end('Forbidden');
-  }
-
-  fs.readFile(filePath, (err, data) => {
-    if (err) {
-      if (err.code === 'ENOENT') { res.writeHead(404); return res.end('Not Found'); }
-      res.writeHead(500); return res.end('Internal Server Error');
-    }
-
-    const mime = getMime(filePath);
-    const etag = '"' + data.length + '-' + fs.statSync(filePath).mtimeMs + '"';
-    const acceptEncoding = req.headers['accept-encoding'] || '';
-    const compressible = /\.(html|css|js|json|svg|xml|txt)$/i.test(filePath);
-
-    // Cache headers
-    const headers = {
-      'Content-Type': mime,
-      'ETag': etag,
-      'Cache-Control': /\.(html|css|js)$/i.test(filePath) ? 'no-cache' : 'public, max-age=3600',
-      'X-Content-Type-Options': 'nosniff',
-      'X-Frame-Options': 'DENY',
-      'Referrer-Policy': 'strict-origin-when-cross-origin',
-          'X-XSS-Protection': '1; mode=block',
-          'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), interest-cohort=()',
-    };
-
-    // Check If-None-Match for 304
-    if (req.headers['if-none-match'] === etag) {
-      res.writeHead(304, headers);
-      return res.end();
-    }
-
-    // Gzip compression for compressible files
-    if (compressible && acceptEncoding.includes('gzip')) {
-      zlib.gzip(data, (err, compressed) => {
-        if (err) {
-          // Fallback to uncompressed
-          res.writeHead(200, headers);
-          res.end(data);
-        } else {
-          headers['Content-Encoding'] = 'gzip';
-          res.writeHead(200, headers);
-          res.end(compressed);
-        }
-      });
-    } else {
-      res.writeHead(200, headers);
-      res.end(data);
-    }
-  });
+  serveStatic(req, res, urlOnly === '/' ? '/cyberedu.html' : urlOnly);
 });
 
-server.listen(PORT, () => {
-  const hasPython = checkRuntime('python', 'python --version');
-  const hasGCC = checkRuntime('gcc', 'gcc --version');
+server.listen(PORT, BIND_HOST, async () => {
+  const hasPython = await checkRuntime('python', ['--version']);
+  const hasGCC    = await checkRuntime('gcc', ['--version']);
   console.log('');
   console.log('  ╔══════════════════════════════════════════════╗');
-  console.log('  ║   CyberEdu Server  v2.5  (Multi-Model AI)  ║');
-  console.log('  ║   http://localhost:' + PORT + '                     ║');
+  console.log('  ║   CyberEdu Server  v2.6  (Multi-Model AI)  ║');
+  console.log('  ║   http://' + BIND_HOST + ':' + PORT + '                    ║');
   console.log('  ╚══════════════════════════════════════════════╝');
   console.log('');
   console.log('  Runtime detection for practice exercises:');
@@ -787,11 +830,12 @@ server.listen(PORT, () => {
     console.log('');
   }
 
-  // Auto-open browser
-  try {
-    const url = 'http://localhost:' + PORT;
-    const cp  = require('child_process');
-    const cmd = process.platform === 'win32' ? 'start ""' : process.platform === 'darwin' ? 'open' : 'xdg-open';
-    cp.exec(cmd + ' "' + url + '"');
-  } catch {}
+  // Auto-open browser (opt out with CYBEREDU_NO_OPEN=1)
+  if (AUTO_OPEN) {
+    try {
+      const url = 'http://localhost:' + PORT;
+      const cmd = process.platform === 'win32' ? 'start ""' : process.platform === 'darwin' ? 'open' : 'xdg-open';
+      require('child_process').exec(cmd + ' "' + url + '"').unref();
+    } catch {}
+  }
 });

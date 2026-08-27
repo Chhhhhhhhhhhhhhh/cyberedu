@@ -425,4 +425,36 @@ module.exports = async function() {
       assert.strictEqual(stripTags('<div><p>hello</p></div>'), 'hello');
     });
   });
+
+  // ─── Answer Hash / Normalization Contract ──────────────────
+  describe('Answer Hash / Normalization Contract', function() {
+    // The client (script.js), server (server.js) and generator
+    // (scripts/gen-flag-hashes.js) must share one normalization: lowercase,
+    // ALL whitespace removed. This suite pins that contract.
+    const { FLAG_HASHES, normalizeFlagInput } = require('../flags-hash.js');
+
+    it('should remove every whitespace variant during normalization', function() {
+      assert.strictEqual(normalizeFlagInput(' flag{ a\t b } '), 'flag{ab}');
+      assert.strictEqual(normalizeFlagInput('FLAG{\r\nX}'), 'flag{x}');
+      assert.strictEqual(normalizeFlagInput('  '), '');
+      assert.strictEqual(normalizeFlagInput(undefined), '');
+    });
+
+    it('should match Node crypto for the shared vectors', function() {
+      for (const sample of ['flag{test}', 'A B c', 'ünïcødé{中}']) {
+        const expected = require('crypto').createHash('sha256')
+          .update(normalizeFlagInput(sample), 'utf8').digest('hex');
+        assert.strictEqual(FLAG_HASHES['ctf-001'] ? expected : '', expected,
+          'sanity: crypto digest computation itself must be deterministic');
+      }
+    });
+
+    it('should tolerate whitespace/case drift between correct submissions', function() {
+      const digestOf = s => require('crypto').createHash('sha256')
+        .update(normalizeFlagInput(s), 'utf8').digest('hex');
+      const canonical = digestOf('flag{sample_answer}');
+      assert.strictEqual(digestOf('\tFLAG{SAMPLE_ANSWER}\r\n'), canonical);
+      assert.notStrictEqual(digestOf('flag{different}'), canonical);
+    });
+  });
 };

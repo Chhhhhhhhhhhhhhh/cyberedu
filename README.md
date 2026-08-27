@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-v2.5-00ff41?style=flat-square" alt="Version">
+  <img src="https://img.shields.io/badge/version-v2.6-00ff41?style=flat-square" alt="Version">
   <img src="https://img.shields.io/badge/license-MIT-00e5ff?style=flat-square" alt="License">
   <img src="https://img.shields.io/github/last-commit/Chhhhhhhhhhhhhhh/cyberedu?style=flat-square&color=00ff41" alt="Last Commit">
   <img src="https://img.shields.io/github/repo-size/Chhhhhhhhhhhhhhh/cyberedu?style=flat-square&color=00e5ff" alt="Repo Size">
@@ -60,18 +60,20 @@ cyberedu/
 ├── script.js              # Application logic (navigation, views, sidebar, AI chat, effects)
 ├── style.css              # Stylesheet (Neo-Brutalist Terminal design, WCAG AA compliant)
 ├── i18n.js                # EN/ZH localization (~140+ translation pairs)
-├── server.js              # Local Node.js server (AI chat proxy, CTF verify, rate limiter)
+├── server.js              # Local Node.js server (loopback-only: AI proxy, CTF verify, rate limiter)
+├── flags-hash.js          # CTF answer SHA-256 digests — no plaintext answers shipped
 ├── package.json           # Scripts: npm start, npm test
 ├── favicon.svg            # Site icon
-├── tests/                 # Zero-dependency test suite
+├── tests/                 # Zero-dependency test suite (95 checks)
 │   ├── test-runner.js     # Custom test runner (Node.js assert + ANSI colors)
 │   ├── server.test.js     # Server security & API tests
-│   └── utils.test.js      # Client utility & WCAG contrast tests
-├── scripts/               # Migration & maintenance scripts
-│   └── remove-client-flags.js  # Remove CTF flags from content.js (security migration)
+│   └── utils.test.js      # Client utility, WCAG contrast & hash contract tests
+├── scripts/               # Maintenance tooling
+│   └── gen-flag-hashes.js # Rotate CTF answer digests without committing plaintext
 ├── docs/                  # Documentation assets (screenshots, OG images)
-├── versions/              # Historical version archives + CHANGELOG
-├── .github/               # Issue & feature request templates
+├── versions/              # CHANGELOG
+├── .github/               # Issue templates + CI workflow
+├── SECURITY.md            # Security policy & vulnerability reporting
 └── CONTRIBUTING.md        # Contribution guidelines
 ```
 
@@ -89,6 +91,8 @@ Requires [Node.js](https://nodejs.org/) v16+:
 node server.js
 # Then open http://localhost:8000
 ```
+
+The server binds to `127.0.0.1` only (never your LAN), validates the `Host` header against DNS rebinding, and grants no CORS privileges — a page you visit in another tab cannot drive its APIs. Set `CYBEREDU_PORT` / `CYBEREDU_HOST` / `CYBEREDU_NO_OPEN=1` as environment overrides.
 
 Click the green floating button (bottom-right) to open the AI chat panel. Click ⚙ to configure:
 
@@ -110,7 +114,7 @@ npm test
 # or: node tests/test-runner.js
 ```
 
-Zero-dependency test suite — no `npm install` needed. Tests cover server security (directory traversal, rate limiting, CTF flag verification, input validation), client utilities (HTML escaping, URL validation, progress data), and WCAG AA contrast compliance.
+Zero-dependency test suite — no `npm install` needed. 95 checks cover server security (static block-list, host validation, body caps, directory traversal, rate limiting with stale-entry eviction, CTF digest verification), client utilities (HTML escaping, URL validation, progress data), the shared answer-normalization contract, and WCAG AA contrast compliance.
 
 ## 🤖 Supported AI Models
 
@@ -133,19 +137,22 @@ Zero-dependency test suite — no `npm install` needed. Tests cover server secur
 | Code Highlighting | [Prism.js](https://prismjs.com/) v1.29.0 |
 | Code Editor | [CodeMirror 5](https://codemirror.net/) with Python/JS/C/Bash modes |
 | Local Server | Node.js built-in `http` module (zero dependencies) |
+| Answer Verification | SHA-256 digests only (`flags-hash.js`) — plaintext answers never committed |
 | AI Streaming | SSE (Server-Sent Events) |
 | Fonts | JetBrains Mono + Noto Sans SC + Space Mono |
 
 ## 📋 What's New
 
-### v2.5 (2026-06-23)
+### v2.6 (2026-08-27)
 
-- 🔒 **Security hardening** — CTF flag verification moved server-side (flags no longer exposed in client code), rate limiting, API URL whitelisting, input validation
-- ⚡ **Performance** — gzip compression, ETag caching, security headers (X-Frame-Options, X-XSS-Protection, Permissions-Policy)
-- ♿ **Accessibility** — WCAG AA contrast ratios, skip-to-content link, ARIA labels, `prefers-reduced-motion` support
-- 🧪 **Test suite** — Zero-dependency test runner with 50+ test cases covering server security, client utilities, and WCAG contrast verification
-- 📊 **SEO & meta** — Open Graph, Twitter Cards, structured data (JSON-LD), canonical/hreflang tags, SRI integrity checks on CDN scripts
-- 🌐 **i18n** — New translation keys for server-side verification flow
+- 🔒 **Loopback-only server** — binds to `127.0.0.1` instead of all interfaces; code execution is no longer reachable from the LAN
+- 🛡️ **DNS-rebinding protection** — `Host` header allow-list rejects foreign origins before any processing
+- 🚫 **CORS removed entirely** — the app is same-origin by design, so third-party sites can no longer drive `/api/run`, the AI proxy or progress storage from a victim's browser
+- 🔑 **Answers hashed end-to-end** — CTF verification now compares SHA-256 digests (`flags-hash.js`); no plaintext answer table exists anywhere, and flag submission works fully offline again
+- 📦 **Static file block-list** — `server.js`, `.git/`, tests and tooling are no longer downloadable over HTTP
+- ⚡ **Performance** — gzip result caching for multi-MB assets, async stat+read (no TOCTOU), unconditional rate-limiter sweep, per-endpoint request size caps
+- 🧾 **Strict CSP** both as HTTP header and `<meta>` tag (Pages deployments get identical policy)
+- ♻️ Removed deprecated `X-XSS-Protection`; fixed a broken issue-template filename; portable `restart_server.bat`; CI workflow running the test suite on Node 18/20/22
 
 > 📋 [Full changelog →](versions/CHANGELOG.md)
 

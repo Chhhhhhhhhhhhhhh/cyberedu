@@ -1,14 +1,61 @@
 // CyberEdu Server Tests — API endpoints, security, and data validation
 const path = require('path');
+const crypto = require('crypto');
 
 module.exports = async function() {
 
   // ─── Static File Server ─────────────────────────────────────
   describe('Static File Server', function() {
+    // Mirrors of server.js logic kept in sync intentionally (zero-dep suite).
+    const MIME = {
+      '.html': 'text/html; charset=utf-8',
+      '.css':  'text/css; charset=utf-8',
+      '.js':   'application/javascript; charset=utf-8',
+      '.json': 'application/json; charset=utf-8',
+      '.png':  'image/png',
+      '.svg':  'image/svg+xml',
+      '.txt':  'text/plain; charset=utf-8',
+      '.xml':  'application/xml; charset=utf-8',
+    };
+
+    const STATIC_BLOCK_RULES = [
+      /^\/\.git/i, /^\/\.github/i, /^\/\.mailmap$/i, /^\/\.gitignore$/i,
+      /^\/server\.js$/i, /^\/progress\.json$/i, /^\/package(-lock)?\.json$/i,
+      /^\/restart_server\.bat$/i,
+      /^\/(tests|scripts|versions)\//i,
+    ];
+    function isBlockedStatic(urlPath) {
+      if (/(^|\/)\./.test(path.posix.basename(urlPath))) return true;
+      if (/\.(bak|bat|cmd|log|env|lock)$/i.test(urlPath)) return true;
+      return STATIC_BLOCK_RULES.some(re => re.test(urlPath));
+    }
+
     it('should detect HTML file extensions correctly', function() {
       assert.strictEqual(path.extname('test.html').toLowerCase(), '.html');
       assert.strictEqual(path.extname('style.css').toLowerCase(), '.css');
       assert.strictEqual(path.extname('app.js').toLowerCase(), '.js');
+    });
+
+    it('should serve required app assets', function() {
+      for (const p of ['/cyberedu.html', '/content.js', '/script.js', '/i18n.js',
+                       '/style.css', '/flags-hash.js', '/favicon.svg']) {
+        assert.strictEqual(isBlockedStatic(p), false, p + ' must be servable');
+      }
+    });
+
+    it('should block server internals and repo metadata', function() {
+      for (const p of ['/server.js', '/progress.json', '/package.json',
+                       '/restart_server.bat', '/.gitignore', '/.mailmap']) {
+        assert.strictEqual(isBlockedStatic(p), true, p + ' must be blocked');
+      }
+    });
+
+    it('should block .git, CI and tool directories', function() {
+      for (const p of ['/.git/config', '/.github/workflows/test.yml',
+                       '/tests/server.test.js', '/scripts/gen-flag-hashes.js',
+                       '/versions/cyberedu_v1.0.html']) {
+        assert.strictEqual(isBlockedStatic(p), true, p + ' must be blocked');
+      }
     });
 
     it('should detect directory traversal attempts', function() {
@@ -21,71 +68,128 @@ module.exports = async function() {
     it('should block .. path traversal with multiple segments', function() {
       const ROOT = path.resolve(__dirname, '..');
       const traversal = path.join(ROOT, '..', '..', 'etc', 'passwd');
-      const normalized = path.normalize(traversal);
-      assert.strictEqual(normalized.startsWith(ROOT), false);
+      assert.strictEqual(path.normalize(traversal).startsWith(ROOT), false);
     });
 
-    it('should allow valid paths within ROOT', function() {
+    it('should reject encoded traversal after URL decoding', function() {
       const ROOT = path.resolve(__dirname, '..');
-      const valid = path.join(ROOT, 'cyberedu.html');
-      assert.strictEqual(valid.startsWith(ROOT), true);
+      const decoded = decodeURIComponent('/..%2F..%2Fetc%2Fpasswd');
+      const resolved = path.resolve(ROOT, '.' + decoded);
+      assert.ok(
+        path.relative(ROOT, resolved).startsWith('..') || path.isAbsolute(path.relative(ROOT, resolved)),
+        'Encoded traversal must land outside ROOT'
+      );
+    });
+
+    it('should keep absolute drive paths outside ROOT rejected on Windows', function() {
+      const ROOT = path.resolve(__dirname, '..');
+      const rel = path.relative(ROOT, 'D:\\elsewhere\\secret.txt');
+      assert.ok(rel.startsWith('..') || path.isAbsolute(rel));
     });
 
     it('should handle MIME type lookup for common extensions', function() {
-      const MIME = {
-        '.html': 'text/html; charset=utf-8',
-        '.css':  'text/css; charset=utf-8',
-        '.js':   'application/javascript; charset=utf-8',
-        '.json': 'application/json; charset=utf-8',
-        '.png':  'image/png',
-        '.svg':  'image/svg+xml',
-      };
       assert.strictEqual(MIME['.html'], 'text/html; charset=utf-8');
       assert.strictEqual(MIME['.js'], 'application/javascript; charset=utf-8');
       assert.strictEqual(MIME['.unknown'], undefined);
     });
   });
 
-  // ─── CTF Flag Verification ─────────────────────────────────
-  describe('CTF Flag Verification', function() {
-    // Simulate the verification logic from server.js
-    const CTF_FLAGS = {
-      'ctf-001': 'flag{c4s4r_1s_n0t_s3cur3}',
-      'ctf-003': 'flag{sql1_1nj3ct1on_m4st3r}',
-      'ctf-008': 'flag{c0mm4nd_1nj3ct10n_3z}',
-      'ctf-012': 'flag{j1nj4_2_t3mpl4t3_1nj3ct10n}',
-      'ctf-016': 'flag{php_l00s3_c0mp4r1s0n}',
-    };
+  // ─── Host Header Validation (anti DNS-rebinding) ─────────────
+  describe('Host Header Validation', function() {
+    const HOST_ALLOWED = new Set(['localhost:8000', '127.0.0.1:8000', '[::1]:8000']);
+    function hostIsAllowed(h) { return !h || HOST_ALLOWED.has(String(h).toLowerCase()); }
 
-    function verify(challengeId, flag) {
-      const expected = CTF_FLAGS[challengeId];
-      if (!expected) return { error: 'not found' };
-      return { correct: flag.trim().toLowerCase() === expected.trim().toLowerCase() };
-    }
+    it('should accept loopback host forms', function() {
+      assert.ok(hostIsAllowed('localhost:8000'));
+      assert.ok(hostIsAllowed('127.0.0.1:8000'));
+      assert.ok(hostIsAllowed('[::1]:8000'));
+    });
 
-    it('should correctly verify a valid flag', function() {
-      const result = verify('ctf-001', 'flag{c4s4r_1s_n0t_s3cur3}');
-      assert.strictEqual(result.correct, true);
+    it('should reject attacker-controlled hosts', function() {
+      assert.ok(!hostIsAllowed('evil.com'));
+      assert.ok(!hostIsAllowed('attacker.example.org:8000'));
+      assert.ok(!hostIsAllowed('localhost.evil.com:8000'));
     });
 
     it('should be case-insensitive', function() {
-      const result = verify('ctf-001', 'FLAG{C4S4R_1S_N0T_S3CUR3}');
-      assert.strictEqual(result.correct, true);
+      assert.ok(hostIsAllowed('LOCALHOST:8000'));
+    });
+  });
+
+  // ─── Request Body Size Caps ──────────────────────────────────
+  describe('Request Body Size Caps', function() {
+    // Pure mirror of readJsonBody byte-accumulation semantics.
+    function bodyVerdict(byteLen, maxBytes) {
+      if (byteLen > maxBytes) return 413;
+      return 200;
+    }
+
+    it('should allow bodies within cap', function() {
+      assert.strictEqual(bodyVerdict(1024, 16 * 1024), 200);
+      assert.strictEqual(bodyVerdict(256 * 1024, 256 * 1024), 200);
     });
 
-    it('should handle leading/trailing whitespace', function() {
-      const result = verify('ctf-001', '  flag{c4s4r_1s_n0t_s3cur3}  ');
-      assert.strictEqual(result.correct, true);
+    it('should reject oversized chat payloads (256KB cap)', function() {
+      assert.strictEqual(bodyVerdict(256 * 1024 + 1, 256 * 1024), 413);
+    });
+
+    it('should reject oversized verify payloads (16KB cap)', function() {
+      assert.strictEqual(bodyVerdict(17 * 1024, 16 * 1024), 413);
+    });
+
+    it('should keep progress cap at 100KB', function() {
+      assert.strictEqual(bodyVerdict(100 * 1024, 100 * 1024), 200);
+      assert.strictEqual(bodyVerdict(100 * 1024 + 1, 100 * 1024), 413);
+    });
+  });
+
+  // ─── CTF Flag Verification (SHA-256 digests) ────────────────
+  describe('CTF Flag Verification (SHA-256)', function() {
+    const { FLAG_HASHES, normalizeFlagInput } = require('../flags-hash.js');
+    function verify(challengeId, flag) {
+      const expected = FLAG_HASHES[challengeId];
+      if (!expected) return { error: 'not found' };
+      const got = crypto.createHash('sha256')
+        .update(normalizeFlagInput(flag), 'utf8').digest('hex');
+      return { correct: got === expected };
+    }
+    // Hard-coded external vector pins the normalization contract even if the
+    // hash file is regenerated someday: sha256("flag{c4s4r_1s_n0t_s3cur3}")
+    const PINNED_CTF001 = '7df7fb0c5737f9149adf654971f53d8941bddb2d0499ecc0e4a790e5a6fe72e5';
+
+    it('should ship exactly 28 well-formed answer hashes', function() {
+      const keys = Object.keys(FLAG_HASHES);
+      assert.strictEqual(keys.length, 28);
+      for (let i = 1; i <= 28; i++) {
+        const id = 'ctf-' + String(i).padStart(3, '0');
+        assert.ok(/^[0-9a-f]{64}$/.test(FLAG_HASHES[id] || ''), id + ' hash missing/malformed');
+      }
+    });
+
+    it('should match the pinned digest for ctf-001', function() {
+      assert.strictEqual(FLAG_HASHES['ctf-001'], PINNED_CTF001,
+        'Normalization or hashing changed — rotate PINNED_CTF001 deliberately!');
+    });
+
+    it('should correctly verify a valid flag', function() {
+      assert.strictEqual(verify('ctf-003', 'flag{sql1_1nj3ct1on_m4st3r}').correct, true);
+    });
+
+    it('should be case-insensitive and whitespace-tolerant', function() {
+      assert.strictEqual(verify('ctf-001', '  FLAG{C4S4R_1S_N0T_S3CUR3}\t').correct, true);
+      assert.strictEqual(verify('ctf-008', '\nflag{c0mm4nd_1nj3ct10n_3z}\r\n').correct, true);
+      // NB: removed whitespace *joins* characters — it never substitutes
+      // underscores, so a spaced-out answer is a different (rejected) string.
+      assert.strictEqual(verify('ctf-001', 'flag{ c4s4r 1s n0t s3cur3 }').correct, false);
     });
 
     it('should reject wrong flags', function() {
-      const result = verify('ctf-001', 'flag{wrong_answer}');
-      assert.strictEqual(result.correct, false);
+      assert.strictEqual(verify('ctf-001', 'flag{wrong_answer}').correct, false);
+      assert.strictEqual(verify('ctf-002', '').correct, false);
     });
 
     it('should return error for nonexistent challenges', function() {
-      const result = verify('ctf-999', 'flag{anything}');
-      assert.strictEqual(result.error, 'not found');
+      assert.strictEqual(verify('ctf-999', 'flag{anything}').error, 'not found');
     });
   });
 
@@ -93,21 +197,26 @@ module.exports = async function() {
   describe('Rate Limiter', function() {
     function createRateLimiter(max, window) {
       const limits = new Map();
-      return function checkRateLimit(ip) {
-        const now = Date.now();
+      let nowStub = null;
+      const check = function(ip) {
+        const now = nowStub ? nowStub() : Date.now();
         let entry = limits.get(ip);
         if (!entry || now - entry.start > window) {
           entry = { start: now, count: 0 };
           limits.set(ip, entry);
         }
         entry.count++;
-        if (entry.count === 1 && limits.size > 100) {
-          for (const [k, v] of limits) {
-            if (now - v.start > window) limits.delete(k);
-          }
-        }
         return entry.count <= max;
       };
+      check.sweep = function() {
+        const now = nowStub ? nowStub() : Date.now();
+        for (const [k, v] of limits) {
+          if (now - v.start > window) limits.delete(k);
+        }
+      };
+      check.setClock = fn => { nowStub = fn; };
+      check.size = () => limits.size;
+      return check;
     }
 
     it('should allow requests within limit', function() {
@@ -125,10 +234,19 @@ module.exports = async function() {
 
     it('should track IPs independently', function() {
       const check = createRateLimiter(2, 60000);
-      check('10.0.0.1');
-      check('10.0.0.1');
+      check('10.0.0.1'); check('10.0.0.1');
       assert.strictEqual(check('10.0.0.1'), false, 'IP 1 should be blocked');
       assert.strictEqual(check('10.0.0.2'), true, 'IP 2 should still be allowed');
+    });
+
+    it('should evict stale entries on unconditional sweep', function() {
+      const check = createRateLimiter(30, 60000);
+      let clock = 1_000_000;
+      check.setClock(() => clock);
+      check('203.0.113.7');
+      clock += 120000;                        // two windows later
+      check.sweep();                          // server's setInterval equivalent
+      assert.strictEqual(check.size(), 0, 'stale IP entry should be gone');
     });
   });
 
@@ -181,24 +299,20 @@ module.exports = async function() {
     });
 
     it('should reject null data', function() {
-      const result = validateProgress('null');
-      assert.strictEqual(result.error, 'invalid format');
+      assert.strictEqual(validateProgress('null').error, 'invalid format');
     });
 
     it('should reject array data', function() {
-      const result = validateProgress('[1,2,3]');
-      assert.strictEqual(result.error, 'invalid format');
+      assert.strictEqual(validateProgress('[1,2,3]').error, 'invalid format');
     });
 
     it('should reject invalid JSON', function() {
-      const result = validateProgress('{bad json');
-      assert.strictEqual(result.error, 'invalid JSON');
+      assert.strictEqual(validateProgress('{bad json').error, 'invalid JSON');
     });
 
     it('should enforce size limits', function() {
       const large = JSON.stringify({ x: 'a'.repeat(200 * 1024) });
-      const result = validateProgress(large);
-      assert.strictEqual(result.error, 'too large');
+      assert.strictEqual(validateProgress(large).error, 'too large');
     });
   });
 
@@ -253,6 +367,36 @@ module.exports = async function() {
       const status = 418;
       const msg = ERR_ZH[status] || `API 错误 ${status}`;
       assert.strictEqual(msg, 'API 错误 418');
+    });
+  });
+
+  // ─── Content-Security-Policy ────────────────────────────────
+  describe('Content Security Policy', function() {
+    it('HTML meta CSP should exist and include CDN plus inline JSON-LD hash', function() {
+      const fs = require('fs');
+      const html = fs.readFileSync(path.join(__dirname, '..', 'cyberedu.html'), 'utf8');
+      const m = html.match(/<meta http-equiv="Content-Security-Policy" content="([^"]+)">/);
+      assert.ok(m, 'CSP meta tag must be present');
+      assert.ok(m[1].includes("'self'"), 'default-src self required');
+      assert.ok(m[1].includes('cdnjs.cloudflare.com'), 'CDN scripts allowed');
+      assert.ok(m[1].includes("'sha256-gZvMHtWytt7MrvpMQQn6tIbyqzV5jz1AoQY2AxxYBdg='"),
+        'inline JSON-LD hash must stay whitelisted');
+      assert.ok(!m[1].includes("'unsafe-eval'"), 'unsafe-eval forbidden');
+      assert.ok(!m[1].includes('http://'), 'no insecure upgradeable origins');
+    });
+
+    it('flags-hash.js must not contain plaintext answers', function() {
+      const fs = require('fs');
+      const src = fs.readFileSync(path.join(__dirname, '..', 'flags-hash.js'), 'utf8');
+      assert.ok(!/['"`]flag\{[^}]+\}['"`]/.test(src), 'plaintext flag literal found in flags-hash.js!');
+    });
+
+    it('removed legacy archives must not resurrect', function() {
+      const fs = require('fs');
+      for (const f of ['versions/cyberedu_v1.0.html', 'versions/cyberedu_v2.0.html',
+                       'versions/script_v2.0.js', 'scripts/remove-client-flags.js']) {
+        assert.ok(!fs.existsSync(path.join(__dirname, '..', f)), f + ' was deleted; keep it deleted');
+      }
     });
   });
 };

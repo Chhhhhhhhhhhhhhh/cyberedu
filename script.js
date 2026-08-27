@@ -1164,13 +1164,13 @@ async function sendCTFTerminal() {
 
 function closeCTFModal() { document.getElementById('ctf-modal').classList.remove('open'); }
 
-function submitFlag() {
+async function submitFlag() {
   const input = document.getElementById('flag-input').value.trim();
   const fb = document.getElementById('flag-feedback');
   if (!input) { fb.textContent = t('ctf.enterFlag'); fb.style.color = 'var(--color-red)'; return; }
   const c = CTF_CHALLENGES.find(x => x.id === currentCTFId);
   if (!c) return;
-  if (input.toLowerCase().replace(/\s/g,'') === c.flag.toLowerCase().replace(/\s/g,'')) {
+  if (await verifyFlagHash(currentCTFId, input)) {
     fb.textContent = t('ctf.correct');
     fb.style.color = 'var(--color-green)';
     if (!userProgress.ctfSolved.includes(c.id)) {
@@ -1194,6 +1194,26 @@ function submitFlag() {
     document.getElementById('flag-input').offsetHeight;
     document.getElementById('flag-input').style.animation = 'shake 0.3s ease';
   }
+}
+
+// ── CTF answer verification (SHA-256 of normalized input) ────
+// Answers never ship as plaintext: flags-hash.js holds digests only.
+// Normalization must stay identical to server.js / scripts/gen-flag-hashes.js.
+function normalizeFlagInput(s) { return String(s || '').replace(/\s+/g, '').toLowerCase(); }
+
+async function verifyFlagHash(challengeId, input) {
+  const expected = typeof FLAG_HASHES === 'undefined' ? null : FLAG_HASHES[challengeId];
+  if (!expected) return false;
+  // WebCrypto's SubtleCrypto requires a secure context — true for
+  // https://, http://localhost and file:// openings, i.e. every mode the
+  // app officially supports.
+  if (!window.isSecureContext || !crypto || !crypto.subtle) {
+    console.warn('[CTF] WebCrypto unavailable — cannot verify flag here.');
+    return false;
+  }
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(normalizeFlagInput(input)));
+  const hex = [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+  return hex === expected;
 }
 function spawnConfetti() {
   const colors = ['#00ff41','#00e5ff','#00ff88','#b388ff','#ff4466'];

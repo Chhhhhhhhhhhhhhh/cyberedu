@@ -1,6 +1,6 @@
 {
   "name": "cyberedu",
-  "version": "2.5.0",
+  "version": "2.6.0",
   "description": "Interactive cybersecurity learning platform — 52 chapters, 28 CTF challenges, bilingual EN/ZH, AI tutor support. Zero-config setup.",
   "main": "server.js",
   "private": true,
@@ -8,12 +8,22 @@
     "start": "node server.js",
     "test": "node tests/test-runner.js"
   },
-  "keywords": ["cybersecurity", "education", "ctf", "learning", "penetration-testing", "web-security"],
+  "keywords": [
+    "cybersecurity",
+    "education",
+    "ctf",
+    "learning",
+    "penetration-testing",
+    "web-security"
+  ],
   "author": "Chhhhhhhhhhhhhhh",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/Chhhhhhhhhhhhhhh/cyberedu.git"
   },
-  "homepage": "https://chhhhhhhhhhhhhhh.github.io/cyberedu/"
+  "homepage": "https://chhhhhhhhhhhhhhh.github.io/cyberedu/",
+  "engines": {
+    "node": ">=16"
+  }
 }

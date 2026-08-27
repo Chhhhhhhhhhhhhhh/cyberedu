@@ -1,5 +1,48 @@
 # cyberedu 版本记录
 
+## v2.6 — 2026-08-27
+
+**文件**: `server.js`, `script.js`, `cyberedu.html`, `flags-hash.js`(新), `tests/*.js`, `scripts/gen-flag-hashes.js`(新), `SECURITY.md`(新), `.mailmap`(新), `.github/workflows/test.yml`(新), `restart_server.bat`, `package.json`, `README.md`, `README_zh.md`
+
+### 🔒 安全修复（高危）
+- **回环监听**：server.listen 绑定 127.0.0.1（原为 0.0.0.0 全网卡）——/api/run 的无沙箱代码执行不再能被局域网访问；可用 CYBEREDU_HOST 显式覆盖
+- **DNS 重绑定防护**：Host 头白名单（localhost / 127.0.0.1 / [::1]），陌生主机名直接 403
+- **移除全部 CORS 授权**：删除 Access-Control-Allow-Origin:\*，恶意网页无法再以受害者浏览器身份跨站调用本服务任何接口
+- **静态文件黑名单**：server.js、.git/\*、.github/\*、tests/、scripts/、versions/、progress.json、package.json、restart_server.bat 等不再通过 HTTP 提供（解码前后双重校验 + 目录穿越二次加固）
+- **CTF 答案全量哈希化**：
+  - 新增 flags-hash.js —— 仅存 28 道题答案的 SHA-256 摘要，仓库任何位置不再有明文答案主表
+  - 服务端 /api/ctf-verify 与前端 submitFlag() 均改为摘要比对（规范化规则统一：去空白 + 小写）
+  - 修复 v2.5 引入的前端致命 Bug：content.js 的 flag 字段已迁移删除但 submitFlag 仍读取 c.flag，导致提交必然抛 TypeError——**Flag 提交功能自 v2.5 起完全不可用**，现已恢复且支持离线校验
+  - 版本历史归档（含明文答案的 v1.0/v2.0 快照）已从仓库移除；scripts/remove-client-flags.js 完成使命随之退役，由 scripts/gen-flag-hashes.js 取代（stdin 收集明文、只落盘摘要）
+  - 五道模拟器挑战的通关奖励 flag 保持可在模拟中获取——其本质即完成该技术动作的奖励，属教学设计而非泄露；威胁模型详见 SECURITY.md
+- **请求体积上限**：readJsonBody 统一实现——代理 256KB / 执行 256KB / 模拟终端 64KB / 校验 16KB / 进度 100KB，超限 413 并断开
+- **进度数据再序列化存储**：POST /api/progress 解析校验后重新 JSON.stringify 落盘，不再原样写入未净化的请求体
+
+### ⚡ 性能与健壮性
+- gzip 结果缓存（FIFO 上限 24）：3.6MB content.js 不再每次请求重复压缩，命中后即取即发
+- 静态服务改 async stat→read 两段式，消除读取回调中的 statSync TOCTOU 与额外系统调用
+- 限流器清理逻辑从"恰好触发"改为 setInterval 无条件周期清扫（unref 不阻退出），过期 IP 条目不再滞留内存
+- API 路由匹配基于去除查询串后的路径，带参调用不再落空
+- MIME 补齐 .txt/.xml/.md；可压缩类型同步扩展；响应统一附加 Vary: Accept-Encoding
+
+### 🧾 安全头与策略
+- 下发严格 Content-Security-Policy（HTTP 头 + HTML meta 双通道，GitHub Pages 同享）：default-src 'self'，脚本限 self+cdnjs+内联 JSON-LD 摘要哈希，禁 unsafe-eval，frame-ancestors 'none'
+- 移除已废弃的 X-XSS-Protection；其余安全头经统一的 securityHeaders() 出口注入所有响应
+
+### 🧪 测试与工程化
+- 测试扩至 **95 项**并全部通过：新增静态黑名单覆盖（含 URL 编码绕过）、Host 白名单、body 上限边界、限流清扫、SHA-256 摘要契约钉住向量、flags-hash.js 无明文审计、CSP meta 断言、已删文件不复活检查
+- 新增 GitHub Actions 工作流：push/PR 时在 Node 18/20/22 运行 npm test 与五个入口文件语法检查
+- SECURITY.md 安全策略（威胁模型 + 私密漏洞报告通道）
+- .mailmap 统一三种历史作者身份
+- Issue 模板重命名为 feedback.yml（避免非 ASCII 文件名的工具链兼容问题）
+- restart_server.bat 便携化：%~dp0 定位 + 系统 node，不再硬编码个人机器路径
+- package.json 升至 2.6.0，声明 engines: node>=16
+
+### ♻️ 清理
+- 删除 versions/cyberedu_v1.0.html、cyberedu_v2.0.html、script_v2.0.js、style_v2.0.css（明文答案残留的死快照）
+- 删除 scripts/remove-client-flags.js（一次性迁移已完成）
+
+## v2.5 — 2026-06-23
 ## v2.5 — 2026-06-23
 
 **文件**: `script.js`, `cyberedu.html`, `style.css`, `server.js`, `content.js`, `i18n.js`, `tests/*.js`, `scripts/*.js`, `README.md`, `package.json`, `robots.txt`, `sitemap.xml`
