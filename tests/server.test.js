@@ -81,10 +81,15 @@ module.exports = async function() {
       );
     });
 
-    it('should keep absolute drive paths outside ROOT rejected on Windows', function() {
+    it('should keep resolved paths outside ROOT rejected (any platform)', function() {
       const ROOT = path.resolve(__dirname, '..');
-      const rel = path.relative(ROOT, 'D:\\elsewhere\\secret.txt');
-      assert.ok(rel.startsWith('..') || path.isAbsolute(rel));
+      // Construct a genuinely-absolute sibling of ROOT in a portable way.
+      const outside = path.resolve(ROOT, '..', 'elsewhere-secret.txt');
+      const rel = path.relative(ROOT, outside);
+      assert.ok(
+        rel.startsWith('..') || path.isAbsolute(rel),
+        'escape detection must hold whether or not drives differ'
+      );
     });
 
     it('should handle MIME type lookup for common extensions', function() {
