@@ -377,15 +377,24 @@ module.exports = async function() {
 
   // ─── Content-Security-Policy ────────────────────────────────
   describe('Content Security Policy', function() {
-    it('HTML meta CSP should exist and include CDN plus inline JSON-LD hash', function() {
+    it('HTML meta CSP should allow inline handlers without voiding hash sources', function() {
       const fs = require('fs');
       const html = fs.readFileSync(path.join(__dirname, '..', 'cyberedu.html'), 'utf8');
       const m = html.match(/<meta http-equiv="Content-Security-Policy" content="([^"]+)">/);
       assert.ok(m, 'CSP meta tag must be present');
       assert.ok(m[1].includes("'self'"), 'default-src self required');
       assert.ok(m[1].includes('cdnjs.cloudflare.com'), 'CDN scripts allowed');
-      assert.ok(m[1].includes("'sha256-gZvMHtWytt7MrvpMQQn6tIbyqzV5jz1AoQY2AxxYBdg='"),
-        'inline JSON-LD hash must stay whitelisted');
+      assert.ok(m[1].includes("'self'"), 'default-src self required');
+      assert.ok(m[1].includes('cdnjs.cloudflare.com'), 'CDN scripts allowed');
+      // CSP2+ GOTCHA: a hash/nonce source makes browsers IGNORE 'unsafe-inline',
+      // which re-breaks all ~830 inline handlers. The JSON-LD data block is
+      // never executed, so it needs no hash entry. Pin its absence:
+      assert.ok(!m[1].includes("'sha256-"), 'no hash source beside unsafe-inline (would void it)');
+      // ~830 inline onclick/onkeydown attributes across cyberedu.html and
+      // content.js REQUIRE 'unsafe-inline' — without it browsers silently
+      // block every handler and ALL buttons die (v2.6 roll-out regression).
+      assert.ok(m[1].includes("'unsafe-inline'"),
+        "script-src must whitelist inline handlers or the UI becomes inert");
       assert.ok(!m[1].includes("'unsafe-eval'"), 'unsafe-eval forbidden');
       assert.ok(!m[1].includes('http://'), 'no insecure upgradeable origins');
     });

@@ -39,10 +39,21 @@ const AUTO_OPEN = process.env.CYBEREDU_NO_OPEN !== '1';
 // ── Content-Security-Policy ──────────────────────────────────
 // Sent as a header here and mirrored as a <meta> tag in cyberedu.html so the
 // policy also applies to GitHub Pages / offline usage where this server is not
-// involved. The sha256-… entry whitelists the page's inline JSON-LD block.
+// involved.
+// script-src carries 'unsafe-inline' BY NECESSITY: the app is a zero-build
+// architecture with ~830 inline onclick/onkeydown handler attributes across
+// cyberedu.html and content.js.
+// GOTCHA (cost us a day-one outage): per CSP2+, if ANY hash-/nonce-source
+// appears alongside 'unsafe-inline', browsers IGNORE 'unsafe-inline' and fall
+// back to hash-only allowlisting — every handler dies again. That's why the
+// inline JSON-LD block deliberately has NO hash entry here: it is never
+// executed (data block for crawlers only), so script-src doesn't need to
+// allow it. Do not re-add a hash/nonce to this policy.
+// Everything else stays strict: no eval, no objects, same-origin connects,
+// no framing.
 const CSP =
   "default-src 'self'; " +
-  "script-src 'self' cdnjs.cloudflare.com 'sha256-gZvMHtWytt7MrvpMQQn6tIbyqzV5jz1AoQY2AxxYBdg='; " +
+  "script-src 'self' 'unsafe-inline' cdnjs.cloudflare.com; " +
   "style-src 'self' 'unsafe-inline' cdnjs.cloudflare.com fonts.googleapis.com; " +
   "font-src 'self' cdnjs.cloudflare.com fonts.gstatic.com; " +
   "img-src 'self' data: https:; " +

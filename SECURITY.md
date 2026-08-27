@@ -17,7 +17,7 @@ CyberEdu is a **local-first, single-user learning platform**. Its local server a
 - No CORS headers are emitted anywhere: third-party origins cannot drive any API in your browser.
 - `/api/run` executes submitted practice code **unsandboxed by design** — it must never be reachable from untrusted networks. Do not set `CYBEREDU_HOST=0.0.0.0` unless you fully understand the consequences.
 - CTF answers are stored only as SHA-256 digests (`flags-hash.js`). Answers for the five simulator-based challenges are derivable *by performing the simulated technique* — that is inherent to their design.
-- A strict Content-Security-Policy ships both as an HTTP header and as an HTML `<meta>` tag, so GitHub Pages deployments get equivalent protection.
+- A Content-Security-Policy ships both as an HTTP header and as an HTML `<meta>` tag, so GitHub Pages deployments get equivalent protection. `script-src` intentionally allows `'unsafe-inline'` because the app is a zero-build architecture with ~830 inline event-handler attributes (`onclick=…`) in its markup and content data — the other strict directives (no `unsafe-eval`, no objects/plugins, same-origin-only connections, anti-framing) still apply. All rendered content is self-authored static data, and AI model output is HTML-escaped before insertion.
 
 ## Reporting a Vulnerability
 

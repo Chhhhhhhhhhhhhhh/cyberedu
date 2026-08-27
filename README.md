@@ -151,7 +151,7 @@ Zero-dependency test suite — no `npm install` needed. 95 checks cover server s
 - 🔑 **Answers hashed end-to-end** — CTF verification now compares SHA-256 digests (`flags-hash.js`); no plaintext answer table exists anywhere, and flag submission works fully offline again
 - 📦 **Static file block-list** — `server.js`, `.git/`, tests and tooling are no longer downloadable over HTTP
 - ⚡ **Performance** — gzip result caching for multi-MB assets, async stat+read (no TOCTOU), unconditional rate-limiter sweep, per-endpoint request size caps
-- 🧾 **Strict CSP** both as HTTP header and `<meta>` tag (Pages deployments get identical policy)
+- 🧾 **CSP** both as HTTP header and `<meta>` tag (Pages deployments get identical policy; inline event handlers whitelisted to fit the zero-build architecture)
 - ♻️ Removed deprecated `X-XSS-Protection`; fixed a broken issue-template filename; portable `restart_server.bat`; CI workflow running the test suite on Node 18/20/22
 
 > 📋 [Full changelog →](versions/CHANGELOG.md)

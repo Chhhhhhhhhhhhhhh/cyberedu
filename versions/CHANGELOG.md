@@ -26,7 +26,7 @@
 - MIME 补齐 .txt/.xml/.md；可压缩类型同步扩展；响应统一附加 Vary: Accept-Encoding
 
 ### 🧾 安全头与策略
-- 下发严格 Content-Security-Policy（HTTP 头 + HTML meta 双通道，GitHub Pages 同享）：default-src 'self'，脚本限 self+cdnjs+内联 JSON-LD 摘要哈希，禁 unsafe-eval，frame-ancestors 'none'
+- 下发 Content-Security-Policy（HTTP 头 + HTML meta 双通道，GitHub Pages 同享）：default-src 'self'，禁 unsafe-eval / 插件 / 跨源连接 / 嵌套 frame；script-src 因应用的零构建内联事件架构（全站约 830 个 onclick/onkeydown 属性）放行 unsafe-inline。发布首日曾出现"全部按钮无响应"事故，根因有二：① 首发策略漏配 unsafe-inline；② 修复时又与 JSON-LD 摘要哈希并存——按 CSP2+ 规范哈希源会令浏览器忽略 unsafe-inline。已移除该哈希（JSON-LD 为非执行数据块，无需脚本源白名单），并以回归测试钉住"禁止哈希源与 unsafe-inline 并存"
 - 移除已废弃的 X-XSS-Protection；其余安全头经统一的 securityHeaders() 出口注入所有响应
 
 ### 🧪 测试与工程化

@@ -141,7 +141,7 @@ node server.js
 - 🔑 **答案端到端哈希化** — CTF 校验改为比对 SHA-256 摘要（`flags-hash.js`），仓库与服务端均不再存在明文答案表；离线提交 Flag 同时恢复可用
 - 📦 **静态文件黑名单** — `server.js`、`.git/`、测试与脚本目录无法再被 HTTP 直接下载
 - ⚡ **性能** — gzip 结果缓存（多 MB 资源零重复压缩）、异步 stat+read 消除 TOCTOU、限流器无条件周期清理、各接口独立的请求体积上限
-- 🧾 **严格 CSP** 以 HTTP 响应头 + HTML `<meta>` 双通道下发（GitHub Pages 部署获得同等策略）
+- 🧾 **CSP** 以 HTTP 响应头 + HTML meta 双通道下发（GitHub Pages 部署同等生效；按零构建内联事件架构放行内联处理器）
 - ♻️ 移除已废弃的 `X-XSS-Protection`；修复 Issue 模板文件名兼容性；`restart_server.bat` 便携化（不再硬编码个人路径）；新增 CI 工作流在 Node 18/20/22 上运行测试
 
 > 📋 [查看完整版本历史 →](versions/CHANGELOG.md)
