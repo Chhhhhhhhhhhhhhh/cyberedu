@@ -1,4 +1,4 @@
-// CyberEdu Local Server v2.6 - Multi-Model AI Proxy
+// CyberEdu Local Server v2.6.1 - Multi-Model AI Proxy
 // Usage: node server.js   (serves on http://127.0.0.1:8000)
 //
 // Security model (v2.6):
@@ -596,6 +596,52 @@ const CTF_SIM = {
       }
       return { output: `<span style="color:#888">[Template]: Hello ${escHtml(input)}</span>\n<span style="color:#888">[Rendered]: Hello ${escHtml(input)}</span>\n\n<span style="color:#888">Normal text output. No template injection detected.</span>` };
     }
+  },
+  'ctf-019': { // File Upload Bypass (simulated uploader)
+    welcome: 'Image Upload Service v1.0 - 模拟环境\n只允许上传图片（jpg/jpeg/png/gif），扩展名走黑名单过滤。\n输入文件名尝试上传，例如: shell.php\n目标: 绕过过滤拿到 webshell 并 cat /flag.txt\n',
+    respond(input) {
+      const name = input.trim();
+      if (!name || /\s/.test(name)) {
+        return { output: '<span style="color:#f44">Usage: 输入一个文件名，例如 shell.php</span>' };
+      }
+      if (/\.php$/.test(name)) {
+        return { output: `<span style="color:#f44">[!] Upload failed: extension '.php' is blacklisted</span>\n<span style="color:#888">提示：黑名单只匹配了字面 .php —— 大小写变体和 PHP 的别名扩展呢？</span>` };
+      }
+      if (/\.php\d?\.(jpg|jpeg|png|gif)$/i.test(name)) {
+        return { output: `<span style="color:#ff0">[√] ${escHtml(name)} 已保存，但服务器按最后的 .jpg 解析 —— 双扩展名在这里不生效</span>\n<span style="color:#888">试试 PHP 本身的别名扩展</span>` };
+      }
+      if (/\.(phtml|phar|php5|pht)$/i.test(name) || /\.pHp$/.test(name)) {
+        return { output: `<span style="color:#0f0">[√] ${escHtml(name)} 上传成功！黑名单没有覆盖这个扩展名</span>\n<span style="color:#888">$ curl https://target/uploads/${escHtml(name)}?cmd=cat%20/flag.txt</span>\n<span style="color:#0f0">&lt;?php system($_GET['cmd']); ?&gt; → 执行成功</span>\n<span style="color:#0f0">flag{upl04d_byp4ss_m4st3r}</span>` };
+      }
+      if (/\.(jpg|jpeg|png|gif)$/i.test(name)) {
+        return { output: `<span style="color:#888">[√] ${escHtml(name)} 上传成功（但它只是一张图片...）</span>` };
+      }
+      return { output: `<span style="color:#888">${escHtml(name)}: 已提交给过滤器。观察它的反应，逐步试探黑名单边界。</span>` };
+    }
+  },
+  'ctf-020': { // SSRF 101 (simulated URL fetcher)
+    welcome: 'URL Fetcher - 模拟环境\n服务器会代你请求任意 URL 并回显内容（curl_exec($url)，无内网限制）。\n已知 flag 位于内网 http://localhost:8080/flag.txt\n输入 URL 开始探测，例如: http://example.com\n',
+    respond(input) {
+      const url = input.trim();
+      if (!url || !/^[a-z]+:\/\//i.test(url)) {
+        return { output: '<span style="color:#f44">Usage: 输入完整 URL（含协议）</span>' };
+      }
+      const low = url.toLowerCase();
+      const isLocal = /(^|\/\/|@)(localhost|127\.0\.0\.1|\[::1\]|0\.0\.0\.0|0x7f000001|2130706433)(:\d+)?/.test(low);
+      if (low.startsWith('file://')) {
+        return { output: `<span style="color:#ff0">[协议走私] file:// 被服务器执行了！</span>\n<span style="color:#888">root:x:0:0:root:/root:/bin/bash\ndaemon:x:1:1:daemon:...</span>\n<span style="color:#ff0">你能读本地文件了 —— 但 flag 在另一台内网服务的 HTTP 端口上</span>` };
+      }
+      if (isLocal && low.includes('flag.txt')) {
+        return { output: `<span style="color:#888">HTTP/1.1 200 OK</span>\n<span style="color:#888">Content-Type: text/plain</span>\n\n<span style="color:#0f0">flag{ssrf_l0c4lh0st_pwn3d}</span>\n\n<span style="color:#0f0">✓ SSRF 命中内网服务！</span>` };
+      }
+      if (isLocal) {
+        return { output: `<span style="color:#888">HTTP/1.1 200 OK</span>\n<span style="color:#888">Content-Type: text/html</span>\n\n&lt;h1&gt;Internal Admin Panel&lt;/h1&gt;\n&lt;a href="/flag.txt"&gt;flag.txt (24 bytes)&lt;/a&gt;\n\n<span style="color:#ff0">发现内网服务 —— 目录里有个 flag.txt</span>` };
+      }
+      if (low.startsWith('http')) {
+        return { output: `<span style="color:#888">HTTP/1.1 200 OK</span>\n<span style="color:#888">&lt;html&gt;&lt;body&gt;External page fetched.&lt;/body&gt;&lt;/html&gt;</span>\n<span style="color:#888">外网能通。但 flag 不在外面 —— 想想这个功能还能让服务器访问哪里？</span>` };
+      }
+      return { output: `<span style="color:#888">${escHtml(url)}: 服务器尝试请求了。除了 http:// 还有 file:// gopher:// dict:// ...</span>` };
+    }
   }
 };
 
@@ -826,7 +872,7 @@ server.listen(PORT, BIND_HOST, async () => {
   const hasGCC    = await checkRuntime('gcc', ['--version']);
   console.log('');
   console.log('  ╔══════════════════════════════════════════════╗');
-  console.log('  ║   CyberEdu Server  v2.6  (Multi-Model AI)  ║');
+  console.log('  ║   CyberEdu Server  v2.6.1 (Multi-Model AI)  ║');
   console.log('  ║   http://' + BIND_HOST + ':' + PORT + '                    ║');
   console.log('  ╚══════════════════════════════════════════════╝');
   console.log('');

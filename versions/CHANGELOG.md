@@ -1,5 +1,33 @@
 # cyberedu 版本记录
 
+## v2.6.1 — 2026-08-27
+
+**文件**: `content.js`, `server.js`, `flags-hash.js`, `script.js`, `tests/*.js`, `scripts/migrate-ctf-v261.js`(新), `scripts/verify-ctf-solvable.js`(新), `README.md`, `README_zh.md`, `package.json`
+
+### 🚩 CTF 内容大修：28 道题全部"真实可解"
+修复 v2.3 内容改版遗留的答案表错位（当时题目按难度重排，但答案表仍是最早的类别分组版本，且约半数新题的答案从未录入）。此前约 20 道题即使真正解出、提交题面给出的 flag 也会被判错，另有 15+ 道题的答案数据根本不存在于任何地方（无文件、无密文、无模拟器），实际不可解。
+
+- **真实密码学数据**：ctf-001/007/011 三道 RSA 题全部用真实生成的参数重建（此前密文为 TODO 0，无法解出）——001 使用含 24 位小因子的 144 位模数（sympy 瞬间分解）；007 使用仅相差 12364 的孪生素数（费马分解 1 次迭代命中）；011 提供三组真实 (nᵢ, cᵢ)，CRT + 立方根可完整恢复明文
+- **真实可解码数据**：ctf-009 换掉著名的"套娃空串"Base64 链（原串解码到底不含 flag），改为真正的 6 层编码；ctf-017 原密文是伪维吉尼亚（实为凯撒移 5 的乱文本），重新以密钥 `cat` 加密含 flag 的完整明文；ctf-002 答案确认为题面 ROT13 解码所得 `flag{caesar_is_not_encryption}`
+- **13 道取证/逆向/PWN 题补齐"题目文件"**：以 Code Editor 内嵌工具输出产物的形式提供真实感数据——strings 输出、objdump 反汇编、Wireshark Follow Stream、zsteg 结果、Volatility cmdline、auth.log、mactime 时间线、dnSpy 反编译 C#、jadx 反编译 Java、pwntools 会话记录等，flag 均可从产物中按题目教授的方法提取
+- **2 个新服务端模拟终端**：ctf-019 文件上传绕过（扩展名黑名单试探：.php 被拒 → .pHp/.phtml/.phar 成功）、ctf-020 SSRF（file:// 协议走私、localhost/127.0.0.1/[::1]/0x7f000001 变体、内网 flag.txt 探测）——此前两题宣称有模拟终端但服务端从未实现
+- **新答案表**：全部 28 题答案重新核定并重生成 `flags-hash.js`（`scripts/gen-flag-hashes.js` 流程）；五道服务端模拟题答案不变
+
+### 🔗 修复课程内挑战跳转按钮（15 处全部失效）
+课程章节中的 `openCTF(0)` 式调用传的是数字下标，而 API 期望字符串 id——所有"▶ 挑战：XXX"按钮从上线起就无法打开题目。现已全部改为主题化字符串 id（如 `openCTF('ctf-003')`），并根据按钮文案重新对准了语义正确的题目（流量分析→Pcap、内存取证→Memory Dump 等）。
+
+### 📚 挑战列表按学习路径重排
+28 道题从"随机穿插"改为**分类轨道 + 难度递增**排序：Crypto(6) → Web(7) → Misc(4) → Forensics(4) → Reverse(4) → PWN(3)，每条轨道内从 ★ 入门到 ★★★★ 进阶，符合循序渐进的学习曲线。
+
+### 🧪 验证方式（全部自动化、全部通过）
+- 新增 `scripts/verify-ctf-solvable.js`：像解题者一样从每道题自身内容**程序化解出全部 21 道非模拟题**（ROT13 解码、6 层 Base64、XOR-0xFF、维吉尼亚密钥破解、DNS 隧道标签重组、真实 RSA/费马/Håstad 解密、13 个产物 grep），逐一与哈希表对账 → 21/21
+- 7 道模拟器题现场起服务实测：触发输入 → 模拟输出含 flag → `/api/ctf-verify` 通过 → 7/7
+- 测试套件 95 项全绿（钉住向量更新为 ctf-001 新答案）
+
+### 📝 诚实化
+- README（中英）与仓库描述的双语宣传修正为实际情况：**UI 与题目双语、章节正文为中文**（此前宣称"全部章节完整英文翻译"与实现不符）
+- 版本号升至 2.6.1
+
 ## v2.6 — 2026-08-27
 
 **文件**: `server.js`, `script.js`, `cyberedu.html`, `flags-hash.js`(新), `tests/*.js`, `scripts/gen-flag-hashes.js`(新), `SECURITY.md`(新), `.mailmap`(新), `.github/workflows/test.yml`(新), `restart_server.bat`, `package.json`, `README.md`, `README_zh.md`
