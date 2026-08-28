@@ -20,4 +20,5 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - run: npm test
       - run: node scripts/verify-ctf-solvable.js
+      - run: node scripts/verify-content-quality.js
       - run: node --check server.js && node --check script.js && node --check content.js && node --check i18n.js && node --check flags-hash.js
