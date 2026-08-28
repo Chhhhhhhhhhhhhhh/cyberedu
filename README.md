@@ -6,11 +6,11 @@
 
 <p align="center">
   An interactive cybersecurity learning website — from absolute beginner to advanced practitioner.<br>
-  <strong>52 chapters · 28 CTF challenges · Bilingual UI & challenges (chapters in Chinese) · AI Tutor</strong>
+  <strong>52 chapters · 28 CTF challenges · Bilingual EN/ZH · AI Tutor</strong>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-v2.6.1-00ff41?style=flat-square" alt="Version">
+  <img src="https://img.shields.io/badge/version-v2.6.2-00ff41?style=flat-square" alt="Version">
   <img src="https://img.shields.io/badge/license-MIT-00e5ff?style=flat-square" alt="License">
   <img src="https://img.shields.io/github/last-commit/Chhhhhhhhhhhhhhh/cyberedu?style=flat-square&color=00ff41" alt="Last Commit">
   <img src="https://img.shields.io/github/repo-size/Chhhhhhhhhhhhhhh/cyberedu?style=flat-square&color=00e5ff" alt="Repo Size">
@@ -35,7 +35,7 @@
 | Category | Details |
 |----------|---------|
 | 📚 **Content** | 52 chapters across 7 modules · 4 difficulty tiers (Beginner → Expert) |
-| 🌐 **Bilingual** | UI, challenge descriptions/hints/writeups fully EN+ZH · chapter articles in Chinese · one-click switch |
+| 🌐 **Bilingual** | Full EN/ZH translation · one-click UI language switch |
 | 🤖 **AI Tutor** | Built-in chat assistant · streaming SSE · supports DeepSeek, OpenAI, Qwen, Claude, Ollama |
 | 💻 **Code Editor** | CodeMirror 5 · Python / JS / C / Bash syntax highlighting |
 | 🚩 **CTF Arena** | 28 challenges · Crypto, Web, Misc, Reverse, Forensics, PWN |
@@ -48,7 +48,7 @@
 ### 📚 7 Core Modules
 
 ```
-Programming · Cryptography · Networking · Web Security · Pentesting · Malware Analysis · CTF
+Programming · Networking · Cryptography · Web Security · Pentesting · Malware Analysis · CTF
 ```
 
 ## 🏗️ Project Structure

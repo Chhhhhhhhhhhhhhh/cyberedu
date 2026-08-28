@@ -28,6 +28,33 @@
 - README（中英）与仓库描述的双语宣传修正为实际情况：**UI 与题目双语、章节正文为中文**（此前宣称"全部章节完整英文翻译"与实现不符）
 - 版本号升至 2.6.1
 
+## v2.6.2 — 2026-08-28
+
+**文件**: `content.js`, `script.js`, `docs/content-roadmap.md`(新), `scripts/hub-structure-v262.js`(新), `README.md`, `README_zh.md`, `package.json`
+
+### 📚 学习中心改造启动（针对"太专业/不丰富/不够循序渐进"的反馈）
+- **模块顺序修正**：网络提到密码学之前（编程 → 网络 → 密码学 → Web → 渗透 → 恶意软件 → CTF）——消除"密码学模块先讲 TLS、网络模块后讲 HTTP"的依赖倒置，并与首页推荐学习路径统一
+- **侧边栏章节编号**：学习中心侧边栏每章显示 01. 02. … 序号，进度感可视化
+- **标杆章重写**：`prog-01-02 控制流与函数` 按菜鸟教程式风格重写——"第 N 步"小步结构、每个概念最小可运行例子+运行结果+逐行拆解、安全场景串联（弱密码检测器贯穿全章）、常见坑速查表、3 道折叠答案练习、章末小结表
+- **新增 `docs/content-roadmap.md`**：10 条章节风格规范 + 7 批改造计划与验收清单，后续按批推进
+- README 模块顺序同步；版本号 2.6.2
+- 标杆章提供中英双语两个版本（SECTION_CONTENT_EN 同步更新）
+
+## v2.6.1 — 2026-08-28
+
+**文件**: `content.js`, `server.js`, `flags-hash.js`, `script.js`, `tests/*.js`, `scripts/gen-flag-hashes.js`, `scripts/migrate-ctf-v261.js`(新), `scripts/verify-ctf-solvable.js`(新), `SECURITY.md`, `README.md`, `README_zh.md`, `package.json`
+
+### 🚩 CTF 内容大修：28 道题全部"真实可解"
+修复 v2.3 内容改版遗留的答案表错位——此前约 20 道题真正解出后提交也会被判错，且 15+ 道题的答案数据根本不存在。要点：
+- 三道 RSA 题以真实参数重建（小因子 144 位模数 / 费马分解 1 次迭代 / Håstad 三模数 CRT）
+- 009 换掉解码为空的套娃串、017 重新用密钥 `cat` 加密真明文、002 答案确认为 ROT13 推导值
+- 13 道取证/逆向/PWN 题补齐 Code Editor 内嵌工具产物（strings/objdump/zsteg/Volatility/auth.log/mactime/dnSpy/jadx/pwntools 会话）
+- 新增上传绕过与 SSRF 两个服务端模拟终端
+- 全部 28 题答案重新核定并重生成 `flags-hash.js`
+- 修复 15 处课程内 `openCTF(数字)` 死按钮（API 需要字符串 id），按语义重新对准题目
+- 挑战列表按分类轨道 + 难度递增重排
+- 新增 `scripts/verify-ctf-solvable.js` 程序化解出全部 21 道非模拟题并与哈希对账（已进 CI 门禁）
+
 ## v2.6 — 2026-08-27
 
 **文件**: `server.js`, `script.js`, `cyberedu.html`, `flags-hash.js`(新), `tests/*.js`, `scripts/gen-flag-hashes.js`(新), `SECURITY.md`(新), `.mailmap`(新), `.github/workflows/test.yml`(新), `restart_server.bat`, `package.json`, `README.md`, `README_zh.md`

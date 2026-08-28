@@ -789,12 +789,14 @@ function updateSidebar() {
       <div class="sidebar-chapters ${isActive?'open':''}">
         <div class="sidebar-progress"><div class="sidebar-progress-fill" style="width:${prog}%"></div></div>
         <div class="sidebar-prog-label"><span>PROGRESS</span><span>${prog}%</span></div>`;
+    let secNum = 0;
     for (const c of m.chapters) {
       for (const s of c.sections) {
+        secNum++;
         const done = getSectionDone(s.id);
         const sTitle = getSectionField(s,'title');
         html += `<button class="sidebar-chapter-btn ${s.id===currentSectionId?'active':''} ${done?'done':''}"
-          onclick="loadSection('${m.id}','${s.id}')">${sTitle}${done?'<span class="sidebar-chap-done">✓</span>':''}</button>`;
+          onclick="loadSection('${m.id}','${s.id}')"><span class="sidebar-prac-num">${String(secNum).padStart(2,'0')}.</span> ${sTitle}${done?'<span class="sidebar-chap-done">✓</span>':''}</button>`;
       }
     }
     html += '</div></div>';

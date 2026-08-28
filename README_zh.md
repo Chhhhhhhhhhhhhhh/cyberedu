@@ -6,11 +6,11 @@
 
 <p align="center">
   一个交互式网络安全学习网站，从零基础到高级渗透，全面覆盖。<br>
-  <strong>52 个章节 · 28 道 CTF 挑战 · UI 与题目中英双语（章节正文为中文） · AI 导师</strong>
+  <strong>52 个章节 · 28 道 CTF 挑战 · 中英双语 · AI 导师</strong>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/版本-v2.6.1-00ff41?style=flat-square" alt="版本">
+  <img src="https://img.shields.io/badge/版本-v2.6.2-00ff41?style=flat-square" alt="版本">
   <img src="https://img.shields.io/badge/许可证-MIT-00e5ff?style=flat-square" alt="许可证">
   <img src="https://img.shields.io/github/last-commit/Chhhhhhhhhhhhhhh/cyberedu?style=flat-square&color=00ff41&label=最近更新" alt="最近更新">
   <img src="https://img.shields.io/github/repo-size/Chhhhhhhhhhhhhhh/cyberedu?style=flat-square&color=00e5ff&label=仓库大小" alt="仓库大小">
@@ -39,7 +39,7 @@
 | 分类 | 详情 |
 |------|------|
 | 📚 **内容体系** | 7 大模块 · 52 个章节 · 4 级难度（零基础 → 高级） |
-| 🌐 **中英双语** | UI 与题目（描述/提示/writeup）完整双语 · 章节正文为中文 · 一键切换 |
+| 🌐 **中英双语** | 全部章节完整英文翻译 · UI 一键切换 |
 | 🤖 **AI 导师** | 内置聊天助手 · SSE 流式输出 · 支持 DeepSeek/OpenAI/通义/Claude/Ollama |
 | 💻 **代码编辑器** | CodeMirror 5 · Python / JS / C / Bash 语法高亮 |
 | 🚩 **CTF 竞技场** | 28 道挑战 · 密码学、Web、Misc、逆向、取证、PWN |
@@ -52,7 +52,7 @@
 ### 📚 7 大核心模块
 
 ```
-编程基础 · 密码学 · 网络 · Web 安全 · 渗透测试 · 恶意软件分析 · CTF 实战
+编程基础 · 网络 · 密码学 · Web 安全 · 渗透测试 · 恶意软件分析 · CTF 实战
 ```
 
 ## 🏗️ 项目结构
