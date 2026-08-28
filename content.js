@@ -27636,3 +27636,652 @@ const SECTION_CHECKPOINTS = {
     }
   ]
 };
+
+// ==== content override: programming (appended; last assignment wins) ====
+SECTION_CONTENT["programming"] = "<h2>变量与类型系统——安全工程师的第一块积木</h2>\n\n<p>所有安全工具的第一步都是同一件事：<strong>把数据装进变量</strong>。一个 IP 地址、一个端口号、一次扫描的结果——都要先存进变量，才能被处理。这一章用最短的路，带你掌握 Python 变量和四种最常用的数据类型。学完你就能亲手解析一个 \"192.168.1.1:8080\" 这样的目标地址。</p>\n\n<div class=\"callout info\"><div class=\"callout-title\">本章你将学会</div><p>① 创建变量并用 print 输出　② 字符串的拼接、长度与切片　③ 端口号为什么要用整数　④ True/False 布尔值　⑤ 用列表装一批目标　⑥ 用字典给数据起名字　⑦ 亲手解析 \"IP:端口\" 格式的目标地址。不需要安装任何东西，右侧代码编辑器直接跟着敲。</p></div>\n\n<h3>第 1 步：变量就是一个贴了标签的盒子</h3>\n<p>把一个值放进变量，等于给这个值贴上标签，以后喊标签就是在喊这个值。语法只有一个：<strong>变量名 = 值</strong>。</p>\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">ip = \"192.168.1.1\"\nport = 80\n\nprint(ip)\nprint(port)</code></pre></div>\n<p>运行结果：</p>\n<div class=\"code-block\"><pre><code class=\"language-text\">192.168.1.1\n80</code></pre></div>\n<p>拆开看：<code>ip</code> 和 <code>port</code> 是你起的名字（建议见名知意）；<code>=</code> 是\"把右边的值装进左边的盒子\"；<code>print(...)</code> 把盒子里面的东西显示出来。改一下第 1 行的值再运行，输出会跟着变——这就是\"变量\"：装的东西可以换，标签不变。</p>\n<div class=\"callout warn\"><div class=\"callout-title\">新手坑</div><p>变量名区分大小写：<code>IP</code> 和 <code>ip</code> 是两个不同的变量。另外别用中文引号 <code>\" \"</code>，Python 只认英文引号 <code>\" \"</code>。</p></div>\n\n<h3>第 2 步：字符串（str）—— 安全工程师最常打交道的数据</h3>\n<p>用引号包起来的都是字符串：IP 地址、域名、日志行、密码……全都是。字符串自带很多\"技能\"（叫方法），先学三个最常用的：</p>\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">target = \"192.168.1.1\"\n\nprint(\"目标长度:\", len(target))          # 长度：字符个数\nprint(\"大写:\", target.upper())           # 全部变大写\nprint(\"把 . 换成 -:\", target.replace(\".\", \"-\"))</code></pre></div>\n<p>运行结果：</p>\n<div class=\"code-block\"><pre><code class=\"language-text\">目标长度: 11\n大写: 192.168.1.1\n把 . 换成 - : 192-168-1-1</code></pre></div>\n<p>字符串还能用 <code>+</code> 拼接、用 <code>[ ]</code> 切片取出其中一段。切片的规则是<strong>从第几个字符取到第几个字符（不含结尾）</strong>，从 0 开始数：</p>\n<div class=\"code-block\"><pre><code class=\"language-python\">target = \"192.168.1.1\"\n\nprint(target[0:3])    # 从第 0 位取到第 3 位之前 → 192\nprint(target[0:1])    # 只取第 0 位 → 1\nprint(target[-3:])    # 负数 = 从结尾往前数 3 位 → 1.1</code></pre></div>\n<div class=\"callout info\"><div class=\"callout-title\">安全视角</div><p>日志分析的第一步永远是\"从一整行文本里切出想要的字段\"——用的就是切片和马上要学的 split。字符串玩得熟，日志就玩得熟。</p></div>\n\n<h3>第 3 步：整数（int）—— 端口号和状态码</h3>\n<p>不带引号的数字是整数。端口号、HTTP 状态码、重试次数，都用它：</p>\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">port = 80\nstatus = 404\n\nprint(port + 1)          # 整数可以做数学运算 → 81\nprint(status == 404)     # 可以做比较 → True</code></pre></div>\n<div class=\"callout warn\"><div class=\"callout-title\">最重要的坑：\"80\" 和 80 不是一回事</div><p><code>\"80\"</code> 带引号是<strong>字符串</strong>（两个字符），<code>80</code> 不带引号是<strong>整数</strong>（一个数）。<code>\"80\" + 1</code> 会直接报错。互相转换用 <code>int(\"80\")</code> 和 <code>str(80)</code>——这两个转换在解析日志时天天用。</p></div>\n\n<h3>第 4 步：布尔值（bool）—— 只有两个答案的问题</h3>\n<p>布尔值只有两个值：<code>True</code>（真）和 <code>False</code>（假）。端口\"开还是关\"、密码\"弱还是不强\"，本质上都是布尔值：</p>\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">port_open = True\nis_admin = False\n\nprint(port_open)\nprint(is_admin)\nprint(80 &lt; 443)          # 比较的结果就是布尔值 → True</code></pre></div>\n<p>注意 <code>True</code>/<code>False</code> 首字母大写。布尔值是下一章 if 判断的燃料——现在记住\"比较运算会产生布尔值\"就够了。</p>\n\n<h3>第 5 步：列表（list）—— 把一批目标装在一起</h3>\n<p>扫描器不会只扫一个端口。用方括号把多个值装进列表：</p>\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">ports = [21, 22, 80, 443, 3389]\n\nprint(len(ports))        # 列表里有几个元素 → 5\nprint(ports[0])          # 第一个元素（从 0 数）→ 21\nprint(ports[-1])         # 最后一个 → 3389\n\nports.append(8443)       # 追加一个新端口\nprint(ports)</code></pre></div>\n<p>运行结果：</p>\n<div class=\"code-block\"><pre><code class=\"language-text\">5\n21\n3389\n[21, 22, 80, 443, 3389, 8443]</code></pre></div>\n<p>列表和字符串是一家人：列表能用 <code>len</code>、能切片，字符串也能。下一章的 for 循环会展示\"逐个处理列表\"的威力。</p>\n\n<h3>第 6 步：字典（dict）—— 给数据起名字</h3>\n<p>一台服务器的信息有 IP、端口、服务名。用三个变量存太散，用字典打包：</p>\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">server = {\n    \"ip\": \"10.0.0.5\",\n    \"port\": 22,\n    \"service\": \"SSH\"\n}\n\nprint(server[\"ip\"])          # 按名字取值 → 10.0.0.5\nprint(server[\"service\"])     # → SSH\nserver[\"os\"] = \"Linux\"       # 随时添加新的名字\nprint(server)</code></pre></div>\n<p>运行结果：</p>\n<div class=\"code-block\"><pre><code class=\"language-text\">10.0.0.5\nSSH\n{'ip': '10.0.0.5', 'port': 22, 'service': 'SSH', 'os': 'Linux'}</code></pre></div>\n<p>大括号里是\"名字: 值\"的配对。安全工具里的资产信息、扫描报告，几乎都用字典来组织。</p>\n\n<h3>第 7 步：综合实战 —— 解析 \"IP:端口\" 目标地址</h3>\n<p>把本章所有知识串起来。目标格式是 <code>\"192.168.1.1:8080\"</code>，我们要拆出 IP 和端口：</p>\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">target = \"192.168.1.1:8080\"\n\nparts = target.split(\":\")       # 按冒号切开，得到列表\nip = parts[0]                   # \"192.168.1.1\"\nport_str = parts[1]             # \"8080\"（注意：还是字符串！）\nport = int(port_str)            # 转成整数才能做数学运算\n\nprint(\"IP  :\", ip)\nprint(\"端口:\", port)\nprint(\"类型检查:\", type(ip), type(port))</code></pre></div>\n<p>运行结果：</p>\n<div class=\"code-block\"><pre><code class=\"language-text\">IP  : 192.168.1.1\n端口: 8080\n类型检查: &lt;class 'str'&gt; &lt;class 'int'&gt;</code></pre></div>\n<p>短短 8 行，用到了字符串的 <code>split</code>、列表取值、<code>int</code> 转换和 <code>type</code> 检查——这就是一个迷你解析器的诞生。真实工具读的只是更复杂的\"目标格式\"而已。</p>\n\n<h3>动手练习（先自己写，再展开答案）</h3>\n<p><strong>练习 1：</strong>把变量 <code>url = \"https://example.com/login\"</code> 中的域名 <code>example.com</code> 提取出来打印（提示：<code>split(\"/\")</code>）。</p>\n<details><summary>点击展开练习 1 答案</summary>\n<div class=\"code-block\"><pre><code class=\"language-python\">url = \"https://example.com/login\"\nparts = url.split(\"/\")\nprint(parts[2])          # ['https:', '', 'example.com', 'login'] 的第 3 个</code></pre></div>\n</details>\n<p><strong>练习 2：</strong>创建一个列表 <code>weak_ports = [23, 445, 3389]</code>，把 <code>21</code>（FTP，同样不安全）追加进去，然后打印列表长度和第一个元素。</p>\n<details><summary>点击展开练习 2 答案</summary>\n<div class=\"code-block\"><pre><code class=\"language-python\">weak_ports = [23, 445, 3389]\nweak_ports.append(21)\nprint(\"数量:\", len(weak_ports))     # 4\nprint(\"第一个:\", weak_ports[0])     # 23</code></pre></div>\n</details>\n<p><strong>练习 3：</strong>用字典描述你自己的电脑：主机名、系统、开放端口列表（3 个数字）。然后打印一句话：\"我的主机 xxx 开放了 N 个端口\"（用 <code>len()</code> 算 N）。</p>\n<details><summary>点击展开练习 3 答案</summary>\n<div class=\"code-block\"><pre><code class=\"language-python\">my_pc = {\n    \"hostname\": \"WIN-DEV01\",\n    \"os\": \"Windows 11\",\n    \"ports\": [135, 445, 3389]\n}\nprint(\"我的主机\", my_pc[\"hostname\"], \"开放了\", len(my_pc[\"ports\"]), \"个端口\")</code></pre></div>\n</details>\n\n<h3>本章小结</h3>\n<table>\n<tr><th>类型</th><th>样子</th><th>安全场景</th></tr>\n<tr><td>字符串 str</td><td><code>\"192.168.1.1\"</code></td><td>IP、域名、日志行</td></tr>\n<tr><td>整数 int</td><td><code>8080</code></td><td>端口、状态码、次数</td></tr>\n<tr><td>布尔 bool</td><td><code>True / False</code></td><td>端口开/关、是否弱密码</td></tr>\n<tr><td>列表 list</td><td><code>[21, 22, 80]</code></td><td>目标列表、端口列表</td></tr>\n<tr><td>字典 dict</td><td><code>{\"ip\": \"...\"}</code></td><td>资产信息、扫描报告</td></tr>\n</table>\n<p>变量只是\"存数据\"。下一章让数据<strong>流动起来</strong>：if 判断、for 循环、函数封装——并写出你的第一个批量弱密码检测器。</p>\n<button class=\"practice-link-btn\" onclick=\"navigate('practice'); switchPractice(0)\">▶ 配套练习：凯撒密码破解（用到字符串与列表）</button>";
+SECTION_CONTENT_EN["programming"] = `<h2>Variables & Types — the First Building Block for Security Engineers</h2>
+
+<p>Every security tool starts the same way: <strong>put data into variables</strong>. An IP address, a port number, the result of a scan — everything must live in a variable before it can be processed. This chapter takes the shortest path through Python variables and the four data types you will use every day. By the end you will parse a target like "192.168.1.1:8080" with your own code.</p>
+
+<div class="callout info"><div class="callout-title">What You Will Learn</div><p>① Create variables and print them　② String length, concatenation and slicing　③ Why ports must be integers　④ True/False booleans　⑤ Storing targets in lists　⑥ Naming data with dictionaries　⑦ Parsing an "IP:port" target with your own mini-parser. Nothing to install — type along in the code editor.</p></div>
+
+<h3>Step 1: a Variable Is a Box with a Label</h3>
+<p>Putting a value into a variable means sticking a label on it. From then on, calling the label calls the value. The syntax is one line: <strong>name = value</strong>.</p>
+<div class="code-block"><div class="copy-btn">Copy</div><pre><code class="language-python">ip = "192.168.1.1"
+port = 80
+
+print(ip)
+print(port)</code></pre></div>
+<p>Output:</p>
+<div class="code-block"><pre><code class="language-text">192.168.1.1
+80</code></pre></div>
+<p>Breaking it down: <code>ip</code> and <code>port</code> are names you chose (make them meaningful); <code>=</code> means "put the right-hand value into the left-hand box"; <code>print(...)</code> shows what is inside. Change line 1 and run again — the output follows. That is what "variable" means: the content can change, the label stays.</p>
+<div class="callout warn"><div class="callout-title">Beginner Trap</div><p>Names are case-sensitive: <code>IP</code> and <code>ip</code> are two different variables. And Python only accepts straight quotes <code>" "</code>, never curly quotes <code>" "</code>.</p></div>
+
+<h3>Step 2: Strings (str) — the Data You Will Touch the Most</h3>
+<p>Anything inside quotes is a string: IP addresses, domains, log lines, passwords — all strings. Strings come with built-in skills (methods). Here are the three you will use constantly:</p>
+<div class="code-block"><div class="copy-btn">Copy</div><pre><code class="language-python">target = "192.168.1.1"
+
+print("Length:", len(target))            # number of characters
+print("Upper:", target.upper())          # all caps
+print("Dots to dashes:", target.replace(".", "-"))</code></pre></div>
+<p>Output:</p>
+<div class="code-block"><pre><code class="language-text">Length: 11
+Upper: 192.168.1.1
+Dots to dashes: 192-168-1-1</code></pre></div>
+<p>Strings can be glued with <code>+</code> and sliced with <code>[ ]</code>. Slicing rule: <strong>take from index A up to (not including) index B</strong>, counting from 0:</p>
+<div class="code-block"><pre><code class="language-python">target = "192.168.1.1"
+
+print(target[0:3])    # index 0 up to 3 → 192
+print(target[0:1])    # only index 0 → 1
+print(target[-3:])    # negative = 3 from the end → 1.1</code></pre></div>
+<div class="callout info"><div class="callout-title">Security Lens</div><p>Log analysis always starts with "cut the field I need out of a line of text" — that is slicing plus the split method coming up. Master strings and you master logs.</p></div>
+
+<h3>Step 3: Integers (int) — Ports and Status Codes</h3>
+<p>Numbers without quotes are integers. Ports, HTTP status codes, retry counts:</p>
+<div class="code-block"><div class="copy-btn">Copy</div><pre><code class="language-python">port = 80
+status = 404
+
+print(port + 1)          # math works → 81
+print(status == 404)     # comparison works → True</code></pre></div>
+<div class="callout warn"><div class="callout-title">The Most Important Trap: "80" Is Not 80</div><p><code>"80"</code> with quotes is a <strong>string</strong> (two characters); <code>80</code> without quotes is an <strong>integer</strong> (a number). <code>"80" + 1</code> raises an error. Convert with <code>int("80")</code> and <code>str(80)</code> — you will use these two constantly when parsing logs.</p></div>
+
+<h3>Step 4: Booleans (bool) — Questions with Two Answers</h3>
+<p>A boolean has only two values: <code>True</code> and <code>False</code>. "Port open or closed", "password weak or not" — all booleans underneath:</p>
+<div class="code-block"><div class="copy-btn">Copy</div><pre><code class="language-python">port_open = True
+is_admin = False
+
+print(port_open)
+print(is_admin)
+print(80 &lt; 443)          # a comparison produces a boolean → True</code></pre></div>
+<p>Note the capital first letters: <code>True</code>/<code>False</code>. Booleans are the fuel for next chapter's if statements — for now, remember "comparisons produce booleans".</p>
+
+<h3>Step 5: Lists — Carry a Batch of Targets</h3>
+<p>A scanner never checks a single port. Square brackets pack many values into a list:</p>
+<div class="code-block"><div class="copy-btn">Copy</div><pre><code class="language-python">ports = [21, 22, 80, 443, 3389]
+
+print(len(ports))        # how many elements → 5
+print(ports[0])          # first element (count from 0) → 21
+print(ports[-1])         # last one → 3389
+
+ports.append(8443)       # append a new port
+print(ports)</code></pre></div>
+<p>Output:</p>
+<div class="code-block"><pre><code class="language-text">5
+21
+3389
+[21, 22, 80, 443, 3389, 8443]</code></pre></div>
+<p>Lists and strings are siblings: both support <code>len</code> and slicing. Next chapter's for loop will show the power of "process a list item by item".</p>
+
+<h3>Step 6: Dictionaries (dict) — Name Your Data</h3>
+<p>A server has an IP, a port, a service name. Three loose variables are messy; a dictionary bundles them:</p>
+<div class="code-block"><div class="copy-btn">Copy</div><pre><code class="language-python">server = {
+    "ip": "10.0.0.5",
+    "port": 22,
+    "service": "SSH"
+}
+
+print(server["ip"])          # look up by name → 10.0.0.5
+print(server["service"])     # → SSH
+server["os"] = "Linux"       # add new entries anytime
+print(server)</code></pre></div>
+<p>Output:</p>
+<div class="code-block"><pre><code class="language-text">10.0.0.5
+SSH
+{'ip': '10.0.0.5', 'port': 22, 'service': 'SSH', 'os': 'Linux'}</code></pre></div>
+<p>Curly braces hold "name: value" pairs. Asset inventories and scan reports in real tools are all dictionaries.</p>
+
+<h3>Step 7: Putting It Together — Parse an "IP:port" Target</h3>
+<p>Wire everything together. The target format is <code>"192.168.1.1:8080"</code>; split out the IP and the port:</p>
+<div class="code-block"><div class="copy-btn">Copy</div><pre><code class="language-python">target = "192.168.1.1:8080"
+
+parts = target.split(":")       # split on the colon → a list
+ip = parts[0]                   # "192.168.1.1"
+port_str = parts[1]             # "8080" (still a string!)
+port = int(port_str)            # convert so math becomes possible
+
+print("IP  :", ip)
+print("Port:", port)
+print("Types:", type(ip), type(port))</code></pre></div>
+<p>Output:</p>
+<div class="code-block"><pre><code class="language-text">IP  : 192.168.1.1
+Port: 8080
+Types: &lt;class 'str'&gt; &lt;class 'int'&gt;</code></pre></div>
+<p>Eight lines using <code>split</code>, list indexing, <code>int</code> conversion and a <code>type</code> check — a mini-parser is born. Real tools just read fancier "target formats".</p>
+
+<h3>Exercises (try first, then unfold the answer)</h3>
+<p><strong>Exercise 1:</strong> Extract the domain <code>example.com</code> from <code>url = "https://example.com/login"</code> and print it (hint: <code>split("/")</code>).</p>
+<details><summary>Click to unfold Exercise 1 answer</summary>
+<div class="code-block"><pre><code class="language-python">url = "https://example.com/login"
+parts = url.split("/")
+print(parts[2])          # 3rd item of ['https:', '', 'example.com', 'login']</code></pre></div>
+</details>
+<p><strong>Exercise 2:</strong> Create the list <code>weak_ports = [23, 445, 3389]</code>, append <code>21</code> (FTP — also insecure), then print the length and the first element.</p>
+<details><summary>Click to unfold Exercise 2 answer</summary>
+<div class="code-block"><pre><code class="language-python">weak_ports = [23, 445, 3389]
+weak_ports.append(21)
+print("Count:", len(weak_ports))     # 4
+print("First:", weak_ports[0])       # 23</code></pre></div>
+</details>
+<p><strong>Exercise 3:</strong> Describe your own computer with a dictionary: hostname, OS, and a list of 3 open ports. Then print "My host xxx has N ports open" (compute N with <code>len()</code>).</p>
+<details><summary>Click to unfold Exercise 3 answer</summary>
+<div class="code-block"><pre><code class="language-python">my_pc = {
+    "hostname": "WIN-DEV01",
+    "os": "Windows 11",
+    "ports": [135, 445, 3389]
+}
+print("My host", my_pc["hostname"], "has", len(my_pc["ports"]), "ports open")</code></pre></div>
+</details>
+
+<h3>Chapter Summary</h3>
+<table>
+<tr><th>Type</th><th>Looks Like</th><th>Security Scenario</th></tr>
+<tr><td>String str</td><td><code>"192.168.1.1"</code></td><td>IPs, domains, log lines</td></tr>
+<tr><td>Integer int</td><td><code>8080</code></td><td>ports, status codes, counts</td></tr>
+<tr><td>Boolean bool</td><td><code>True / False</code></td><td>port open/closed, weak password or not</td></tr>
+<tr><td>List list</td><td><code>[21, 22, 80]</code></td><td>target lists, port lists</td></tr>
+<tr><td>Dictionary dict</td><td><code>{"ip": "..."}</code></td><td>asset info, scan reports</td></tr>
+</table>
+<p>Variables only <em>store</em> data. Next chapter makes it <strong>flow</strong>: if decisions, for loops and functions — and your first batch weak-password detector.</p>
+<button class="practice-link-btn" onclick="navigate('practice'); switchPractice(0)">▶ Related exercise: Caesar Cipher Cracker (strings & lists)</button>`;
+
+// ==== content override: prog-02 (appended; last assignment wins) ====
+SECTION_CONTENT["prog-02"] = "<h2>文件与网络编程——让你的程序开始\"接触外界\"</h2>\n\n<p>前两章的程序都活在\"内存\"里：一运行就有了，一关就没了。这一章解决两个关键问题：<strong>怎么把数据存下来</strong>（文件读写）和<strong>出了意外怎么办</strong>（异常处理）。学完你会做出第一个有实际用处的工具：从登录日志里统计出爆破攻击的来源。</p>\n\n<div class=\"callout info\"><div class=\"callout-title\">本章你将学会</div><p>① 读整个文件 / 逐行读文件　② 用 with 让文件自动关闭　③ 写文件与追加文件　④ 用 try/except 接住意外　⑤ 亲手写出日志分析器：统计 SSH 爆破次数并生成报告。所有代码在右侧编辑器直接运行，日志内容已内置。</p></div>\n\n<h3>第 0 步：先造一份练习日志（顺便学会写文件）</h3>\n<p>分析需要数据。我们先用程序把练习日志 <code>auth.log</code> 创建出来——这一步本身就在学\"写文件\"：</p>\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">log_lines = [\n    \"Mar 15 00:11:02 srv sshd[8817]: Failed password for root from 45.155.205.233 port 40212 ssh2\",\n    \"Mar 15 00:11:09 srv sshd[8817]: Failed password for root from 45.155.205.233 port 40218 ssh2\",\n    \"Mar 15 00:11:20 srv sshd[8818]: Accepted password for deploy from 192.168.1.14 port 41002 ssh2\",\n    \"Mar 15 00:12:44 srv sshd[8821]: Failed password for admin from 45.155.205.233 port 51234 ssh2\",\n]\n\nwith open(\"auth.log\", \"w\", encoding=\"utf-8\") as f:   # \"w\" = 写入\n    for line in log_lines:\n        f.write(line + \"\\n\")                          # 每写一行补一个换行\n\nprint(\"auth.log 已创建，共\", len(log_lines), \"行\")</code></pre></div>\n<p>运行结果：</p>\n<div class=\"code-block\"><pre><code class=\"language-text\">auth.log 已创建，共 4 行</code></pre></div>\n<p>运行一次后，目录里就多了一个真实的 <code>auth.log</code> 文件，后面所有步骤都读它。</p>\n\n<h3>第 1 步：读一个文件 —— 三行代码</h3>\n<p>把刚才生成的日志读进来：</p>\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">f = open(\"auth.log\", \"r\", encoding=\"utf-8\")   # r = 只读模式\ncontent = f.read()                             # 一次读出全部内容\nf.close()                                      # 用完要关门\n\nprint(\"读到了\", len(content), \"个字符\")\nprint(\"第一行是:\", content.splitlines()[0])</code></pre></div>\n<p>运行结果：</p>\n<div class=\"code-block\"><pre><code class=\"language-text\">读到了 388 个字符\n第一行是: Mar 15 00:11:02 srv sshd[8817]: Failed password for root from 45.155.205.233 port 40212 ssh2</code></pre></div>\n<p><code>open(路径, 模式)</code> 打开文件；<code>\"r\"</code> 表示只读。<code>content.splitlines()</code> 把整段文本按行切成列表——日志分析的一切都建立在\"逐行处理\"上。</p>\n\n<h3>第 2 步：逐行读 —— 日志分析的正确姿势</h3>\n<p>日志可能有几个 GB，一次读进内存会把程序撑死。正确姿势是逐行处理：</p>\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">f = open(\"auth.log\", \"r\", encoding=\"utf-8\")\n\nfor line in f:                     # 文件对象可以直接逐行迭代\n    if \"Failed password\" in line:  # 只关心失败的登录\n        print(\"爆破记录:\", line.strip())   # strip() 去掉行尾换行符\n\nf.close()</code></pre></div>\n<p>运行结果：</p>\n<div class=\"code-block\"><pre><code class=\"language-text\">爆破记录: Mar 15 00:11:02 srv sshd[8817]: Failed password for root from 45.155.205.233 port 40212 ssh2\n爆破记录: Mar 15 00:11:09 srv sshd[8817]: Failed password for root from 45.155.205.233 port 40218 ssh2\n爆破记录: Mar 15 00:12:44 srv sshd[8821]: Failed password for admin from 45.155.205.233 port 51234 ssh2</code></pre></div>\n<p>三行核心代码就完成了\"过滤出所有爆破尝试\"。真实的日志分析工具（哪怕几万行的 ELK 体系）做的事情本质相同。</p>\n\n<h3>第 3 步：with 语句 —— 让文件自动关闭</h3>\n<p>手工 <code>close()</code> 有个隐患：如果中间出了错，close 就执行不到了。Python 提供了更优雅的写法——<code>with</code>：</p>\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">with open(\"auth.log\", \"r\", encoding=\"utf-8\") as f:\n    for line in f:\n        if \"Failed password\" in line:\n            print(line.strip())\n# 离开 with 的缩进块，文件自动关闭 —— 哪怕中途出错也会关</code></pre></div>\n<div class=\"callout info\"><div class=\"callout-title\">人话版解释</div><p><code>with open(...) as f</code> 相当于说：\"Python，帮我把这个文件打开，用完你负责关。\"从今天起，读写文件一律用 with，不要再手写 close。</p></div>\n\n<h3>第 4 步：写文件 —— 把结果保存下来</h3>\n<p>分析结果只打印在屏幕上，关掉就没了。写进文件才能交付：</p>\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">with open(\"report.txt\", \"w\", encoding=\"utf-8\") as f:   # w = 写入(会覆盖旧内容)\n    f.write(\"SSH 爆破分析报告\\n\")\n    f.write(\"来源 IP: 45.155.205.233\\n\")\n    f.write(\"失败次数: 3\\n\")\n\nprint(\"报告已生成\")\n\n# 追加模式 \"a\"：在文件末尾续写，不覆盖\nwith open(\"report.txt\", \"a\", encoding=\"utf-8\") as f:\n    f.write(\"建议: 封禁该 IP 并改用密钥登录\\n\")</code></pre></div>\n<div class=\"callout warn\"><div class=\"callout-title\">新手坑：\"w\" 会清空原文件</div><p><code>\"w\"</code> 模式打开的一瞬间，原文件内容就被清空了。想在后面续写必须用 <code>\"a\"</code>（append）。这两个模式选错会\"丢数据\"。</p></div>\n\n<h3>第 5 步：try / except —— 给程序系上安全绳</h3>\n<p>如果日志文件不存在呢？程序会直接崩掉。用 try/except 把意外接住：</p>\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">try:\n    with open(\"不存在.txt\", \"r\", encoding=\"utf-8\") as f:\n        print(f.read())\nexcept FileNotFoundError:\n    print(\"文件不存在——请检查路径（程序不会崩溃）\")\n\nprint(\"程序继续运行\")</code></pre></div>\n<p>运行结果：</p>\n<div class=\"code-block\"><pre><code class=\"language-text\">文件不存在——请检查路径（程序不会崩溃）\n程序继续运行</code></pre></div>\n<p><code>try</code> 里放\"可能会出错的代码\"，<code>except</code> 里放\"出错了怎么办\"。<code>FileNotFoundError</code> 是\"文件不存在\"这种意外的名字。专业工具和玩具的区别就在这里：专业工具把意外都接住了。</p>\n\n<h3>第 6 步：综合实战 —— SSH 爆破日志分析器</h3>\n<p>把本章所有知识组合成一个完整工具：读日志 → 统计每个 IP 的爆破次数 → 生成报告文件。</p>\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">stats = {}   # 字典：{IP: 失败次数}（上一章学过）\n\nwith open(\"auth.log\", \"r\", encoding=\"utf-8\") as f:\n    for line in f:\n        if \"Failed password\" not in line:\n            continue                # 不是爆破记录，跳过\n        parts = line.split()        # 按空格切词\n        ip = parts[-5]              # 倒数第 5 个词是来源 IP\n        if ip in stats:\n            stats[ip] = stats[ip] + 1\n        else:\n            stats[ip] = 1\n\nwith open(\"report.txt\", \"w\", encoding=\"utf-8\") as out:\n    out.write(\"=== SSH 爆破来源统计 ===\\n\")\n    for ip, count in stats.items():\n        line = ip + \" 失败 \" + str(count) + \" 次\\n\"\n        out.write(line)\n        print(line.strip())\n\nprint(\"报告已写入 report.txt\")</code></pre></div>\n<p>运行结果：</p>\n<div class=\"code-block\"><pre><code class=\"language-text\">45.155.205.233 失败 3 次\n报告已写入 report.txt</code></pre></div>\n<p>读成中文：<strong>打开日志 → 逐行看 → 只看失败记录 → 切出来源 IP → 计数 → 写报告</strong>。这就是第 25 题《Log Analysis: SSH Brute Force》要你手工做的事情，现在你已经能用程序自动化它了。</p>\n<div class=\"callout success\"><div class=\"callout-title\">里程碑</div><p>你已经能写出\"读数据 → 分析 → 出报告\"的完整程序。所有 SIEM（安全信息事件管理）平台的核心逻辑，就是这个东西的放大版。</p></div>\n\n<h3>动手练习（先自己写，再展开答案）</h3>\n<p><strong>练习 1：</strong>修改分析器，让它同时统计\"Accepted password\"（成功登录）并打印出来。</p>\n<details><summary>点击展开练习 1 答案</summary>\n<div class=\"code-block\"><pre><code class=\"language-python\">with open(\"auth.log\", \"r\", encoding=\"utf-8\") as f:\n    for line in f:\n        if \"Failed password\" in line:\n            print(\"[失败]\", line.strip())\n        if \"Accepted password\" in line:\n            print(\"[成功!]\", line.strip())</code></pre></div>\n</details>\n<p><strong>练习 2：</strong>用追加模式 <code>\"a\"</code> 往 report.txt 写三天的分析日期：<code>\"Day 1\\n\" \"Day 2\\n\" \"Day 3\\n\"</code>，然后读出整个文件验证三行都在。</p>\n<details><summary>点击展开练习 2 答案</summary>\n<div class=\"code-block\"><pre><code class=\"language-python\">with open(\"report.txt\", \"a\", encoding=\"utf-8\") as f:\n    f.write(\"Day 1\\nDay 2\\nDay 3\\n\")\n\nwith open(\"report.txt\", \"r\", encoding=\"utf-8\") as f:\n    print(f.read())</code></pre></div>\n</details>\n<p><strong>练习 3：</strong>让程序在文件不存在时提示用户\"正在创建空文件\"，并用 <code>\"w\"</code> 模式创建它（提示：先 try 打开，except 里用 \"w\" 模式重新 open）。</p>\n<details><summary>点击展开练习 3 答案</summary>\n<div class=\"code-block\"><pre><code class=\"language-python\">try:\n    with open(\"auth.log\", \"r\", encoding=\"utf-8\") as f:\n        print(f.read())\nexcept FileNotFoundError:\n    print(\"日志不存在，正在创建空文件...\")\n    with open(\"auth.log\", \"w\", encoding=\"utf-8\") as f:\n        f.write(\"\")</code></pre></div>\n</details>\n\n<h3>本章小结</h3>\n<table>\n<tr><th>知识点</th><th>一句话记住</th></tr>\n<tr><td>open + 模式</td><td>\"r\" 读 / \"w\" 写（清空）/ \"a\" 追加</td></tr>\n<tr><td>with 语句</td><td>自动关文件，永远用它</td></tr>\n<tr><td>逐行迭代</td><td>for line in f，日志分析的标配</td></tr>\n<tr><td>try / except</td><td>接住意外，程序不崩</td></tr>\n<tr><td>字典计数</td><td>stats[ip] += 1，统计的唯一套路</td></tr>\n</table>\n<p>下一章把\"读本地文件\"升级成\"访问网络\"：用 socket 亲手写一个迷你端口扫描器——你在第一章整理的端口列表终于要派上用场了。</p>\n<button class=\"practice-link-btn\" onclick=\"navigate('ctf'); openCTF('ctf-025')\">▶ 配套挑战：Log Analysis: SSH Brute Force（用程序解决它）</button>";
+SECTION_CONTENT_EN["prog-02"] = `<h2>File & Network Programming — Let Your Program Touch the Outside World</h2>
+
+<p>So far your programs lived in "memory": born on run, gone on close. This chapter solves two key problems: <strong>how to persist data</strong> (file I/O) and <strong>what to do when things go wrong</strong> (exception handling). By the end you will build a tool with real value: an analyzer that counts SSH brute-force attempts from a login log.</p>
+
+<div class="callout info"><div class="callout-title">What You Will Learn</div><p>① Read a whole file / read line by line　② Auto-close files with with　③ Write and append files　④ Catch accidents with try/except　⑤ Build a log analyzer that counts brute-force attempts per IP and writes a report. Everything runs in the editor on the right — the log data is generated in-chapter.</p></div>
+
+<h3>Step 0: Generate the Practice Log First (and Learn Writing Files)</h3>
+<p>Analysis needs data. Create the practice log <code>auth.log</code> with a program — this step itself teaches "writing files":</p>
+<div class="code-block"><div class="copy-btn">Copy</div><pre><code class="language-python">log_lines = [
+    "Mar 15 00:11:02 srv sshd[8817]: Failed password for root from 45.155.205.233 port 40212 ssh2",
+    "Mar 15 00:11:09 srv sshd[8817]: Failed password for root from 45.155.205.233 port 40218 ssh2",
+    "Mar 15 00:11:20 srv sshd[8818]: Accepted password for deploy from 192.168.1.14 port 41002 ssh2",
+    "Mar 15 00:12:44 srv sshd[8821]: Failed password for admin from 45.155.205.233 port 51234 ssh2",
+]
+
+with open("auth.log", "w", encoding="utf-8") as f:   # "w" = write mode
+    for line in log_lines:
+        f.write(line + "\\n")                          # newline after each line
+
+print("auth.log created with", len(log_lines), "lines")</code></pre></div>
+<p>Output:</p>
+<div class="code-block"><pre><code class="language-text">auth.log created with 4 lines</code></pre></div>
+<p>Run it once and a real <code>auth.log</code> appears on disk — every later step reads this file.</p>
+
+<h3>Step 1: Reading a File — Three Lines of Code</h3>
+<p>Read the log you just generated:</p>
+<div class="code-block"><div class="copy-btn">Copy</div><pre><code class="language-python">f = open("auth.log", "r", encoding="utf-8")   # r = read-only mode
+content = f.read()                             # read everything at once
+f.close()                                      # close the door behind you
+
+print("Read", len(content), "characters")
+print("First line:", content.splitlines()[0])</code></pre></div>
+<p>Output:</p>
+<div class="code-block"><pre><code class="language-text">Read 388 characters
+First line: Mar 15 00:11:02 srv sshd[8817]: Failed password for root from 45.155.205.233 port 40212 ssh2</code></pre></div>
+<p><code>open(path, mode)</code> opens a file; <code>"r"</code> means read-only. <code>content.splitlines()</code> cuts the text into a list of lines — all log analysis is built on "process line by line".</p>
+
+<h3>Step 2: Reading Line by Line — the Right Way to Analyze Logs</h3>
+<p>Real logs can be gigabytes; loading everything into memory would crash the program. The right way is line by line:</p>
+<div class="code-block"><div class="copy-btn">Copy</div><pre><code class="language-python">with open("auth.log", "r", encoding="utf-8") as f:
+    for line in f:                     # file objects iterate line by line
+        if "Failed password" in line:  # we only care about failures
+            print("Brute attempt:", line.strip())   # strip() removes the newline</code></pre></div>
+<p>Output:</p>
+<div class="code-block"><pre><code class="language-text">Brute attempt: Mar 15 00:11:02 srv sshd[8817]: Failed password for root from 45.155.205.233 port 40212 ssh2
+Brute attempt: Mar 15 00:11:09 srv sshd[8817]: Failed password for root from 45.155.205.233 port 40218 ssh2
+Brute attempt: Mar 15 00:12:44 srv sshd[8821]: Failed password for admin from 45.155.205.233 port 51234 ssh2</code></pre></div>
+<p>Three lines of core code filtered out every brute-force attempt. Real log-analysis platforms (even huge ELK stacks) do fundamentally the same thing.</p>
+
+<h3>Step 3: the with Statement — Files That Close Themselves</h3>
+<p>Manual <code>close()</code> has a hidden danger: if an error happens halfway, close never runs. Python has a more elegant form — <code>with</code>:</p>
+<div class="code-block"><div class="copy-btn">Copy</div><pre><code class="language-python">with open("auth.log", "r", encoding="utf-8") as f:
+    for line in f:
+        if "Failed password" in line:
+            print(line.strip())
+# leaving the with block closes the file automatically — even on errors</code></pre></div>
+<div class="callout info"><div class="callout-title">In Plain Words</div><p><code>with open(...) as f</code> says: "Python, open this file for me and close it when we're done." From today on, always use with — never hand-write close.</p></div>
+
+<h3>Step 4: Writing Files — Persist Your Results</h3>
+<p>Results printed on screen are gone when the terminal closes. Write them to a file:</p>
+<div class="code-block"><div class="copy-btn">Copy</div><pre><code class="language-python">with open("report.txt", "w", encoding="utf-8") as f:   # w = write (overwrites!)
+    f.write("SSH brute-force report\\n")
+    f.write("Source IP: 45.155.205.233\\n")
+    f.write("Failures: 3\\n")
+
+print("Report generated")
+
+# append mode "a": continue at the end, keep existing content
+with open("report.txt", "a", encoding="utf-8") as f:
+    f.write("Recommendation: block the IP and switch to key login\\n")</code></pre></div>
+<div class="callout warn"><div class="callout-title">Beginner Trap: "w" Wipes the File</div><p>The moment you open with <code>"w"</code>, the original content is erased. To add to the end you must use <code>"a"</code> (append). Picking the wrong mode loses data.</p></div>
+
+<h3>Step 5: try / except — a Safety Rope for Your Program</h3>
+<p>What if the log file doesn't exist? The program crashes. Catch the accident with try/except:</p>
+<div class="code-block"><div class="copy-btn">Copy</div><pre><code class="language-python">try:
+    with open("missing.txt", "r", encoding="utf-8") as f:
+        print(f.read())
+except FileNotFoundError:
+    print("File not found — check the path (program keeps running)")
+
+print("Program continues")</code></pre></div>
+<p>Output:</p>
+<div class="code-block"><pre><code class="language-text">File not found — check the path (program keeps running)
+Program continues</code></pre></div>
+<p><code>try</code> holds "code that might fail"; <code>except</code> holds "what to do when it fails". <code>FileNotFoundError</code> is the name of this specific accident. The difference between professional tools and toys: professional tools catch the accidents.</p>
+
+<h3>Step 6: Putting It Together — the SSH Brute-Force Analyzer</h3>
+<p>Combine everything into a complete tool: read the log → count attempts per IP → write a report file.</p>
+<div class="code-block"><div class="copy-btn">Copy</div><pre><code class="language-python">stats = {}   # dictionary: {IP: failure count} (last chapter)
+
+with open("auth.log", "r", encoding="utf-8") as f:
+    for line in f:
+        if "Failed password" not in line:
+            continue                # not a brute attempt, skip
+        parts = line.split()        # split into words
+        ip = parts[-5]              # 5th from the end is the source IP
+        if ip in stats:
+            stats[ip] = stats[ip] + 1
+        else:
+            stats[ip] = 1
+
+with open("report.txt", "w", encoding="utf-8") as out:
+    out.write("=== SSH brute-force sources ===\\n")
+    for ip, count in stats.items():
+        line = ip + " failed " + str(count) + " times\\n"
+        out.write(line)
+        print(line.strip())
+
+print("Report written to report.txt")</code></pre></div>
+<p>Output:</p>
+<div class="code-block"><pre><code class="language-text">45.155.205.233 failed 3 times
+Report written to report.txt</code></pre></div>
+<p>Read as English: <strong>open the log → scan lines → keep failures → extract source IP → count → write report</strong>. This is exactly what Challenge 25 (Log Analysis: SSH Brute Force) asks you to do by hand — now you can automate it.</p>
+<div class="callout success"><div class="callout-title">Milestone</div><p>You can now write "read data → analyze → produce a report" end to end. Every SIEM platform on the market is a scaled-up version of this program.</p></div>
+
+<h3>Exercises (try first, then unfold the answer)</h3>
+<p><strong>Exercise 1:</strong> Extend the analyzer to also print "Accepted password" lines (successful logins).</p>
+<details><summary>Click to unfold Exercise 1 answer</summary>
+<div class="code-block"><pre><code class="language-python">with open("auth.log", "r", encoding="utf-8") as f:
+    for line in f:
+        if "Failed password" in line:
+            print("[FAIL]", line.strip())
+        if "Accepted password" in line:
+            print("[SUCCESS!]", line.strip())</code></pre></div>
+</details>
+<p><strong>Exercise 2:</strong> Append three analysis dates to report.txt using <code>"a"</code>: <code>"Day 1\\n" "Day 2\\n" "Day 3\\n"</code>, then read the whole file back to verify all lines are there.</p>
+<details><summary>Click to unfold Exercise 2 answer</summary>
+<div class="code-block"><pre><code class="language-python">with open("report.txt", "a", encoding="utf-8") as f:
+    f.write("Day 1\\nDay 2\\nDay 3\\n")
+
+with open("report.txt", "r", encoding="utf-8") as f:
+    print(f.read())</code></pre></div>
+</details>
+<p><strong>Exercise 3:</strong> Make the program create an empty log when missing: try to open it, and in the except branch create it with <code>"w"</code> mode (hint: print "creating empty file" first).</p>
+<details><summary>Click to unfold Exercise 3 answer</summary>
+<div class="code-block"><pre><code class="language-python">try:
+    with open("auth.log", "r", encoding="utf-8") as f:
+        print(f.read())
+except FileNotFoundError:
+    print("Log missing — creating empty file...")
+    with open("auth.log", "w", encoding="utf-8") as f:
+        f.write("")</code></pre></div>
+</details>
+
+<h3>Chapter Summary</h3>
+<table>
+<tr><th>Concept</th><th>Remember It As</th></tr>
+<tr><td>open + mode</td><td>"r" read / "w" write (wipes) / "a" append</td></tr>
+<tr><td>with statement</td><td>Auto-closes files; always use it</td></tr>
+<tr><td>Line iteration</td><td>for line in f — the log-analysis standard</td></tr>
+<tr><td>try / except</td><td>Catch accidents, keep running</td></tr>
+<tr><td>Dictionary counting</td><td>stats[ip] += 1 — the only counting pattern you need</td></tr>
+</table>
+<p>Next chapter upgrades "reading local files" to "reaching the network": build a mini port scanner with sockets — the port list you organized in chapter one finally goes to work.</p>
+<button class="practice-link-btn" onclick="navigate('ctf'); openCTF('ctf-025')">▶ Related challenge: Log Analysis: SSH Brute Force (solve it with code)</button>`;
+
+// ==== content override: prog-02-02 (appended; last assignment wins) ====
+SECTION_CONTENT["prog-02-02"] = "<h2>网络编程入门——亲手写你的第一个端口扫描器</h2>\n\n<p>上一章你的程序学会了读写文件。这一章让它学会<strong>上网</strong>：主动去连接别的机器。学完你会得到一个真正能跑的迷你端口扫描器——第一章整理的端口列表、第二章的循环与函数，全部在这里会师。</p>\n\n<div class=\"callout info\"><div class=\"callout-title\">本章你将学会</div><p>① socket 是什么（程序的\"电话\"）　② 带超时的连接尝试　③ 把连接封装成 check_port 函数　④ 组合成端口扫描器　⑤ 手工发送一个 HTTP 请求。请在自己电脑上运行（扫描目标用 localhost，不要扫别人的机器）。</p></div>\n\n<h3>第 1 步：socket —— 程序之间打电话</h3>\n<p>两台机器上的程序要通信，各自需要一部\"电话\"，这部电话就叫 <strong>socket</strong>。打电话三步：拨号（连接）、说话（发送）、挂断（关闭）。Python 标准库 <code>socket</code> 全部内置，零安装：</p>\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import socket\n\ns = socket.create_connection((\"baidu.com\", 80), timeout=5)\nprint(\"连接成功！对方地址:\", s.getpeername())\ns.close()\nprint(\"已挂断\")</code></pre></div>\n<p>运行结果（网络正常时）：</p>\n<div class=\"code-block\"><pre><code class=\"language-text\">连接成功！对方地址: ('110.242.68.66', 80)\n已挂断</code></pre></div>\n<p><code>create_connection((主机, 端口))</code> 就是\"拨号\"：主机可以是域名（自动解析成 IP）或 IP；<code>timeout=5</code> 表示最多等 5 秒。<code>getpeername()</code> 告诉你实际连上了谁。</p>\n\n<h3>第 2 步：连接失败也是一种信息</h3>\n<p>安全扫描的核心逻辑恰恰是\"尝试连接，看成不成功\"。连接失败会抛异常，用上一章学的 try/except 接住它：</p>\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import socket\n\ntry:\n    s = socket.create_connection((\"localhost\", 9999), timeout=3)\n    print(\"端口 9999 开放\")\n    s.close()\nexcept (ConnectionRefusedError, TimeoutError, OSError):\n    print(\"端口 9999 关闭（或无法到达）\")\n\nprint(\"程序没有崩溃，继续运行\")</code></pre></div>\n<p>运行结果（本机没开 9999 端口时）：</p>\n<div class=\"code-block\"><pre><code class=\"language-text\">端口 9999 关闭（或无法到达）\n程序没有崩溃，继续运行</code></pre></div>\n<div class=\"callout info\"><div class=\"callout-title\">安全视角</div><p>\"连得上 = 开放，连不上 = 关闭\"——所有端口扫描器（nmap 的 TCP 扫描部分）的第一层原理就这么简单。</p></div>\n\n<h3>第 3 步：封装成函数 —— check_port</h3>\n<p>把\"试连一次\"打包成可复用的函数（第二章学的函数盒子派上用场了）：</p>\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import socket\n\ndef check_port(host, port, timeout=2):\n    \"\"\"返回 True 表示端口开放\"\"\"\n    try:\n        s = socket.create_connection((host, port), timeout=timeout)\n        s.close()\n        return True\n    except OSError:\n        return False\n\nprint(check_port(\"localhost\", 80))\nprint(check_port(\"localhost\", 9999))</code></pre></div>\n<p>注意 <code>except OSError</code>：连接拒绝、超时、主机不可达等等都是 OSError 的子类，一句话全接住。函数返回布尔值——<code>True</code> 开放，<code>False</code> 关闭。</p>\n\n<h3>第 4 步：组合技 —— 迷你端口扫描器</h3>\n<p>函数 + for 循环 = 扫描器。第一章的端口列表正式上岗：</p>\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import socket\n\ndef check_port(host, port, timeout=2):\n    try:\n        s = socket.create_connection((host, port), timeout=timeout)\n        s.close()\n        return True\n    except OSError:\n        return False\n\ntarget = \"localhost\"\nopen_ports = []\n\nfor port in [21, 22, 80, 443, 3306, 3389, 8080]:\n    if check_port(target, port):\n        print(f\"[开放] {target}:{port}\")\n        open_ports.append(port)\n    else:\n        print(f\"[关闭] {target}:{port}\")\n\nprint(\"\\n扫描完成，开放端口:\", open_ports)</code></pre></div>\n<p>运行结果（示例，取决于你机器上开着什么服务）：</p>\n<div class=\"code-block\"><pre><code class=\"language-text\">[关闭] localhost:21\n[开放] localhost:80\n[关闭] localhost:443\n[开放] localhost:3306\n\n扫描完成，开放端口: [80, 3306]</code></pre></div>\n<div class=\"callout success\"><div class=\"callout-title\">里程碑</div><p>20 行代码，一个能跑的端口扫描器。nmap 的基本原理就是它的高级版——你现在理解的不是\"概念\"，而是原理本身。</p></div>\n<div class=\"callout warn\"><div class=\"callout-title\">法律与道德</div><p>只扫描<strong>自己的机器</strong>或<strong>获得书面授权</strong>的目标。扫描他人系统在多数国家/地区违法。</p></div>\n\n<h3>第 5 步：进阶 —— 亲手发一个 HTTP 请求</h3>\n<p>连接只是打电话，<code>send</code> 才是\"说话\"。连上 Web 端口后，手工发一个 HTTP GET：</p>\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-python\">import socket\n\ns = socket.create_connection((\"example.com\", 80), timeout=5)\ns.sendall(b\"GET / HTTP/1.1\\r\\nHost: example.com\\r\\nConnection: close\\r\\n\\r\\n\")\n\nchunks = []\nwhile True:\n    data = s.recv(4096)          # 一次最多收 4096 字节\n    if not data:                 # 收到空 = 对方挂断\n        break\n    chunks.append(data)\ns.close()\n\npage = b\"\".join(chunks)\nprint(\"收到\", len(page), \"字节\")\nprint(page[:200])                # 预览前 200 字节（HTTP 响应头）</code></pre></div>\n<p>运行结果（节选）：</p>\n<div class=\"code-block\"><pre><code class=\"language-text\">收到 1256 字节\nb'HTTP/1.1 200 OK\\r\\nAge: 230актуally... Content-Type: text/html; ...'</code></pre></div>\n<p>你会看到浏览器每天替你发的请求长这样：<code>GET / HTTP/1.1</code> 加上几个头。<code>\\r\\n</code> 是 HTTP 的行分隔符——网络模块的 HTTP 章节会展开讲。</p>\n<div class=\"callout warn\"><div class=\"callout-title\">两个坑</div><p>① <code>recv</code> 不保证一次收完，要循环收直到空字节串；② 忘记 <code>close()</code> 会占着连接不放——用 with 或 try/finally 管理更好。</p></div>\n\n<h3>动手练习（先自己写，再展开答案）</h3>\n<p><strong>练习 1：</strong>修改扫描器，扫描 <code>localhost</code> 的 <code>range(1, 1025)</code> 全部端口，统计开放数量。（提示：本机服务不多，扫描很快；timeout 用 0.5 秒加速）</p>\n<details><summary>点击展开练习 1 答案</summary>\n<div class=\"code-block\"><pre><code class=\"language-python\">import socket\n\ndef check_port(host, port, timeout=0.5):\n    try:\n        s = socket.create_connection((host, port), timeout=timeout)\n        s.close()\n        return True\n    except OSError:\n        return False\n\nopen_ports = [p for p in range(1, 1025) if check_port(\"localhost\", p)]\nprint(\"开放端口:\", open_ports)</code></pre></div>\n</details>\n<p><strong>练习 2：</strong>给扫描器加\"服务识别\"：准备字典 <code>{22: \"SSH\", 80: \"HTTP\", 443: \"HTTPS\"}</code>，开放端口打印时附上已知服务名，未知的显示 \"Unknown\"。</p>\n<details><summary>点击展开练习 2 答案</summary>\n<div class=\"code-block\"><pre><code class=\"language-python\">services = {22: \"SSH\", 80: \"HTTP\", 443: \"HTTPS\", 3306: \"MySQL\"}\n\nfor port in open_ports:\n    name = services.get(port, \"Unknown\")\n    print(f\"{port}/tcp  {name}\")</code></pre></div>\n</details>\n<p><strong>练习 3：</strong>把扫描结果写入 <code>scan_report.txt</code>（上一章学的文件写入），每行一条 \"端口 服务名 状态\"。</p>\n<details><summary>点击展开练习 3 答案</summary>\n<div class=\"code-block\"><pre><code class=\"language-python\">with open(\"scan_report.txt\", \"w\", encoding=\"utf-8\") as f:\n    f.write(\"target: localhost\\n\")\n    for port in open_ports:\n        f.write(f\"{port}  {services.get(port, 'Unknown')}  open\\n\")\nprint(\"报告已写入 scan_report.txt\")</code></pre></div>\n</details>\n\n<h3>本章小结</h3>\n<table>\n<tr><th>知识点</th><th>一句话记住</th></tr>\n<tr><td>socket</td><td>程序之间的电话：连接 → 通信 → 挂断</td></tr>\n<tr><td>create_connection</td><td>域名或 IP 都能拨，务必带 timeout</td></tr>\n<tr><td>连接失败 = OSError</td><td>try/except 接住，\"连不上\"本身就是信息</td></tr>\n<tr><td>check_port 函数</td><td>扫描器的原子操作</td></tr>\n<tr><td>send / recv</td><td>sendall 发字节，recv 循环收直到空</td></tr>\n</table>\n<p>至此你的 Python 武器库已经能干活了。下一章换一把刀：<strong>Shell 脚本</strong>——把命令行的积木拼成自动化脚本，一行命令顶十行 Python。</p>\n<button class=\"practice-link-btn\" onclick=\"navigate('practice'); switchPractice(1)\">▶ 配套练习：端口扫描器（把本章代码完善成标准作业）</button>";
+SECTION_CONTENT_EN["prog-02-02"] = `<h2>Network Programming Basics — Build Your First Port Scanner</h2>
+
+<p>Last chapter your program learned to read and write files. This one teaches it to <strong>reach out to other machines</strong>. By the end you will have a working mini port scanner — where the port list from chapter one, and the loops and functions from chapter two, all meet.</p>
+
+<div class="callout info"><div class="callout-title">What You Will Learn</div><p>① What a socket is (a "telephone" for programs)　② Connection attempts with timeouts　③ Packaging the check into a check_port function　④ Assembling a port scanner　⑤ Hand-crafting an HTTP request. Run on your own machine (scan localhost only — never other people's machines).</p></div>
+
+<h3>Step 1: a Socket Is a Telephone for Programs</h3>
+<p>When two programs on different machines talk, each needs a "telephone" — that is a <strong>socket</strong>. Three steps: dial (connect), talk (send), hang up (close). Python's standard library <code>socket</code> has it all, zero install:</p>
+<div class="code-block"><div class="copy-btn">Copy</div><pre><code class="language-python">import socket
+
+s = socket.create_connection(("baidu.com", 80), timeout=5)
+print("Connected! Peer address:", s.getpeername())
+s.close()
+print("Hung up")</code></pre></div>
+<p>Output (with normal network):</p>
+<div class="code-block"><pre><code class="language-text">Connected! Peer address: ('110.242.68.66', 80)
+Hung up</code></pre></div>
+<p><code>create_connection((host, port))</code> is the dialing step: host can be a domain (resolved automatically) or an IP; <code>timeout=5</code> means wait at most 5 seconds. <code>getpeername()</code> tells you who you actually reached.</p>
+
+<h3>Step 2: Failure Is Information Too</h3>
+<p>The core of security scanning is precisely "attempt the connection and see". Failures raise exceptions — catch them with the try/except you learned last chapter:</p>
+<div class="code-block"><div class="copy-btn">Copy</div><pre><code class="language-python">import socket
+
+try:
+    s = socket.create_connection(("localhost", 9999), timeout=3)
+    print("Port 9999 is OPEN")
+    s.close()
+except (ConnectionRefusedError, TimeoutError, OSError):
+    print("Port 9999 is closed (or unreachable)")
+
+print("Program did not crash, continuing")</code></pre></div>
+<p>Output (when nothing listens on 9999):</p>
+<div class="code-block"><pre><code class="language-text">Port 9999 is closed (or unreachable)
+Program did not crash, continuing</code></pre></div>
+<div class="callout info"><div class="callout-title">Security Lens</div><p>"Connects = open, refuses = closed" — that is the first-layer principle behind every TCP port scanner, including nmap.</p></div>
+
+<h3>Step 3: Package It — check_port</h3>
+<p>Wrap "try one connection" into a reusable function box (chapter two's functions, reporting for duty):</p>
+<div class="code-block"><div class="copy-btn">Copy</div><pre><code class="language-python">import socket
+
+def check_port(host, port, timeout=2):
+    """Returns True if the port is open"""
+    try:
+        s = socket.create_connection((host, port), timeout=timeout)
+        s.close()
+        return True
+    except OSError:
+        return False
+
+print(check_port("localhost", 80))
+print(check_port("localhost", 9999))</code></pre></div>
+<p>Note <code>except OSError</code>: connection refused, timeouts, unreachable hosts — all are OSError subclasses, caught in one line. The function returns a boolean: <code>True</code> open, <code>False</code> closed.</p>
+
+<h3>Step 4: The Combo — a Mini Port Scanner</h3>
+<p>Function + for loop = scanner. The port list from chapter one finally goes to work:</p>
+<div class="code-block"><div class="copy-btn">Copy</div><pre><code class="language-python">import socket
+
+def check_port(host, port, timeout=2):
+    try:
+        s = socket.create_connection((host, port), timeout=timeout)
+        s.close()
+        return True
+    except OSError:
+        return False
+
+target = "localhost"
+open_ports = []
+
+for port in [21, 22, 80, 443, 3306, 3389, 8080]:
+    if check_port(target, port):
+        print(f"[OPEN] {target}:{port}")
+        open_ports.append(port)
+    else:
+        print(f"[closed] {target}:{port}")
+
+print("\\nScan complete. Open ports:", open_ports)</code></pre></div>
+<p>Output (varies with what your machine runs):</p>
+<div class="code-block"><pre><code class="language-text">[closed] localhost:21
+[OPEN] localhost:80
+[closed] localhost:443
+[OPEN] localhost:3306
+
+Scan complete. Open ports: [80, 3306]</code></pre></div>
+<div class="callout success"><div class="callout-title">Milestone</div><p>Twenty lines — a working port scanner. nmap's basic TCP scan is a polished version of exactly this. You now understand the principle itself, not just the concept.</p></div>
+<div class="callout warn"><div class="callout-title">Legal & Ethics</div><p>Scan <strong>only your own machine</strong> or targets with written authorization. Scanning other people's systems is illegal in most jurisdictions.</p></div>
+
+<h3>Step 5: Level Up — Hand-craft an HTTP Request</h3>
+<p>Connecting is dialing; <code>send</code> is talking. After connecting to a web port, send a raw HTTP GET:</p>
+<div class="code-block"><div class="copy-btn">Copy</div><pre><code class="language-python">import socket
+
+s = socket.create_connection(("example.com", 80), timeout=5)
+s.sendall(b"GET / HTTP/1.1\\r\\nHost: example.com\\r\\nConnection: close\\r\\n\\r\\n")
+
+chunks = []
+while True:
+    data = s.recv(4096)          # up to 4096 bytes per call
+    if not data:                 # empty bytes = peer hung up
+        break
+    chunks.append(data)
+s.close()
+
+page = b"".join(chunks)
+print("Received", len(page), "bytes")
+print(page[:200])                # preview the first 200 bytes (HTTP headers)</code></pre></div>
+<p>Output (excerpt):</p>
+<div class="code-block"><pre><code class="language-text">Received 1256 bytes
+b'HTTP/1.1 200 OK\\r\\nAge: ...\\r\\nContent-Type: text/html; ...'</code></pre></div>
+<p>Now you have seen what your browser sends every day: <code>GET / HTTP/1.1</code> plus a few headers. <code>\\r\\n</code> is HTTP's line separator — the HTTP chapter in the networking module expands on this.</p>
+<div class="callout warn"><div class="callout-title">Two Traps</div><p>① <code>recv</code> does not guarantee receiving everything at once — loop until you get empty bytes; ② forgetting <code>close()</code> keeps connections open — manage sockets with with/try-finally where possible.</p></div>
+
+<h3>Exercises (try first, then unfold the answer)</h3>
+<p><strong>Exercise 1:</strong> Modify the scanner to sweep <code>range(1, 1025)</code> on <code>localhost</code> and count open ports. (Hint: few services run locally, so it is fast; use a 0.5s timeout to speed it up.)</p>
+<details><summary>Click to unfold Exercise 1 answer</summary>
+<div class="code-block"><pre><code class="language-python">import socket
+
+def check_port(host, port, timeout=0.5):
+    try:
+        s = socket.create_connection((host, port), timeout=timeout)
+        s.close()
+        return True
+    except OSError:
+        return False
+
+open_ports = [p for p in range(1, 1025) if check_port("localhost", p)]
+print("Open ports:", open_ports)</code></pre></div>
+</details>
+<p><strong>Exercise 2:</strong> Add "service identification": prepare the dict <code>{22: "SSH", 80: "HTTP", 443: "HTTPS"}</code>; when printing an open port, attach the known service name, or "Unknown".</p>
+<details><summary>Click to unfold Exercise 2 answer</summary>
+<div class="code-block"><pre><code class="language-python">services = {22: "SSH", 80: "HTTP", 443: "HTTPS", 3306: "MySQL"}
+
+for port in open_ports:
+    name = services.get(port, "Unknown")
+    print(f"{port}/tcp  {name}")</code></pre></div>
+</details>
+<p><strong>Exercise 3:</strong> Write the scan results to <code>scan_report.txt</code> (file writing from last chapter), one line per port: "port  service  status".</p>
+<details><summary>Click to unfold Exercise 3 answer</summary>
+<div class="code-block"><pre><code class="language-python">with open("scan_report.txt", "w", encoding="utf-8") as f:
+    f.write("target: localhost\\n")
+    for port in open_ports:
+        f.write(f"{port}  {services.get(port, 'Unknown')}  open\\n")
+print("Report written to scan_report.txt")</code></pre></div>
+</details>
+
+<h3>Chapter Summary</h3>
+<table>
+<tr><th>Concept</th><th>Remember It As</th></tr>
+<tr><td>socket</td><td>A telephone for programs: connect → communicate → hang up</td></tr>
+<tr><td>create_connection</td><td>Dials domains or IPs; always carry a timeout</td></tr>
+<tr><td>Failure = OSError</td><td>Catch it — "cannot connect" is itself information</td></tr>
+<tr><td>check_port function</td><td>The atomic operation of every scanner</td></tr>
+<tr><td>send / recv</td><td>sendall sends bytes; recv in a loop until empty</td></tr>
+</table>
+<p>Your Python arsenal can now do real work. Next chapter switches blades: <strong>Shell scripting</strong> — snapping command-line building blocks into automation, where one line beats ten lines of Python.</p>
+<button class="practice-link-btn" onclick="navigate('practice'); switchPractice(1)">▶ Related exercise: Port Scanner (polish this chapter's code into the standard solution)</button>`;
+
+// ==== content override: prog-03 (appended; last assignment wins) ====
+SECTION_CONTENT["prog-03"] = "<h2>Shell 脚本实战——把命令行积木拼成自动化脚本</h2>\n\n<p>安全工程师的日常一半在终端里。这一章教你两件事：<strong>把零散命令拼成管道</strong>（一条命令顶十行代码），以及<strong>把管道固化成脚本</strong>（一个脚本顶一夜的手工操作）。学完你将拥有一键生成 SSH 爆破统计报告的 report.sh。</p>\n\n<div class=\"callout info\"><div class=\"callout-title\">本章你将学会</div><p>① 创建并运行 .sh 脚本　② 变量、环境变量与命令替换　③ 文件系统侦察四命令　④ 管道与重定向　⑤ grep/sort/uniq/wc 统计四件套　⑥ for 循环与 if 判断　⑦ 一键日志统计脚本 report.sh。需要 Bash 环境（Windows 用 Git Bash，Mac/Linux 自带）。</p></div>\n\n<h3>第 1 步：第一个脚本 —— 三个规定动作</h3>\n<p>新建文件 <code>hello.sh</code>，输入三行：</p>\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">#!/bin/bash\necho \"Hello, Security!\"\necho \"今天是 $(date)\"</code></pre></div>\n<p>然后两个动作让它跑起来：</p>\n<div class=\"code-block\"><pre><code class=\"language-bash\">$ chmod +x hello.sh      # 给予执行权限（只需一次）\n$ ./hello.sh             # 运行</code></pre></div>\n<p>运行结果：</p>\n<div class=\"code-block\"><pre><code class=\"language-text\">Hello, Security!\n今天是 2026年 08月 28日 星期五 12:00:00 CST</code></pre></div>\n<p>拆解：<code>#!/bin/bash</code> 叫 shebang，告诉系统\"用 bash 执行我\"；<code>echo</code> 是 Shell 的 print；<code>$(date)</code> 是<strong>命令替换</strong>——把命令的输出当成值嵌进来，这个技巧全章反复用。</p>\n\n<h3>第 2 步：变量与环境变量</h3>\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">target=\"192.168.1.1\"\ntoday=$(date +%F)        # +%F 输出 2026-08-28 格式\n\necho \"扫描目标: $target\"\necho \"扫描日期: $today\"\necho \"日志文件: scan_$today.log\"</code></pre></div>\n<p>除了自己定义的变量，系统还维护着一批<strong>环境变量</strong>：<code>$PATH</code>（命令搜索路径）、<code>$HOME</code>（家目录）、<code>$USER</code>（当前用户）。渗透测试里的\"环境变量注入\"攻击的入口就是它们：</p>\n<div class=\"code-block\"><pre><code class=\"language-bash\">echo \"当前用户: $USER\"\necho \"家目录: $HOME\"\necho \"$PATH\" | tr \":\" \"\\n\" | head -3    # 把 PATH 按冒号切开看前 3 条</code></pre></div>\n<div class=\"callout warn\"><div class=\"callout-title\">新手坑</div><p>① 赋值时 <code>=</code> 两边<strong>不能有空格</strong>（<code>target = \"x\"</code> 会报错）；② 用变量要带 <code>$</code>，定义时不要；③ 值最好用双引号包住，防空格拆词。</p></div>\n\n<h3>第 3 步：文件系统侦察 —— 渗透测试的第一组命令</h3>\n<p>拿到一台机器的访问权，第一件事永远是\"四处看看\"。这四条命令是侦察的基本功：</p>\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">ls -la                    # 当前目录全部文件（含隐藏文件、权限、大小）\nfile auth.log             # 判断文件类型（不靠扩展名）\ndu -sh /var/log           # 目录占用空间（快速找\"大东西\"）\nfind / -name \"*.log\" -mtime -7 2>/dev/null   # 最近 7 天改过的日志</code></pre></div>\n<p><code>find</code> 是侦察之王：<code>-name</code> 按名字、<code>-mtime -7</code> 按修改时间、<code>2&gt;/dev/null</code> 把\"权限不足\"的报错扔进黑洞（第 5 步讲重定向）。这组命令组合能快速定位\"最近被动过的文件\"——取证和提权侦察都用它。</p>\n\n<h3>第 4 步：管道 —— Shell 的积木思想</h3>\n<p>管道 <code>|</code> 把<strong>上一个命令的输出</strong>变成<strong>下一个命令的输入</strong>。像搭积木一样，小命令拼出强大功能：</p>\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">cat auth.log | grep \"Failed password\" | wc -l</code></pre></div>\n<p>运行结果：</p>\n<div class=\"code-block\"><pre><code class=\"language-text\">3</code></pre></div>\n<p>从左到右读：<code>cat</code> 倒出日志全文 → <code>grep</code> 只留下含\"Failed password\"的行 → <code>wc -l</code> 数行数。三块积木，一个问题：<strong>爆破尝试一共几次？</strong></p>\n\n<h3>第 5 步：重定向 —— 给输出指条路</h3>\n<p>每个命令自带两条输出通道：1（stdout 正常输出）和 2（stderr 报错）。重定向符号决定它们去哪：</p>\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">grep \"Failed\" auth.log > found.txt        # > 覆盖写入\ngrep \"Accepted\" auth.log >> found.txt     # >> 追加写入\nfind / -name \"*.conf\" 2>/dev/null         # 2>/dev/null 丢弃报错\ngrep \"root\" < auth.log > root_lines.txt   # < 从文件读输入</code></pre></div>\n<div class=\"callout warn\"><div class=\"callout-title\">和第 0 步呼应的坑</div><p><code>&gt;</code> 的一瞬间就清空原文件（和 Python 的 \"w\" 模式一样）；续写永远用 <code>&gt;&gt;</code>。把报错扔进 <code>/dev/null</code> 很爽，但调试时别扔——报错是线索。</p></div>\n\n<h3>第 6 步：统计四件套 —— grep / sort / uniq / wc</h3>\n<p>数出\"哪个 IP 爆破得最狠\"，一条命令：</p>\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">grep \"Failed password\" auth.log | awk '{print $(NF-3)}' | sort | uniq -c | sort -rn</code></pre></div>\n<p>运行结果：</p>\n<div class=\"code-block\"><pre><code class=\"language-text\">      3 45.155.205.233</code></pre></div>\n<p>逐段拆解：</p>\n<ul>\n<li><code>grep \"Failed password\"</code> —— 只要失败记录</li>\n<li><code>awk '{print $(NF-3)}'</code> —— 每行按空格分词，取倒数第 4 个字段（= 来源 IP）</li>\n<li><code>sort</code> —— 排序（uniq 要求相邻重复，所以先排）</li>\n<li><code>uniq -c</code> —— 相邻去重并<strong>计数</strong></li>\n<li><code>sort -rn</code> —— 按数字倒序排，最狠的排最前</li>\n</ul>\n<div class=\"callout success\"><div class=\"callout-title\">对照第二章</div><p>上次你用 Python 十行代码统计出同一个结果——这次一条命令。工具没有高下，场景决定选择：复杂逻辑用 Python，快速管道用 Shell，高手两个都要会。</p></div>\n\n<h3>第 7 步：循环与判断 —— 让脚本学会思考</h3>\n<p>Shell 也有 for 和 if。批量检查多个日志文件：</p>\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">for f in auth.log syslog.txt kern.log; do\n    if [ -f \"$f\" ]; then\n        count=$(grep -c \"Failed password\" \"$f\")\n        echo \"$f 中的爆破记录: $count 条\"\n    else\n        echo \"$f 不存在，跳过\"\n    fi\ndone</code></pre></div>\n<p>要点：<code>do ... done</code> 包住循环体；<code>[ -f \"$f\" ]</code> 判断文件存在；<code>grep -c</code> 直接输出计数（比 grep+wc 更省一步）；<code>$(...)` 里嵌命令把结果赋给变量。语法细节多但都是固定套路，照抄两遍就会。</p>\n\n<h3>第 8 步：脚本参数 —— 让脚本通用起来</h3>\n<p>写死的文件名是玩具。<code>$1</code> 代表脚本的第一个参数：</p>\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">#!/bin/bash\n# usage: ./brute_count.sh <日志文件>\nLOG=\"$1\"\n\nif [ -z \"$LOG\" ]; then\n    echo \"用法: $0 <日志文件>\"\n    exit 1\nfi\n\nif [ ! -f \"$LOG\" ]; then\n    echo \"错误: 文件 $LOG 不存在\"\n    exit 1\nfi\n\necho \"统计 $LOG 中的爆破尝试:\"\ngrep \"Failed password\" \"$LOG\" | wc -l</code></pre></div>\n<p>运行：</p>\n<div class=\"code-block\"><pre><code class=\"language-bash\">$ chmod +x brute_count.sh\n$ ./brute_count.sh auth.log\n统计 auth.log 中的爆破尝试:\n3</code></pre></div>\n<p><code>[ -z \"$LOG\" ]</code> 判断\"参数是否为空\"；<code>$0</code> 是脚本自己的名字；<code>exit 1</code> 表示带错误码退出。以后任何日志丢给它都能数——这就是\"脚本\"和\"命令\"的区别。</p>\n\n<h3>第 9 步：综合实战 —— report.sh 一键日志统计报告</h3>\n<div class=\"code-block\"><div class=\"copy-btn\">复制</div><pre><code class=\"language-bash\">#!/bin/bash\n# report.sh — 一键生成 SSH 爆破统计报告\n# usage: ./report.sh auth.log\n\nLOG=\"$1\"\nOUT=\"brute_report.txt\"\n\nif [ -z \"$LOG\" ] || [ ! -f \"$LOG\" ]; then\n    echo \"用法: $0 <日志文件>\"\n    exit 1\nfi\n\n{\n    echo \"=== SSH 爆破统计报告 ===\"\n    echo \"日期: $(date +%F)\"\n    echo \"\"\n    echo \"来源 IP 排行:\"\n    grep \"Failed password\" \"$LOG\" | awk '{print $(NF-3)}' | sort | uniq -c | sort -rn\n    echo \"\"\n    echo \"成功登录记录:\"\n    grep \"Accepted password\" \"$LOG\"\n} > \"$OUT\"\n\necho \"报告已生成: $OUT\"\ncat \"$OUT\"</code></pre></div>\n<p>运行：</p>\n<div class=\"code-block\"><pre><code class=\"language-bash\">$ ./report.sh auth.log\n报告已生成: brute_report.txt\n=== SSH 爆破统计报告 ===\n日期: 2026-08-28\n\n来源 IP 排行:\n      3 45.155.205.233\n\n成功登录记录:\nMar 15 00:11:20 srv sshd[8818]: Accepted password for deploy from 192.168.1.14 port 41002 ssh2</code></pre></div>\n<p>大括号 <code>{ ...; } &gt; 文件</code> 把一组命令的输出一次性重定向进报告——管道、重定向、统计四件套、参数检查，全章知识在这一屏里集合完毕。</p>\n\n<h3>动手练习（先自己写，再展开答案）</h3>\n<p><strong>练习 1：</strong>写一行命令，找出 /var/log（或当前目录）下最近 3 天内修改过的所有 .conf 文件，并把报错丢弃。</p>\n<details><summary>点击展开练习 1 答案</summary>\n<div class=\"code-block\"><pre><code class=\"language-bash\">find . -name \"*.conf\" -mtime -3 2>/dev/null</code></pre></div>\n</details>\n<p><strong>练习 2：</strong>写一行命令，统计 auth.log 中<strong>成功登录</strong>的来源 IP 排行（把\"Failed password\"换成\"Accepted password\"，其余照抄第 6 步管道）。</p>\n<details><summary>点击展开练习 2 答案</summary>\n<div class=\"code-block\"><pre><code class=\"language-bash\">grep \"Accepted password\" auth.log | awk '{print $(NF-5)}' | sort | uniq -c | sort -rn</code></pre></div>\n<p>注意 Accepted 行的字段位置和 Failed 行不同，$(NF-5) 才是 IP——管道 tunes 的是\"工具\"，字段位置永远要对着真实数据调。</p>\n</details>\n<p><strong>练习 3：</strong>写脚本 <code>count.sh</code>：接收一个关键词参数，带参数检查，输出该关键词在 auth.log 中出现的次数。</p>\n<details><summary>点击展开练习 3 答案</summary>\n<div class=\"code-block\"><pre><code class=\"language-bash\">#!/bin/bash\n# usage: ./count.sh <关键词>\nKEY=\"$1\"\nif [ -z \"$KEY\" ]; then\n    echo \"用法: $0 <关键词>\"\n    exit 1\nfi\necho \"关键词 '$KEY' 出现次数:\"\ngrep -c \"$KEY\" auth.log\n# 运行: ./count.sh \"Failed password\"  → 3</code></pre></div>\n</details>\n\n<h3>本章小结</h3>\n<table>\n<tr><th>知识点</th><th>一句话记住</th></tr>\n<tr><td>shebang + chmod</td><td>#!/bin/bash 开头，chmod +x 一次</td></tr>\n<tr><td>环境变量</td><td>$PATH/$HOME/$USER，系统自带的记忆</td></tr>\n<tr><td>侦察四命令</td><td>ls -la / file / du / find，拿到机器先看一圈</td></tr>\n<tr><td>管道 |</td><td>上一块的输出 = 下一块的输入</td></tr>\n<tr><td>重定向 > >> 2></td><td>覆盖 / 追加 / 丢弃报错</td></tr>\n<tr><td>grep/sort/uniq/wc</td><td>过滤 → 排序 → 计数 → 排行</td></tr>\n<tr><td>for + if + $1</td><td>循环处理、先检查后干活</td></tr>\n</table>\n<p>下一章进入安全圈绕不开的语言：<strong>C 语言</strong>——理解了它，你才能理解漏洞为什么存在。</p>\n<button class=\"practice-link-btn\" onclick=\"navigate('ctf'); openCTF('ctf-025')\">▶ 配套挑战：Log Analysis: SSH Brute Force（Shell 和 Python 两种解法都试试）</button>";
+SECTION_CONTENT_EN["prog-03"] = `<h2>Shell Scripting in Practice — Snap Command-Line Bricks into Automation</h2>
+
+<p>Security engineers live half their lives in a terminal. This chapter teaches two things: <strong>snapping scattered commands into pipelines</strong> (one line beats ten lines of code), and <strong>freezing pipelines into scripts</strong> (one script beats a night of manual work). By the end you will own report.sh, a one-command SSH brute-force report generator.</p>
+
+<div class="callout info"><div class="callout-title">What You Will Learn</div><p>① Create and run .sh scripts　② Variables, environment variables and command substitution　③ The filesystem recon quartet　④ Pipes and redirection　⑤ The grep/sort/uniq/wc quartet　⑥ for loops and if checks　⑦ report.sh, a one-key log statistics script. Needs Bash (Git Bash on Windows; built into macOS/Linux).</p></div>
+
+<h3>Step 1: the First Script — Three Required Moves</h3>
+<p>Create <code>hello.sh</code> with three lines:</p>
+<div class="code-block"><div class="copy-btn">Copy</div><pre><code class="language-bash">#!/bin/bash
+echo "Hello, Security!"
+echo "Today is $(date)"</code></pre></div>
+<p>Then two moves make it run:</p>
+<div class="code-block"><pre><code class="language-bash">$ chmod +x hello.sh      # grant execute permission (once)
+$ ./hello.sh             # run it</code></pre></div>
+<p>Output:</p>
+<div class="code-block"><pre><code class="language-text">Hello, Security!
+Today is 2026-08-28 12:00:00 CST</code></pre></div>
+<p>Breakdown: <code>#!/bin/bash</code> is the shebang — "execute me with bash"; <code>echo</code> is Shell's print; <code>$(date)</code> is <strong>command substitution</strong> — embedding a command's output as a value. This trick repeats all chapter.</p>
+
+<h3>Step 2: Variables and Environment Variables</h3>
+<div class="code-block"><div class="copy-btn">Copy</div><pre><code class="language-bash">target="192.168.1.1"
+today=$(date +%F)        # +%F prints the 2026-08-28 form
+
+echo "Scan target: $target"
+echo "Scan date: $today"
+echo "Log file: scan_$today.log"</code></pre></div>
+<p>Besides your own variables, the system maintains <strong>environment variables</strong>: <code>$PATH</code> (command search path), <code>$HOME</code>, <code>$USER</code>. The entry point of "environment variable injection" attacks is exactly here:</p>
+<div class="code-block"><pre><code class="language-bash">echo "Current user: $USER"
+echo "Home: $HOME"
+echo "$PATH" | tr ":" "\\n" | head -3    # split PATH on colons, show first 3</code></pre></div>
+<div class="callout warn"><div class="callout-title">Beginner Traps</div><p>① No spaces around <code>=</code> when assigning (<code>target = "x"</code> errors); ② use <code>$</code> when reading, not when defining; ③ wrap values in double quotes so spaces don't split words.</p></div>
+
+<h3>Step 3: Filesystem Recon — the First Command Set of Any Pentest</h3>
+<p>The first thing on any machine you can touch: look around. Four commands are the recon basics:</p>
+<div class="code-block"><div class="copy-btn">Copy</div><pre><code class="language-bash">ls -la                    # all files here (hidden, permissions, sizes)
+file auth.log             # detect file type (ignores extensions)
+du -sh /var/log           # directory footprint (find "big things" fast)
+find / -name "*.log" -mtime -7 2>/dev/null   # logs touched in last 7 days</code></pre></div>
+<p><code>find</code> is the king of recon: <code>-name</code> by name, <code>-mtime -7</code> by modification time, <code>2&gt;/dev/null</code> throws "permission denied" noise into the void (redirection in Step 5). This combo quickly locates "recently modified files" — used by both forensics and privilege-escalation recon.</p>
+
+<h3>Step 4: Pipes — Shell's Building-Block Idea</h3>
+<p>A pipe <code>|</code> turns <strong>the previous command's output</strong> into <strong>the next command's input</strong>. Small commands snap into powerful pipelines:</p>
+<div class="code-block"><div class="copy-btn">Copy</div><pre><code class="language-bash">cat auth.log | grep "Failed password" | wc -l</code></pre></div>
+<p>Output:</p>
+<div class="code-block"><pre><code class="language-text">3</code></pre></div>
+<p>Read left to right: <code>cat</code> dumps the log → <code>grep</code> keeps lines with "Failed password" → <code>wc -l</code> counts. Three bricks, one question: <strong>how many brute attempts?</strong></p>
+
+<h3>Step 5: Redirection — Give Output Somewhere to Go</h3>
+<p>Every command has two output channels: 1 (stdout) and 2 (stderr). Redirectors decide where they go:</p>
+<div class="code-block"><div class="copy-btn">Copy</div><pre><code class="language-bash">grep "Failed" auth.log > found.txt        # > overwrite
+grep "Accepted" auth.log >> found.txt     # >> append
+find / -name "*.conf" 2>/dev/null         # 2>/dev/null drops errors
+grep "root" < auth.log > root_lines.txt   # < read input from a file</code></pre></div>
+<div class="callout warn"><div class="callout-title">Echoing Step 0's Trap</div><p><code>&gt;</code> erases the target the instant it opens (same as Python's "w"); always append with <code>&gt;&gt;</code>. Sending errors to <code>/dev/null</code> is satisfying — but never while debugging. Errors are clues.</p></div>
+
+<h3>Step 6: the Statistics Quartet — grep / sort / uniq / wc</h3>
+<p>Find which IP brute-forced hardest, in one line:</p>
+<div class="code-block"><div class="copy-btn">Copy</div><pre><code class="language-bash">grep "Failed password" auth.log | awk '{print $(NF-3)}' | sort | uniq -c | sort -rn</code></pre></div>
+<p>Output:</p>
+<div class="code-block"><pre><code class="language-text">      3 45.155.205.233</code></pre></div>
+<p>Segment by segment:</p>
+<ul>
+<li><code>grep "Failed password"</code> — keep only failures</li>
+<li><code>awk '{print $(NF-3)}'</code> — split each line on spaces, take the 4th-from-last field (= source IP)</li>
+<li><code>sort</code> — sort (uniq needs duplicates adjacent)</li>
+<li><code>uniq -c</code> — deduplicate adjacent lines and <strong>count</strong></li>
+<li><code>sort -rn</code> — numeric reverse sort; worst on top</li>
+</ul>
+<div class="callout success"><div class="callout-title">Compare with Chapter Two</div><p>Last chapter this took ten lines of Python — now one command. Tools have no ranking; scenarios decide. Complex logic: Python. Quick pipelines: Shell. Masters speak both.</p></div>
+
+<h3>Step 7: Loops and Checks — a Script That Thinks</h3>
+<p>Shell has for and if too. Check several log files in a batch:</p>
+<div class="code-block"><div class="copy-btn">Copy</div><pre><code class="language-bash">for f in auth.log syslog.txt kern.log; do
+    if [ -f "$f" ]; then
+        count=$(grep -c "Failed password" "$f")
+        echo "$f brute records: $count"
+    else
+        echo "$f missing, skipped"
+    fi
+done</code></pre></div>
+<p>Key points: <code>do ... done</code> wraps the loop body; <code>[ -f "$f" ]</code> tests file existence; <code>grep -c</code> prints the count directly; <code>$(...)\` embeds a command into a variable assignment. The syntax is dense but it is all fixed patterns — copy twice and it sticks.</p>
+
+<h3>Step 8: Script Arguments — Make It Generic</h3>
+<p>A hard-coded filename is a toy. <code>$1</code> is the first argument:</p>
+<div class="code-block"><div class="copy-btn">Copy</div><pre><code class="language-bash">#!/bin/bash
+# usage: ./brute_count.sh <logfile>
+LOG="$1"
+
+if [ -z "$LOG" ]; then
+    echo "Usage: $0 <logfile>"
+    exit 1
+fi
+
+if [ ! -f "$LOG" ]; then
+    echo "Error: file $LOG does not exist"
+    exit 1
+fi
+
+echo "Counting brute attempts in $LOG:"
+grep "Failed password" "$LOG" | wc -l</code></pre></div>
+<p>Running it:</p>
+<div class="code-block"><pre><code class="language-bash">$ chmod +x brute_count.sh
+$ ./brute_count.sh auth.log
+Counting brute attempts in auth.log:
+3</code></pre></div>
+<p><code>[ -z "$LOG" ]</code> tests "is the argument empty"; <code>$0</code> is the script's own name; <code>exit 1</code> exits with an error code. Now any log can be thrown at it — that is the difference between a "script" and a "command".</p>
+
+<h3>Step 9: Putting It Together — report.sh</h3>
+<div class="code-block"><div class="copy-btn">Copy</div><pre><code class="language-bash">#!/bin/bash
+# report.sh — one-shot SSH brute-force statistics report
+# usage: ./report.sh auth.log
+
+LOG="$1"
+OUT="brute_report.txt"
+
+if [ -z "$LOG" ] || [ ! -f "$LOG" ]; then
+    echo "Usage: $0 <logfile>"
+    exit 1
+fi
+
+{
+    echo "=== SSH brute-force statistics ==="
+    echo "Date: $(date +%F)"
+    echo ""
+    echo "Source IP ranking:"
+    grep "Failed password" "$LOG" | awk '{print $(NF-3)}' | sort | uniq -c | sort -rn
+    echo ""
+    echo "Successful logins:"
+    grep "Accepted password" "$LOG"
+} > "$OUT"
+
+echo "Report generated: $OUT"
+cat "$OUT"</code></pre></div>
+<p>Running it:</p>
+<div class="code-block"><pre><code class="language-bash">$ ./report.sh auth.log
+Report generated: brute_report.txt
+=== SSH brute-force statistics ===
+Date: 2026-08-28
+
+Source IP ranking:
+      3 45.155.205.233
+
+Successful logins:
+Mar 15 00:11:20 srv sshd[8818]: Accepted password for deploy from 192.168.1.14 port 41002 ssh2</code></pre></div>
+<p>The brace group <code>{ ...; } &gt; file</code> redirects a whole set of commands into the report in one shot — pipes, redirection, the statistics quartet, argument checks: the whole chapter assembles in this one screen.</p>
+
+<h3>Exercises (try first, then unfold the answer)</h3>
+<p><strong>Exercise 1:</strong> One command listing all .conf files modified in the last 3 days under the current directory, discarding errors.</p>
+<details><summary>Click to unfold Exercise 1 answer</summary>
+<div class="code-block"><pre><code class="language-bash">find . -name "*.conf" -mtime -3 2>/dev/null</code></pre></div>
+</details>
+<p><strong>Exercise 2:</strong> One command ranking the source IPs of <strong>successful</strong> logins in auth.log (swap "Failed password" for "Accepted password" in the Step 6 pipeline; adjust the awk field position).</p>
+<details><summary>Click to unfold Exercise 2 answer</summary>
+<div class="code-block"><pre><code class="language-bash">grep "Accepted password" auth.log | awk '{print $(NF-5)}' | sort | uniq -c | sort -rn</code></pre></div>
+<p>Note: Accepted lines have a different field layout than Failed lines — $(NF-5) is the IP. Pipelines tune the tool; field positions you always tune against real data.</p>
+</details>
+<p><strong>Exercise 3:</strong> Write <code>count.sh</code>: takes a keyword argument, validates it, and prints how many times it appears in auth.log.</p>
+<details><summary>Click to unfold Exercise 3 answer</summary>
+<div class="code-block"><pre><code class="language-bash">#!/bin/bash
+# usage: ./count.sh <keyword>
+KEY="$1"
+if [ -z "$KEY" ]; then
+    echo "Usage: $0 <keyword>"
+    exit 1
+fi
+echo "Occurrences of '$KEY':"
+grep -c "$KEY" auth.log
+# run: ./count.sh "Failed password"  → 3</code></pre></div>
+</details>
+
+<h3>Chapter Summary</h3>
+<table>
+<tr><th>Concept</th><th>Remember It As</th></tr>
+<tr><td>shebang + chmod</td><td>#!/bin/bash at the top; chmod +x once</td></tr>
+<tr><td>Environment variables</td><td>$PATH/$HOME/$USER — the system's own memory</td></tr>
+<tr><td>Recon quartet</td><td>ls -la / file / du / find — look around first</td></tr>
+<tr><td>Pipes |</td><td>Last block's output = next block's input</td></tr>
+<tr><td>Redirection > >> 2></td><td>Overwrite / append / drop errors</td></tr>
+<tr><td>grep/sort/uniq/wc</td><td>Filter → sort → count → ranking</td></tr>
+<tr><td>for + if + $1</td><td>Batch processing; verify before working</td></tr>
+</table>
+<p>Next chapter enters the language security can never avoid: <strong>C</strong> — understand it, and you understand why vulnerabilities exist at all.</p>
+<button class="practice-link-btn" onclick="navigate('ctf'); openCTF('ctf-025')">▶ Related challenge: Log Analysis: SSH Brute Force (try both Shell and Python solutions)</button>`;
