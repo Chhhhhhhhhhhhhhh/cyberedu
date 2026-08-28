@@ -1519,3 +1519,56 @@ pre[class*="language-"]{background:rgba(2,2,6,0.9) !important;color:var(--text-d
 .sec-stars { color: #ffd166; letter-spacing: 2px; }
 .sec-prereq { color: var(--text-muted); }
 .reading-time .sec-stars, .reading-time .sec-prereq { margin-left: 6px; font-size: 12px; }
+
+
+/* ── content tables (chapter summary / comparison tables) ── */
+.article-content table{
+  width:100%;border-collapse:collapse;margin:18px 0 24px;
+  font-size:13px;line-height:1.6;
+  border:1px solid var(--border-subtle);
+}
+.article-content table th{
+  background:rgba(0,255,136,0.07);color:var(--text-main);
+  font-weight:600;text-align:left;
+}
+.article-content table th,.article-content table td{
+  padding:10px 14px;border-bottom:1px solid var(--border-subtle);
+}
+.article-content table tr:last-child td{border-bottom:none}
+.article-content table tbody tr:nth-child(odd){background:rgba(255,255,255,0.025)}
+.article-content table tbody tr:hover{background:rgba(0,255,136,0.045)}
+[data-theme="light"] .article-content table th{background:rgba(22,163,74,0.08)}
+[data-theme="light"] .article-content table tbody tr:nth-child(odd){background:rgba(0,0,0,0.02)}
+[data-theme="light"] .article-content table tbody tr:hover{background:rgba(22,163,74,0.05)}
+
+/* ── AI settings fills the whole panel while open ── */
+.ai-chat-panel.settings-open .ai-messages,
+.ai-chat-panel.settings-open .ai-chat-input-area{display:none}
+.ai-chat-panel.settings-open .ai-settings{flex:1;max-height:none;min-height:0}
+.ai-chat-panel.settings-open .ai-settings .ai-save-btn:last-of-type{margin-left:0;margin-top:8px}
+
+/* ── content tables (chapter summary / comparison tables) ── */
+.article-content table{
+  width:100%;border-collapse:collapse;margin:18px 0 24px;
+  font-size:13px;line-height:1.6;
+  border:1px solid var(--border-subtle);
+}
+.article-content table th{
+  background:rgba(0,255,136,0.07);color:var(--text-main);
+  font-weight:600;text-align:left;
+}
+.article-content table th,.article-content table td{
+  padding:10px 14px;border-bottom:1px solid var(--border-subtle);
+}
+.article-content table tr:last-child td{border-bottom:none}
+.article-content table tbody tr:nth-child(odd){background:rgba(255,255,255,0.025)}
+.article-content table tbody tr:hover{background:rgba(0,255,136,0.045)}
+[data-theme="light"] .article-content table th{background:rgba(22,163,74,0.08)}
+[data-theme="light"] .article-content table tbody tr:nth-child(odd){background:rgba(0,0,0,0.02)}
+[data-theme="light"] .article-content table tbody tr:hover{background:rgba(22,163,74,0.05)}
+
+/* ── AI settings fills the whole panel while open ── */
+.ai-chat-panel.settings-open .ai-messages,
+.ai-chat-panel.settings-open .ai-chat-input-area{display:none}
+.ai-chat-panel.settings-open .ai-settings{flex:1;max-height:none;min-height:0}
+.ai-chat-panel.settings-open .ai-settings .ai-save-btn:last-of-type{margin-left:0;margin-top:8px}

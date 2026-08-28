@@ -1,3 +1,12 @@
+## v2.7.1 — 2026-08-28
+
+**文件**: `style.css`, `script.js`, `package.json`
+
+### 🎨 UI 修复（用户反馈）
+- **章内表格样式**：此前正文表格无边框、无列分隔，视觉拥挤。新增完整表格主题——绿色表头、行列分隔线、斑马纹、悬停高亮，深浅色主题各自适配
+- **AI 导师设置面板重叠/显示不全**：原实现把设置区硬限在 50vh 内并与消息区/输入区同时挤压。现在设置页打开时独占整个面板（消息区与输入区隐藏，设置内部可滚动），关闭后恢复
+- 版本号 2.7.1
+
 ## v2.7.0 — 2026-08-28
 
 **文件**: `content.js`, `script.js`, `style.css`, `i18n.js`, `docs/content-roadmap.md`, `scripts/augment-section.js`(新), `scripts/verify-content-quality.js`(新), `.github/workflows/test.yml`, `package.json`

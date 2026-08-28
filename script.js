@@ -2090,7 +2090,13 @@ function toggleAIChat() {
 }
 
 function toggleAISettings() {
-  document.getElementById('ai-settings').classList.toggle('hidden');
+  const panel = document.getElementById('ai-chat-panel');
+  const settings = document.getElementById('ai-settings');
+  const opening = settings.classList.contains('hidden');
+  settings.classList.toggle('hidden');
+  // while settings are open, give them the whole window (messages/input hidden via CSS)
+  panel.classList.toggle('settings-open', opening);
+  if (opening) document.getElementById('ai-history').classList.add('hidden');
 }
 
 function saveAISettings() {
