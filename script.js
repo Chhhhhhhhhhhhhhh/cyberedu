@@ -919,6 +919,13 @@ function loadSection(moduleId, sectionId) {
   let prevMod = null, nextMod = null;
   if (prevSec) prevMod = MODULES.find(mod => mod.chapters.some(c => c.sections.some(s => s.id === prevSec.id)));
   if (nextSec) nextMod = MODULES.find(mod => mod.chapters.some(c => c.sections.some(s => s.id === nextSec.id)));
+  const curChap = m.chapters.find(c => c.sections.some(s => s.id === sectionId));
+  const starsHtml = curChap && curChap.difficulty
+    ? '· <span class="sec-stars">' + '★'.repeat(curChap.difficulty) + '☆'.repeat(5 - curChap.difficulty) + '</span>'
+    : '';
+  const prereqHtml = (idx > 0 && prevSec)
+    ? '· <span class="sec-prereq">' + t('section.prereq') + ' ' + getSectionField(prevSec, 'title') + '</span>'
+    : '';
 
   const done = getSectionDone(sectionId);
   const contentSource = (typeof currentLang !== 'undefined' && currentLang === 'en' && sec.contentKey && typeof SECTION_CONTENT_EN !== 'undefined' && SECTION_CONTENT_EN[sec.contentKey])
@@ -933,7 +940,7 @@ function loadSection(moduleId, sectionId) {
   document.getElementById('article-body').innerHTML = `
     <div class="reading-time">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-      ${readMin} min read
+      ${readMin} min read ${starsHtml} ${prereqHtml}
     </div>
     ${contentWithGlossary}
     <div class="separator"></div>

@@ -1514,3 +1514,8 @@ pre[class*="language-"]{background:rgba(2,2,6,0.9) !important;color:var(--text-d
     display: none !important;
   }
 }
+
+/* section meta bar (difficulty + prerequisite) */
+.sec-stars { color: #ffd166; letter-spacing: 2px; }
+.sec-prereq { color: var(--text-muted); }
+.reading-time .sec-stars, .reading-time .sec-prereq { margin-left: 6px; font-size: 12px; }

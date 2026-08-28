@@ -121,6 +121,7 @@ const LANG = {
     'hub.sidebarExpand': '展开侧边栏',
 
     // Section nav
+    'section.prereq': '建议先完成',
     'section.completed': '✓ 已完成',
     'section.markDone': '○ 标记完成',
     'section.prev': '← 上一节: ',
@@ -349,6 +350,7 @@ const LANG = {
     'hub.sidebarExpand': 'Expand sidebar',
 
     // Section nav
+    'section.prereq': 'Finish first:',
     'section.completed': '✓ COMPLETED',
     'section.markDone': '○ MARK AS COMPLETED',
     'section.prev': '← PREV: ',

@@ -48,7 +48,7 @@ global.itAsync = itAsync;
 global.assert = assert;
 
 async function runTests() {
-  console.log('\n  \x1b[1mCyberEdu Test Suite v2.6.2\x1b[0m');
+  console.log('\n  \x1b[1mCyberEdu Test Suite v2.6.3\x1b[0m');
   console.log('  =========================');
   const startTime = Date.now();
 
