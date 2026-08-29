@@ -1,6 +1,6 @@
 {
   "name": "cyberedu",
-  "version": "2.7.5",
+  "version": "2.7.6",
   "description": "Interactive cybersecurity learning platform — 52 chapters, 28 CTF challenges, bilingual EN/ZH, AI tutor support. Zero-config setup.",
   "main": "server.js",
   "private": true,

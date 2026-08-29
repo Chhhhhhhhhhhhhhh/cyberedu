@@ -1637,3 +1637,70 @@ pre[class*="language-"]{background:rgba(2,2,6,0.9) !important;color:var(--text-d
 [data-theme="light"] .ai-history{background:rgba(0,0,0,0.02)}
 [data-theme="light"] .ai-history-item:hover{background:rgba(0,0,0,0.03)}
 [data-theme="light"] .ai-history-item.active,[data-theme="light"] .ai-history-item.cur{background:rgba(22,163,74,0.06)}
+
+/* ── AI history: full-panel overlay drawer (v2.7.6) ── */
+#ai-history.aih-overlay{
+  position:absolute;inset:0;z-index:20;width:auto;
+  display:flex;flex-direction:column;gap:0;
+  background:var(--bg-panel);border-right:none;
+  animation:aihIn .18s ease-out;
+}
+@keyframes aihIn{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:none}}
+.aih-head{display:flex;justify-content:space-between;align-items:center;padding:14px 16px 10px;flex-shrink:0}
+.aih-head-title{font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted)}
+.aih-close{width:26px;height:26px;border:1px solid var(--border-subtle);background:none;border-radius:6px;color:var(--text-muted);cursor:pointer;font-size:12px;transition:all var(--transition)}
+.aih-close:hover{color:var(--text-main);border-color:var(--border-mid)}
+.aih-search{
+  margin:0 16px 12px;padding:9px 12px;flex-shrink:0;
+  background:var(--bg-input);border:1px solid var(--border-subtle);border-radius:8px;
+  color:var(--text-main);font-size:12px;outline:none;font-family:inherit;
+  transition:border-color var(--transition);
+}
+.aih-search:focus{border-color:var(--color-green)}
+.aih-search::placeholder{color:var(--text-muted)}
+.aih-list{flex:1;overflow-y:auto;padding:0 10px 10px;display:flex;flex-direction:column;gap:6px;min-height:0}
+.aih-grp{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1.2px;padding:10px 6px 4px}
+.aih-item{
+  position:relative;display:block;padding:9px 12px;
+  border:1px solid var(--border-subtle);border-left:2px solid var(--border-subtle);
+  border-radius:8px;cursor:pointer;
+  transition:background var(--transition),border-color var(--transition);
+}
+.aih-item:hover{background:rgba(255,255,255,0.04);border-color:var(--border-mid)}
+.aih-item.active,.aih-item.cur{border-left-color:var(--color-green);background:rgba(0,255,136,0.05)}
+.aih-item.cur .aih-t{color:var(--color-green)}
+.aih-l1{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.aih-t{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px;color:var(--text-secondary)}
+.aih-time{font-size:10px;color:var(--text-muted);flex-shrink:0}
+.aih-l2{display:flex;justify-content:space-between;align-items:center;margin-top:4px}
+.aih-count{font-size:10px;color:var(--text-muted)}
+.aih-acts{display:flex;gap:8px;opacity:0;transition:opacity .15s}
+.aih-item:hover .aih-acts{opacity:1}
+.aih-act{font-size:10px;color:var(--text-muted);cursor:pointer;padding:1px 5px;border-radius:3px;transition:all .15s}
+.aih-act:hover{color:var(--color-green);background:rgba(0,255,136,0.08)}
+.aih-act.del:hover{color:#ff6b6b;background:rgba(255,77,107,0.08)}
+.aih-act.confirm{color:#fff;background:#ff4d6b}
+.aih-empty{padding:26px 14px;text-align:center;font-size:11px;color:var(--text-muted)}
+.aih-foot{display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--border-subtle);flex-shrink:0}
+.aih-foot-new{
+  flex:1;padding:8px 10px;border-radius:8px;font-size:12px;cursor:pointer;
+  background:var(--color-green);color:#04120a;border:1px solid var(--color-green);
+  font-weight:600;transition:filter var(--transition);
+}
+.aih-foot-new:hover{filter:brightness(1.12)}
+.aih-foot-clear{
+  padding:8px 12px;border-radius:8px;font-size:11px;cursor:pointer;
+  background:none;border:1px solid var(--border-subtle);color:var(--text-muted);
+  transition:all var(--transition);
+}
+.aih-foot-clear:hover{color:#ff6b6b;border-color:#ff6b6b}
+.aih-foot-spacer{flex:1}
+#ai-history-tip{z-index:30}
+.ai-chat-panel.history-open .ai-messages,
+.ai-chat-panel.history-open .ai-chat-input-area,
+.ai-chat-panel.history-open .ai-settings{display:none}
+[data-theme="light"] #ai-history.aih-overlay{background:#fafbfc}
+[data-theme="light"] .aih-item:hover{background:rgba(0,0,0,0.03)}
+[data-theme="light"] .aih-item.active,[data-theme="light"] .aih-item.cur{background:rgba(22,163,74,0.06)}
+#ai-history.aih-overlay.hidden{display:none}
+#ai-history.aih-overlay{animation:aihIn .18s ease-out}

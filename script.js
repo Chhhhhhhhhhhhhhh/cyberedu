@@ -2013,6 +2013,9 @@ function _saveCurrentSession() {
 
 function _loadSession(id) {
   if (aiIsStreaming) { _pushHistoryTip(t('ai.stopFirst')); return; }
+  const panel2 = document.getElementById('ai-chat-panel');
+  panel2.classList.remove('history-open');
+  document.getElementById('ai-history').classList.add('hidden');
   const list = _histLoad();
   const session = list.find(s => s.id === id);
   if (!session) return;
@@ -2051,7 +2054,7 @@ function _deleteSession(id) {
 }
 
 function _renameSession(id) {
-  const item = document.querySelector('[data-sid="' + id + '"] .ai-history-item-title');
+  const item = document.querySelector('[data-sid="' + id + '"] .aih-t');
   if (!item) return;
   const old = item.textContent;
   const input = document.createElement('input');
@@ -2103,41 +2106,57 @@ function _pushHistoryTip(msg) {
 // ── History list rendering ──
 function _renderHistoryList() {
   const container = document.getElementById('ai-history-list');
-  const list = _histLoad();
-  let html = '';
-
-  // virtual entry ONLY when the in-memory chat is not in the saved list
+  const q = (window._histQ || '').toLowerCase();
+  const list = _histLoad().filter(s => !q || (s.title || '').toLowerCase().includes(q));
+  const now = Date.now();
+  const groups = [
+    { key: 'ai.grpToday', items: [] },
+    { key: 'ai.grp7d', items: [] },
+    { key: 'ai.grpOlder', items: [] }
+  ];
+  // virtual entry for the current (unsaved) chat — newest first
   const currentInList = aiCurrentSessionId && list.some(s => s.id === aiCurrentSessionId);
   if (aiMessages.length && !currentInList) {
-    const meta = aiMessages.length + t('ai.msgsUnit') + ' · ' + t('ai.unsaved');
-    html += '<div class="ai-history-item cur">'
-      + '<div class="aih-line1"><span class="aih-title">' + t('ai.curSession') + '</span>'
-      + '<span class="aih-time">' + t('ai.unsaved') + '</span></div>'
-      + '<div class="aih-line2"><span class="aih-count">' + aiMessages.length + t('ai.msgsUnit') + '</span></div>'
-      + '</div>';
+    groups[0].items.unshift({
+      id: '__current__', title: t('ai.curSession'), time: Date.now(), messages: aiMessages
+    });
   }
-
   for (const s of list) {
-    const active = s.id === aiCurrentSessionId ? ' active' : '';
-    const pending = _pendingDeleteId === s.id;
-    const count = (s.messages || []).length;
-    html += '<div class="ai-history-item' + active + '" data-sid="' + s.id + '" onclick="_loadSession(\'' + s.id + '\')">'
-      + '<div class="aih-line1"><span class="aih-title">' + _escHtml(s.title) + '</span>'
-      + '<span class="aih-time">' + _fmtRel(s.time) + '</span></div>'
-      + '<div class="aih-line2"><span class="aih-count">' + count + t('ai.msgsUnit') + '</span>'
-      + '<span class="aih-actions">'
-      + '<span class="aih-act" title="' + t('ai.rename') + '" onclick="event.stopPropagation();_renameSession(\'' + s.id + '\')">✎</span>'
-      + '<span class="aih-act del' + (pending ? ' confirm' : '') + '" title="' + t('ai.confirmDelShort') + '" onclick="event.stopPropagation();_deleteSession(\'' + s.id + '\')">' + (pending ? '✓ 确认' : '✕') + '</span>'
-      + '</span></div>'
-      + '</div>';
+    const age = now - (s.time || 0);
+    if (age < 86400000) groups[0].items.push(s);
+    else if (age < 7 * 86400000) groups[1].items.push(s);
+    else groups[2].items.push(s);
   }
 
-  if (!html) {
-    html = '<div class="ai-history-empty">' + t('ai.noHistory') + '</div>';
-  } else {
-    html += '<div class="ai-history-clear' + (_pendingDeleteId === '__all__' ? ' confirm' : '') + '" onclick="_clearAllHistory()">'
-      + (_pendingDeleteId === '__all__' ? t('ai.confirmClear') : t('ai.clearAll')) + '</div>';
+  let html = '';
+  for (const g of groups) {
+    if (!g.items.length) continue;
+    html += '<div class="aih-grp">' + t(g.key) + '</div>';
+    for (const s of g.items) {
+      const isCur = s.id === '__current__';
+      const active = s.id === aiCurrentSessionId ? ' active' : '';
+      const pending = _pendingDeleteId === s.id;
+      const count = (s.messages || []).length;
+      if (isCur) {
+        html += '<div class="aih-item cur' + active + '">'
+          + '<div class="aih-l1"><span class="aih-t">● ' + _escHtml(s.title) + '</span>'
+          + '<span class="aih-act del confirm">' + t('ai.unsaved') + '</span></div>'
+          + '<div class="aih-l2"><span class="aih-count">' + count + t('ai.msgsUnit') + '</span></div>'
+          + '</div>';
+        continue;
+      }
+      html += '<div class="aih-item' + active + '" data-sid="' + s.id + '" onclick="_loadSession(\'' + s.id + '\')">'
+        + '<div class="aih-l1"><span class="aih-t">' + _escHtml(s.title) + '</span>'
+        + '<span class="aih-time">' + _fmtRel(s.time) + '</span></div>'
+        + '<div class="aih-l2"><span class="aih-count">' + count + t('ai.msgsUnit') + '</span>'
+        + '<span class="aih-acts">'
+        + '<span class="aih-act" title="' + t('ai.rename') + '" onclick="event.stopPropagation();_renameSession(\'' + s.id + '\')">✎</span>'
+        + '<span class="aih-act del' + (pending ? ' confirm' : '') + '" onclick="event.stopPropagation();_deleteSession(\'' + s.id + '\')">' + (pending ? '✓' : '✕') + '</span>'
+        + '</span></div>'
+        + '</div>';
+    }
   }
+  if (!html) html = '<div class="aih-empty">' + t('ai.noHistory') + '</div>';
   container.innerHTML = html;
 }
 function _fmtRel(ts) {
@@ -2156,11 +2175,20 @@ function _escHtml(s) {
 
 // ── Toggle history sidebar ──
 function toggleAIHistory() {
+  const panel = document.getElementById('ai-chat-panel');
   const hist = document.getElementById('ai-history');
+  const opening = hist.classList.contains('hidden');
   hist.classList.toggle('hidden');
-  if (!hist.classList.contains('hidden')) {
+  // the drawer covers the whole panel while open
+  panel.classList.toggle('history-open', opening);
+  if (opening) {
+    document.getElementById('ai-settings').classList.add('hidden');
+    panel.classList.remove('settings-open');
+    window._histQ = '';
+    const se = document.getElementById('ai-history-search');
+    if (se) se.value = '';
     _renderHistoryList();
-    _pushHistoryTip = _pushHistoryTip || function() {};
+    setTimeout(() => { try { se.focus(); } catch (e) {} }, 80);
   }
 }
 

@@ -313,7 +313,7 @@
   <div class="statusbar-item">CTRL+K SEARCH &nbsp; ESC CLOSE</div>
   <div style="flex:1"></div>
   <div class="statusbar-item" id="status-progress">PROGRESS: 0%</div>
-  <div class="statusbar-item" id="status-version" title="点击查看更新日志" style="cursor:pointer;opacity:.6" onclick="window.open('https://github.com/Chhhhhhhhhhhhhhh/cyberedu/releases','_blank')">v2.7.5</div>
+  <div class="statusbar-item" id="status-version" title="点击查看更新日志" style="cursor:pointer;opacity:.6" onclick="window.open('https://github.com/Chhhhhhhhhhhhhhh/cyberedu/releases','_blank')">v2.7.6</div>
 </footer>
 
 <!-- ============================================================
@@ -336,13 +336,19 @@
     </div>
   </div>
 
-  <!-- History sidebar -->
-  <div id="ai-history" class="ai-history hidden">
-    <div class="ai-history-header">
-      <span data-i18n="ai.history">历史会话</span>
-      <button class="ai-history-new-btn" data-i18n="ai.newChat" onclick="newAIChat()">+ 新对话</button>
+  <!-- History: full-panel overlay drawer -->
+  <div id="ai-history" class="aih-overlay hidden" role="complementary" aria-label="历史会话">
+    <div class="aih-head">
+      <span class="aih-head-title" data-i18n="ai.history">历史会话</span>
+      <button class="aih-close" onclick="toggleAIHistory()" aria-label="关闭历史会话">✕</button>
     </div>
-    <div id="ai-history-list" class="ai-history-list"></div>
+    <input id="ai-history-search" class="aih-search" type="text" aria-label="搜索会话"
+           placeholder="搜索会话…" oninput="_filterHistory(this.value)">
+    <div id="ai-history-list" class="aih-list"></div>
+    <div class="aih-foot">
+      <button class="aih-foot-new" onclick="newAIChat()">＋ 新对话</button>
+      <button class="aih-foot-clear" onclick="_clearAllHistory()">清空全部</button>
+    </div>
   </div>
 
   <!-- Settings panel -->
