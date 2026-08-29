@@ -2195,6 +2195,60 @@ function formatAIContent(text) {
   return h;
 }
 
+// Smart scroll: follow the stream only when the user is already near the bottom
+function aiAutoScroll(box) {
+  if (box.scrollHeight - box.scrollTop - box.clientHeight < 140) box.scrollTop = box.scrollHeight;
+}
+
+// Code-block copy buttons + Prism highlighting + per-message action bar
+function attachAIMessageTools(div, rawText) {
+  div.querySelectorAll('pre').forEach(pre => {
+    if (pre.querySelector('.ai-code-copy')) return;
+    pre.style.position = 'relative';
+    const btn = document.createElement('button');
+    btn.className = 'ai-code-copy';
+    btn.textContent = t('ai.copy');
+    btn.onclick = () => {
+      navigator.clipboard.writeText(pre.innerText).then(() => {
+        btn.textContent = t('ai.copied');
+        setTimeout(() => btn.textContent = t('ai.copy'), 1200);
+      });
+    };
+    pre.appendChild(btn);
+  });
+  if (window.Prism) { try { Prism.highlightAllUnder(div); } catch (e) {} }
+  if (div.querySelector('.ai-msg-actions')) return;
+  const bar = document.createElement('div');
+  bar.className = 'ai-msg-actions';
+  const copyBtn = document.createElement('button');
+  copyBtn.className = 'ai-action-btn';
+  copyBtn.textContent = t('ai.copy');
+  copyBtn.onclick = () => {
+    navigator.clipboard.writeText(rawText || div.innerText).then(() => {
+      copyBtn.textContent = t('ai.copied');
+      setTimeout(() => copyBtn.textContent = t('ai.copy'), 1200);
+    });
+  };
+  const retryBtn = document.createElement('button');
+  retryBtn.className = 'ai-action-btn';
+  retryBtn.textContent = t('ai.retry');
+  retryBtn.onclick = () => {
+    if (aiIsStreaming || !lastUserText) return;
+    const wrappers = document.querySelectorAll('#ai-messages .ai-response-wrapper');
+    if (wrappers.length) wrappers[wrappers.length - 1].remove();
+    sendAIMessage(lastUserText);
+  };
+  bar.appendChild(copyBtn);
+  bar.appendChild(retryBtn);
+  div.appendChild(bar);
+}
+
+// Regenerate helper used by the retry button above
+function regenerateLastAIMessage() {
+  if (aiIsStreaming || !lastUserText) return;
+  sendAIMessage(lastUserText);
+}
+
 function handleAIKeydown(e) {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
@@ -2205,10 +2259,14 @@ function handleAIKeydown(e) {
 // System prompt for the AI tutor
 const AI_SYS_PROMPT = '你是一位专业的网络安全学习导师，精通编程基础、密码学、网络协议、Web安全、渗透测试、恶意软件分析和CTF竞赛。\n请用简明准确的中文回答学生的问题：\n- 由浅入深，适合初学者理解\n- 必要时提供代码示例（Python / Bash / C）\n- 标注相关风险和法律边界\n- 不直接给出CTF flag，而是引导解题思路';
 
-async function sendAIMessage() {
-  if (aiIsStreaming) return;
+async function sendAIMessage(forcedText) {
+  if (aiIsStreaming) {
+    // clicking send while streaming acts as STOP
+    if (aiAbortController) aiAbortController.abort();
+    return;
+  }
   const input = document.getElementById('ai-input');
-  const text  = input.value.trim();
+  const text  = (forcedText !== undefined) ? forcedText : input.value.trim();
   if (!text) return;
 
   const config = getAIConfig();
@@ -2230,8 +2288,11 @@ async function sendAIMessage() {
   // ── UI: user message + AI placeholder ──
   addAIMsg('user', text);
   aiMessages.push({ role: 'user', content: text });
-  input.value = '';
-  input.style.height = 'auto';
+  lastUserText = text;
+  if (forcedText === undefined) {
+    input.value = '';
+    input.style.height = 'auto';
+  }
 
   // Container: thinking div comes BEFORE aiDiv in DOM
   const box = document.getElementById('ai-messages');
@@ -2242,11 +2303,16 @@ async function sendAIMessage() {
   let thinkDiv = null;
   const aiDiv = document.createElement('div');
   aiDiv.className = 'ai-msg ai-msg-ai';
-  aiDiv.innerHTML = '<span class="ai-thinking-hint">正在思考</span>';
+  aiDiv.innerHTML = '<span class="ai-thinking-hint">' + t('ai.thinking') + '</span>';
   wrapper.appendChild(aiDiv);
 
   aiIsStreaming = true;
-  document.getElementById('ai-send-btn').disabled = true;
+  aiAbortController = new AbortController();
+  const sendBtn = document.getElementById('ai-send-btn');
+  sendBtn.disabled = false;                 // stays clickable — now acts as STOP
+  sendBtn.classList.add('ai-streaming');
+  sendBtn.textContent = '■';
+  sendBtn.title = t('ai.stop');
 
   let aiText = '';
   let thinkText = '';
@@ -2268,6 +2334,7 @@ async function sendAIMessage() {
         temperature: config.temperature,
         max_tokens:  config.max_tokens,
         thinking:    config.thinking ? { type: 'enabled' } : { type: 'disabled' },
+        signal:      aiAbortController.signal,
       }),
     });
 
@@ -2309,7 +2376,7 @@ async function sendAIMessage() {
             }
             const body = thinkDiv.querySelector('.ai-thinking-body');
             if (body) body.innerHTML = formatAIContent(thinkText);
-            box.scrollTop = box.scrollHeight;
+            aiAutoScroll(box);
           }
 
           // ── Main content ──
@@ -2324,7 +2391,7 @@ async function sendAIMessage() {
             }
             aiText += delta.content;
             aiDiv.innerHTML = formatAIContent(aiText) + '<span class="ai-cursor"></span>';
-            box.scrollTop = box.scrollHeight;
+            aiAutoScroll(box);
           }
 
           // ── Usage stats (final chunk) ──
@@ -2335,6 +2402,7 @@ async function sendAIMessage() {
 
     // ── Finalize response ──
     aiDiv.innerHTML = formatAIContent(aiText);
+    attachAIMessageTools(aiDiv, aiText);
 
     if (thinkDiv && thinkText) {
       const rTokens = usageInfo?.completion_tokens_details?.reasoning_tokens;
@@ -2362,13 +2430,38 @@ async function sendAIMessage() {
     _renderHistoryList();
 
   } catch (e) {
-    aiDiv.className = 'ai-msg ai-msg-error';
-    aiDiv.innerHTML = '⚠ ' + e.message;
-    if (thinkDiv) thinkDiv.remove();
+    if (e.name === 'AbortError') {
+      // user pressed stop — keep whatever was generated
+      aiDiv.innerHTML = formatAIContent(aiText);
+      const stopTag = document.createElement('span');
+      stopTag.className = 'ai-usage-tag';
+      stopTag.textContent = t('ai.stopped');
+      aiDiv.appendChild(stopTag);
+      if (aiText) {
+        attachAIMessageTools(aiDiv, aiText);
+        aiMessages.push({ role: 'assistant', content: aiText });
+      }
+    } else {
+      aiDiv.className = 'ai-msg ai-msg-error';
+      aiDiv.innerHTML = '⚠ ' + e.message;
+      if (thinkDiv) thinkDiv.remove();
+      const bar = document.createElement('div');
+      bar.className = 'ai-msg-actions';
+      const retry = document.createElement('button');
+      retry.className = 'ai-action-btn';
+      retry.textContent = t('ai.retry');
+      retry.onclick = () => { if (!aiIsStreaming && lastUserText) { bar.remove(); aiDiv.remove(); sendAIMessage(lastUserText); } };
+      bar.appendChild(retry);
+      aiDiv.appendChild(bar);
+    }
   }
 
   aiIsStreaming = false;
-  document.getElementById('ai-send-btn').disabled = false;
+  aiAbortController = null;
+  const btn = document.getElementById('ai-send-btn');
+  btn.classList.remove('ai-streaming');
+  btn.textContent = '→';
+  btn.title = '';
   document.getElementById('ai-input').focus();
 }
 

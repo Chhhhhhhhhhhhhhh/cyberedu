@@ -1572,3 +1572,14 @@ pre[class*="language-"]{background:rgba(2,2,6,0.9) !important;color:var(--text-d
 .ai-chat-panel.settings-open .ai-chat-input-area{display:none}
 .ai-chat-panel.settings-open .ai-settings{flex:1;max-height:none;min-height:0}
 .ai-chat-panel.settings-open .ai-settings .ai-save-btn:last-of-type{margin-left:0;margin-top:8px}
+
+/* ── AI tutor UX upgrade (v2.7.2) ── */
+.ai-send-btn.ai-streaming{background:#ff4d6b;border-color:#ff4d6b;color:#fff}
+.ai-msg-actions{display:flex;gap:8px;margin-top:10px;opacity:.8}
+.ai-action-btn{background:none;border:1px solid var(--border-subtle);color:var(--text-muted);font-size:11px;padding:3px 10px;border-radius:5px;cursor:pointer;transition:all var(--transition)}
+.ai-action-btn:hover{color:var(--color-green);border-color:var(--color-green)}
+.ai-msg-ai pre{position:relative}
+.ai-code-copy{position:absolute;top:6px;right:6px;font-size:10px;padding:2px 8px;border-radius:4px;background:rgba(0,0,0,0.45);color:var(--text-muted);border:1px solid var(--border-subtle);cursor:pointer;opacity:0;transition:opacity .15s,color var(--transition)}
+.ai-msg-ai pre:hover .ai-code-copy{opacity:1}
+.ai-code-copy:hover{color:var(--color-green);border-color:var(--color-green)}
+[data-theme="light"] .ai-code-copy{background:rgba(255,255,255,0.7)}
