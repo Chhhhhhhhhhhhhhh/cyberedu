@@ -2107,30 +2107,28 @@ function _renderHistoryList() {
   let html = '';
 
   // virtual entry ONLY when the in-memory chat is not in the saved list
-  // (otherwise it would duplicate the already-saved session above it)
   const currentInList = aiCurrentSessionId && list.some(s => s.id === aiCurrentSessionId);
   if (aiMessages.length && !currentInList) {
-    const curId = aiCurrentSessionId || '__current__';
-    const active = ' cur';
-    const meta = aiMessages.length ? aiMessages.length + t('ai.msgsUnit') + ' · ' + t('ai.unsaved') : t('ai.unsaved');
-    html += '<div class="ai-history-item cur" onclick="_renderHistoryList()">'
-      + '<span class="ai-history-item-title">● ' + t('ai.curSession') + '</span>'
-      + '<span class="ai-history-item-del cur-tag">' + t('ai.unsaved') + '</span>'
-      + '<span class="ai-history-item-meta">' + _escHtml(meta) + '</span>'
+    const meta = aiMessages.length + t('ai.msgsUnit') + ' · ' + t('ai.unsaved');
+    html += '<div class="ai-history-item cur">'
+      + '<div class="aih-line1"><span class="aih-title">' + t('ai.curSession') + '</span>'
+      + '<span class="aih-time">' + t('ai.unsaved') + '</span></div>'
+      + '<div class="aih-line2"><span class="aih-count">' + aiMessages.length + t('ai.msgsUnit') + '</span></div>'
       + '</div>';
   }
 
   for (const s of list) {
     const active = s.id === aiCurrentSessionId ? ' active' : '';
-    const date = _fmtRel(s.time);
     const pending = _pendingDeleteId === s.id;
     const count = (s.messages || []).length;
     html += '<div class="ai-history-item' + active + '" data-sid="' + s.id + '" onclick="_loadSession(\'' + s.id + '\')">'
-      + '<span class="ai-history-item-title">' + _escHtml(s.title) + '</span>'
-      + '<span class="ai-history-item-ren" onclick="event.stopPropagation();_renameSession(\'' + s.id + '\')">✎</span>'
-      + '<span class="ai-history-item-del' + (pending ? ' confirm' : '') + '" onclick="event.stopPropagation();_deleteSession(\'' + s.id + '\')">'
-      + (pending ? '✓' : '✕') + '</span>'
-      + '<span class="ai-history-item-meta">' + date + ' · ' + count + t('ai.msgsUnit') + '</span>'
+      + '<div class="aih-line1"><span class="aih-title">' + _escHtml(s.title) + '</span>'
+      + '<span class="aih-time">' + _fmtRel(s.time) + '</span></div>'
+      + '<div class="aih-line2"><span class="aih-count">' + count + t('ai.msgsUnit') + '</span>'
+      + '<span class="aih-actions">'
+      + '<span class="aih-act" title="' + t('ai.rename') + '" onclick="event.stopPropagation();_renameSession(\'' + s.id + '\')">✎</span>'
+      + '<span class="aih-act del' + (pending ? ' confirm' : '') + '" title="' + t('ai.confirmDelShort') + '" onclick="event.stopPropagation();_deleteSession(\'' + s.id + '\')">' + (pending ? '✓ 确认' : '✕') + '</span>'
+      + '</span></div>'
       + '</div>';
   }
 
@@ -2142,7 +2140,6 @@ function _renderHistoryList() {
   }
   container.innerHTML = html;
 }
-
 function _fmtRel(ts) {
   const d = new Date(ts), diff = Date.now() - ts;
   const zh = (typeof currentLang !== 'undefined' && currentLang === 'zh');
