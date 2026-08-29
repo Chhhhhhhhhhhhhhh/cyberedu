@@ -1,4 +1,4 @@
-// CyberEdu Local Server v2.7.0 - Multi-Model AI Proxy
+// CyberEdu Local Server v2.7.6 - Multi-Model AI Proxy
 // Usage: node server.js   (serves on http://127.0.0.1:8000)
 //
 // Security model (v2.6):
@@ -872,7 +872,7 @@ server.listen(PORT, BIND_HOST, async () => {
   const hasGCC    = await checkRuntime('gcc', ['--version']);
   console.log('');
   console.log('  ╔══════════════════════════════════════════════╗');
-  console.log('  ║   CyberEdu Server  v2.7.0 (Multi-Model AI)  ║');
+  console.log('  ║   CyberEdu Server  v2.7.6 (Multi-Model AI)  ║');
   console.log('  ║   http://' + BIND_HOST + ':' + PORT + '                    ║');
   console.log('  ╚══════════════════════════════════════════════╝');
   console.log('');

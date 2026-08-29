@@ -36,3 +36,6 @@ Desktop.ini
 # Environment
 .env
 .env.local
+
+# Privacy scanner: private watch-lists (never commit)
+privacy-local-patterns.txt
