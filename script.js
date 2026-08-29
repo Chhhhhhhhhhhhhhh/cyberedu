@@ -2106,9 +2106,10 @@ function _renderHistoryList() {
   const list = _histLoad();
   let html = '';
 
-  // virtual entry for the CURRENT chat (even if unsaved)
-  const isCurrentSaved = aiCurrentSessionId && list.some(s => s.id === aiCurrentSessionId);
-  if (aiMessages.length || aiCurrentSessionId === null) {
+  // virtual entry ONLY when the in-memory chat is not in the saved list
+  // (otherwise it would duplicate the already-saved session above it)
+  const currentInList = aiCurrentSessionId && list.some(s => s.id === aiCurrentSessionId);
+  if (aiMessages.length && !currentInList) {
     const curId = aiCurrentSessionId || '__current__';
     const active = ' cur';
     const meta = aiMessages.length ? aiMessages.length + t('ai.msgsUnit') + ' · ' + t('ai.unsaved') : t('ai.unsaved');
