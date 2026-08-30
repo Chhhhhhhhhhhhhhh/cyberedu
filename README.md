@@ -143,16 +143,25 @@ Zero-dependency test suite — no `npm install` needed. 95 checks cover server s
 
 ## 📋 What's New
 
-### v2.6 (2026-08-27)
+### v2.7.6 (2026-08-30)
 
-- 🔒 **Loopback-only server** — binds to `127.0.0.1` instead of all interfaces; code execution is no longer reachable from the LAN
-- 🛡️ **DNS-rebinding protection** — `Host` header allow-list rejects foreign origins before any processing
-- 🚫 **CORS removed entirely** — the app is same-origin by design, so third-party sites can no longer drive `/api/run`, the AI proxy or progress storage from a victim's browser
-- 🔑 **Answers hashed end-to-end** — CTF verification now compares SHA-256 digests (`flags-hash.js`); no plaintext answer table exists anywhere, and flag submission works fully offline again
-- 📦 **Static file block-list** — `server.js`, `.git/`, tests and tooling are no longer downloadable over HTTP
-- ⚡ **Performance** — gzip result caching for multi-MB assets, async stat+read (no TOCTOU), unconditional rate-limiter sweep, per-endpoint request size caps
-- 🧾 **CSP** both as HTTP header and `<meta>` tag (Pages deployments get identical policy; inline event handlers whitelisted to fit the zero-build architecture)
-- ♻️ Removed deprecated `X-XSS-Protection`; fixed a broken issue-template filename; portable `restart_server.bat`; CI workflow running the test suite on Node 18/20/22
+- 📚 **All 52 chapters upgraded to a beginner-friendly tutorial template** — every chapter now has a "What you'll learn" box, step-by-step examples with outputs, 3+ folded-answer exercises, and a summary table (CN + EN)
+- 🗂 **Module order fixed** — Programming → Networking → Cryptography → Web → Pentesting → Malware → CTF (removes the TLS-before-HTTP dependency inversion)
+- 🔢 **Sidebar section numbering** — chapters display as 01. 02. 03. for visible progression
+- 🚩 **All 28 CTF challenges rebuilt to be genuinely solvable** — real RSA params, decodable payloads, embedded forensics artifacts, 2 new server-side simulators; every answer derivable from the challenge itself
+- 🗂 **CTF arena tracks** — challenges sorted into category tracks with ascending difficulty
+- 🔗 **Fixed 15 dead challenge-jump buttons** — lesson buttons passed numeric indexes to an API expecting string ids
+- 🗂 **AI history as full-panel drawer** — search, time-grouped sessions (Today / 7d / Earlier), rename, two-step delete, clear-all
+- 🤖 **AI tutor UX** — stop generation (■), per-message copy / regenerate, code-block copy + Prism highlighting, smart auto-scroll
+- 📊 **Article meta bar** — difficulty stars + prerequisite hint on every chapter
+- 🔒 **Security hardening** — loopback-only server, DNS-rebinding guard, CORS removed, static file block-list, CSP, SHA-256 answer hashing, privacy scan CI gate
+- 🐛 Fixed: submitFlag crash (v2.5 regression), 28 CTF answer misalignment, CSP void of unsafe-inline, content.js dead assignments (5.96MB → 2.83MB compacted)
+
+<details><summary>v2.6 (2026-08-27)</summary>
+
+- 🔒 **Loopback-only server** · 🛡️ **DNS-rebinding guard** · 🚫 **CORS removed** · 🔑 **Answers hashed end-to-end** · 📦 **Static file block-list** · ⚡ **gzip cache / async stat / rate-limiter sweep** · 🧾 **CSP header + meta** · ♻️ portable `restart_server.bat`, CI workflow
+
+</details>
 
 > 📋 [Full changelog →](versions/CHANGELOG.md)
 
