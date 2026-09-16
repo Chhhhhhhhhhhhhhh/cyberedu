@@ -1395,7 +1395,7 @@ const SECTION_CTF_MAP = {
   'web-01-01': 'ctf-003', // SQLi -> Login Bypass
   'web-02-01': 'ctf-008', // Command Injection -> Command Injection 101
   'web-04-01': 'ctf-004', // XSS -> XSS Hunter
-  'web-05-01': 'ctf-020', // CSRF & SSRF -> SSRF 101
+  'web-05-03': 'ctf-020', // SSRF -> SSRF 101
   'web-06-01': 'ctf-019', // File Upload -> File Upload Bypass
   'web-07-01': 'ctf-016', // Deserialization -> PHP Type Juggling
   'web-08-01': 'ctf-012', // SSTI -> SSTI Detective
@@ -1434,7 +1434,7 @@ const CTF_SECTION_MAP = {
   'ctf-017': 'crypto-01-02',
   'ctf-018': 'crypto-02-01',
   'ctf-019': 'web-06-01',
-  'ctf-020': 'web-05-01',
+  'ctf-020': 'web-05-03',
   'ctf-021': 'ctfg-05-01',
   'ctf-022': 'net-03-01',
   'ctf-023': 'ctfg-03-01',
@@ -3078,7 +3078,7 @@ function animateCountUp(el, target, duration){
 }
 function triggerCountUp(){
   const statTargets = {
-    'stat-chapters': (typeof MODULES !== 'undefined') ? MODULES.flatMap(m => m.chapters.flatMap(c => c.sections)).length : 78,
+    'stat-chapters': (typeof MODULES !== 'undefined') ? MODULES.flatMap(m => m.chapters.flatMap(c => c.sections)).length : 85,
     'stat-exercises': (typeof PRACTICES !== 'undefined') ? PRACTICES.length : 10,
     'stat-ctf': (typeof CTF_CHALLENGES !== 'undefined') ? CTF_CHALLENGES.length : 28,
     'stat-tools': (typeof TOOLS !== 'undefined') ? TOOLS.length : 6
