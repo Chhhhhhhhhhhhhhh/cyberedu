@@ -1,0 +1,23 @@
+{
+  "name": "CyberEdu — 网络空间安全综合学习站",
+  "short_name": "CyberEdu",
+  "description": "Interactive cybersecurity learning platform with 52 chapters, 28 CTF challenges, bilingual EN/ZH support, and AI tutor.",
+  "start_url": "./cyberedu.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0a0d14",
+  "theme_color": "#00ff41",
+  "categories": [
+    "education",
+    "security"
+  ],
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

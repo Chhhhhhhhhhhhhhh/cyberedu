@@ -1,34 +1,27 @@
 // CyberEdu Server Tests — API endpoints, security, and data validation
 const path = require('path');
 const crypto = require('crypto');
+const serverModule = require('../server.js');
+const {
+  MIME,
+  STATIC_BLOCK_RULES,
+  isBlockedStatic,
+  HOST_ALLOWED,
+  hostIsAllowed,
+  ALLOWED_API_HOSTS,
+  RATE_MAX,
+  RATE_WINDOW,
+  checkRateLimit,
+  verifyFlag,
+  CTF_SIM,
+  escHtml,
+  ERR_ZH,
+} = serverModule;
 
 module.exports = async function() {
 
   // ─── Static File Server ─────────────────────────────────────
   describe('Static File Server', function() {
-    // Mirrors of server.js logic kept in sync intentionally (zero-dep suite).
-    const MIME = {
-      '.html': 'text/html; charset=utf-8',
-      '.css':  'text/css; charset=utf-8',
-      '.js':   'application/javascript; charset=utf-8',
-      '.json': 'application/json; charset=utf-8',
-      '.png':  'image/png',
-      '.svg':  'image/svg+xml',
-      '.txt':  'text/plain; charset=utf-8',
-      '.xml':  'application/xml; charset=utf-8',
-    };
-
-    const STATIC_BLOCK_RULES = [
-      /^\/\.git/i, /^\/\.github/i, /^\/\.mailmap$/i, /^\/\.gitignore$/i,
-      /^\/server\.js$/i, /^\/progress\.json$/i, /^\/package(-lock)?\.json$/i,
-      /^\/restart_server\.bat$/i,
-      /^\/(tests|scripts|versions)\//i,
-    ];
-    function isBlockedStatic(urlPath) {
-      if (/(^|\/)\./.test(path.posix.basename(urlPath))) return true;
-      if (/\.(bak|bat|cmd|log|env|lock)$/i.test(urlPath)) return true;
-      return STATIC_BLOCK_RULES.some(re => re.test(urlPath));
-    }
 
     it('should detect HTML file extensions correctly', function() {
       assert.strictEqual(path.extname('test.html').toLowerCase(), '.html');
@@ -38,7 +31,7 @@ module.exports = async function() {
 
     it('should serve required app assets', function() {
       for (const p of ['/cyberedu.html', '/content.js', '/script.js', '/i18n.js',
-                       '/style.css', '/flags-hash.js', '/favicon.svg']) {
+                       '/style.css', '/flags-hash.js', '/favicon.svg', '/manifest.json', '/sw.js']) {
         assert.strictEqual(isBlockedStatic(p), false, p + ' must be servable');
       }
     });
@@ -101,23 +94,20 @@ module.exports = async function() {
 
   // ─── Host Header Validation (anti DNS-rebinding) ─────────────
   describe('Host Header Validation', function() {
-    const HOST_ALLOWED = new Set(['localhost:8000', '127.0.0.1:8000', '[::1]:8000']);
-    function hostIsAllowed(h) { return !h || HOST_ALLOWED.has(String(h).toLowerCase()); }
-
     it('should accept loopback host forms', function() {
-      assert.ok(hostIsAllowed('localhost:8000'));
-      assert.ok(hostIsAllowed('127.0.0.1:8000'));
-      assert.ok(hostIsAllowed('[::1]:8000'));
+      assert.ok(hostIsAllowed('localhost:' + serverModule.PORT));
+      assert.ok(hostIsAllowed('127.0.0.1:' + serverModule.PORT));
+      assert.ok(hostIsAllowed('[::1]:' + serverModule.PORT));
     });
 
     it('should reject attacker-controlled hosts', function() {
       assert.ok(!hostIsAllowed('evil.com'));
-      assert.ok(!hostIsAllowed('attacker.example.org:8000'));
-      assert.ok(!hostIsAllowed('localhost.evil.com:8000'));
+      assert.ok(!hostIsAllowed('attacker.example.org:' + serverModule.PORT));
+      assert.ok(!hostIsAllowed('localhost.evil.com:' + serverModule.PORT));
     });
 
     it('should be case-insensitive', function() {
-      assert.ok(hostIsAllowed('LOCALHOST:8000'));
+      assert.ok(hostIsAllowed('LOCALHOST:' + serverModule.PORT));
     });
   });
 
@@ -150,14 +140,7 @@ module.exports = async function() {
 
   // ─── CTF Flag Verification (SHA-256 digests) ────────────────
   describe('CTF Flag Verification (SHA-256)', function() {
-    const { FLAG_HASHES, normalizeFlagInput } = require('../flags-hash.js');
-    function verify(challengeId, flag) {
-      const expected = FLAG_HASHES[challengeId];
-      if (!expected) return { error: 'not found' };
-      const got = crypto.createHash('sha256')
-        .update(normalizeFlagInput(flag), 'utf8').digest('hex');
-      return { correct: got === expected };
-    }
+    const { FLAG_HASHES } = require('../flags-hash.js');
     // Hard-coded external vector pins the normalization contract even if the
     // hash file is regenerated someday: sha256("flag{c4s4r_1s_n0t_s3cur3}")
     const PINNED_CTF001 = '23a082447a457ad8853b8b7ff8452ec5e2cf9e4cd9267a07bcdd01c9effb7ef6';
@@ -177,24 +160,24 @@ module.exports = async function() {
     });
 
     it('should correctly verify a valid flag', function() {
-      assert.strictEqual(verify('ctf-003', 'flag{sql1_1nj3ct1on_m4st3r}').correct, true);
+      assert.strictEqual(verifyFlag('ctf-003', 'flag{sql1_1nj3ct1on_m4st3r}'), true);
     });
 
     it('should be case-insensitive and whitespace-tolerant', function() {
-      assert.strictEqual(verify('ctf-001', '  FLAG{RS4_G0_BRRR}\t').correct, true);
-      assert.strictEqual(verify('ctf-008', '\nflag{c0mm4nd_1nj3ct10n_3z}\r\n').correct, true);
+      assert.strictEqual(verifyFlag('ctf-001', '  FLAG{RS4_G0_BRRR}\t'), true);
+      assert.strictEqual(verifyFlag('ctf-008', '\nflag{c0mm4nd_1nj3ct10n_3z}\r\n'), true);
       // NB: removed whitespace *joins* characters — it never substitutes
       // underscores, so a spaced-out answer is a different (rejected) string.
-      assert.strictEqual(verify('ctf-001', 'flag{ rs4 g0 brrr }').correct, false);
+      assert.strictEqual(verifyFlag('ctf-001', 'flag{ rs4 g0 brrr }'), false);
     });
 
     it('should reject wrong flags', function() {
-      assert.strictEqual(verify('ctf-001', 'flag{wrong_answer}').correct, false);
-      assert.strictEqual(verify('ctf-002', '').correct, false);
+      assert.strictEqual(verifyFlag('ctf-001', 'flag{wrong_answer}'), false);
+      assert.strictEqual(verifyFlag('ctf-002', ''), false);
     });
 
     it('should return error for nonexistent challenges', function() {
-      assert.strictEqual(verify('ctf-999', 'flag{anything}').error, 'not found');
+      assert.strictEqual(verifyFlag('ctf-999', 'flag{anything}'), null);
     });
   });
 
@@ -257,26 +240,25 @@ module.exports = async function() {
 
   // ─── API URL Whitelist ──────────────────────────────────────
   describe('API URL Whitelist', function() {
-    const ALLOWED = [
-      'api.openai.com', 'api.deepseek.com', 'dashscope.aliyuncs.com',
-      'api.anthropic.com', 'api.groq.com', 'localhost', '127.0.0.1',
-    ];
-
     it('should allow known AI API hosts', function() {
-      assert.ok(ALLOWED.includes('api.deepseek.com'));
-      assert.ok(ALLOWED.includes('api.openai.com'));
-      assert.ok(ALLOWED.includes('api.anthropic.com'));
-      assert.ok(ALLOWED.includes('localhost'));
+      assert.ok(ALLOWED_API_HOSTS.includes('api.deepseek.com'));
+      assert.ok(ALLOWED_API_HOSTS.includes('api.openai.com'));
+      assert.ok(ALLOWED_API_HOSTS.includes('api.anthropic.com'));
+      assert.ok(ALLOWED_API_HOSTS.includes('generativelanguage.googleapis.com'));
+      assert.ok(ALLOWED_API_HOSTS.includes('api.siliconflow.cn'));
+      assert.ok(ALLOWED_API_HOSTS.includes('openrouter.ai'));
+      assert.ok(ALLOWED_API_HOSTS.includes('localhost'));
+      assert.ok(ALLOWED_API_HOSTS.includes('127.0.0.1'));
     });
 
     it('should reject unknown hosts', function() {
-      assert.ok(!ALLOWED.includes('evil.example.com'));
-      assert.ok(!ALLOWED.includes('attacker.org'));
-      assert.ok(!ALLOWED.includes('api.deepseek.com.evil.com'));
+      assert.ok(!ALLOWED_API_HOSTS.includes('evil.example.com'));
+      assert.ok(!ALLOWED_API_HOSTS.includes('attacker.org'));
+      assert.ok(!ALLOWED_API_HOSTS.includes('api.deepseek.com.evil.com'));
     });
 
     it('should reject empty host', function() {
-      assert.ok(!ALLOWED.includes(''));
+      assert.ok(!ALLOWED_API_HOSTS.includes(''));
     });
   });
 
@@ -323,10 +305,6 @@ module.exports = async function() {
 
   // ─── CTF Simulated Terminal ─────────────────────────────────
   describe('CTF Simulated Terminal', function() {
-    function escHtml(s) {
-      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    }
-
     it('should escape HTML in user input', function() {
       assert.strictEqual(
         escHtml('<script>alert(1)</script>'),
@@ -339,29 +317,26 @@ module.exports = async function() {
     });
 
     it('should handle SQL injection detection pattern', function() {
-      const input = "admin' OR '1'='1";
-      assert.ok(/\bOR\b/i.test(input), 'Should detect OR keyword');
+      const sim = CTF_SIM['ctf-003'];
+      assert.ok(sim, 'ctf-003 simulation must exist in server');
+      const pass = sim.respond("admin' OR '1'='1");
+      assert.ok(pass.output.includes('flag{sql1_1nj3ct1on_m4st3r}'));
+      const fail = sim.respond('normal_user');
+      assert.ok(fail.output.includes('Login failed'));
     });
 
     it('should handle command injection splitting', function() {
-      const input = '127.0.0.1;ls;cat flag.txt';
-      const parts = input.split(/[;|&\n]/);
-      assert.strictEqual(parts.length, 3);
-      assert.strictEqual(parts[0].trim(), '127.0.0.1');
+      const sim = CTF_SIM['ctf-008'];
+      assert.ok(sim, 'ctf-008 simulation must exist in server');
+      const pass = sim.respond('127.0.0.1; cat flag.txt');
+      assert.ok(pass.output.includes('flag{c0mm4nd_1nj3ct10n_3z}'));
+      const normal = sim.respond('127.0.0.1');
+      assert.ok(normal.output.includes('3 packets transmitted'));
     });
   });
 
   // ─── Error Messages ─────────────────────────────────────────
   describe('Error Messages', function() {
-    const ERR_ZH = {
-      400: '请求格式错误，请检查参数。',
-      401: 'API Key 无效或已过期，请检查设置。',
-      402: '账户余额不足，请前往 DeepSeek 平台充值。',
-      429: '请求速率超限（RPM/TPM 已达上限），请稍后重试。',
-      500: 'DeepSeek 服务器内部错误，请稍后重试。',
-      503: 'DeepSeek 服务器繁忙，请稍后重试。',
-    };
-
     it('should have Chinese error messages for common status codes', function() {
       assert.ok(typeof ERR_ZH[400] === 'string');
       assert.ok(typeof ERR_ZH[401] === 'string');

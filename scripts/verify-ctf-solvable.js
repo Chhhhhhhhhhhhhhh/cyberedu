@@ -152,10 +152,10 @@ const bnBytes = bn => Buffer.from(bn.toString(16).padStart(Math.ceil(bn.toString
 }
 {
   const ch = getChallenge('ctf-011');
-  const text = JSON.stringify(ch);
+  const src = ch.starterCode || JSON.stringify(ch);
   try {
-    const ns = [1, 2, 3].map(i => BigInt(text.match(new RegExp(`n${i}.*?(\\d{15,})`))[1]));
-    const cs = [1, 2, 3].map(i => BigInt(text.match(new RegExp(`c${i}.*?(\\d{15,})`))[1]));
+    const ns = [1, 2, 3].map(i => BigInt(src.match(new RegExp(`n${i}\\s*=\\s*(\\d{15,})`))[1]));
+    const cs = [1, 2, 3].map(i => BigInt(src.match(new RegExp(`c${i}\\s*=\\s*(\\d{15,})`))[1]));
     let [a1, m1] = [cs[0], ns[0]];
     for (let i = 1; i < 3; i++) {
       const [a2, m2] = [cs[i], ns[i]];

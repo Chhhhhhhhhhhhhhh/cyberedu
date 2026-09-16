@@ -10,10 +10,13 @@ const candidates = new Set();
 for (const m of orig.matchAll(/^(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=/gm)) {
   candidates.add(m[1]);
 }
+for (const m of orig.matchAll(/^function\s+([A-Za-z_$][\w$]*)\s*\(/gm)) {
+  candidates.add(m[1]);
+}
 // KNOWN app bindings (whitelist of intent)
 const KNOWN = ['SECTION_CONTENT', 'SECTION_CONTENT_EN', 'GLOSSARY', 'MODULES',
   'CTF_CHALLENGES', 'PRACTICES', 'PRACTICE_TESTS', 'CHECKPOINTS_MERGED',
-  'SECTION_CHECKPOINTS', 'CHECKPOINTS', 'AI_SYS_PROMPT', 'TOOLS'];
+  'SECTION_CHECKPOINTS', 'SECTION_CHECKPOINTS_EN', 'CHECKPOINTS', 'AI_SYS_PROMPT', 'TOOLS', 'injectGlossary'];
 const knownCandidates = [...candidates].filter(n => KNOWN.includes(n));
 const unknownCandidates = [...candidates].filter(n => !KNOWN.includes(n));
 console.log('行首声明候选:', candidates.size, '| 已知:', knownCandidates.length, '| 未知(将运行时甄别):', unknownCandidates.length);
@@ -58,7 +61,7 @@ parts.push(enLit + '\n');
 
 // other known data bindings, preserved in original file order
 const order = ['GLOSSARY', 'MODULES', 'CTF_CHALLENGES', 'PRACTICES', 'PRACTICE_TESTS',
-  'CHECKPOINTS_MERGED', 'SECTION_CHECKPOINTS', 'CHECKPOINTS', 'AI_SYS_PROMPT'];
+  'CHECKPOINTS_MERGED', 'SECTION_CHECKPOINTS', 'SECTION_CHECKPOINTS_EN', 'CHECKPOINTS', 'AI_SYS_PROMPT'];
 for (const name of order) {
   if (V1[name] === undefined) continue;
   parts.push('const ' + name + ' = ' + JSON.stringify(V1[name]) + ';\n');
@@ -67,7 +70,7 @@ for (const name of order) {
 for (const name of found) {
   const v = V1[name];
   if (typeof v === 'function') {
-    parts.push('const ' + name + ' = ' + v.toString() + ';\n');
+    parts.push(v.toString() + '\n');
   }
 }
 

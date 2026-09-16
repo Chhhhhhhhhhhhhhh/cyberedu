@@ -6,12 +6,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CyberEdu — 网络空间安全综合学习站</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
-<meta name="description" content="CyberEdu — Interactive cybersecurity learning platform. 52 chapters covering programming, cryptography, networking, web security, pentesting, malware analysis, and CTF. Bilingual (EN/ZH) with AI tutor.">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#00ff41">
+<meta name="description" content="CyberEdu — Interactive enterprise cybersecurity learning platform. 78 chapters covering programming, cryptography, networking, web security, pentesting, cloud & container security, malware analysis, blue team DFIR, and CTF. Bilingual (EN/ZH) with AI tutor.">
 <meta name="robots" content="index, follow">
 <meta name="author" content="Chhhhhhhhhhhhhhh">
-<meta name="keywords" content="cybersecurity, learning, CTF, penetration testing, web security, cryptography, education, hacking">
+<meta name="keywords" content="cybersecurity, learning, CTF, penetration testing, web security, cryptography, cloud security, DFIR, education, hacking">
 <meta property="og:title" content="CyberEdu — Cybersecurity Learning Platform">
-<meta property="og:description" content="Interactive cybersecurity learning platform with 52 chapters, 28 CTF challenges, AI tutor, and bilingual EN/ZH support.">
+<meta property="og:description" content="Interactive enterprise cybersecurity learning platform with 78 chapters, 28 CTF challenges, AI tutor, and bilingual EN/ZH support.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://chhhhhhhhhhhhhhh.github.io/cyberedu/">
 <meta property="og:image" content="https://chhhhhhhhhhhhhhh.github.io/cyberedu/docs/og-image.png">
@@ -26,28 +28,28 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" integrity="sha384-wFjoQjtV1y5jVHbt0p35Ui8aV8GVpEZkyF99OXWqP/eNJDU93D3Ugxkoyh6Y2I4A" crossorigin="anonymous" referrerpolicy="no-referrer">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha384-06z5D//U/xpvxZHuUz92xBvq3DqBBFi7Up53HRrbV7Jlv7Yvh/MZ7oenfUe9iCEt" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js" integrity="sha384-WJdEkJKrbsqw0evQ4GB6mlsKe5cGTxBOw4KAEIa52ZLB7DDpliGkwdme/HMa5n1m" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha384-9WmlN8ABpoFSSHvBGGjhvB3E/D8UkNB9HpLJjBQFC2VSQsM1odiQDv4NbEo+7l15" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-c.min.js" integrity="sha384-gaD4ncierlmWk42Z3BmTp37/z+Dqt8V4Wf74UjTvFeo+M+SgnEI6Ysd98pWhksQv" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js" integrity="sha384-/MKWdycCDliku23mP5sYXbZNuXrzgmQO/jsVxwPFn99dVOaXRyKsqDjarqpueGAp" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha384-06z5D//U/xpvxZHuUz92xBvq3DqBBFi7Up53HRrbV7Jlv7Yvh/MZ7oenfUe9iCEt" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js" integrity="sha384-WJdEkJKrbsqw0evQ4GB6mlsKe5cGTxBOw4KAEIa52ZLB7DDpliGkwdme/HMa5n1m" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha384-9WmlN8ABpoFSSHvBGGjhvB3E/D8UkNB9HpLJjBQFC2VSQsM1odiQDv4NbEo+7l15" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-c.min.js" integrity="sha384-gaD4ncierlmWk42Z3BmTp37/z+Dqt8V4Wf74UjTvFeo+M+SgnEI6Ysd98pWhksQv" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js" integrity="sha384-/MKWdycCDliku23mP5sYXbZNuXrzgmQO/jsVxwPFn99dVOaXRyKsqDjarqpueGAp" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js" integrity="sha384-DhxhYObIMeMNGyAG7iK11OHzBIKyEIeRL0ad1iFPAOwZB8iirUlTT0O/WJJUk8+o" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/codemirror.min.css" integrity="sha384-zaeBlB/vwYsDRSlFajnDd7OydJ0cWk+c2OWybl3eSUf6hW2EbhlCsQPqKr3gkznT" crossorigin="anonymous" referrerpolicy="no-referrer">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/theme/material-darker.min.css" integrity="sha384-eZTPTN0EvJdn23s24UDYJmUM2T7C2ZFa3qFLypeBruJv8mZeTusKUAO/j5zPAQ6l" crossorigin="anonymous" referrerpolicy="no-referrer">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/codemirror.min.js" integrity="sha384-BEgQlz0fN4eG0n4jipmUe+nOg65hPY7L0E/lPVRaOPdzAfLPGEbXnpAodHtSnlwM" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/mode/python/python.min.js" integrity="sha384-Xy+2exU6lBoT4OpUOtnQb+cUpn+nlJQEHvRobWVtwz6wIsw4oNoO7xyd/l8rYgMy" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/mode/javascript/javascript.min.js" integrity="sha384-g0o+WW9mdIxA7LaaCKTkRm0M5TVT+Bb4s9eocxPsI2G0Xm0POG9iD6G6qP1IIsfS" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/mode/clike/clike.min.js" integrity="sha384-o9m634t2Hy35pPNKd9Xe16ntbSw11jCOuKPDrzQGXI8k87L2JZthaA3rwmJjnF7Z" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/mode/shell/shell.min.js" integrity="sha384-dmPRq54XNtYnlnAo7QrwJnZNa5r0JP5gU8z4H0686Cgz37qrR2jmNaDHUXyMI4wn" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/addon/edit/closebrackets.min.js" integrity="sha384-69mJoUoPPF/C7qPs6lLjvXvrt6w225+rmxWqGO3a1glVjITdnnwPQOtG9FRTd2Ni" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/addon/edit/matchbrackets.min.js" integrity="sha384-LjCI3E8qhhxXZvu7+FCvqx9eZYSowFvuJ7z54KsgI/BDPGKEuysqCg/vYiKHvC4Y" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/codemirror.min.js" integrity="sha384-BEgQlz0fN4eG0n4jipmUe+nOg65hPY7L0E/lPVRaOPdzAfLPGEbXnpAodHtSnlwM" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/mode/python/python.min.js" integrity="sha384-Xy+2exU6lBoT4OpUOtnQb+cUpn+nlJQEHvRobWVtwz6wIsw4oNoO7xyd/l8rYgMy" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/mode/javascript/javascript.min.js" integrity="sha384-g0o+WW9mdIxA7LaaCKTkRm0M5TVT+Bb4s9eocxPsI2G0Xm0POG9iD6G6qP1IIsfS" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/mode/clike/clike.min.js" integrity="sha384-o9m634t2Hy35pPNKd9Xe16ntbSw11jCOuKPDrzQGXI8k87L2JZthaA3rwmJjnF7Z" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/mode/shell/shell.min.js" integrity="sha384-dmPRq54XNtYnlnAo7QrwJnZNa5r0JP5gU8z4H0686Cgz37qrR2jmNaDHUXyMI4wn" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/addon/edit/closebrackets.min.js" integrity="sha384-69mJoUoPPF/C7qPs6lLjvXvrt6w225+rmxWqGO3a1glVjITdnnwPQOtG9FRTd2Ni" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/addon/edit/matchbrackets.min.js" integrity="sha384-LjCI3E8qhhxXZvu7+FCvqx9eZYSowFvuJ7z54KsgI/BDPGKEuysqCg/vYiKHvC4Y" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <link rel="stylesheet" href="style.css">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "Course",
   "name": "CyberEdu — Cybersecurity Learning Platform",
-  "description": "Interactive cybersecurity learning platform with 52 chapters, 28 CTF challenges, bilingual EN/ZH support, and AI tutor.",
+  "description": "Interactive cybersecurity learning platform with 78 chapters, 28 CTF challenges, bilingual EN/ZH support, and AI tutor.",
   "provider": {
     "@type": "Organization",
     "name": "CyberEdu",
@@ -69,7 +71,22 @@
 <canvas id="matrix-canvas" aria-hidden="true"></canvas>
 
 <!-- INTRO SCREEN -->
-<div id="intro-screen" aria-hidden="true">
+<script>
+  (function() {
+    try {
+      var h = (window.location.hash || '').replace(/^#\/?/, '').split('/')[0];
+      var seen = sessionStorage.getItem('cyberedu_intro_seen') === '1';
+      var direct = ['hub', 'practice', 'ctf', 'progress', 'tools'].indexOf(h) !== -1;
+      if (seen || direct) {
+        var st = document.createElement('style');
+        st.id = 'intro-early-hide';
+        st.textContent = '#intro-screen { display: none !important; }';
+        document.head.appendChild(st);
+      }
+    } catch(e) {}
+  })();
+</script>
+<div id="intro-screen" aria-hidden="true" onclick="if(typeof skipIntro==='function')skipIntro();else this.style.display='none'">
   <canvas id="intro-noise"></canvas>
   <div id="intro-scanlines"></div>
   <div id="intro-vignette"></div>
@@ -85,9 +102,21 @@
     </div>
     <div id="intro-status">INITIALIZING NEURAL INTERFACE...</div>
   </div>
-  <div id="intro-skip">[ PRESS ANY KEY TO SKIP ]</div>
+  <div id="intro-skip" role="button" tabindex="0" onclick="event.stopPropagation();if(typeof skipIntro==='function')skipIntro();else document.getElementById('intro-screen').style.display='none'">[ PRESS ANY KEY OR CLICK TO SKIP ]</div>
   <div id="intro-flash"></div>
 </div>
+<script>
+  (function() {
+    function onEarlyKey() {
+      var intro = document.getElementById('intro-screen');
+      if (intro && intro.style.display !== 'none') {
+        if (typeof skipIntro === 'function') skipIntro();
+        else intro.style.display = 'none';
+      }
+    }
+    window.addEventListener('keydown', onEarlyKey);
+  })();
+</script>
 
 <!-- TOP NAV -->
 <header role="banner">
@@ -108,6 +137,10 @@
   <span class="nav-shortcut" aria-hidden="true">CTRL+K</span>
   <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" data-i18n-title="nav.theme" title="切换主题" aria-pressed="false" aria-label="切换亮色/暗色主题">☀</button>
   <button id="lang-toggle" onclick="setLang(currentLang==='zh'?'en':'zh')">EN</button>
+  <button class="nav-rank-badge" id="nav-rank-badge" onclick="navigate('progress')" data-i18n-title="rank.title" title="特工档案与军衔" aria-label="特工档案与军衔">
+    <span class="rank-indicator-dot"></span>
+    <span class="rank-name-text" id="nav-rank-text">LV.1 RECRUIT</span>
+  </button>
 </nav>
 <canvas id="nav-glitch-canvas" aria-hidden="true"></canvas>
 </header>
@@ -149,6 +182,7 @@
           <button class="btn-primary" onclick="navigate('hub')">ENTER ▸</button>
           <button class="btn-outline" data-i18n="home.viewProgress" onclick="navigate('progress')">查看进度</button>
         </div>
+        <div id="resume-learning-wrap" class="resume-learning-wrap"></div>
         <div class="hero-stats">
           <div class="hero-stat"><span class="hero-stat-num" id="stat-chapters" data-count="0">0</span><span class="hero-stat-label" data-i18n="home.chapters">知识章节</span></div>
           <div class="hero-stat"><span class="hero-stat-num" id="stat-exercises" data-count="0">0</span><span class="hero-stat-label" data-i18n="home.exercises">练习题目</span></div>
@@ -157,7 +191,7 @@
         </div>
       </section>
       <section class="modules-section">
-        <div class="section-header"><h2 class="cyber-text" data-i18n="home.coreDirections">七大核心方向</h2></div>
+        <div class="section-header"><h2 class="cyber-text" data-i18n="home.coreDirections">九大核心方向</h2></div>
         <div class="modules-grid" id="modules-grid"></div>
       </section>
       <!-- LEARNING PATH -->
@@ -173,8 +207,25 @@
         <div class="breadcrumb" id="hub-breadcrumbs" data-i18n="hub.breadcrumb">学习中心</div>
         <div class="view-title" id="hub-title" data-i18n="hub.selectModule">选择一个模块开始学习</div>
       </div>
-      <div class="article-content" id="article-body">
-        <p style="color:var(--text-muted)" data-i18n="hub.selectChapter">请从左侧边栏选择章节开始学习。</p>
+      <div id="diagnostic-banner-wrap" class="diagnostic-banner">
+        <div class="diagnostic-banner-text">
+          <h4>⚡ <span data-i18n="diag.bannerTitle">智能能力摸底与学习路线定制</span></h4>
+          <p data-i18n="diag.bannerDesc">只需 5 道题，测出你的网安五维能力雷达图，并推荐专属突破路径！</p>
+        </div>
+        <button class="diagnostic-banner-btn" data-i18n="diag.startBtn" onclick="openSkillDiagnostic()">🎯 开始 5 分钟能力摸底</button>
+      </div>
+      <div class="hub-main-container">
+        <div class="article-content" id="article-body">
+          <p style="color:var(--text-muted)" data-i18n="hub.selectChapter">请从左侧边栏选择章节开始学习。</p>
+        </div>
+        <aside class="hub-toc" id="hub-toc" aria-label="本章目录导航">
+          <div class="hub-toc-header">
+            <span class="hub-toc-title" data-i18n="hub.onThisPage">ON THIS PAGE</span>
+            <span class="hub-toc-pct" id="hub-toc-pct">0%</span>
+          </div>
+          <div class="hub-toc-bar"><div class="hub-toc-bar-fill" id="hub-toc-bar-fill"></div></div>
+          <nav class="hub-toc-list" id="hub-toc-list"></nav>
+        </aside>
       </div>
     </div>
 
@@ -232,7 +283,8 @@
       <div class="modal" style="max-width:780px;max-height:90vh;display:flex;flex-direction:column">
         <button class="modal-close" onclick="closeCTFModal()" aria-label="关闭">✕</button>
         <div class="modal-title" id="modal-title"></div>
-        <div class="modal-meta" id="modal-meta" style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap"></div>
+        <div class="modal-meta" id="modal-meta" style="margin-bottom:10px;display:flex;gap:8px;flex-wrap:wrap"></div>
+        <div id="ctf-prereq-wrap" class="ctf-prereq-wrap"></div>
         <!-- CTF Tabs -->
         <div class="ctf-tabs" id="ctf-tabs" role="tablist">
           <button class="ctf-tab active" id="ctf-tab-desc" data-tab="desc" role="tab" aria-selected="true" data-i18n="ctf.descTab" onclick="switchCTFTab('desc')">题目描述</button>
@@ -257,7 +309,8 @@
           </div>
           <!-- Tab: Terminal -->
           <div class="ctf-panel" id="ctf-panel-terminal" role="tabpanel" aria-labelledby="ctf-tab-terminal" style="display:none">
-            <div id="ctf-terminal" style="width:100%;height:320px;background:#0a0a0a;border:1px solid var(--border-subtle);border-radius:6px;padding:12px;font-family:var(--font-mono);font-size:12px;overflow-y:auto;white-space:pre-wrap;color:#00ff41"></div>
+            <div id="ctf-terminal" style="width:100%;height:300px;background:#0a0a0a;border:1px solid var(--border-subtle);border-radius:6px;padding:12px;font-family:var(--font-mono);font-size:12px;overflow-y:auto;white-space:pre-wrap;color:#00ff41"></div>
+            <div id="ctf-term-quick-pills" class="ctf-quick-pills"></div>
             <div class="flag-input-row" style="margin-top:8px">
               <input class="flag-input" id="ctf-term-input" aria-label="CTF terminal input" data-i18n-placeholder="ctf.terminalPlaceholder" placeholder="$ 输入 payload..." autocomplete="off" style="background:#0a0a0a;color:#00ff41;border-color:#333" onkeydown="if(event.key==='Enter')sendCTFTerminal()">
               <button class="run-btn" onclick="sendCTFTerminal()" style="font-size:11px;padding:5px 16px;background:#0a0a0a;color:#00ff41;border-color:#333">SEND</button>
@@ -280,18 +333,38 @@
         <div class="breadcrumb" data-i18n="progress.breadcrumb">个人中心</div>
         <div class="view-title" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
           <span data-i18n="progress.title">学习进度仪表盘</span>
-          <span style="margin-left:auto;display:flex;gap:8px">
+          <span style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">
             <button class="run-btn" data-i18n="progress.export" onclick="exportProgress()" style="font-size:10px;padding:4px 14px">↓ 导出进度</button>
             <button class="run-btn" data-i18n="progress.import" onclick="importProgress()" style="font-size:10px;padding:4px 14px">↑ 导入进度</button>
+            <button class="run-btn btn-danger-soft" data-i18n="progress.resetBtn" onclick="openResetProgressModal()" style="font-size:10px;padding:4px 14px">↺ 重置进度</button>
           </span>
         </div>
       </div>
+      <div class="agent-profile-wrap" id="agent-profile-wrap"></div>
       <div class="stats-grid" id="progress-stats"></div>
       <div class="charts-row">
         <div class="chart-card"><div class="chart-title" data-i18n="progress.moduleProgress">// 各模块掌握度</div><canvas id="radar-chart" style="max-height:260px"></canvas></div>
         <div class="chart-card"><div class="chart-title" data-i18n="progress.overview">// 学习进度一览</div><div class="module-progress-list" id="module-prog-list"></div></div>
       </div>
+      <div class="badges-section" id="badges-section">
+        <div class="badges-header">
+          <div class="badges-title" data-i18n="badges.title">// 特工成就荣誉馆</div>
+          <div class="badges-counter" id="badges-counter">0 / 8</div>
+        </div>
+        <div class="badges-grid" id="badges-grid"></div>
+      </div>
       <div class="timeline-section"><div class="timeline-title" data-i18n="progress.timeline">// 最近学习记录</div><div class="timeline" id="timeline"></div></div>
+      <div class="progress-manage-card" id="progress-manage-card">
+        <div class="progress-manage-info">
+          <div class="progress-manage-title" data-i18n="progress.manageTitle">// 数据管理与进度重置</div>
+          <div class="progress-manage-desc" data-i18n="progress.manageDesc">导出进度备份、从文件恢复学习记录，或自定义配置重置当前学习数据。</div>
+        </div>
+        <div class="progress-manage-actions">
+          <button class="run-btn" data-i18n="progress.export" onclick="exportProgress()" style="font-size:11px;padding:6px 14px">↓ 导出备份</button>
+          <button class="run-btn" data-i18n="progress.import" onclick="importProgress()" style="font-size:11px;padding:6px 14px">↑ 导入恢复</button>
+          <button class="run-btn btn-danger-soft" data-i18n="progress.resetBtn" onclick="openResetProgressModal()" style="font-size:11px;padding:6px 14px">↺ 重置设置</button>
+        </div>
+      </div>
     </div>
 
     <!-- TOOLS -->
@@ -310,11 +383,102 @@
 <footer id="statusbar" role="contentinfo">
   <div class="statusbar-item"><div class="status-dot"></div>LOCAL</div>
   <div class="statusbar-item" id="status-loc">HOME</div>
-  <div class="statusbar-item">CTRL+K SEARCH &nbsp; ESC CLOSE</div>
+  <div class="statusbar-item" style="cursor:pointer" onclick="openShortcutsModal()" title="Keyboard Shortcuts"><span style="color:var(--color-cyan)">⌨ SHORTCUTS (?)</span></div>
+  <div class="statusbar-item" id="status-motion-toggle" style="cursor:pointer" onclick="toggleReducedMotion()" title="切换动效模式 (Normal / Reduced Motion)"><span id="status-motion-text">⚡ MOTION: FX ON</span></div>
   <div style="flex:1"></div>
+  <div class="statusbar-item" id="status-rank" style="cursor:pointer" onclick="navigate('progress')" title="特工军衔">RANK: [LV.1 SCRIPT KIDDIE]</div>
   <div class="statusbar-item" id="status-progress">PROGRESS: 0%</div>
   <div class="statusbar-item" id="status-version" title="点击查看更新日志" style="cursor:pointer;opacity:.6" onclick="window.open('https://github.com/Chhhhhhhhhhhhhhh/cyberedu/releases','_blank')">v2.7.6</div>
 </footer>
+
+<!-- KEYBOARD SHORTCUTS MODAL -->
+<div class="modal-backdrop" id="shortcuts-modal" role="dialog" aria-label="快捷键速查" aria-modal="true" onclick="if(event.target===this)closeShortcutsModal()">
+  <div class="modal" style="max-width:560px">
+    <button class="modal-close" onclick="closeShortcutsModal()" aria-label="关闭">✕</button>
+    <div class="modal-title" style="display:flex;align-items:center;gap:8px">
+      <span class="badge green">HOTKEYS</span>
+      <span data-i18n="shortcuts.title">键盘快捷键指南</span>
+    </div>
+    <div id="shortcuts-body" class="shortcuts-body" style="margin-top:16px"></div>
+  </div>
+</div>
+
+<!-- PROGRESS RESET MODAL -->
+<div class="modal-backdrop" id="reset-progress-modal" role="dialog" aria-label="学习进度重置设置" aria-modal="true" onclick="if(event.target===this)closeResetProgressModal()">
+  <div class="modal reset-modal">
+    <button class="modal-close" onclick="closeResetProgressModal()" aria-label="关闭">✕</button>
+    <div class="modal-title" style="display:flex;align-items:center;gap:8px">
+      <span class="badge" style="background:rgba(255,68,102,0.15);color:var(--color-red);border:1px solid rgba(255,68,102,0.4)" data-i18n="resetModal.badge">DANGER ZONE</span>
+      <span data-i18n="resetModal.title">学习进度重置设置</span>
+    </div>
+    
+    <div class="reset-modal-banner">
+      <div data-i18n="resetModal.warning">重置操作将永久清除所勾选的本地及云端学习数据。为防止误操作，建议在重置前先下载备份文件。</div>
+      <button class="reset-backup-btn" onclick="exportProgress()" data-i18n="resetModal.backupBtn">📥 立即导出当前进度备份 (JSON)</button>
+    </div>
+
+    <div class="reset-presets-bar">
+      <span class="reset-presets-label" data-i18n="resetModal.presetLabel">快捷预设：</span>
+      <button class="reset-preset-chip active" id="preset-chip-all" onclick="setResetPreset('all')" data-i18n="resetModal.presetAll">⚡ 全量出厂重置</button>
+      <button class="reset-preset-chip" id="preset-chip-sections" onclick="setResetPreset('sections')" data-i18n="resetModal.presetSections">📖 仅重置章节</button>
+      <button class="reset-preset-chip" id="preset-chip-ctf" onclick="setResetPreset('ctf')" data-i18n="resetModal.presetCtf">🚩 仅重置靶场</button>
+    </div>
+
+    <div style="font-family:var(--font-mono);font-size:12px;color:var(--text-main);font-weight:600;margin-bottom:8px" data-i18n="resetModal.scopeTitle">选择需要重置的数据范围：</div>
+
+    <div class="reset-scope-list">
+      <label class="reset-scope-item selected" id="item-reset-sections">
+        <input type="checkbox" class="reset-scope-checkbox" id="check-reset-sections" checked onchange="onResetOptionChange()">
+        <div class="reset-scope-text">
+          <div class="reset-scope-title" data-i18n="resetModal.scopeSections">知识章节学习进度</div>
+          <div class="reset-scope-desc" data-i18n="resetModal.scopeSectionsDesc">清空 52 个小节已学标记、模块完成率与断点续学记录</div>
+        </div>
+      </label>
+
+      <label class="reset-scope-item selected" id="item-reset-ctf">
+        <input type="checkbox" class="reset-scope-checkbox" id="check-reset-ctf" checked onchange="onResetOptionChange()">
+        <div class="reset-scope-text">
+          <div class="reset-scope-title" data-i18n="resetModal.scopeCtf">CTF 靶场实战通关</div>
+          <div class="reset-scope-desc" data-i18n="resetModal.scopeCtfDesc">清空 28 道靶机挑战解题标记与提交的 Flag 记录</div>
+        </div>
+      </label>
+
+      <label class="reset-scope-item selected" id="item-reset-badges">
+        <input type="checkbox" class="reset-scope-checkbox" id="check-reset-badges" checked onchange="onResetOptionChange()">
+        <div class="reset-scope-text">
+          <div class="reset-scope-title" data-i18n="resetModal.scopeBadges">特工档案与荣誉勋章</div>
+          <div class="reset-scope-desc" data-i18n="resetModal.scopeBadgesDesc">重置特工代号、军衔段位 (重回 Novice) 与 8 枚成就勋章</div>
+        </div>
+      </label>
+
+      <label class="reset-scope-item selected" id="item-reset-timeline">
+        <input type="checkbox" class="reset-scope-checkbox" id="check-reset-timeline" checked onchange="onResetOptionChange()">
+        <div class="reset-scope-text">
+          <div class="reset-scope-title" data-i18n="resetModal.scopeTimeline">学习足迹与连续打卡</div>
+          <div class="reset-scope-desc" data-i18n="resetModal.scopeTimelineDesc">重置学习时间轴活动记录与连续打卡天数 (重回 1 天)</div>
+        </div>
+      </label>
+
+      <label class="reset-scope-item" id="item-reset-ai">
+        <input type="checkbox" class="reset-scope-checkbox" id="check-reset-ai" onchange="onResetOptionChange()">
+        <div class="reset-scope-text">
+          <div class="reset-scope-title" data-i18n="resetModal.scopeAi">AI 导师本地对话历史</div>
+          <div class="reset-scope-desc" data-i18n="resetModal.scopeAiDesc">清空与 AI 导师的历史提问与答疑对话记录 (可选)</div>
+        </div>
+      </label>
+    </div>
+
+    <div class="reset-confirm-box">
+      <input type="checkbox" class="reset-confirm-checkbox" id="check-reset-confirm" onchange="onResetOptionChange()">
+      <label for="check-reset-confirm" class="reset-confirm-label" data-i18n="resetModal.confirmCheckbox">我已知晓重置操作不可撤销，确认清空所选数据</label>
+    </div>
+
+    <div class="reset-modal-actions">
+      <button class="run-btn" onclick="closeResetProgressModal()" data-i18n="resetModal.cancelBtn">取消</button>
+      <button class="reset-btn-confirm" id="btn-execute-reset" disabled onclick="confirmProgressReset()" data-i18n="resetModal.confirmBtn">⚠ 确认执行重置</button>
+    </div>
+  </div>
+</div>
 
 <!-- ============================================================
      AI CHAT FLOATING WINDOW
@@ -330,6 +494,7 @@
       <span class="ai-chat-title" data-i18n="ai.title">AI 导师</span>
     </div>
     <div style="display:flex;gap:8px;align-items:center">
+      <button class="ai-chat-btn" onclick="toggleAIDock()" data-i18n-title="ai.dock" title="停靠侧边栏" id="ai-dock-btn" aria-label="停靠侧边栏">◫</button>
       <button class="ai-chat-btn" onclick="toggleAISettings()" data-i18n-title="ai.settings" title="设置" aria-label="AI 设置">⚙</button>
       <button class="ai-chat-btn" onclick="clearAIChat()" data-i18n-title="ai.newChat" title="新对话" aria-label="新对话" style="font-size:16px;font-weight:700">+</button>
       <button class="ai-chat-btn" onclick="toggleAIChat()" data-i18n-title="ai.close" title="关闭" aria-label="关闭 AI 面板">—</button>
@@ -386,6 +551,23 @@
     <button id="ai-send-btn" class="ai-send-btn" onclick="sendAIMessage()" aria-label="发送消息">→</button>
   </div>
 </div>
+
+<!-- FLOATING AI SELECTION TOOLTIP -->
+<div id="ai-selection-tooltip" role="button" aria-label="Ask AI Tutor" onclick="triggerSelectionAI()">
+  <span>🤖</span> <span data-i18n="ai.askSelection">问 AI 导师</span>
+</div>
+
+<!-- SKILL DIAGNOSTIC MODAL CONTAINER -->
+<div id="diag-modal-container" style="display:none"></div>
+
+<!-- LAB ENVIRONMENT MODAL CONTAINER -->
+<div id="lab-modal-container" style="display:none"></div>
+
+<!-- CELEBRATION CANVAS & PARTICLES -->
+<canvas id="celebration-canvas" aria-hidden="true"></canvas>
+
+<!-- ACHIEVEMENT UNLOCKED TOAST NOTIFICATION -->
+<div id="achievement-toast" class="achievement-toast hidden" role="status" aria-live="polite"></div>
 
 <!-- ============================================================
      SCRIPTS

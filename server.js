@@ -133,15 +133,28 @@ setInterval(() => {
 }, RATE_WINDOW).unref();
 
 // ── API URL Whitelist ─────────────────────────────────
-const ALLOWED_API_HOSTS = [
+const DEFAULT_ALLOWED_API_HOSTS = [
   'api.openai.com',
   'api.deepseek.com',
   'dashscope.aliyuncs.com',
   'api.anthropic.com',
   'api.groq.com',
+  'generativelanguage.googleapis.com',
+  'api.siliconflow.cn',
+  'openrouter.ai',
+  'api.moonshot.cn',
+  'open.bigmodel.cn',
+  'api.mistral.ai',
   'localhost',
   '127.0.0.1',
 ];
+
+const CUSTOM_ALLOWED_HOSTS = (process.env.CYBEREDU_ALLOWED_HOSTS || '')
+  .split(',')
+  .map(h => h.trim())
+  .filter(Boolean);
+
+const ALLOWED_API_HOSTS = Array.from(new Set([...DEFAULT_ALLOWED_API_HOSTS, ...CUSTOM_ALLOWED_HOSTS]));
 
 // ── MIME types ───────────────────────────────────────────────
 const MIME = {
@@ -645,7 +658,7 @@ const CTF_SIM = {
   }
 };
 
-function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escHtml(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
 function handleCTFSim(req, res) {
   readJsonBody(req, res, 64 * 1024, (parsed) => {
@@ -867,32 +880,54 @@ const server = http.createServer((req, res) => {
   serveStatic(req, res, urlOnly === '/' ? '/cyberedu.html' : urlOnly);
 });
 
-server.listen(PORT, BIND_HOST, async () => {
-  const hasPython = await checkRuntime('python', ['--version']);
-  const hasGCC    = await checkRuntime('gcc', ['--version']);
-  console.log('');
-  console.log('  ╔══════════════════════════════════════════════╗');
-  console.log('  ║   CyberEdu Server  v2.7.6 (Multi-Model AI)  ║');
-  console.log('  ║   http://' + BIND_HOST + ':' + PORT + '                    ║');
-  console.log('  ╚══════════════════════════════════════════════╝');
-  console.log('');
-  console.log('  Runtime detection for practice exercises:');
-  console.log('    Python  ' + (hasPython ? '✓ found' : '✗ NOT FOUND — Python exercises will show errors'));
-  console.log('    GCC     ' + (hasGCC ? '✓ found' : '✗ NOT FOUND — C exercises will show errors'));
-  console.log('');
-  if (!hasPython || !hasGCC) {
-    console.log('  To enable code execution, install:');
-    if (!hasPython) console.log('    Python 3:  https://python.org/downloads/');
-    if (!hasGCC) console.log('    GCC:       https://winlibs.com/  or  MinGW-w64');
+if (require.main === module) {
+  server.listen(PORT, BIND_HOST, async () => {
+    const hasPython = await checkRuntime('python', ['--version']);
+    const hasGCC    = await checkRuntime('gcc', ['--version']);
     console.log('');
-  }
+    console.log('  ╔══════════════════════════════════════════════╗');
+    console.log('  ║   CyberEdu Server  v2.7.6 (Multi-Model AI)  ║');
+    console.log('  ║   http://' + BIND_HOST + ':' + PORT + '                    ║');
+    console.log('  ╚══════════════════════════════════════════════╝');
+    console.log('');
+    console.log('  Runtime detection for practice exercises:');
+    console.log('    Python  ' + (hasPython ? '✓ found' : '✗ NOT FOUND — Python exercises will show errors'));
+    console.log('    GCC     ' + (hasGCC ? '✓ found' : '✗ NOT FOUND — C exercises will show errors'));
+    console.log('');
+    if (!hasPython || !hasGCC) {
+      console.log('  To enable code execution, install:');
+      if (!hasPython) console.log('    Python 3:  https://python.org/downloads/');
+      if (!hasGCC) console.log('    GCC:       https://winlibs.com/  or  MinGW-w64');
+      console.log('');
+    }
 
-  // Auto-open browser (opt out with CYBEREDU_NO_OPEN=1)
-  if (AUTO_OPEN) {
-    try {
-      const url = 'http://localhost:' + PORT;
-      const cmd = process.platform === 'win32' ? 'start ""' : process.platform === 'darwin' ? 'open' : 'xdg-open';
-      require('child_process').exec(cmd + ' "' + url + '"').unref();
-    } catch {}
-  }
-});
+    // Auto-open browser (opt out with CYBEREDU_NO_OPEN=1)
+    if (AUTO_OPEN) {
+      try {
+        const url = 'http://localhost:' + PORT;
+        const cmd = process.platform === 'win32' ? 'start ""' : process.platform === 'darwin' ? 'open' : 'xdg-open';
+        require('child_process').exec(cmd + ' "' + url + '"').unref();
+      } catch {}
+    }
+  });
+}
+
+module.exports = {
+  server,
+  PORT,
+  BIND_HOST,
+  MIME,
+  STATIC_BLOCK_RULES,
+  isBlockedStatic,
+  HOST_ALLOWED,
+  hostIsAllowed,
+  ALLOWED_API_HOSTS,
+  RATE_MAX,
+  RATE_WINDOW,
+  rateLimits,
+  checkRateLimit,
+  verifyFlag,
+  CTF_SIM,
+  escHtml,
+  ERR_ZH,
+};
