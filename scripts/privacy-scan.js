@@ -50,7 +50,7 @@ if (fs.existsSync(localFile)) {
 }
 
 let hits = 0;
-const ALLOW_SUBSTR = ['example.com', 'example.org', 'evil.com', 'attacker', 'ns1.google', 'noreply', 'team.io', '/home/ctf', 'sqlsvc', 'svc', 'demo', 'your-', 'your_', '<', 'localhost', 'user', 'test', '/home/alice', 'begin rsa private key', '@app.', 'corp.local', 'cyberedu.com', 'targetcorp.com', 'company.com', 'cybershop.com', 'corp.com'];
+const ALLOW_SUBSTR = ['example.com', 'example.org', 'evil.com', 'attacker', 'ns1.google', 'noreply', 'team.io', '/home/ctf', 'sqlsvc', 'svc', 'demo', 'your-', 'your_', '<', 'localhost', 'user', 'test', '/home/alice', 'begin rsa private key', 'begin openssh private key', 'akiaiosfodnn7example', '@app.', 'corp.local', 'cyberedu.com', 'targetcorp.com', 'company.com', 'cybershop.com', 'cybershop.local', 'corp.com'];
 
 for (const f of files) {
   let text;
