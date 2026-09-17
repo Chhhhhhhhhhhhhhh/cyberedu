@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-v2.7.6-00ff41?style=flat-square" alt="Version">
+  <img src="https://img.shields.io/badge/version-v2.8.0-00ff41?style=flat-square" alt="Version">
   <img src="https://img.shields.io/badge/modules-9_core-00e5ff?style=flat-square" alt="Modules">
   <img src="https://img.shields.io/badge/lessons-171_atomic-00ff41?style=flat-square" alt="Lessons">
   <img src="https://img.shields.io/badge/bilingual-100%25_EN%2FZH-00e5ff?style=flat-square" alt="Bilingual">

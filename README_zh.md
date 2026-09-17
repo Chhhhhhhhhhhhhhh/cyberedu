@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/版本-v2.7.6-00ff41?style=flat-square" alt="版本">
+  <img src="https://img.shields.io/badge/版本-v2.8.0-00ff41?style=flat-square" alt="版本">
   <img src="https://img.shields.io/badge/核心方向-9大体系-00e5ff?style=flat-square" alt="核心方向">
   <img src="https://img.shields.io/badge/原子微课-171讲-00ff41?style=flat-square" alt="原子微课">
   <img src="https://img.shields.io/badge/双语对齐-100%25_中英-00e5ff?style=flat-square" alt="双语对齐">

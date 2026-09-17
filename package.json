@@ -1,6 +1,6 @@
 {
   "name": "cyberedu",
-  "version": "2.7.6",
+  "version": "2.8.0",
   "description": "Interactive cybersecurity learning platform & reference manual — 9 core modules, 171 atomic lessons, 28 CTF challenges, 6 security tools, bilingual EN/ZH & AI tutor.",
   "main": "server.js",
   "private": true,
