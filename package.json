@@ -1,7 +1,7 @@
 {
   "name": "cyberedu",
   "version": "2.7.6",
-  "description": "Interactive cybersecurity learning platform — 171 chapters, 28 CTF challenges, bilingual EN/ZH, AI tutor support. Zero-config setup.",
+  "description": "Interactive cybersecurity learning platform & reference manual — 9 core modules, 171 atomic lessons, 28 CTF challenges, 6 security tools, bilingual EN/ZH & AI tutor.",
   "main": "server.js",
   "private": true,
   "scripts": {
@@ -14,7 +14,15 @@
     "ctf",
     "learning",
     "penetration-testing",
-    "web-security"
+    "web-security",
+    "reverse-engineering",
+    "malware-analysis",
+    "cryptography",
+    "cloud-security",
+    "dfir",
+    "blue-team",
+    "pwn",
+    "ai-tutor"
   ],
   "author": "Chhhhhhhhhhhhhhh",
   "license": "MIT",
