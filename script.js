@@ -3141,16 +3141,6 @@ function updateStatusBar(){
 // ============================================================
 function getTwLines(){
   const totalCh = (typeof MODULES !== 'undefined') ? MODULES.flatMap(m => m.chapters.flatMap(c => c.sections)).length : 171;
-  const isZh = (typeof currentLang !== 'undefined' && currentLang === 'zh');
-  if (isZh) {
-    return [
-      '> 在数字世界的每个角落，漏洞都在等待被发现...',
-      `> ${totalCh} 个原子微课与交互速查 · 从零基础到实战精通...`,
-      '> 28 道实战 CTF 靶场挑战 · 真实攻防利用...',
-      '> 6 大实用安全武器库 · 浏览器原生动手实操...',
-      '> 4 阶系统化进阶路径 · 攻防兼备，立刻开启。'
-    ];
-  }
   return [
     '> Break the surface, own the stack',
     `> ${totalCh} chapters. Zero to hero.`,
