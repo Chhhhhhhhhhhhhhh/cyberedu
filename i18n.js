@@ -437,7 +437,7 @@ const LANG = {
     // Typewriter lines
     'typewriter.line1': '> 在数字世界的每个角落，漏洞都在等待被发现...',
     'typewriter.line2': '> 从基础编程到高级渗透，4阶系统化学习路径...',
-    'typewriter.line3': '> 94个知识章节 · 28个CTF挑战 · 6大安全工具 · AI智能辅导...',
+    'typewriter.line3': '> 104个知识章节 · 28个CTF挑战 · 6大安全工具 · AI智能辅导...',
     'typewriter.line4': '> 打破表象，寻找真相。每一次攻击都有故事...',
 
     // CTF
@@ -813,7 +813,7 @@ const LANG = {
     // Typewriter lines
     'typewriter.line1': '> In every corner of the digital world, vulnerabilities await discovery...',
     'typewriter.line2': '> From basic programming to advanced penetration, 4-stage learning path...',
-    'typewriter.line3': '> 94 chapters · 28 CTF challenges · 6 security tools · AI tutoring...',
+    'typewriter.line3': '> 104 chapters · 28 CTF challenges · 6 security tools · AI tutoring...',
     'typewriter.line4': '> Break the surface, find the truth. Every attack has a story...',
 
     // CTF
