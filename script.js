@@ -171,6 +171,12 @@ function navigate(view, moduleId, sectionId) {
     if (navIdx[view] !== undefined) links[navIdx[view]]?.classList.add('active');
 
     currentView = view;
+    document.body.classList.toggle('in-hub', view === 'hub');
+    if (view !== 'hub' && document.body.classList.contains('zen-mode')) {
+      toggleZenMode(false);
+    }
+    const readProg = document.getElementById('hub-reading-progress');
+    if (readProg && view !== 'hub') readProg.style.width = '0%';
     document.getElementById('status-loc').textContent = { home:'HOME', hub:'HUB', practice:'PRACTICE', ctf:'CTF', progress:'PROGRESS', tools:'TOOLS' }[view] || view;
 
     if (view === 'hub') {
@@ -1182,6 +1188,10 @@ function loadSection(moduleId, sectionId) {
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
       ${readMin} min read ${starsHtml} ${prereqHtml}
       <button class="lab-badge-btn" onclick="openLabDrawer('${sec.contentKey}')" style="margin-left:12px">📦 ${t('lab.drawerTitle')}</button>
+      <div class="reading-controls-group">
+        <button class="reading-tool-btn font-size-btn" onclick="cycleArticleFontSize()" title="${t('reading.fontSize')}" aria-label="Toggle Font Size">🗛 <span class="font-size-label">${getFontSizeLabel()}</span></button>
+        <button class="reading-tool-btn zen-toggle-btn" onclick="toggleZenMode()" title="${t('zen.tooltip')}" aria-label="Toggle Zen Mode">👁️ ${t('zen.enable')}</button>
+      </div>
     </div>
     ${contentWithGlossary}
     ${renderSectionCTFCard(sectionId)}
@@ -1315,8 +1325,10 @@ function buildTableOfContents() {
 
     const pctEl = document.getElementById('hub-toc-pct');
     const barFill = document.getElementById('hub-toc-bar-fill');
+    const readProg = document.getElementById('hub-reading-progress');
     if (pctEl) pctEl.textContent = pct + '%';
     if (barFill) barFill.style.width = pct + '%';
+    if (readProg) readProg.style.width = pct + '%';
 
     let activeId = null;
     for (let i = 0; i < items.length; i++) {
@@ -3594,6 +3606,10 @@ if (typeof document !== 'undefined') {
         closeShortcutsModal();
         return;
       }
+      if (document.body.classList.contains('zen-mode')) {
+        toggleZenMode(false);
+        return;
+      }
       if (typeof closeSearch === 'function') closeSearch();
       if (typeof closeCTFModal === 'function') closeCTFModal();
       if (typeof closeLabDrawer === 'function') closeLabDrawer();
@@ -3635,6 +3651,15 @@ if (typeof document !== 'undefined') {
 
     // If typing in input/textarea, ignore navigation and single-key hotkeys
     if (isTyping) return;
+
+    // Zen Mode toggle: 'z' or 'Z' when in hub view
+    if ((e.key === 'z' || e.key === 'Z') && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      if (typeof currentView !== 'undefined' && currentView === 'hub') {
+        e.preventDefault();
+        toggleZenMode();
+        return;
+      }
+    }
 
     // 5. Search hotkeys: '/' or 'Ctrl+K' / 'Cmd+K'
     if (e.key === '/' || ((e.ctrlKey || e.metaKey) && e.key === 'k')) {
@@ -5198,42 +5223,149 @@ function updateStackVisualizer() {
     ${len > 20 ? `<div class="sandbox-alert danger" style="margin-top:8px">${alertContent}</div>` : ''}`;
 }
 
-// ── 3. Context-Aware AI Tutor Integrations ──
+// ── 3. Context-Aware Reading & AI Integrations ──
 
-function initSelectionAITooltip() {
+// ── Font Size Controls ──
+const FONT_SIZES = ['sm', 'md', 'lg'];
+const FONT_SIZE_LABELS = { sm: 'A-', md: 'A', lg: 'A+' };
+
+function getSavedFontSize() {
+  try {
+    return localStorage.getItem('cyberedu_font_size') || 'md';
+  } catch(e) { return 'md'; }
+}
+
+function getFontSizeLabel() {
+  const size = getSavedFontSize();
+  return FONT_SIZE_LABELS[size] || 'A';
+}
+
+function applyFontSize(size) {
+  if (!FONT_SIZES.includes(size)) size = 'md';
+  if (typeof document !== 'undefined') {
+    document.body.setAttribute('data-font-size', size);
+    document.querySelectorAll('.font-size-label').forEach(el => {
+      el.textContent = FONT_SIZE_LABELS[size] || 'A';
+    });
+  }
+  try {
+    localStorage.setItem('cyberedu_font_size', size);
+  } catch(e) {}
+}
+
+function cycleArticleFontSize() {
+  const cur = getSavedFontSize();
+  const nextIdx = (FONT_SIZES.indexOf(cur) + 1) % FONT_SIZES.length;
+  applyFontSize(FONT_SIZES[nextIdx]);
+}
+
+// ── Zen Focus Mode & Top Banner Controls ──
+function toggleZenMode(forcedState) {
+  if (typeof currentView !== 'undefined' && currentView !== 'hub' && forcedState !== false) return;
+  const isZen = typeof forcedState === 'boolean'
+    ? forcedState
+    : !document.body.classList.contains('zen-mode');
+  document.body.classList.toggle('zen-mode', isZen);
+  const btn = document.getElementById('zen-exit-btn');
+  if (btn) btn.style.display = isZen ? 'flex' : 'none';
+}
+
+function dismissDiagBanner(e) {
+  if (e) e.stopPropagation();
+  const banner = document.getElementById('diagnostic-banner-wrap');
+  if (banner) banner.classList.add('dismissed');
+  try {
+    localStorage.setItem('cyberedu_diag_dismissed', '1');
+  } catch(err) {}
+}
+
+function checkDiagBannerState() {
+  try {
+    if (localStorage.getItem('cyberedu_diag_dismissed') === '1') {
+      const banner = document.getElementById('diagnostic-banner-wrap');
+      if (banner) banner.classList.add('dismissed');
+    }
+  } catch(e) {}
+}
+
+// ── Selection Quick Toolbar ("划词问 AI" & "复制") ──
+function initSelectionToolbar() {
   if (typeof document === 'undefined') return;
-  const tip = document.getElementById('ai-selection-tooltip');
-  if (!tip) return;
+  const toolbar = document.getElementById('selection-quick-toolbar');
+  if (!toolbar) return;
 
-  document.addEventListener('selectionchange', () => {
+  const updateToolbarPosition = () => {
+    if (typeof currentView !== 'undefined' && currentView !== 'hub') {
+      toolbar.style.display = 'none';
+      return;
+    }
     const sel = window.getSelection();
     if (!sel || sel.isCollapsed || !sel.rangeCount) {
-      tip.style.display = 'none';
+      toolbar.style.display = 'none';
       return;
     }
     const text = sel.toString().trim();
     if (text.length < 2) {
-      tip.style.display = 'none';
+      toolbar.style.display = 'none';
       return;
     }
     const range = sel.getRangeAt(0);
-    const rect = range.getBoundingClientRect();
     const article = document.getElementById('article-body');
     if (!article || !article.contains(range.commonAncestorContainer)) {
-      tip.style.display = 'none';
+      toolbar.style.display = 'none';
       return;
     }
-    tip.style.display = 'flex';
-    tip.style.left = `${rect.left + rect.width / 2}px`;
-    tip.style.top = `${rect.top + window.scrollY - 8}px`;
+    const rect = range.getBoundingClientRect();
+    toolbar.style.display = 'flex';
+    const tbWidth = toolbar.offsetWidth || 180;
+    const tbHeight = toolbar.offsetHeight || 36;
+    let left = rect.left + (rect.width / 2) - (tbWidth / 2);
+    left = Math.max(16, Math.min(window.innerWidth - tbWidth - 16, left));
+    const top = rect.top + window.scrollY - tbHeight - 10;
+    toolbar.style.left = `${left}px`;
+    toolbar.style.top = `${top}px`;
+  };
+
+  document.addEventListener('mouseup', (e) => {
+    if (toolbar.contains(e.target)) return;
+    setTimeout(updateToolbarPosition, 30);
+  });
+  document.addEventListener('keyup', (e) => {
+    if (e.key === 'Shift' || e.key.startsWith('Arrow')) {
+      setTimeout(updateToolbarPosition, 30);
+    }
+  });
+  document.addEventListener('mousedown', (e) => {
+    if (!toolbar.contains(e.target)) {
+      toolbar.style.display = 'none';
+    }
   });
 }
 
-function triggerSelectionAI() {
+function copySelectionText(e) {
+  if (e) e.stopPropagation();
   const sel = window.getSelection();
   const text = sel ? sel.toString().trim() : '';
-  const tip = document.getElementById('ai-selection-tooltip');
-  if (tip) tip.style.display = 'none';
+  if (!text) return;
+  const copyBtn = document.getElementById('sel-copy-btn');
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => {
+      if (copyBtn) copyBtn.innerHTML = `✓ <span>${t('ai.copied') || '已复制'}</span>`;
+      setTimeout(() => {
+        if (copyBtn) copyBtn.innerHTML = `📋 <span>${t('ai.copy') || '复制'}</span>`;
+        const tb = document.getElementById('selection-quick-toolbar');
+        if (tb) tb.style.display = 'none';
+      }, 1000);
+    }).catch(() => {});
+  }
+}
+
+function askAISelection(e) {
+  if (e) e.stopPropagation();
+  const sel = window.getSelection();
+  const text = sel ? sel.toString().trim() : '';
+  const tb = document.getElementById('selection-quick-toolbar');
+  if (tb) tb.style.display = 'none';
   if (!text) return;
 
   const panel = document.getElementById('ai-chat-panel');
@@ -5243,10 +5375,18 @@ function triggerSelectionAI() {
   const isEn = typeof currentLang !== 'undefined' && currentLang === 'en';
   const curTitle = document.getElementById('hub-title')?.textContent || (isEn ? 'Current Section' : '当前章节');
   const prompt = isEn
-    ? `I am studying "${curTitle}" and have questions about the following text. Please explain it clearly with real-world cybersecurity scenarios:\n> "${text}"`
-    : `我正在研读【${curTitle}】，对以下内容存在疑惑，请用深入浅出、结合实战场景的语言为我剖析：\n> "${text}"`;
+    ? `I am studying "${curTitle}" and selected the following text. Please explain it thoroughly with technical depth and practical security examples:\n> "${text}"`
+    : `我正在研读【${curTitle}】，划选了以下重点内容。请结合底层原理与实战攻防场景，为我做深度透彻的解析：\n> "${text}"`;
   sendAIMessage(prompt);
   if (sel) sel.removeAllRanges();
+}
+
+// Backward-compatibility aliases
+function initSelectionAITooltip() {
+  initSelectionToolbar();
+}
+function triggerSelectionAI() {
+  askAISelection();
 }
 
 function askAICheckpoint(key, idx, opt) {
@@ -5369,7 +5509,58 @@ function attachCodeAITools() {
     toolbar.appendChild(copyBtn);
     toolbar.appendChild(aiBtn);
 
+    // 5. Run in Practice Lab
+    const runBtn = document.createElement('button');
+    runBtn.className = 'code-tool-btn code-run-btn';
+    runBtn.setAttribute('type', 'button');
+    runBtn.setAttribute('title', t('code.runInPractice') || 'Run in Practice Lab');
+    runBtn.innerHTML = `🚀 <span>${t('code.runInPractice') || '在练习场运行'}</span>`;
+    runBtn.onclick = (e) => {
+      e.stopPropagation();
+      const code = cb.querySelector('code')?.textContent || cb.querySelector('pre')?.textContent || '';
+      navigate('practice');
+      setTimeout(() => {
+        if (typeof window !== 'undefined' && window.codeEditor && typeof window.codeEditor.setValue === 'function') {
+          window.codeEditor.setValue(code);
+        } else if (typeof cmEditor !== 'undefined' && cmEditor && typeof cmEditor.setValue === 'function') {
+          cmEditor.setValue(code);
+        } else {
+          const textarea = document.getElementById('code-input');
+          if (textarea) textarea.value = code;
+        }
+      }, 150);
+    };
+    toolbar.appendChild(runBtn);
+
     cb.insertBefore(toolbar, cb.firstChild);
+
+    // 6. Fold long code blocks (>26 lines)
+    const pre = cb.querySelector('pre');
+    const codeEl = cb.querySelector('code');
+    const fullText = (codeEl ? codeEl.textContent : (pre ? pre.textContent : '')) || '';
+    const lineCount = fullText.split('\n').length;
+    if (lineCount > 26 && !cb.querySelector('.code-fold-bar')) {
+      cb.classList.add('collapsible-code', 'is-folded');
+      const foldBar = document.createElement('div');
+      foldBar.className = 'code-fold-bar';
+      const foldBtn = document.createElement('button');
+      foldBtn.className = 'code-fold-btn';
+      foldBtn.setAttribute('type', 'button');
+      const remainingLines = lineCount - 20;
+      foldBtn.innerHTML = `▾ <span>${(t('code.expandCode') || '展开剩余代码 ({n} 行)').replace('{n}', remainingLines)}</span>`;
+      foldBtn.onclick = (e) => {
+        e.stopPropagation();
+        const isFolded = cb.classList.toggle('is-folded');
+        if (isFolded) {
+          foldBtn.innerHTML = `▾ <span>${(t('code.expandCode') || '展开剩余代码 ({n} 行)').replace('{n}', remainingLines)}</span>`;
+          cb.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        } else {
+          foldBtn.innerHTML = `▴ <span>${t('code.collapseCode') || '收起代码'}</span>`;
+        }
+      };
+      foldBar.appendChild(foldBtn);
+      cb.appendChild(foldBar);
+    }
   });
 }
 
@@ -5743,7 +5934,9 @@ function initApp() {
     initCodeMirror();
     initAIChat();
     initAIDock();
-    initSelectionAITooltip();
+    initSelectionToolbar();
+    checkDiagBannerState();
+    applyFontSize(getSavedFontSize());
     initMatrix();
     renderHome();
     renderCTF();

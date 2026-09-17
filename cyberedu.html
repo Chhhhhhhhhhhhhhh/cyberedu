@@ -203,6 +203,8 @@
 
     <!-- HUB -->
     <div id="view-hub" class="view">
+      <div id="hub-reading-progress" class="hub-reading-progress" aria-hidden="true"></div>
+      <button id="zen-exit-btn" class="zen-exit-btn" onclick="toggleZenMode(false)" data-i18n-title="zen.exit" title="退出专注模式 (Esc)" aria-label="Exit Zen Mode">✕ <span data-i18n="zen.exitText">退出专注 (Esc)</span></button>
       <div class="view-header">
         <div class="breadcrumb" id="hub-breadcrumbs" data-i18n="hub.breadcrumb">学习中心</div>
         <div class="view-title" id="hub-title" data-i18n="hub.selectModule">选择一个模块开始学习</div>
@@ -212,7 +214,10 @@
           <h4>⚡ <span data-i18n="diag.bannerTitle">智能能力摸底与学习路线定制</span></h4>
           <p data-i18n="diag.bannerDesc">只需 5 道题，测出你的网安五维能力雷达图，并推荐专属突破路径！</p>
         </div>
-        <button class="diagnostic-banner-btn" data-i18n="diag.startBtn" onclick="openSkillDiagnostic()">🎯 开始 5 分钟能力摸底</button>
+        <div class="diagnostic-banner-actions">
+          <button class="diagnostic-banner-btn" data-i18n="diag.startBtn" onclick="openSkillDiagnostic()">🎯 开始 5 分钟能力摸底</button>
+          <button class="diag-dismiss-btn" onclick="dismissDiagBanner(event)" data-i18n-title="diag.dismiss" title="收起此横幅" aria-label="Dismiss">✕</button>
+        </div>
       </div>
       <div class="hub-main-container">
         <div class="article-content" id="article-body">
@@ -226,6 +231,11 @@
           <div class="hub-toc-bar"><div class="hub-toc-bar-fill" id="hub-toc-bar-fill"></div></div>
           <nav class="hub-toc-list" id="hub-toc-list"></nav>
         </aside>
+      </div>
+      <!-- SELECTION FLOATING TOOLBAR -->
+      <div id="selection-quick-toolbar" class="selection-quick-toolbar" style="display:none;" aria-hidden="true">
+        <button class="sel-tool-btn sel-copy-btn" id="sel-copy-btn" onclick="copySelectionText(event)">📋 <span data-i18n="ai.copy">复制</span></button>
+        <button class="sel-tool-btn sel-ai-btn" id="sel-ai-btn" onclick="askAISelection(event)">🤖 <span data-i18n="ai.askSelection">问 AI 讲透</span></button>
       </div>
     </div>
 
@@ -550,11 +560,6 @@
     <textarea id="ai-input" aria-label="Chat input" class="ai-input-area" data-i18n-placeholder="ai.placeholder" placeholder="输入你的问题…" rows="1" onkeydown="handleAIKeydown(event)"></textarea>
     <button id="ai-send-btn" class="ai-send-btn" onclick="sendAIMessage()" aria-label="发送消息">→</button>
   </div>
-</div>
-
-<!-- FLOATING AI SELECTION TOOLTIP -->
-<div id="ai-selection-tooltip" role="button" aria-label="Ask AI Tutor" onclick="triggerSelectionAI()">
-  <span>🤖</span> <span data-i18n="ai.askSelection">问 AI 导师</span>
 </div>
 
 <!-- SKILL DIAGNOSTIC MODAL CONTAINER -->
