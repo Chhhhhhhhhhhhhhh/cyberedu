@@ -1379,7 +1379,9 @@ const SECTION_CTF_MAP = {
 
   // Computer Networking
   'net-01-02': 'ctf-006', // TCP Handshake -> Pcap Analysis
-  'net-02-01': 'ctf-006', // Packet Capture -> Pcap Analysis
+  'net-02-01': 'ctf-006',
+  'net-02-02': 'ctf-006',
+  'net-03-03': 'ctf-022', // Packet Capture -> Pcap Analysis
   'net-03-01': 'ctf-022', // DNS Protocol -> DNS Tunneling Detection
   'net-04-01': 'ctf-016', // HTTP In-depth -> PHP Type Juggling
 
@@ -3078,7 +3080,7 @@ function animateCountUp(el, target, duration){
 }
 function triggerCountUp(){
   const statTargets = {
-    'stat-chapters': (typeof MODULES !== 'undefined') ? MODULES.flatMap(m => m.chapters.flatMap(c => c.sections)).length : 104,
+    'stat-chapters': (typeof MODULES !== 'undefined') ? MODULES.flatMap(m => m.chapters.flatMap(c => c.sections)).length : 113,
     'stat-exercises': (typeof PRACTICES !== 'undefined') ? PRACTICES.length : 10,
     'stat-ctf': (typeof CTF_CHALLENGES !== 'undefined') ? CTF_CHALLENGES.length : 28,
     'stat-tools': (typeof TOOLS !== 'undefined') ? TOOLS.length : 6
@@ -4950,7 +4952,7 @@ function renderDiagrams(sectionContentKey) {
   const isEn = typeof currentLang !== 'undefined' && currentLang === 'en';
 
   // 1. TCP 3-Way Handshake in net-01-01 / net-02
-  if ((sectionContentKey === 'net-01-01' || sectionContentKey === 'net-02') && !document.getElementById('diagram-tcp')) {
+  if ((sectionContentKey === 'net-01-01' || sectionContentKey === 'net-01-02' || sectionContentKey === 'net-02-01') && !document.getElementById('diagram-tcp')) {
     const box = document.createElement('div');
     box.id = 'diagram-tcp';
     box.className = 'interactive-diagram';
