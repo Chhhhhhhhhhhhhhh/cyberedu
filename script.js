@@ -3080,7 +3080,7 @@ function animateCountUp(el, target, duration){
 }
 function triggerCountUp(){
   const statTargets = {
-    'stat-chapters': (typeof MODULES !== 'undefined') ? MODULES.flatMap(m => m.chapters.flatMap(c => c.sections)).length : 140,
+    'stat-chapters': (typeof MODULES !== 'undefined') ? MODULES.flatMap(m => m.chapters.flatMap(c => c.sections)).length : 149,
     'stat-exercises': (typeof PRACTICES !== 'undefined') ? PRACTICES.length : 10,
     'stat-ctf': (typeof CTF_CHALLENGES !== 'undefined') ? CTF_CHALLENGES.length : 28,
     'stat-tools': (typeof TOOLS !== 'undefined') ? TOOLS.length : 6
