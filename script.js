@@ -3139,20 +3139,53 @@ function updateStatusBar(){
 // ============================================================
 // TYPEWRITER
 // ============================================================
-const TW_LINES=[
-  '> Break the surface, own the stack',
-  '> 52 chapters. Zero to hero.',
-  '> 28 CTF challenges. Real exploits.',
-  '> 6 security tools. Hands-on.',
-  '> 4-stage learning path. Start now.'
-];
+function getTwLines(){
+  const totalCh = (typeof MODULES !== 'undefined') ? MODULES.flatMap(m => m.chapters.flatMap(c => c.sections)).length : 171;
+  const isZh = (typeof currentLang !== 'undefined' && currentLang === 'zh');
+  if (isZh) {
+    return [
+      '> 在数字世界的每个角落，漏洞都在等待被发现...',
+      `> ${totalCh} 个原子微课与交互速查 · 从零基础到实战精通...`,
+      '> 28 道实战 CTF 靶场挑战 · 真实攻防利用...',
+      '> 6 大实用安全武器库 · 浏览器原生动手实操...',
+      '> 4 阶系统化进阶路径 · 攻防兼备，立刻开启。'
+    ];
+  }
+  return [
+    '> Break the surface, own the stack',
+    `> ${totalCh} chapters. Zero to hero.`,
+    '> 28 CTF challenges. Real exploits.',
+    '> 6 security tools. Hands-on.',
+    '> 4-stage learning path. Start now.'
+  ];
+}
+const TW_LINES=getTwLines();
 let twIdx=0,twChar=0,twDel=false;
 function tickTypewriter(){
   const el=document.getElementById('typewriter');
   if(!el)return;
-  const line=TW_LINES[twIdx];
-  if(!twDel){twChar++;el.textContent=line.slice(0,twChar);if(twChar>=line.length){twDel=true;setTimeout(tickTypewriter,2000);return}setTimeout(tickTypewriter,50)}
-  else{twChar--;el.textContent=line.slice(0,twChar);if(twChar<=0){twDel=false;twIdx=(twIdx+1)%TW_LINES.length;setTimeout(tickTypewriter,300);return}setTimeout(tickTypewriter,25)}
+  const lines=getTwLines();
+  const line=lines[twIdx % lines.length];
+  if(!twDel){
+    twChar++;
+    el.textContent=line.slice(0,twChar);
+    if(twChar>=line.length){
+      twDel=true;
+      setTimeout(tickTypewriter,2000);
+      return;
+    }
+    setTimeout(tickTypewriter,50);
+  } else {
+    twChar--;
+    el.textContent=line.slice(0,twChar);
+    if(twChar<=0){
+      twDel=false;
+      twIdx=(twIdx+1)%lines.length;
+      setTimeout(tickTypewriter,300);
+      return;
+    }
+    setTimeout(tickTypewriter,25);
+  }
 }
 
 // ============================================================

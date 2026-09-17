@@ -227,7 +227,7 @@ const LANG = {
     'resetModal.backupBtn': '📥 立即导出当前进度备份 (JSON)',
     'resetModal.scopeTitle': '选择需要重置的数据范围：',
     'resetModal.scopeSections': '知识章节学习进度',
-    'resetModal.scopeSectionsDesc': '清空 52 个小节已学标记、模块完成率与断点续学记录',
+    'resetModal.scopeSectionsDesc': '清空 171 个小节已学标记、模块完成率与断点续学记录',
     'resetModal.scopeCtf': 'CTF 靶场实战通关',
     'resetModal.scopeCtfDesc': '清空 28 道靶机挑战解题标记与提交的 Flag 记录',
     'resetModal.scopeBadges': '特工档案与荣誉勋章',
@@ -437,7 +437,7 @@ const LANG = {
     // Typewriter lines
     'typewriter.line1': '> 在数字世界的每个角落，漏洞都在等待被发现...',
     'typewriter.line2': '> 从基础编程到高级渗透，4阶系统化学习路径...',
-    'typewriter.line3': '> 104个知识章节 · 28个CTF挑战 · 6大安全工具 · AI智能辅导...',
+    'typewriter.line3': '> 171个知识章节 · 28个CTF挑战 · 6大安全工具 · AI智能辅导...',
     'typewriter.line4': '> 打破表象，寻找真相。每一次攻击都有故事...',
 
     // CTF
@@ -603,7 +603,7 @@ const LANG = {
     'resetModal.backupBtn': '📥 Export Current Backup (JSON)',
     'resetModal.scopeTitle': 'Select data scope to reset:',
     'resetModal.scopeSections': 'Knowledge Chapters & Sections',
-    'resetModal.scopeSectionsDesc': 'Clear all 52 section completed states, module progress and resume state',
+    'resetModal.scopeSectionsDesc': 'Clear all 171 section completed states, module progress and resume state',
     'resetModal.scopeCtf': 'CTF Challenge Solved Records',
     'resetModal.scopeCtfDesc': 'Clear solved marks and flag history for all 28 challenges',
     'resetModal.scopeBadges': 'Agent Profile & Badges',
@@ -813,7 +813,7 @@ const LANG = {
     // Typewriter lines
     'typewriter.line1': '> In every corner of the digital world, vulnerabilities await discovery...',
     'typewriter.line2': '> From basic programming to advanced penetration, 4-stage learning path...',
-    'typewriter.line3': '> 104 chapters · 28 CTF challenges · 6 security tools · AI tutoring...',
+    'typewriter.line3': '> 171 chapters · 28 CTF challenges · 6 security tools · AI tutoring...',
     'typewriter.line4': '> Break the surface, find the truth. Every attack has a story...',
 
     // CTF

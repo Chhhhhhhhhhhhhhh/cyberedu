@@ -6,7 +6,7 @@
 
 <p align="center">
   An interactive cybersecurity learning website — from absolute beginner to advanced practitioner.<br>
-  <strong>52 chapters · 28 CTF challenges · Bilingual EN/ZH · AI Tutor</strong>
+  <strong>171 chapters · 28 CTF challenges · Bilingual EN/ZH · AI Tutor</strong>
 </p>
 
 <p align="center">
@@ -34,7 +34,7 @@
 
 | Category | Details |
 |----------|---------|
-| 📚 **Content** | 52 chapters across 7 modules · 4 difficulty tiers (Beginner → Expert) |
+| 📚 **Content** | 171 chapters across 9 modules · 4 difficulty tiers (Beginner → Expert) |
 | 🌐 **Bilingual** | Full EN/ZH translation · one-click UI language switch |
 | 🤖 **AI Tutor** | Built-in chat assistant · streaming SSE · supports DeepSeek, OpenAI, Qwen, Claude, Ollama |
 | 💻 **Code Editor** | CodeMirror 5 · Python / JS / C / Bash syntax highlighting |
