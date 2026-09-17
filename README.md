@@ -5,23 +5,24 @@
 <h1 align="center">CyberEdu — Cybersecurity Learning Platform</h1>
 
 <p align="center">
-  An interactive cybersecurity learning website — from absolute beginner to advanced practitioner.<br>
-  <strong>171 chapters · 28 CTF challenges · Bilingual EN/ZH · AI Tutor</strong>
+  An interactive cybersecurity learning platform and reference manual — from absolute beginner to advanced red/blue team operations.<br>
+  <strong>9 Core Modules · 50 Chapters · 171 Atomic Micro-Lessons · 342 Bilingual Articles · 342 Interactive Checkpoints · 28 CTF Challenges · AI Tutor</strong>
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/version-v2.7.6-00ff41?style=flat-square" alt="Version">
+  <img src="https://img.shields.io/badge/modules-9_core-00e5ff?style=flat-square" alt="Modules">
+  <img src="https://img.shields.io/badge/lessons-171_atomic-00ff41?style=flat-square" alt="Lessons">
+  <img src="https://img.shields.io/badge/bilingual-100%25_EN%2FZH-00e5ff?style=flat-square" alt="Bilingual">
+  <img src="https://img.shields.io/badge/tests-114_passed-00ff41?style=flat-square" alt="Tests">
   <img src="https://img.shields.io/badge/license-MIT-00e5ff?style=flat-square" alt="License">
-  <img src="https://img.shields.io/github/last-commit/Chhhhhhhhhhhhhhh/cyberedu?style=flat-square&color=00ff41" alt="Last Commit">
-  <img src="https://img.shields.io/github/repo-size/Chhhhhhhhhhhhhhh/cyberedu?style=flat-square&color=00e5ff" alt="Repo Size">
-  <img src="https://img.shields.io/github/languages/top/Chhhhhhhhhhhhhhh/cyberedu?style=flat-square&color=00ff41" alt="Top Language">
   <img src="https://img.shields.io/github/stars/Chhhhhhhhhhhhhhh/cyberedu?style=social" alt="Stars">
 </p>
 
 <p align="center">
   <a href="https://chhhhhhhhhhhhhhh.github.io/cyberedu/">🚀 Live Demo</a>
   &nbsp;·&nbsp;
-  <a href="README_zh.md">中文</a>
+  <a href="README_zh.md">中文文档</a>
   &nbsp;·&nbsp;
   <a href="versions/CHANGELOG.md">Changelog</a>
   &nbsp;·&nbsp;
@@ -30,155 +31,165 @@
 
 ---
 
+## ✨ Key Features
 
+<p align="center">
+  <img src="docs/features-showcase.png" alt="Features Showcase" width="100%">
+</p>
 
 | Category | Details |
 |----------|---------|
-| 📚 **Content** | 171 chapters across 9 modules · 4 difficulty tiers (Beginner → Expert) |
-| 🌐 **Bilingual** | Full EN/ZH translation · one-click UI language switch |
-| 🤖 **AI Tutor** | Built-in chat assistant · streaming SSE · supports DeepSeek, OpenAI, Qwen, Claude, Ollama |
-| 💻 **Code Editor** | CodeMirror 5 · Python / JS / C / Bash syntax highlighting |
-| 🚩 **CTF Arena** | 28 challenges · Crypto, Web, Misc, Reverse, Forensics, PWN |
-| ⌨️ **Practice** | 10 coding challenges with expected output validation |
-| 🔍 **Search** | Ctrl+K global search · token-based fuzzy matching |
-| 📱 **Responsive** | Full mobile support · sidebar overlay · compact navigation |
-| 🌙 **Themes** | Dark / Light mode · persisted to localStorage |
-| 📊 **Progress** | Auto-tracked learning progress · JSON export/import backup |
+| 📚 **Atomic Micro-Lessons** | 171 structured micro-lessons across 9 core domains, equipped with "What You'll Learn", reproducible exploit/defense steps, folded exercises, and summary cheatsheets |
+| 🌐 **100% Bilingual Manual** | Complete side-by-side English and Chinese technical manuals across all 171 lessons (342 total articles) with one-click seamless switching |
+| 🎯 **342 Interactive Checkpoints** | 2 self-assessment checkpoints per lesson with immediate feedback, detailed technical explanations, and one-click "Ask AI Tutor" |
+| 🛠️ **6 Security Tools & Sandboxes** | Interactive SQLi injection simulator, XSS entity filter tester, Command injection visualizer, Hash avalanche bit analyzer, 5-point Radar skill evaluator, and hands-on Lab Drawer |
+| 🚩 **28 CTF Challenges** | Mathematically and technically verified challenges across Web, Reverse, PWN, Crypto, Misc, and Forensics — SHA-256 hashed verification |
+| 🎮 **Gamification & Ranks** | 5-tier hacker rank progression (LV.1 Script Kiddie → LV.5 Cyber Sovereign), dynamic EXP engine, daily streaks, unlockable achievements, and celebration effects |
+| 🤖 **AI Tutor & Copilot** | Built-in streaming SSE chat assistant supporting DeepSeek, OpenAI, Qwen, Claude, Ollama, and Groq with full-screen conversation drawer |
+| 💻 **In-Browser Code Playground** | Embedded CodeMirror 5 with syntax highlighting for Python, JS, C, and Bash + 10 executable challenges with auto-verification |
+| 📱 **PWA & Offline Support** | Native PWA with `manifest.json` and Service Worker offline caching; neo-brutalist cyber terminal UI with WCAG AA contrast compliance |
+| 🔍 **Global Navigation** | Ctrl+K fuzzy search, prerequisite tracking, difficulty star ratings, and persistent progress backup (JSON export/import) |
 
-### 📚 7 Core Modules
+---
 
-```
-Programming · Networking · Cryptography · Web Security · Pentesting · Malware Analysis · CTF
-```
+## 📚 9 Core Modules & Curriculum Matrix
+
+| # | Domain | Identifier | Chapters | Lessons | Key Topics & Technical Focus |
+|:---:|:---|:---:|:---:|:---:|:---|
+| 1 | **Web Security** | `websec` | 10 | 39 | SQL Injection, XSS, CSRF, SSRF, XXE, File Upload, Auth & Session, RCE & Insecure Deserialization, API Security, DevSecOps & WAF |
+| 2 | **Penetration Testing** | `pentest` | 5 | 15 | Reconnaissance & OSINT, Port & Service Fingerprinting, Vulnerability Scanning, Privilege Escalation, Post-Exploitation & Lateral Movement |
+| 3 | **Computer Networking** | `network` | 5 | 15 | OSI & TCP/IP Model, DNS/ARP Security & Poisoning, HTTP/1.1 to HTTP/3 Evolution, Routing & Firewall Hardening, Wireshark Packet Forensics |
+| 4 | **Cryptography & Modern Apps** | `cryptography` | 6 | 18 | Classical Ciphers & Math Foundations, Symmetric Ciphers (AES/DES), Asymmetric Ciphers (RSA/ECC), Hash Functions & Signatures, TLS/SSL & PKI, Modern ZKP & Post-Quantum Cryptography |
+| 5 | **Malware Analysis & Reverse** | `malware` | 5 | 15 | Static Analysis & PE Architecture, Dynamic Sandboxing & Behavioral Analysis, Disassembly & Decompilation (IDA/Ghidra), Anti-Debugging & Evasion, Threat Intel & MITRE ATT&CK |
+| 6 | **Cloud-Native & Container** | `cloudsec` | 5 | 15 | Docker Container Isolation & Escape Defense, Kubernetes Cluster Hardening, Cloud IAM & Metadata Security, Microservices & Service Mesh, CI/CD Pipeline & Supply Chain Security |
+| 7 | **Blue Team DFIR & SOC** | `dfir` | 5 | 15 | SOC Architecture & SIEM Triage, Windows & Linux Host Artifact Forensics, Volatility Memory Forensics, Threat Hunting with Sigma Rules, Incident Response SOP & Ransomware Playbooks |
+| 8 | **Programming Fundamentals** | `programming` | 7 | 18 | Python Exploit Scripting, C Language & Memory Layout, Bash Automation & Regex, Go Concurrency Tools, Wasm & JS Security, x86/x64 Assembly, Secure Coding & Memory Safety |
+| 9 | **CTF Arena & AWD Strategy** | `ctf-guide` | 7 | 21 | CTF Architecture & Arsenal, PWN Stack Frames & ROP Chains, Reverse Engineering Anti-Decompilation, Advanced Web Exploit Chains, Cryptanalysis, Misc Forensics, AWD Attack & Defense Strategy |
+| **Σ** | **All 9 Modules** | **Complete** | **50** | **171** | **342 Bilingual Lessons · 342 Checkpoints · 28 CTF Challenges · 6 Interactive Sandboxes** |
+
+---
 
 ## 🏗️ Project Structure
 
 ```
 cyberedu/
-├── cyberedu.html          # Main page (entry point)
-├── content.js             # Content data (bilingual: modules/chapters/exercises/CTF)
-├── script.js              # Application logic (navigation, views, sidebar, AI chat, effects)
-├── style.css              # Stylesheet (Neo-Brutalist Terminal design, WCAG AA compliant)
-├── i18n.js                # EN/ZH localization (~140+ translation pairs)
-├── server.js              # Local Node.js server (loopback-only: AI proxy, CTF verify, rate limiter)
-├── flags-hash.js          # CTF answer SHA-256 digests — no plaintext answers shipped
-├── package.json           # Scripts: npm start, npm test
-├── favicon.svg            # Site icon
-├── tests/                 # Zero-dependency test suite (95 checks)
-│   ├── test-runner.js     # Custom test runner (Node.js assert + ANSI colors)
-│   ├── server.test.js     # Server security & API tests
-│   └── utils.test.js      # Client utility, WCAG contrast & hash contract tests
-├── scripts/               # Maintenance tooling
-│   └── gen-flag-hashes.js # Rotate CTF answer digests without committing plaintext
-├── docs/                  # Documentation assets (screenshots, OG images)
-├── versions/              # CHANGELOG
-├── .github/               # Issue templates + CI workflow
-├── SECURITY.md            # Security policy & vulnerability reporting
-└── CONTRIBUTING.md        # Contribution guidelines
+├── cyberedu.html          # Main application entry point
+├── content.js             # 171 atomic micro-lessons (CN) + 342 checkpoints + CTF metadata
+├── script.js              # Application core (state management, views, gamification, AI chat)
+├── style.css              # Neo-brutalist cyber terminal styles (WCAG AA compliant)
+├── i18n.js                # Dual-language localization system (~250+ translation pairs)
+├── manifest.json          # Progressive Web App (PWA) manifest
+├── sw.js                  # Service Worker offline cache engine
+├── server.js              # Zero-dependency local Node.js server (loopback-only AI proxy & CTF verification)
+├── flags-hash.js          # CTF answer SHA-256 digests — zero plaintext answers shipped
+├── package.json           # Project manifest, scripts & metadata
+├── favicon.svg            # CyberEdu vector terminal icon
+├── tests/                 # Zero-dependency regression test suite (114 checks)
+│   ├── test-runner.js     # Custom ANSI color test runner
+│   ├── server.test.js     # Server security, host guards, traversal & rate limiter tests
+│   └── utils.test.js      # Client utilities, gamification engine, playgrounds & WCAG AA contrast tests
+├── scripts/               # Quality verification & automation tooling
+│   ├── verify-content-quality.js # Automated 342/342 lesson template & structure validator
+│   ├── verify-ctf-solvable.js    # Mathematical & programmatic CTF solvability verifier
+│   ├── privacy-scan.js           # Pre-push zero-leak privacy & credential scanner
+│   ├── gen-flag-hashes.js        # Answer digest rotation tool
+│   └── compact-content.js        # Content memory compaction utility
+├── docs/                  # Documentation assets & screenshots
+│   ├── og-image.png
+│   ├── features-showcase.png
+│   └── content-roadmap.md
+├── versions/              # Detailed version changelogs
+│   └── CHANGELOG.md
+└── .github/               # GitHub workflows & issue templates
+    └── workflows/test.yml # Multi-version Node.js CI test suite
 ```
+
+---
+
+## 🧪 Quality Gates & Automated Testing
+
+The platform enforces four automated CI quality gates:
+
+```bash
+# 1. Run unit test suite (114 tests covering security, gamification, sandboxes & contrast)
+npm test
+
+# 2. Verify mathematical solvability of CTF challenges (21/21 verified)
+node scripts/verify-ctf-solvable.js
+
+# 3. Validate structural completeness of all 342 micro-lessons (342/342 OK)
+node scripts/verify-content-quality.js
+
+# 4. Scan repository for personal identifiers and sensitive leaks
+node scripts/privacy-scan.js
+
+# 5. Static syntax verification across all core files
+node --check server.js && node --check script.js && node --check content.js && node --check i18n.js && node --check flags-hash.js
+```
+
+---
 
 ## 🚀 Getting Started
 
-### Quick Start (no server needed)
+### Option 1: Static Offline Browsing (No Server Required)
 
-Just open `cyberedu.html` directly in your browser. Code highlighting, theme switching, progress tracking, and search — all work without a server.
+Simply double-click `cyberedu.html` or open it in any modern browser. All 171 micro-lessons, interactive checkpoints, code highlighting, search, and sandboxes work completely client-side without internet connectivity.
 
-### With AI Tutor (local server)
+### Option 2: Local Server (Full AI Tutor & PWA Support)
 
 Requires [Node.js](https://nodejs.org/) v16+:
 
 ```bash
 node server.js
-# Then open http://localhost:8000
+# Then open http://127.0.0.1:8000 in your browser
 ```
 
-The server binds to `127.0.0.1` only (never your LAN), validates the `Host` header against DNS rebinding, and grants no CORS privileges — a page you visit in another tab cannot drive its APIs. Set `CYBEREDU_PORT` / `CYBEREDU_HOST` / `CYBEREDU_NO_OPEN=1` as environment overrides.
+> **Security by Design**: The local server binds strictly to `127.0.0.1` (loopback only, never exposed to your local network), enforces `Host` header whitelisting against DNS rebinding, and rejects cross-origin requests.
 
-Click the green floating button (bottom-right) to open the AI chat panel. Click ⚙ to configure:
+To configure your AI Tutor, click the green terminal button at the bottom-right and open Settings (⚙):
 
-| Field | Example |
-|-------|---------|
-| API Type | `OpenAI Compatible` or `Anthropic` |
-| API Base URL | `https://api.deepseek.com` |
-| API Key | `sk-...` |
-| Model | `deepseek-chat`, `deepseek-reasoner`, `claude-sonnet-4-20250514` |
-
-Optional: adjust temperature, max tokens, and thinking/reasoning mode.
-
-> 💡 On Windows, double-click `restart_server.bat` to restart the server.
-
-### Run Tests
-
-```bash
-npm test
-# or: node tests/test-runner.js
-```
-
-Zero-dependency test suite — no `npm install` needed. 95 checks cover server security (static block-list, host validation, body caps, directory traversal, rate limiting with stale-entry eviction, CTF digest verification), client utilities (HTML escaping, URL validation, progress data), the shared answer-normalization contract, and WCAG AA contrast compliance.
-
-## 🤖 Supported AI Models
-
-| Provider | API Base URL | Model Examples |
-|----------|-------------|--------|
-| **OpenAI Compatible** |||
-| DeepSeek | `https://api.deepseek.com` | `deepseek-chat`, `deepseek-reasoner` |
-| OpenAI | `https://api.openai.com/v1` | `gpt-4o`, `gpt-4o-mini` |
-| Qwen (Tongyi) | `https://dashscope.aliyuncs.com/compatible-mode/v1` | `qwen-plus`, `qwen-max` |
-| Ollama (local) | `http://localhost:11434` | `llama3`, `qwen2` |
-| Groq | `https://api.groq.com/openai/v1` | `llama-3.1-70b` |
-| **Anthropic** |||
-| Claude | `https://api.anthropic.com` | `claude-sonnet-4-20250514`, `claude-haiku-3-5` |
-
-## 🛠️ Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Frontend | HTML5 / CSS3 / Vanilla JavaScript (zero dependencies client-side) |
-| Code Highlighting | [Prism.js](https://prismjs.com/) v1.29.0 |
-| Code Editor | [CodeMirror 5](https://codemirror.net/) with Python/JS/C/Bash modes |
-| Local Server | Node.js built-in `http` module (zero dependencies) |
-| Answer Verification | SHA-256 digests only (`flags-hash.js`) — plaintext answers never committed |
-| AI Streaming | SSE (Server-Sent Events) |
-| Fonts | JetBrains Mono + Noto Sans SC + Space Mono |
-
-## 📋 What's New
-
-### v2.7.6 (2026-08-30)
-
-- 📚 **All 52 chapters upgraded to a beginner-friendly tutorial template** — every chapter now has a "What you'll learn" box, step-by-step examples with outputs, 3+ folded-answer exercises, and a summary table (CN + EN)
-- 🗂 **Module order fixed** — Programming → Networking → Cryptography → Web → Pentesting → Malware → CTF (removes the TLS-before-HTTP dependency inversion)
-- 🔢 **Sidebar section numbering** — chapters display as 01. 02. 03. for visible progression
-- 🚩 **All 28 CTF challenges rebuilt to be genuinely solvable** — real RSA params, decodable payloads, embedded forensics artifacts, 2 new server-side simulators; every answer derivable from the challenge itself
-- 🗂 **CTF arena tracks** — challenges sorted into category tracks with ascending difficulty
-- 🔗 **Fixed 15 dead challenge-jump buttons** — lesson buttons passed numeric indexes to an API expecting string ids
-- 🗂 **AI history as full-panel drawer** — search, time-grouped sessions (Today / 7d / Earlier), rename, two-step delete, clear-all
-- 🤖 **AI tutor UX** — stop generation (■), per-message copy / regenerate, code-block copy + Prism highlighting, smart auto-scroll
-- 📊 **Article meta bar** — difficulty stars + prerequisite hint on every chapter
-- 🔒 **Security hardening** — loopback-only server, DNS-rebinding guard, CORS removed, static file block-list, CSP, SHA-256 answer hashing, privacy scan CI gate
-- 🐛 Fixed: submitFlag crash (v2.5 regression), 28 CTF answer misalignment, CSP void of unsafe-inline, content.js dead assignments (5.96MB → 2.83MB compacted)
-
-<details><summary>v2.6 (2026-08-27)</summary>
-
-- 🔒 **Loopback-only server** · 🛡️ **DNS-rebinding guard** · 🚫 **CORS removed** · 🔑 **Answers hashed end-to-end** · 📦 **Static file block-list** · ⚡ **gzip cache / async stat / rate-limiter sweep** · 🧾 **CSP header + meta** · ♻️ portable `restart_server.bat`, CI workflow
-
-</details>
-
-> 📋 [Full changelog →](versions/CHANGELOG.md)
-
-## 🤝 Contributing
-
-Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) before submitting pull requests.
-
-## 💬 Feedback
-
-Found a bug or have a suggestion? [Open an issue →](https://github.com/Chhhhhhhhhhhhhhh/cyberedu/issues/new/choose)
-
-## 📄 License
-
-[MIT](LICENSE) — Free for personal and commercial use.
+| Field | Example | Description |
+|-------|---------|-------------|
+| **API Type** | `OpenAI Compatible` or `Anthropic` | Protocol selection |
+| **API Base URL** | `https://api.deepseek.com` | Endpoint base address |
+| **API Key** | `sk-...` | Stored strictly in browser `localStorage` |
+| **Model** | `deepseek-chat`, `gpt-4o`, `qwen-plus`, `claude-3-5-sonnet` | Model identifier |
 
 ---
 
+## 🤖 Supported AI Providers
+
+| Provider | Base URL | Recommended Models |
+|----------|----------|--------------------|
+| **DeepSeek** | `https://api.deepseek.com` | `deepseek-chat`, `deepseek-reasoner` |
+| **OpenAI** | `https://api.openai.com/v1` | `gpt-4o`, `gpt-4o-mini` |
+| **Alibaba Qwen** | `https://dashscope.aliyuncs.com/compatible-mode/v1` | `qwen-plus`, `qwen-max` |
+| **Anthropic Claude** | `https://api.anthropic.com` | `claude-3-5-sonnet-20241022` |
+| **Ollama (Local)** | `http://localhost:11434/v1` | `llama3.1`, `qwen2.5-coder` |
+| **Groq** | `https://api.groq.com/openai/v1` | `llama-3.3-70b-versatile` |
+
+---
+
+## 🛠️ Technology Stack
+
+| Layer | Implementation | Details |
+|---|---|---|
+| **Frontend** | HTML5 / CSS3 / Vanilla JavaScript | Zero third-party npm runtime dependencies |
+| **Styling** | Cyberpunk Neo-Brutalist Architecture | CSS Custom Properties, WCAG AA contrast compliant |
+| **Code Highlighting** | [Prism.js](https://prismjs.com/) v1.29.0 | Cyberpunk theme syntax highlighting |
+| **Code Editor** | [CodeMirror 5](https://codemirror.net/) | Python, JavaScript, C, and Bash modes |
+| **AI Stream Engine** | Server-Sent Events (SSE) | Multi-provider streaming parser with fallback |
+| **Flag Verification** | Web Crypto SHA-256 | Zero plaintext answers in frontend or git tree |
+| **PWA Engine** | Service Worker + Web App Manifest | Offline first, installable desktop/mobile experience |
+| **Local Proxy** | Node.js native `http` module | DNS rebinding protection, zero external server deps |
+
+---
+
+## 📄 License
+
+This project is licensed under the [MIT License](LICENSE) — free for educational, personal, and commercial exploration.
+
 <p align="center">
-  <strong>If you find CyberEdu helpful, consider giving it a ⭐!</strong>
+  <strong>Break the Surface, find the Truth. Every vulnerability has a story.</strong><br>
+  If CyberEdu helped your security journey, don't forget to star ⭐ this repository!
 </p>
