@@ -185,6 +185,47 @@ To configure your AI Tutor, click the green terminal button at the bottom-right 
 
 ---
 
+## 📋 What's New
+
+### 🚀 v2.8.0 (2026-09-17) — Latest Milestone Release
+
+- 🏆 **Complete 9-Module Transformation**: The platform expanded from 52 lessons to **171 atomic micro-lessons (342 bilingual articles)** across Web Security, Penetration Testing, Networking, Cryptography, Malware Analysis, Cloud-Native, Blue Team DFIR, Programming, and CTF Combat Strategy.
+- 🎯 **342 Interactive Checkpoints**: Every lesson features 2 self-assessment checkpoints with immediate feedback, detailed architectural explanations, and one-click "Ask AI Tutor" deep-dive tutoring.
+- 🛠️ **6 Interactive Security Sandboxes**: Built-in SQLi injection simulator, XSS entity filter tester, Command injection analyzer, Hash avalanche bit explorer, 5-point Radar skill evaluator, and hands-on Lab Drawer.
+- 🎮 **Gamification & Hacker Ranks**: 5-tier rank progression (LV.1 Script Kiddie → LV.5 Cyber Sovereign), dynamic EXP algorithm, login/practice streak bonuses, and unlockable achievement badges.
+- 🌐 **Cyber Terminal Brand Aesthetics & 100% Bilingual**: Homepage typewriter strictly preserves the English hacker terminal motif (`> 171 chapters. Zero to hero.`), dynamic binding to platform chapter count, with one-click seamless EN/ZH switching.
+- 📱 **PWA & Offline First**: Added `manifest.json` and Service Worker caching for complete offline learning and standalone app installation.
+- 🔒 **Industrial Quality Assurance Gates**: 114 unit tests passed, 21/21 CTF mathematical solvability verified, 342/342 lesson template validation, zero-leak privacy scanner passed.
+
+### 📦 v2.7.6 (2026-08-30)
+
+- 🗂 **AI History Full-Panel Drawer** — Real-time search, time-grouped sessions (Today / 7d / Earlier), rename, two-step delete, and clear-all.
+- 🤖 **AI Tutor UX Upgrade** — Generation abort (■), message action bar (copy / regenerate), code block copy + Prism highlighting, and smart auto-scroll.
+- 🔒 **Privacy Scan CI Gate** — Scans full tree for personal identifiers, credentials, and local machine artifacts.
+- 🚩 **Solvable CTF Challenges** — All 28 CTF challenges rebuilt to be genuinely derivable and mathematically verifiable.
+- 📊 **Article Metadata Bar** — Added difficulty star ratings and prerequisite recommendations.
+- 🐛 **Bug Fixes** — Fixed submitFlag regression, 28 CTF answer alignment, CSP inline handlers, and compacted content.js.
+
+<details><summary><b>View Earlier Releases (v2.7.0 ~ v2.6.0)</b></summary>
+
+#### v2.7.0 (2026-08-28)
+- 📚 **52 chapters upgraded to beginner-friendly tutorial template** — "What you'll learn" callout, step-by-step examples with outputs, folded exercises, and summary cheatsheet tables.
+- 🗂 **Module order optimization** — Programming → Networking → Cryptography → Web → Pentesting → Malware → CTF.
+- 🔢 **Sidebar section numbering** — Chapters display visible numbered index 01. 02. 03.
+
+#### v2.6.0 (2026-08-27)
+- 🔒 **Loopback-only server** — Strict binding to 127.0.0.1, eliminating LAN exposure.
+- 🛡️ **DNS Rebinding Guard** — Host header whitelist verification.
+- 🚫 **CORS Privileges Removed** — Complete cross-origin isolation.
+- 🔑 **Answer Hashing** — SHA-256 cryptographic digests, eliminating plaintext answer leakage.
+- 📦 **Static File Block-list** — Path traversal and internal file access denied.
+
+</details>
+
+> 📋 [For full historical changelog, see CHANGELOG.md →](versions/CHANGELOG.md)
+
+---
+
 ## 📄 License
 
 This project is licensed under the [MIT License](LICENSE) — free for educational, personal, and commercial exploration.
