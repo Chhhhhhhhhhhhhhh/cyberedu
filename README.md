@@ -33,9 +33,6 @@
 
 ## ✨ Key Features
 
-<p align="center">
-  <img src="docs/features-showcase.png" alt="Features Showcase" width="100%">
-</p>
 
 | Category | Details |
 |----------|---------|
