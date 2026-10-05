@@ -6,7 +6,7 @@
 
 <p align="center">
   An interactive cybersecurity learning platform and reference manual — from absolute beginner to advanced red/blue team operations.<br>
-  <strong>9 Core Modules · 50 Chapters · 171 Atomic Micro-Lessons · 342 Bilingual Articles · 342 Interactive Checkpoints · 28 CTF Challenges · AI Tutor</strong>
+  <strong>9 Core Modules · 55 Chapters · 171 Atomic Micro-Lessons · 342 Bilingual Articles · 342 Interactive Checkpoints · 28 CTF Challenges · AI Tutor</strong>
 </p>
 
 <p align="center">
@@ -62,7 +62,7 @@
 | 7 | **Blue Team DFIR & SOC** | `dfir` | 5 | 15 | SOC Architecture & SIEM Triage, Windows & Linux Host Artifact Forensics, Volatility Memory Forensics, Threat Hunting with Sigma Rules, Incident Response SOP & Ransomware Playbooks |
 | 8 | **Programming Fundamentals** | `programming` | 7 | 18 | Python Exploit Scripting, C Language & Memory Layout, Bash Automation & Regex, Go Concurrency Tools, Wasm & JS Security, x86/x64 Assembly, Secure Coding & Memory Safety |
 | 9 | **CTF Arena & AWD Strategy** | `ctf-guide` | 7 | 21 | CTF Architecture & Arsenal, PWN Stack Frames & ROP Chains, Reverse Engineering Anti-Decompilation, Advanced Web Exploit Chains, Cryptanalysis, Misc Forensics, AWD Attack & Defense Strategy |
-| **Σ** | **All 9 Modules** | **Complete** | **50** | **171** | **342 Bilingual Lessons · 342 Checkpoints · 28 CTF Challenges · 6 Interactive Sandboxes** |
+| **Σ** | **All 9 Modules** | **Complete** | **55** | **171** | **342 Bilingual Lessons · 342 Checkpoints · 28 CTF Challenges · 6 Interactive Sandboxes** |
 
 ---
 

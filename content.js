@@ -3219,6 +3219,17 @@ const SECTION_CHECKPOINTS = {
       ],
       "answer": 2,
       "explanation": "证书透明度（crt.sh）记录是由各大证书颁发机构公开提交的公共日志，查询 crt.sh 是从第三方公共数据库获取信息，不向目标发送任何网络流量，属于纯粹的被动开源情报（OSINT）。"
+    },
+    {
+      "question": "在被动资产侦察中，当目标 Web 服务使用了 CDN 进行反向代理加速时，以下哪种手段最常用于挖掘目标的真实服务器源站 IP（Origin IP）？",
+      "options": [
+        "查询历史 DNS 解析记录（如 SecurityTrails / DNSDB）或检查目标以往发出的系统邮件（如邮件头中的 Received 字段）",
+        "使用 sqlmap 对 CDN 节点进行全量参数注入测试",
+        "向目标根域名发送超大规模 SYN Flood 拒绝服务攻击",
+        "在目标 CDN 证书上直接查看绑定的内网私有 IP 地址"
+      ],
+      "answer": 0,
+      "explanation": "CDN 隐藏了当前 DNS 解析出的公网 IP，但历史 DNS 解析记录往往会残留 CDN 接入前的真实主机 IP；此外，Web 应用外发邮件（如重置密码邮件）通常由真实源站直连发出，其邮件头部的 Received / Message-ID 往往会泄漏源站真实 IP。"
     }
   ],
   "pentest-02-01": [
@@ -3232,6 +3243,17 @@ const SECTION_CHECKPOINTS = {
       ],
       "answer": 1,
       "explanation": "企业网络边界防火墙默认对入站流量（Inbound）设置白名单阻断，但为了保障员工与内网业务对外访问，通常对出站流量（Outbound）宽松放行。反弹 Shell 让内网受害主机主动向攻击机建立外部连接，因此更容易穿透边界防护。"
+    },
+    {
+      "question": "在使用 Netcat（`nc -lvnp`）接收到 Linux 初始的反弹 Shell 后，终端通常缺少交互功能（无 TAB 补全、按 Ctrl+C 会意外断开）。以下哪组操作是将其平滑升级为全功能交互式 PTY 终端的标准做法？",
+      "options": [
+        "在目标上执行 python3 -c 'import pty; pty.spawn(\"/bin/bash\")'，然后在本地终端挂起并执行 stty raw -echo; fg，最后设置 export TERM=xterm",
+        "直接在本地终端连续输入三次 exit 并重启 nc 监听",
+        "在目标系统上安装全新带有图形界面的 Ubuntu 桌面包",
+        "向反弹端口持续发送 kill -9 信号"
+      ],
+      "answer": 0,
+      "explanation": "基础反弹 Shell 只是单纯的标准输入输出（stdin/stdout）重定向管道，没有虚拟终端驱动。利用 Python 的 pty 模块生成伪终端进程，再配合本地终端的 stty raw -echo 禁用本地行缓冲与回显，最后设置终端环境变量，即可获得具备自动补齐、Ctrl+C 中断保护与 Vim 兼容的全功能 PTY。"
     }
   ],
   "pentest-03-01": [
@@ -3245,6 +3267,17 @@ const SECTION_CHECKPOINTS = {
       ],
       "answer": 1,
       "explanation": "Exploit 负责寻找并触发漏洞，而真正负责在漏洞触发后执行具体控制指令（例如反弹 Shell 或启动 Meterpreter）的组件是 Payload。"
+    },
+    {
+      "question": "在 `msfconsole` 操作中，命令 `set RHOSTS 192.168.1.10` 与 `setg RHOSTS 192.168.1.10` 的核心区别在于：",
+      "options": [
+        "set 仅对当前加载的特定模块生效，而 setg 设置全局变量，切换到其他模块后依然保持该配置",
+        "setg 会向目标主机发送真实的扫描探测包，set 不会",
+        "setg 只能用于设置攻击机本机的本地端口（LPORT）",
+        "set 只能设置数值型参数，不能设置 IP 地址"
+      ],
+      "answer": 0,
+      "explanation": "set 是局部变量配置指令，只在当前选中的模块上下文中有效；而 setg（Set Global）会将变量保存到全局环境中，当在多个模块（如扫描、探测、利用）之间频繁切换时，全局变量无需重复输入，极大提升了测试效率。"
     }
   ],
   "pentest-04-01": [
@@ -3258,6 +3291,17 @@ const SECTION_CHECKPOINTS = {
       ],
       "answer": 1,
       "explanation": "在 Kerberos 第一阶段（AS 认证），KDC 验证用户密码后，会签发由 `krbtgt` 账户哈希加密的 TGT（票据授予票据），客户端后续凭借此 TGT 换取各个具体服务的 ST 票据。"
+    },
+    {
+      "question": "在域渗透攻击中，利用伪造“黄金票据（Golden Ticket）”实现对整个活动目录长期完全控制时，攻击者必须提前获取的关键密钥是：",
+      "options": [
+        "域内特殊核心账号 krbtgt 的 NTLM 哈希或 AES-256 密钥",
+        "普通域用户的明文登录密码",
+        "域控制器的公网动态 IP 地址",
+        "DNS 根服务器的私钥证书"
+      ],
+      "answer": 0,
+      "explanation": "Kerberos 认证中心（KDC）签发的 TGT 票据是由 krbtgt 账户密码哈希加密的。一旦获取了 krbtgt 的哈希，攻击者即可在本地离线任意构造并签名属于任何用户（包括伪造的管理员）的合法 TGT，获得域内的完全主宰特权。"
     }
   ],
   "pentest-05-01": [
@@ -3271,6 +3315,17 @@ const SECTION_CHECKPOINTS = {
       ],
       "answer": 0,
       "explanation": "SOCKS 代理是建立在 TCP 传输之上的应用层代理，无法直接封装底层网卡的原始 IP/TCP 报文。因此必须使用调用操作系统完整 `connect()` 的 `-sT` 全连接扫描模式。"
+    },
+    {
+      "question": "当测试人员已通过 SSH 登录到目标边缘堡垒机（跳板机）时，在本地终端执行命令 `ssh -D 1080 user@jump_host -N` 的作用是：",
+      "options": [
+        "在本地 127.0.0.1:1080 启动一个动态 SOCKS5 代理服务，所有发送至该端口的流量都将通过 SSH 加密隧道由跳板机代为向内网发起",
+        "将跳板机的 1080 端口直接映射为公开的 Web 服务",
+        "立即格式化跳板机上的系统日志",
+        "向内网所有主机发起 ARP 欺骗攻击"
+      ],
+      "answer": 0,
+      "explanation": "ssh -D [bind_address:]port 是 OpenSSH 客户端的动态端口转发参数。它在本地分配一个 SOCKS 监听套接字，所有应用层流量（如浏览器或 proxychains）都将无缝经由 SSH 安全加密通道转发，由远程跳板机代理出站访问内网。"
     }
   ],
   "web-01-01": [
@@ -3524,6 +3579,17 @@ const SECTION_CHECKPOINTS = {
       ],
       "answer": 1,
       "explanation": "根据 W3C CORS 安全规范，当 `Access-Control-Allow-Origin` 为通配符 `*` 时，浏览器绝不会允许携带凭据的请求读取响应数据（即不能与 `Credentials: true` 混用）。正因如此，开发者盲目反射具体 Origin 头部的行为往往更加危险。"
+    },
+    {
+      "question": "在 CORS（跨域资源共享）配置中，导致最高危数据泄露的典型开发者偷懒误配置是：",
+      "options": [
+        "后端代码盲目将客户端请求的 Origin 头内容动态反射写入 Access-Control-Allow-Origin，同时设置了 Access-Control-Allow-Credentials: true",
+        "完全禁用了所有跨域 HTTP 请求头",
+        "仅允许来自同源域名的跨域资源访问",
+        "将预检请求（OPTIONS）的缓存时间设置为 3600 秒"
+      ],
+      "answer": 0,
+      "explanation": "当服务器动态反射请求的 Origin 并开启 Allow-Credentials: true 时，任何第三方恶意网站都可以向该 API 发送带凭据（Cookies）的跨域异步请求，并能够完整读取返回的敏感用户个人数据，危害等同于完全击穿了浏览器的同源策略（SOP）。"
     }
   ],
   "web-09-01": [
@@ -3537,6 +3603,17 @@ const SECTION_CHECKPOINTS = {
       ],
       "answer": 1,
       "explanation": "JWT 规范早期支持 `alg: none` 表示无签名令牌。如果后端验证库未强制指定合法签名算法，就会直接信任用户篡改后的 Payload 数据，导致严重的前后端越权与身份伪造漏洞。"
+    },
+    {
+      "question": "在针对 JWT 的“公私钥算法混淆攻击（RS256 降级为 HS256）”中，攻击者的核心利用原理是：",
+      "options": [
+        "利用服务端验证逻辑缺陷，将头部的 alg 从非对称加密 RS256 篡改为对称加密 HS256，并将公开的 RSA 公钥字符串作为对称加密的 Secret Key 来签名伪造 Token",
+        "暴力破解 RSA 私钥的 4096 位大素数",
+        "在 Payload 中注入 SQL 语句直接删除服务端密钥表",
+        "修改 JWT 的 Base64 编码方式为 Base32"
+      ],
+      "answer": 0,
+      "explanation": "若服务端验证代码在校验 HS256 签名时，盲目使用预配置的 RSA 公钥（通常是公开透明的）作为验证密钥，攻击者只需将 Token 算法声明改为 HS256，并在本地用该公钥作为对称密钥进行 HMAC-SHA256 签名，服务端验证就会误认为签名有效，从而导致严重的未授权越权。"
     }
   ],
   "web-08-01": [
@@ -3550,6 +3627,17 @@ const SECTION_CHECKPOINTS = {
       ],
       "answer": 1,
       "explanation": "在 Python 中，字符串与整数相乘会触发字符串重复机制（'7' * 7 = '7777777'）；而在 PHP (Twig) 中会将字符串强制转换为数字进行常规乘法（输出 49）。因此该回显是典型的 Python Jinja2/Tornado 特征。"
+    },
+    {
+      "question": "在经典的 SSTI 模板引擎识别流程图中，当输入 `${7*7}` 被原样回显为 `${7*7}`，但输入 `{{7*7}}` 成功返回 `49`，紧接着输入 `{{7*'7'}}` 返回 `49`（而非 `7777777`）时，该模板引擎最可能为：",
+      "options": [
+        "Twig (PHP 模板引擎)",
+        "Jinja2 (Python 模板引擎)",
+        "Freemarker (Java 模板引擎)",
+        "Velocity (Java 模板引擎)"
+      ],
+      "answer": 0,
+      "explanation": "在 PortSwigger 经典 SSTI 识别树中：{{7*7}} 输出 49 证明支持双大括号语法；由于 PHP 的弱类型特性，'7' 会被隐式转换为整数 7，因此 {{7*'7'}} 在 Twig 中计算为 7*7=49；而在 Python Jinja2 中，字符串乘法会重复字符串，输出 7777777。"
     }
   ],
   "web-07-01": [
@@ -4043,6 +4131,17 @@ const SECTION_CHECKPOINTS = {
       ],
       "answer": 2,
       "explanation": "`__subclasses__()` 是 Python 类对象自带的内置方法，返回内存中所有直接继承自该类的子类列表。通过基类 `object.__subclasses__()` 可以遍历已加载的所有类，寻找可用的利用链 Gadget。"
+    },
+    {
+      "question": "在 Python Jinja2 沙箱逃逸寻找可用命令执行类时，通过遍历 `().__class__.__base__.__subclasses__()` 列表，攻击者通常寻找加载了哪个内置模块或引用以直接执行系统命令？",
+      "options": [
+        "os 模块（例如从 os._wrap_close 类的 __init__.__globals__ 中直接提取 popen 或 system）",
+        "math 模块的 sin() 正弦函数",
+        "random 模块的 randint() 随机数生成器",
+        "turtle 绘图模块"
+      ],
+      "answer": 0,
+      "explanation": "Python 中几乎所有类的 __init__.__globals__ 字典中都包含了定义该类时所处命名空间的全局符号。由于 os._wrap_close、subprocess.Popen 等类直接导入了 os 模块，攻击者通过其 __globals__['os'].popen('id').read() 即可轻松完成沙箱穿透与命令执行。"
     }
   ],
   "web-08-03": [
@@ -4056,6 +4155,17 @@ const SECTION_CHECKPOINTS = {
       ],
       "answer": 1,
       "explanation": "SSTI 的本质是将不可信数据当成了模板代码去解析。只要坚持使用参数化传递数据变量，模板引擎就会将输入纯粹当成数据渲染，而绝不会作为语法指令解析，从根本上杜绝 SSTI 漏洞。"
+    },
+    {
+      "question": "当后端安全过滤器对 `.`（点号）和 `_`（下划线）进行了严格过滤时，在 Jinja2 模板注入中，攻击者最常利用哪个内置过滤器（Filter）来动态读取属性以完成绕过？",
+      "options": [
+        "|attr() 配合十六进制或 Unicode 编码字符串，如 ()|attr(\"\\x5f\\x5fclass\\x5f\\x5f\")",
+        "|length 计算长度过滤器",
+        "|capitalize 首字母大写过滤器",
+        "|reverse 字符串反转过滤器"
+      ],
+      "answer": 0,
+      "explanation": "Jinja2 的 |attr('key') 过滤器等价于点号属性访问（obj.key）。结合字符串转义或十六进制表示（如 \\x5f 代表 _），可以在代码中不出现字面量点号和下划线的情况下，完美提取并调用对象的内部魔术属性。"
     }
   ],
   "web-09-02": [
@@ -4069,6 +4179,17 @@ const SECTION_CHECKPOINTS = {
       ],
       "answer": 1,
       "explanation": "`state` 参数是一个由客户端生成并与当前用户 Session 绑定的不可预测随机数。在授权服务器回调时必须严格核对，防止攻击者利用自己生成的授权码诱导受害者发起绑定操作（OAuth CSRF）。"
+    },
+    {
+      "question": "在 OAuth 2.0 授权流程中，如果授权服务器对 `redirect_uri`（重定向 URI）参数仅进行了宽松的前缀匹配或正则匹配校验，攻击者最常实施的攻击是：",
+      "options": [
+        "构造重定向绕过（如借助目录穿越或开放重定向漏洞），将用户的授权码（Authorization Code）或 Access Token 泄露并回传给攻击者控制的恶意服务器",
+        "直接远程关闭授权认证服务器的主机电源",
+        "强制修改 OAuth 提供商的系统时区设置",
+        "让受害者电脑的 CPU 风扇超速运转"
+      ],
+      "answer": 0,
+      "explanation": "当 redirect_uri 校验不严时，攻击者可诱导受害者点击带有恶意 redirect_uri=https://client.com/callback/../../attacker.com 或配合白名单域名下的开放重定向参数的授权链接。受害者同意授权后，授权服务器会将包含敏感授权凭据的 URL 直接重定向至攻击者服务器，造成凭据被盗与账户劫持。"
     }
   ],
   "web-09-03": [
@@ -4082,6 +4203,17 @@ const SECTION_CHECKPOINTS = {
       ],
       "answer": 0,
       "explanation": "会话固定攻击的根源在于用户登录前后的会话标识符没有改变。在用户通过身份认证的瞬间销毁旧 Session 并签发全新的 Session ID，能够彻底让攻击者预先埋下的旧会话标识失效。"
+    },
+    {
+      "question": "为了彻底防范恶意 JavaScript 脚本（如 XSS 漏洞）读取包含敏感会话凭据的 Cookie，在服务端设置 Cookie 时必须添加的关键安全属性是：",
+      "options": [
+        "HttpOnly",
+        "SameSite=None",
+        "Path=/",
+        "Domain=.example.com"
+      ],
+      "answer": 0,
+      "explanation": "HttpOnly 标志指示浏览器禁止客户端 JavaScript（如 document.cookie）直接读取或修改该 Cookie。即使站点存在 XSS 漏洞，攻击者的恶意脚本也无法直接窃取携带 HttpOnly 的 Session ID。"
     }
   ],
   "web-10-02": [
@@ -4095,6 +4227,17 @@ const SECTION_CHECKPOINTS = {
       ],
       "answer": 0,
       "explanation": "CL.TE 命名遵循“前端.后端”的行业约定惯例：前端代理依据 `Content-Length` (CL) 计算报文长度并转发，而后端服务器依据 `Transfer-Encoding: chunked` (TE) 提前截断分块，导致剩余内容走私滞留在后端 TCP 队列中。"
+    },
+    {
+      "question": "在 HTTP 请求走私（Request Smuggling）的 **TE.CL** 漏洞场景中，前端代理与后端服务器对数据包边界的处理方式是：",
+      "options": [
+        "前端代理优先处理 Transfer-Encoding: chunked（分块传输），而后端服务器不完全支持分块传输而优先遵循 Content-Length",
+        "前端与后端都只遵循 Content-Length",
+        "前端与后端都只遵循 Transfer-Encoding",
+        "前端直接丢弃所有 POST 请求"
+      ],
+      "answer": 0,
+      "explanation": "TE.CL 场景正是 CL.TE 的对称形态：前端代理支持分块传输（Transfer-Encoding），它读取第一个分块后转发完整数据；但后端服务器不支持或忽略了 TE 头，改用较短的 Content-Length 来划定请求结束边界，导致未被后端读取的分块数据滞留在 TCP 复用连接管道中，被拼接进下一个用户的请求头部。"
     }
   ],
   "web-10-03": [
@@ -4108,6 +4251,17 @@ const SECTION_CHECKPOINTS = {
       ],
       "answer": 0,
       "explanation": "由于浏览器在发起 WebSocket 握手请求时不受同源策略（SOP）限制，会允许跨域并发起握手并自动附带 Cookie。因此，服务端必须在接收握手请求时严格核验 `Origin` 头，拒绝未授权来源的连接。"
+    },
+    {
+      "question": "在建立 WebSocket 连接后，客户端与服务端通过双向全双工通道持续收发数据。以下哪项关于 WebSocket 消息安全的说法是正确的？",
+      "options": [
+        "浏览器的同源策略（SOP）不约束已建立连接的 WebSocket 消息内容，服务端若将客户端发来的消息未经验证直接广播或写入 DOM，依然会导致跨站脚本（XSS）漏洞",
+        "WebSocket 协议自带全自动的 SQL 注入和 XSS 过滤器，开发者无需进行输入过滤",
+        "WebSocket 连接只能传输纯文本，无法传输二进制 ArrayBuffer",
+        "WebSocket 通信不需要底层 TCP 连接支持"
+      ],
+      "answer": 0,
+      "explanation": "WebSocket 协议设计为轻量双向长连接，连接建立后由应用层自定义报文协议。浏览器的同源策略不拦截 WebSocket 接收到的数据，若前端盲目调用 innerHTML 渲染收到的消息，或者后端未校验直接存库，传统 Web 漏洞（XSS、SQL 注入）同样会通过 WebSocket 通道爆发。"
     }
   ],
   "pentest-01-02": [
@@ -4121,6 +4275,17 @@ const SECTION_CHECKPOINTS = {
       ],
       "answer": 1,
       "explanation": "`-sS` 为 SYN 半开扫描：当收到目标返回的 SYN/ACK 后，Nmap 会主动发送 RST 中断连接，不完成完整的三次握手，因此绝大多数应用服务不会记录连接事件，隐蔽性好且速度极快。"
+    },
+    {
+      "question": "在执行 Nmap 服务版本探测（`-sV`）时，Nmap 的底层工作原理与特征识别机制是：",
+      "options": [
+        "读取目标操作系统注册表中的已安装软件列表",
+        "向目标开放端口发送针对性探针（Probes），并将其返回的 Banner 及响应特征与 nmap-service-probes 指纹数据库进行正则匹配",
+        "通过破解 SSH/RDP 弱口令登录系统后执行版本查询命令",
+        "向局域网广播 ARP 请求获取设备型号"
+      ],
+      "answer": 1,
+      "explanation": "Nmap 的 -sV 版本探测依赖其内置的 nmap-service-probes 数据库。它依次向目标开放端口发送预设的探测包（如 NULL 探针、GenericLines、HTTP GET 等），监听返回的 Banner 数据流并执行正则模式匹配，从而推断具体守护进程及其版本号。"
     }
   ],
   "pentest-01-03": [
@@ -4134,6 +4299,17 @@ const SECTION_CHECKPOINTS = {
       ],
       "answer": 1,
       "explanation": "在目标全量返回伪 200 状态码时，过滤状态码失效。但统一错误页的响应字节大小通常是固定一致的，通过 `-fs <size>` 过滤掉该基准大小，即可精准浮现出真正存在的独立页面。"
+    },
+    {
+      "question": "在使用 ffuf 进行虚拟主机（Virtual Host / VHost）模糊测试时，与普通子域名 DNS 爆破相比，其核心技术区别是：",
+      "options": [
+        "VHost 爆破向同一个已知 IP 发送 HTTP 请求并动态替换 Host 请求头，能够挖掘未在公网 DNS 解析的内部虚拟站点",
+        "VHost 爆破不需要字典文件，仅靠算法自动推导",
+        "VHost 爆破必须借助靶机本地 Root 权限才能发起",
+        "VHost 爆破只能探测 HTTPS 443 端口，无法探测 HTTP 80 端口"
+      ],
+      "answer": 0,
+      "explanation": "许多内部或测试环境虽然部署在 Web 服务器（如 Nginx/Apache）上，但并未配置公共 DNS 解析。通过向目标公网 IP 发送 HTTP 请求并模糊测试 HTTP Host 头部（如 Host: FUZZ.target.com），Web 服务器会根据内部虚拟主机配置分发流量，从而发现隐藏的内部资产。"
     }
   ],
   "pentest-02-02": [
@@ -4147,6 +4323,17 @@ const SECTION_CHECKPOINTS = {
       ],
       "answer": 0,
       "explanation": "根据 GTFOBins 规范，当 `find` 拥有 SUID 特权时，其 `-exec` 参数调用的子进程会继承有效用户 ID（EUID=root），搭配 `-p` 参数启动 shell 即可直接获得 root 特权。"
+    },
+    {
+      "question": "在 Linux 提权审计中，执行 `sudo -l` 发现配置了 `env_keep+=LD_PRELOAD`，且当前用户被允许以 sudo 权限免密运行任意命令。攻击者最直接的提权手法是：",
+      "options": [
+        "编写一个包含 __attribute__((constructor)) 初始化函数的恶意 C 共享库并编译为 .so，通过 sudo LD_PRELOAD=/path/exploit.so <command> 劫持执行获取 root",
+        "修改 /etc/passwd 将普通用户的 UID 改为 0",
+        "通过 rm -rf / 强制触发系统自愈保护",
+        "利用 SSH 暴力破解 root 密码"
+      ],
+      "answer": 0,
+      "explanation": "当 SudoERS 保留了 LD_PRELOAD 环境变量时，动态链接器会在加载目标二进制前优先加载指定的共享库。带有构造函数属性的恶意库将在目标命令以 root 身份启动的瞬间执行代码，从而直接以最高权限派生交互式 shell。"
     }
   ],
   "pentest-02-03": [
@@ -4160,6 +4347,17 @@ const SECTION_CHECKPOINTS = {
       ],
       "answer": 1,
       "explanation": "`SeImpersonatePrivilege` 允许进程假冒客户端凭据。PrintSpoofer 和 Potato 家族工具通过诱骗 SYSTEM 权限的本地服务（如 Spooler 或 RPC）连接命名管道，窃取其特权令牌，从而实现秒级提权至 SYSTEM。"
+    },
+    {
+      "question": "在 Windows 系统权限提升中，“未加引号的服务路径（Unquoted Service Path）”漏洞的触发原理是：",
+      "options": [
+        "Windows 的注册表被破坏导致服务无法启动",
+        "当服务可执行文件路径包含空格且未用双引号包裹（如 C:\\Program Files\\My App\\service.exe）时，系统启动服务会优先尝试执行截断路径（如 C:\\Program.exe），若低权限用户对截断目录有写权限即可劫持提权",
+        "服务端口使用了明文 HTTP 协议传输数据",
+        "管理员密码被明文硬编码在服务二进制文件中"
+      ],
+      "answer": 1,
+      "explanation": "Windows 创建进程解析命令行时，如果路径存在空格且未加双引号，系统会依次尝试将空格前的部分作为可执行程序（例如依次探测 C:\\Program.exe、C:\\Program Files\\My.exe）。如果攻击者对相关父目录拥有写入权限并放置同名可执行文件，服务启动时将以 SYSTEM 权限优先执行攻击者的恶意程序。"
     }
   ],
   "pentest-03-02": [
@@ -4173,6 +4371,17 @@ const SECTION_CHECKPOINTS = {
       ],
       "answer": 1,
       "explanation": "MSF 命名约定中，用额外斜杠分隔的（`meterpreter/reverse_tcp`）为 Staged 载荷（只投递小体积 Stager，后续拉取主体）；用下划线连接的（`meterpreter_reverse_tcp`）为单阶段 Stageless 载荷（所有指令打包在一起）。"
+    },
+    {
+      "question": "在使用 msfvenom 生成免杀或针对特定漏洞的 Shellcode 时，参数 `-b \"\\x00\\x0a\\x0d\"` 的核心作用是：",
+      "options": [
+        "自动加密压缩整个二进制文件并加上数字签名",
+        "指定坏字符（Bad Characters），强制编码器在生成机器码时剔除这些字节，防止在字符串复制函数（如 strcpy）中被意外截断",
+        "将载荷强制绑定到 0 号系统保留端口",
+        "限制生成木马仅能在 32 位系统上运行"
+      ],
+      "answer": 1,
+      "explanation": "在传统缓冲区溢出攻击中，某些 C 语言函数（如 strcpy、gets）会将空字节 \\x00（NULL 终止符）或换行符 \\x0a/\\x0d 视作字符串结束标志。msfvenom 的 -b 参数让编码器避开这些特定字节，确保载荷能完整注入目标内存缓冲区。"
     }
   ],
   "pentest-03-03": [
@@ -4186,6 +4395,17 @@ const SECTION_CHECKPOINTS = {
       ],
       "answer": 1,
       "explanation": "`migrate` 命令通过反射式注入将 Meterpreter 线程从当前可能被关闭的临时进程（如 Word、CMD）平滑迁移到长期存活的系统进程（如 explorer.exe），确保控制会话稳定存续。"
+    },
+    {
+      "question": "在已获取的 Meterpreter 会话中，当红队需要访问受害主机内网中仅监听在 `127.0.0.1:3389` 的远程桌面服务时，最便捷的原生命令是：",
+      "options": [
+        "portfwd add -l 33890 -p 3389 -r 127.0.0.1（将目标本机的 3389 端口转发至攻击机本机的 33890 端口）",
+        "drop_all_firewalls --force",
+        "reboot -f",
+        "clearev"
+      ],
+      "answer": 0,
+      "explanation": "Meterpreter 内置的 portfwd 命令能够通过现有的反弹加密会话隧道建立端口转发。执行后攻击者只需在攻击机上连接 127.0.0.1:33890，流量便会透明穿透会话抵达目标本机的私有端口。"
     }
   ],
   "pentest-04-02": [
@@ -4199,6 +4419,17 @@ const SECTION_CHECKPOINTS = {
       ],
       "answer": 1,
       "explanation": "任何已认证的域用户均可合法向 KDC 申请服务票据（TGS）。拿到票据后，攻击者在自己的离线 GPU 算力集群上暴力破解密码哈希，整个过程完全脱机进行，因此绝不会触发域控的密码防爆破锁定。"
+    },
+    {
+      "question": "哈希传递（Pass-the-Hash, PtH）攻击之所以能够在不知道目标用户明文密码的情况下成功完成身份认证，根本原因在于：",
+      "options": [
+        "NTLM 协议在质询/响应（Challenge/Response）认证计算过程中，直接使用用户密码的 NTLM 哈希值作为运算密钥，无需参与明文",
+        "Windows 操作系统会自动将所有明文密码广播到局域网中",
+        "哈希传递攻击绕过了网络协议，直接篡改了内存中的显示标签",
+        "NTLM 哈希可以通过简单的反向运算瞬间还原为明文"
+      ],
+      "answer": 0,
+      "explanation": "在 NTLM 认证协议中，客户端生成响应认证票据时，是用用户密码的 NTLM 哈希（MD4 计算结果）直接对服务器发来的随机 Challenge 进行加密计算。因此，攻击者只要拿到 NTLM 哈希，就拥有了生成合法认证响应的全部密钥材料。"
     }
   ],
   "pentest-04-03": [
@@ -4212,6 +4443,17 @@ const SECTION_CHECKPOINTS = {
       ],
       "answer": 0,
       "explanation": "DCSync 借助拥有复制特权（Replication Rights）的凭据，假冒域控制器向主域控发起 DRSUAPI 协议同步请求，主域控会将其视为多域控之间的数据同步，从而交出包括 krbtgt 在内的所有账户哈希。"
+    },
+    {
+      "question": "在大型域渗透评估中，红队使用 SharpHound 采集数据并在 BloodHound 图数据库中进行分析，其最核心的分析价值是：",
+      "options": [
+        "利用图论算法（如最短路径）自动化识别从低权限受陷节点到达 Domain Admins（域管）等高价值目标的最短攻击路径与隐蔽权限链",
+        "自动生成勒索软件对全域主机进行硬盘加密",
+        "扫描内网主机的物理硬件温度与显卡风扇转速",
+        "破解全域所有电脑的 BIOS 密码"
+      ],
+      "answer": 0,
+      "explanation": "BloodHound 将活动目录中的用户、计算机、组、ACL 访问控制列表和会话抽象为图论中的节点与有向边。通过查询最短路径，测试人员可以瞬间发现原本极其隐蔽的权限跳板链条（例如：用户A对组B拥有GenericAll，组B成员在主机C登录，主机C上存有域管令牌）。"
     }
   ],
   "pentest-05-02": [
@@ -4225,6 +4467,17 @@ const SECTION_CHECKPOINTS = {
       ],
       "answer": 1,
       "explanation": "PsExec 会向目标的 `ADMIN$` 共享上传二进制文件并创建临时服务（触发 Event ID 7045，极易被 EDR 拦截）；而 WMI 纯粹在内存中调用 `Win32_Process.Create` 派生进程，无文件落地，因而隐蔽性更优。"
+    },
+    {
+      "question": "在针对开启了 PowerShell Remoting 的 Windows 目标主机执行内网横向移动时，工具 Evil-WinRM 默认连接的目标服务端口是：",
+      "options": [
+        "TCP 5985 (HTTP) 或 TCP 5986 (HTTPS)",
+        "TCP 445 (SMB)",
+        "TCP 3389 (RDP)",
+        "TCP 22 (SSH)"
+      ],
+      "answer": 0,
+      "explanation": "Windows 远程管理服务（WinRM / WS-Management）默认在 TCP 5985 端口监听明文 HTTP 协议流量，在 TCP 5986 监听加密 HTTPS 流量。Evil-WinRM 是专门利用该管理接口进行后渗透控制的强大利器。"
     }
   ],
   "pentest-05-03": [
@@ -4238,6 +4491,17 @@ const SECTION_CHECKPOINTS = {
       ],
       "answer": 1,
       "explanation": "专业渗透测试必须恪守职业道德与授权契约。测试结束后必须 100% 清理测试残留（工具、测试脚本、临时账号），恢复系统初始基线，并交付明确的清理清单，严禁粗暴清空全盘日志。"
+    },
+    {
+      "question": "在 Windows 系统权限维持技术中，利用“WMI 事件订阅（WMI Event Subscription）”实现持久化的显著优势在于：",
+      "options": [
+        "它不依赖传统的注册表 Run 键或启动文件夹，完全无文件驻留在 WMI 命名空间数据库中，可在特定系统事件（如用户登录或系统开机）触发时隐蔽执行",
+        "它能自动破坏目标 CPU 的物理防篡改熔丝",
+        "它不需要管理员权限即可在任何受限账户下创建",
+        "它会阻止系统安装任何 Windows 安全补丁"
+      ],
+      "answer": 0,
+      "explanation": "WMI 事件订阅由 __EventFilter（事件触发条件）、__EventConsumer（执行体，如 CommandLineEventConsumer）和 __FilterToConsumerBinding（绑定关系）三部分组成。其元数据直接存储在 OBJECTS.DATA 数据库中，不生成独立磁盘文件，隐蔽性极强，常被高级威胁（APT）用于权限维持。"
     }
   ],
   "net-01-01": [
@@ -7134,6 +7398,17 @@ const SECTION_CHECKPOINTS_EN = {
       ],
       "answer": 2,
       "explanation": "Certificate Transparency logs (crt.sh) are public registries populated by certificate authorities. Querying these public third-party repositories issues zero probes against the target network, qualifying as pure passive OSINT."
+    },
+    {
+      "question": "During passive reconnaissance, when a target web service is protected behind a CDN/reverse proxy, which technique is most effective for locating the real origin server IP?",
+      "options": [
+        "Checking historical DNS resolution datasets (e.g., SecurityTrails) or analyzing outgoing transactional email headers (Received / Return-Path)",
+        "Launching automated sqlmap injections against all edge CDN nodes",
+        "Executing a volumetric SYN Flood attack against the root apex domain",
+        "Inspecting the Subject Alternative Name (SAN) fields of the public CDN certificate"
+      ],
+      "answer": 0,
+      "explanation": "Historical DNS records often preserve the origin server's public IP prior to CDN adoption. Additionally, transactional outbound emails (such as verification or password reset emails) are typically dispatched directly from the origin server, exposing its real IP inside Received headers."
     }
   ],
   "pentest-02-01": [
@@ -7147,6 +7422,17 @@ const SECTION_CHECKPOINTS_EN = {
       ],
       "answer": 1,
       "explanation": "Corporate firewalls enforce strict inbound port filtering to protect internal assets, but typically allow outbound HTTP/HTTPS sessions so employees can browse the internet. A Reverse Shell initiates an outbound connection, leveraging this permissive rule."
+    },
+    {
+      "question": "After catching an initial raw reverse shell with Netcat (`nc -lvnp`), what is the standard sequence to upgrade it to a fully interactive PTY terminal?",
+      "options": [
+        "Run python3 -c 'import pty; pty.spawn(\"/bin/bash\")' on the remote host, background the shell, execute stty raw -echo; fg locally, and configure export TERM=xterm",
+        "Repeatedly send exit three times to restart the Netcat listener",
+        "Instruct the target host to install a full GNOME desktop environment via apt",
+        "Stream persistent kill -9 signals into the incoming connection socket"
+      ],
+      "answer": 0,
+      "explanation": "Raw reverse shells lack a pseudo-terminal subsystem. Spawning a pty via Python, disabling local terminal echo/line buffering via stty raw -echo, and passing raw terminal characters enables native shell ergonomics including arrow keys, signals, and tab completion."
     }
   ],
   "pentest-03-01": [
@@ -7160,6 +7446,17 @@ const SECTION_CHECKPOINTS_EN = {
       ],
       "answer": 1,
       "explanation": "Exploits verify and trigger vulnerabilities, while Payloads define the weaponized code executed post-exploitation to spawn command shells or initialize Meterpreter sessions."
+    },
+    {
+      "question": "In `msfconsole`, what is the key difference between executing `set RHOSTS 192.168.1.10` and `setg RHOSTS 192.168.1.10`?",
+      "options": [
+        "set applies only to the currently selected module, whereas setg establishes a global datastore value that persists across module switches",
+        "setg immediately dispatches live probe packets to the target network",
+        "setg can only be utilized to configure local listening ports (LPORT)",
+        "set only accepts numeric configuration options and rejects IP strings"
+      ],
+      "answer": 0,
+      "explanation": "set defines variables strictly within the current module's datastore. setg registers the key-value pair globally across all modules in the active session, eliminating repetitive input when transitioning between auxiliary scanners and exploit modules."
     }
   ],
   "pentest-04-01": [
@@ -7173,6 +7470,17 @@ const SECTION_CHECKPOINTS_EN = {
       ],
       "answer": 1,
       "explanation": "During Phase 1 (AS Authentication), the KDC validates the user's secret and returns a TGT encrypted with the domain's `krbtgt` NTLM hash, which is subsequently exchanged for application-specific Service Tickets."
+    },
+    {
+      "question": "When forging a Kerberos 'Golden Ticket' for persistent administrative control across an entire Active Directory forest, which cryptographic secret is strictly required?",
+      "options": [
+        "The NTLM hash or AES-256 key of the domain's built-in krbtgt account",
+        "The plaintext password of a standard unprivileged domain user",
+        "The public dynamic IP address of the primary Domain Controller",
+        "The root private key of the global Internet DNS authority"
+      ],
+      "answer": 0,
+      "explanation": "In Kerberos, Ticket Granting Tickets (TGTs) are encrypted and signed exclusively using the secret key of the krbtgt service account. Possessing this secret enables attackers to forge valid TGTs with arbitrary user identities, domain group memberships, and extended validity periods."
     }
   ],
   "pentest-05-01": [
@@ -7186,6 +7494,17 @@ const SECTION_CHECKPOINTS_EN = {
       ],
       "answer": 0,
       "explanation": "SOCKS5 proxies establish transport-level connections and cannot encapsulate raw IP/TCP packets needed for SYN scans. Testers must force standard operating system `connect()` syscalls using `-sT`."
+    },
+    {
+      "question": "When an operator possesses valid SSH access to an enterprise bastion/jump host, what does executing `ssh -D 1080 user@jump_host -N` accomplish on the operator's workstation?",
+      "options": [
+        "It establishes a local dynamic SOCKS5 proxy on 127.0.0.1:1080, tunneling application traffic through the encrypted SSH connection to reach the target internal network",
+        "It exposes port 1080 on the bastion host as an unauthenticated public web server",
+        "It immediately wipes all system event logs on the bastion host",
+        "It broadcasts ARP cache poisoning frames throughout the remote subnet"
+      ],
+      "answer": 0,
+      "explanation": "The ssh -D flag configures OpenSSH to act as a local SOCKS4/5 proxy server. Applications configured to use localhost:1080 have their TCP connections securely multiplexed through the SSH tunnel and routed from the remote bastion."
     }
   ],
   "web-01-02": [
@@ -7367,6 +7686,17 @@ const SECTION_CHECKPOINTS_EN = {
       ],
       "answer": 1,
       "explanation": "Under the W3C CORS specification, browsers reject credentialed requests if `Access-Control-Allow-Origin` is set to wildcard `*`. Consequently, developers blindly reflecting specific Origin headers create a far greater security risk."
+    },
+    {
+      "question": "Which prevalent CORS implementation flaw introduces severe data exfiltration vulnerabilities across arbitrary origins?",
+      "options": [
+        "Dynamically reflecting whatever Origin header the client sends into Access-Control-Allow-Origin while specifying Access-Control-Allow-Credentials: true",
+        "Completely disallowing custom cross-origin request headers",
+        "Constraining allowed cross-origin origins strictly to explicit same-origin subdomains",
+        "Configuring the preflight OPTIONS response caching interval to 3600 seconds"
+      ],
+      "answer": 0,
+      "explanation": "Dynamically mirroring the incoming Origin header while pairing it with Access-Control-Allow-Credentials: true effectively grants any arbitrary website on the internet full authenticated read access to the target API, eviscerating the Same-Origin Policy."
     }
   ],
   "web-09-01": [
@@ -7380,6 +7710,17 @@ const SECTION_CHECKPOINTS_EN = {
       ],
       "answer": 1,
       "explanation": "The JWT specification historically included `alg: none`. If a server library fails to enforce an algorithm whitelist, it accepts unsigned tokens, allowing attackers to forge arbitrary claims without possessing the secret key."
+    },
+    {
+      "question": "In a JWT Algorithm Confusion attack (downgrading RS256 to HS256), what mechanism enables the attacker to forge valid authentication tokens?",
+      "options": [
+        "Changing alg to symmetric HS256 and signing the forged token using the server's publicly accessible RSA public key as the HMAC shared secret",
+        "Brute-forcing the 4096-bit prime factors of the private RSA key directly",
+        "Injecting SQL statements into the JWT payload to wipe the database key table",
+        "Switching the token encoding standard from Base64Url to Base32"
+      ],
+      "answer": 0,
+      "explanation": "If the backend verification handler blindly delegates key selection based on the token's alg header while using its stored public key, switching to HS256 treats the public key string as a symmetric HMAC secret. Because the public key is known to the attacker, they can sign arbitrary payloads."
     }
   ],
   "web-08-01": [
@@ -7393,6 +7734,17 @@ const SECTION_CHECKPOINTS_EN = {
       ],
       "answer": 1,
       "explanation": "In Python, multiplying a string by an integer repeats the string ('7' * 7 = '7777777'). In PHP Twig, loose type coercion converts '7' to an integer and computes 49. Hence, this is a signature Jinja2/Python response."
+    },
+    {
+      "question": "In PortSwigger's template engine identification decision tree, if `${7*7}` is reflected verbatim, `{{7*7}}` evaluates to `49`, and `{{7*'7'}}` also evaluates to `49` (rather than `7777777`), which engine is indicated?",
+      "options": [
+        "Twig (PHP)",
+        "Jinja2 (Python)",
+        "Freemarker (Java)",
+        "Velocity (Java)"
+      ],
+      "answer": 0,
+      "explanation": "In Twig (PHP), the string '7' undergoes type juggling into integer 7, causing {{7*'7'}} to evaluate arithmetically to 49. In Python Jinja2, multiplying a string replicates it, yielding 7777777."
     }
   ],
   "web-07-01": [
@@ -7886,6 +8238,17 @@ const SECTION_CHECKPOINTS_EN = {
       ],
       "answer": 2,
       "explanation": "`__subclasses__()` is a built-in Python method on class objects that returns a list of all currently loaded direct subclasses. Calling it on root `object` exposes hundreds of candidate gadget classes in memory."
+    },
+    {
+      "question": "When inspecting classes from `().__class__.__base__.__subclasses__()` in a Jinja2 sandbox escape, which reference do attackers typically seek inside `__init__.__globals__` to execute OS commands?",
+      "options": [
+        "The os module or popen function (e.g., accessed via classes like os._wrap_close or subprocess.Popen)",
+        "The math.sin trigonometric calculation function",
+        "The pseudorandom seed generator from the random library",
+        "The standard graphical canvas renderer from turtle"
+      ],
+      "answer": 0,
+      "explanation": "An object's __init__.__globals__ exposes the module-level dictionary where the class was declared. Classes like os._wrap_close reside in modules that import os, allowing attackers to access os.popen() or os.system() directly to execute operating system commands."
     }
   ],
   "web-08-03": [
@@ -7899,6 +8262,17 @@ const SECTION_CHECKPOINTS_EN = {
       ],
       "answer": 1,
       "explanation": "SSTI stems from interpreting untrusted input as executable template source code. Parameterizing data via context variables ensures the engine treats input purely as passive text data, completely neutralizing injection risks."
+    },
+    {
+      "question": "In Jinja2 SSTI exploitation, if security filters strictly strip period (`.`) and underscore (`_`) characters, which built-in filter is commonly utilized to dynamically resolve attributes?",
+      "options": [
+        "|attr() combined with hexadecimal or string escapes, such as ()|attr(\"\\x5f\\x5fclass\\x5f\\x5f\")",
+        "|length array counter filter",
+        "|capitalize string title filter",
+        "|reverse array inversion filter"
+      ],
+      "answer": 0,
+      "explanation": "In Jinja2, the |attr() filter performs dynamic attribute lookup equivalent to dot notation. By passing escaped string arguments (e.g. \\x5f\\x5fclass\\x5f\\x5f or unicode equivalents), attackers retrieve magic methods without typing literal periods or underscores."
     }
   ],
   "web-09-02": [
@@ -7912,6 +8286,17 @@ const SECTION_CHECKPOINTS_EN = {
       ],
       "answer": 1,
       "explanation": "The `state` parameter is an unguessable random token generated by the client and stored in the user's session. Validating it on the redirect callback ensures that the incoming authorization code originated from the genuine user's active session, preventing OAuth CSRF."
+    },
+    {
+      "question": "In an OAuth 2.0 deployment, what vulnerability emerges if the authorization server performs weak or partial prefix matching on the `redirect_uri` parameter?",
+      "options": [
+        "Attackers can manipulate the callback destination (e.g. via path traversal or open redirects) to exfiltrate authorization codes or access tokens to an external server",
+        "Attackers gain direct physical shutdown capabilities over the authentication hardware",
+        "Attackers can alter the global timezone configuration of the OAuth identity provider",
+        "Target workstations suffer automatic CPU cooling hardware overrides"
+      ],
+      "answer": 0,
+      "explanation": "Flawed redirect_uri validation permits attackers to construct authorization requests that leak sensitive authorization codes or tokens to unauthorized endpoints, leading to complete account takeover."
     }
   ],
   "web-09-03": [
@@ -7925,6 +8310,17 @@ const SECTION_CHECKPOINTS_EN = {
       ],
       "answer": 0,
       "explanation": "Session fixation exploits static session identifiers that persist before and after login. Regenerating the session token upon authentication boundary transitions invalidates any pre-seeded session keys an attacker planted in the client."
+    },
+    {
+      "question": "Which cookie security attribute must be enabled by the server to prevent client-side JavaScript (such as injected XSS scripts) from reading session cookies via `document.cookie`?",
+      "options": [
+        "HttpOnly",
+        "SameSite=None",
+        "Path=/",
+        "Domain=.example.com"
+      ],
+      "answer": 0,
+      "explanation": "The HttpOnly directive instructs browsers to block client-side scripts from accessing the cookie through document.cookie. Even if an application suffers from XSS, attackers cannot directly exfiltrate HttpOnly session tokens."
     }
   ],
   "web-10-02": [
@@ -7938,6 +8334,17 @@ const SECTION_CHECKPOINTS_EN = {
       ],
       "answer": 0,
       "explanation": "By convention, CL.TE denotes 'Frontend.Backend'. The frontend interprets `Content-Length` to frame the message, while the backend prioritizes `Transfer-Encoding: chunked`, prematurely completing the chunk and desynchronizing the TCP socket."
+    },
+    {
+      "question": "In a **TE.CL** HTTP Request Smuggling scenario, how do the frontend reverse proxy and backend server misalign on request boundary parsing?",
+      "options": [
+        "The frontend proxy processes Transfer-Encoding: chunked, whereas the backend server ignores chunked encoding and relies strictly on Content-Length",
+        "Both frontend and backend exclusively process Content-Length",
+        "Both frontend and backend exclusively process Transfer-Encoding",
+        "The frontend unconditionally drops all HTTP POST requests"
+      ],
+      "answer": 0,
+      "explanation": "In a TE.CL desynchronization, the frontend interprets the message body via Transfer-Encoding: chunked and routes the whole payload. The backend only checks Content-Length, truncating message boundaries early and leaving orphaned bytes in the persistent socket stream to poison the next client request."
     }
   ],
   "web-10-03": [
@@ -7951,6 +8358,17 @@ const SECTION_CHECKPOINTS_EN = {
       ],
       "answer": 0,
       "explanation": "Browsers do not apply SOP restrictions to WebSocket connections and attach ambient cookies to handshake requests. The server must validate the `Origin` header during handshake processing to prevent cross-site hijacking."
+    },
+    {
+      "question": "Once a WebSocket full-duplex connection is established, which statement regarding message data security is accurate?",
+      "options": [
+        "Browser Same-Origin Policy does not govern raw WebSocket messages; unvalidated messages rendered directly into the DOM can still introduce Cross-Site Scripting (XSS)",
+        "The WebSocket protocol incorporates automated native sanitization against SQL injection and XSS",
+        "WebSocket connections are structurally restricted to plaintext UTF-8 and cannot transmit binary ArrayBuffers",
+        "WebSocket frames operate without underlying TCP transport sockets"
+      ],
+      "answer": 0,
+      "explanation": "WebSocket frames bypass traditional HTTP request/response lifecycles and Same-Origin protections once established. Applications must validate, escape, and authenticate incoming messages just as rigorously as standard HTTP payloads to prevent XSS and backend injection."
     }
   ],
   "pentest-01-02": [
@@ -7964,6 +8382,17 @@ const SECTION_CHECKPOINTS_EN = {
       ],
       "answer": 1,
       "explanation": "`-sS` performs a SYN half-open scan: upon receiving a SYN/ACK from an open port, Nmap promptly replies with an RST packet to tear down the socket before completing the handshake, bypassing application-layer connection logging."
+    },
+    {
+      "question": "How does Nmap's service version detection (`-sV`) determine the exact software and version running on an open port?",
+      "options": [
+        "It reads the remote operating system's software registry directly",
+        "It sends structured probes to open ports and matches the returned banner responses against regular expressions in the nmap-service-probes database",
+        "It brute-forces administrative credentials to run local version query binaries",
+        "It broadcasts ARP queries across the local subnet to gather device metadata"
+      ],
+      "answer": 1,
+      "explanation": "Nmap's -sV engine sends a sequence of protocol-specific probes (beginning with NULL probes, then common protocol handshakes) and analyzes the returned response signatures against regex rules stored in nmap-service-probes."
     }
   ],
   "pentest-01-03": [
@@ -7977,6 +8406,17 @@ const SECTION_CHECKPOINTS_EN = {
       ],
       "answer": 1,
       "explanation": "When wildcard responses undermine status code filtering, the byte length of the default fallback page remains consistent. Supplying that baseline value via `-fs <size>` filters out false positives and reveals genuine routes."
+    },
+    {
+      "question": "What distinguishes Virtual Host (VHost) fuzzing from conventional DNS subdomain enumeration?",
+      "options": [
+        "VHost fuzzing sends HTTP requests to a target IP while altering the Host header, exposing internal virtual hosts that lack public DNS records",
+        "VHost fuzzing operates without wordlists by algorithmically synthesizing hostnames",
+        "VHost fuzzing requires local root privilege on the target server",
+        "VHost fuzzing exclusively probes HTTPS port 443 and cannot evaluate HTTP port 80"
+      ],
+      "answer": 0,
+      "explanation": "Many internal applications reside behind web servers (e.g., Nginx server blocks) without public DNS mappings. Fuzzing the HTTP Host header against the known IP directs traffic based on virtual host configuration, exposing unmapped internal portals."
     }
   ],
   "pentest-02-02": [
@@ -7990,6 +8430,17 @@ const SECTION_CHECKPOINTS_EN = {
       ],
       "answer": 0,
       "explanation": "Under GTFOBins specifications, when `find` holds SUID privileges, processes spawned via its `-exec` flag retain effective user privileges (EUID=root). Invoking `/bin/sh -p` prevents shell privilege dropping."
+    },
+    {
+      "question": "During a Linux privilege escalation assessment, `sudo -l` displays `env_keep+=LD_PRELOAD`. What is the primary attack vector to instantly obtain root?",
+      "options": [
+        "Compile a malicious C shared object containing a constructor (__attribute__((constructor))) and execute sudo LD_PRELOAD=/path/exploit.so <command>",
+        "Directly overwrite /etc/passwd to change the user's UID to 0",
+        "Execute rm -rf / to trigger automatic kernel recovery routines",
+        "Launch a dictionary brute-force attack against the root SSH account"
+      ],
+      "answer": 0,
+      "explanation": "When LD_PRELOAD is preserved across sudo invocations, the dynamic linker loads the attacker's custom shared library into the elevated process space. Code defined in a constructor executes before the main program, yielding immediate root privilege."
     }
   ],
   "pentest-02-03": [
@@ -8003,6 +8454,17 @@ const SECTION_CHECKPOINTS_EN = {
       ],
       "answer": 1,
       "explanation": "`SeImpersonatePrivilege` authorizes a process to impersonate client security contexts. Tools like PrintSpoofer and Potato-family exploits coerce elevated local services into connecting to an attacker-controlled named pipe, capturing and impersonating their SYSTEM token."
+    },
+    {
+      "question": "What fundamental mechanism enables privilege escalation via an 'Unquoted Service Path' in Windows?",
+      "options": [
+        "Corrupted registry keys that force Windows services into maintenance mode",
+        "When a service binary path contains spaces and lacks quotation marks (e.g., C:\\Program Files\\App\\srv.exe), Windows attempts to execute truncated prefixes (like C:\\Program.exe); writing a malicious binary to that path hijacks execution on service start",
+        "Services transmitting administrative commands over unencrypted plaintext HTTP",
+        "Hardcoded administrative passwords embedded in the binary headers"
+      ],
+      "answer": 1,
+      "explanation": "When path strings with whitespace lack surrounding quotes, the Windows CreateProcess API iteratively splits at spaces and probes for candidate executables (e.g., C:\\Program.exe). Placing an executable in an unquoted ancestor directory with write access hijacks the privileged service execution."
     }
   ],
   "pentest-03-02": [
@@ -8016,6 +8478,17 @@ const SECTION_CHECKPOINTS_EN = {
       ],
       "answer": 1,
       "explanation": "By MSF convention, payload paths separated by slashes denote Staged architectures (injecting a miniature stager to pull the main body), while underscore concatenation denotes self-contained Stageless payloads."
+    },
+    {
+      "question": "When generating shellcode with msfvenom, what is the critical purpose of passing the flag `-b \"\\x00\\x0a\\x0d\"`?",
+      "options": [
+        "To apply asymmetric encryption and embed a valid digital certificate",
+        "To define bad characters, instructing the encoder to avoid generating these byte sequences so the payload is not truncated by functions like strcpy",
+        "To restrict the payload socket listener exclusively to port 0",
+        "To constrain payload architecture execution strictly to 32-bit systems"
+      ],
+      "answer": 1,
+      "explanation": "Memory corruption exploits often inject payloads through string-handling functions that terminate on null bytes (\\x00) or line breaks (\\x0a, \\x0d). The -b flag forces encoders to produce alphanumeric or filtered shellcode that excludes these destructive delimiters."
     }
   ],
   "pentest-03-03": [
@@ -8029,6 +8502,17 @@ const SECTION_CHECKPOINTS_EN = {
       ],
       "answer": 1,
       "explanation": "The `migrate` command reflectively injects active Meterpreter threads into enduring system processes (e.g. explorer.exe), preventing session disconnection if the initial process closes."
+    },
+    {
+      "question": "Within an active Meterpreter session, which native command enables an operator to access an internal RDP service bound exclusively to `127.0.0.1:3389` on the compromised host?",
+      "options": [
+        "portfwd add -l 33890 -p 3389 -r 127.0.0.1 (forwarding remote port 3389 to local port 33890 via the Meterpreter tunnel)",
+        "drop_all_firewalls --force",
+        "reboot -f",
+        "clearev"
+      ],
+      "answer": 0,
+      "explanation": "Meterpreter's built-in portfwd creates a local TCP relay through the active reverse session tunnel. The operator can connect an RDP client directly to 127.0.0.1:33890 on their own workstation to reach the host's localhost-only service."
     }
   ],
   "pentest-04-02": [
@@ -8042,6 +8526,17 @@ const SECTION_CHECKPOINTS_EN = {
       ],
       "answer": 1,
       "explanation": "Any domain user can legitimately request service tickets from the KDC. The brute-forcing happens offline against harvested ticket hashes on local GPU rigs, generating zero authentication failure events on the Domain Controller."
+    },
+    {
+      "question": "Why does a Pass-the-Hash (PtH) attack succeed in authenticating against remote Windows hosts without requiring knowledge of the user's plaintext password?",
+      "options": [
+        "The NTLM Challenge/Response protocol utilizes the user's NTLM hash directly as the cryptographic key for calculating responses, without ever needing the plaintext",
+        "Windows broadcasts all plaintext credentials across the broadcast domain",
+        "Pass-the-Hash bypasses network protocols by locally editing UI display labels in memory",
+        "NTLM hashes can be mathematically reversed into plaintext instantly without cost"
+      ],
+      "answer": 0,
+      "explanation": "Under the NTLM authentication protocol, the client encrypts the server's challenge nonce using the user's NTLM hash (the MD4 hash of the UTF-16LE password) as the symmetric encryption key. Possessing the hash is mathematically equivalent to possessing the password during the handshake."
     }
   ],
   "pentest-04-03": [
@@ -8055,6 +8550,17 @@ const SECTION_CHECKPOINTS_EN = {
       ],
       "answer": 0,
       "explanation": "With replication privileges, DCSync pretends to be an authorized Domain Controller requesting directory synchronization via DRSUAPI, compelling the authentic DC to transmit all user credential hashes."
+    },
+    {
+      "question": "What is the primary analytical advantage of ingesting SharpHound collection data into the BloodHound graph database during Active Directory assessments?",
+      "options": [
+        "Leveraging graph theory algorithms (such as shortest path queries) to uncover non-obvious, chained privilege escalation paths leading from low-privilege accounts to Domain Admins",
+        "Automatically deploying ransomware payloads to encrypt enterprise storage arrays",
+        "Monitoring real-time hardware telemetry and GPU fan speeds across domain workstations",
+        "Decrypting the low-level motherboard BIOS passwords across all endpoints"
+      ],
+      "answer": 0,
+      "explanation": "BloodHound models Active Directory objects and ACL permissions as graph nodes and directed edges. Graph queries instantly expose multi-hop transitive trust and access control relationships that are virtually impossible to identify manually."
     }
   ],
   "pentest-05-02": [
@@ -8068,6 +8574,17 @@ const SECTION_CHECKPOINTS_EN = {
       ],
       "answer": 1,
       "explanation": "PsExec drops a binary to `ADMIN$` and registers a temporary service (Event ID 7045), which triggers modern EDR rules. WMI invokes `Win32_Process.Create` in-memory with zero file drops, maximizing stealth."
+    },
+    {
+      "question": "When conducting lateral movement against Windows servers with PowerShell Remoting enabled via Evil-WinRM, which default ports are utilized?",
+      "options": [
+        "TCP 5985 (HTTP) and TCP 5986 (HTTPS)",
+        "TCP 445 (SMB)",
+        "TCP 3389 (RDP)",
+        "TCP 22 (SSH)"
+      ],
+      "answer": 0,
+      "explanation": "Windows Remote Management (WinRM) communicates over WS-Management protocols using TCP port 5985 for default plaintext/Kerberos-authenticated traffic and TCP port 5986 for TLS-secured connections."
     }
   ],
   "pentest-05-03": [
@@ -8081,6 +8598,17 @@ const SECTION_CHECKPOINTS_EN = {
       ],
       "answer": 1,
       "explanation": "Professional penetration testers must adhere to strict ethical and legal boundaries. All artifacts (tools, scripts, test accounts) must be removed, baseline configurations restored, and a verifiable restoration report delivered."
+    },
+    {
+      "question": "In Windows persistence techniques, what makes WMI Event Subscriptions particularly stealthy compared to standard registry autoruns?",
+      "options": [
+        "They store configuration entirely within the WMI repository (OBJECTS.DATA) without dropping executable files in startup folders, triggering on specific system events",
+        "They physically burn anti-tamper hardware fuses inside modern CPUs",
+        "They can be established from unprivileged guest accounts without administrative elevation",
+        "They permanently inhibit Windows Update from installing operating system security patches"
+      ],
+      "answer": 0,
+      "explanation": "WMI Event Subscriptions bind an __EventFilter to a CommandLineEventConsumer via __FilterToConsumerBinding. Because these configurations reside inside the WMI CIM database rather than obvious autorun registry keys, they offer robust, fileless persistence."
     }
   ],
   "net-01-01": [
