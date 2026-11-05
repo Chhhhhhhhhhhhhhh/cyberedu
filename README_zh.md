@@ -14,7 +14,7 @@
   <img src="https://img.shields.io/badge/核心方向-9大体系-00e5ff?style=flat-square" alt="核心方向">
   <img src="https://img.shields.io/badge/原子微课-171讲-00ff41?style=flat-square" alt="原子微课">
   <img src="https://img.shields.io/badge/双语对齐-100%25_中英-00e5ff?style=flat-square" alt="双语对齐">
-  <img src="https://img.shields.io/badge/单元测试-114项通过-00ff41?style=flat-square" alt="单元测试">
+  <img src="https://img.shields.io/badge/单元测试-通过-00ff41?style=flat-square" alt="单元测试">
   <img src="https://img.shields.io/badge/许可证-MIT-00e5ff?style=flat-square" alt="许可证">
   <img src="https://img.shields.io/github/stars/Chhhhhhhhhhhhhhh/cyberedu?style=social" alt="Stars">
 </p>
@@ -43,10 +43,10 @@
 | 🌐 **100% 工业级双语全量对齐** | 342 篇中英双语教材（171 篇深度中文 + 171 篇专业英文），支持顶部导航栏一键平滑切换，沉浸式专业术语悬停提示 |
 | 🎯 **342 组微课随堂 Checkpoint** | 每节微课标配 2 道单选自测题，提交即刻判定并展示底层原理解析，集成“🤖 呼叫 AI 导师”一键针对错题深度辅导 |
 | 🛠️ **6 大交互安全武器库与沙箱** | 内置 SQL 注入攻防沙箱（动态拼接 vs 参数化对比）、XSS 实体转义过滤演练场、命令注入管道隔离分析仪、密码学哈希雪崩效应分析仪、五维技能雷达图评测与实验抽屉 |
-| 🚩 **28 道实战 CTF 竞技场** | 覆盖 Web、PWN、逆向、密码学、取证与 Misc，真实数学推导与靶机利用，SHA-256 安全哈希校验，仓库零明文 Flag 泄露 |
+| 🚩 **28 道实战 CTF 竞技场** | 覆盖 Web、PWN、逆向、密码学、取证与 Misc，真实数学推导与靶机利用，SHA-256 安全哈希校验，按规范化提交内容校验答案摘要 |
 | 🎮 **黑客段位与成长激励体系** | 5 阶段位晋升体系（LV.1 脚本小子 → LV.5 赛博主宰），多维 EXP 经验计算、连续签到/答题加成、成就勋章解锁与通关动效 |
 | 🤖 **AI 智能导师与编程副驾驶** | 原生 SSE 流式输出，支持接入 DeepSeek、OpenAI、通义千问、Claude、Ollama 本地大模型，具备全面板会话抽屉与代码语法高亮 |
-| 💻 **浏览器原生代码运行与实战** | 内置 CodeMirror 5 编辑器，支持 Python / JS / C / Bash 代码高亮与编辑，配套 10 道编程练习自动校验 |
+| 💻 **浏览器原生代码运行与实战** | 内置 CodeMirror 5 编辑器，支持 Python / JS / C / Bash 代码高亮与编辑，配套 10 道编程练习，固定示例核对输出，实时 DNS 题按解析结果自测 |
 | 📱 **PWA 渐进式离线应用** | 内置 `manifest.json` 与 Service Worker 智能缓存，无网环境离线可学，新粗野主义赛博终端界面，WCAG AA 级对比度无障碍合规 |
 | 🔍 **全局效率与学习工具链** | Ctrl+K 全局极速搜索、前置章节关联提示、难度星级标识、学习进度本地持久化与 JSON 备份导出/恢复 |
 
@@ -74,7 +74,8 @@
 ```
 cyberedu/
 ├── cyberedu.html          # 前端核心单页入口（Neo-Brutalist 赛博终端架构）
-├── content.js             # 171 讲原子微课正文 (中文) + 342 组 Checkpoint 评测 + CTF 靶场配置
+├── content.js             # 课程目录、编程练习与 CTF 配置
+├── lessons/               # 按模块和语言拆分的正文与随堂测验
 ├── script.js              # 核心交互引擎（视图路由、段位经验计算、沙箱互动、AI 对话）
 ├── style.css              # 赛博朋克终端主题样式（WCAG AA 级高对比度）
 ├── i18n.js                # 中英双语国际化字典（250+ 翻译对）
@@ -84,7 +85,7 @@ cyberedu/
 ├── flags-hash.js          # CTF 靶场 Flag 的 SHA-256 安全摘要映射（无明文泄露）
 ├── package.json           # 项目配置、运行脚本与元数据
 ├── favicon.svg            # 站点矢量图标
-├── tests/                 # 零外部依赖测试套件（114 项严苛断言）
+├── tests/                 # 零外部依赖测试套件（单元断言）
 │   ├── test-runner.js     # ANSI 彩色轻量测试运行器
 │   ├── server.test.js     # 本地服务器安全、Host 校验、路径穿越与流控测试
 │   └── utils.test.js      # 工具函数、游戏化段位、攻防沙箱与颜色对比度测试
@@ -111,7 +112,7 @@ cyberedu/
 平台内建了严谨的质量自动化门禁，确保每次提交与部署均满足工业级可靠性标准：
 
 ```bash
-# 1. 运行核心回归测试套件（114 项单元测试）
+# 1. 运行核心回归测试套件（单元测试）
 npm test
 
 # 2. 验证 CTF 挑战的数学与逻辑可解性（21/21 验证通过）
@@ -133,7 +134,7 @@ node --check server.js && node --check script.js && node --check content.js && n
 
 ### 方式一：纯静态运行（开箱即用，无需服务器）
 
-直接在浏览器中双击打开 `cyberedu.html`。所有 171 节原子微课、交互式 Checkpoint 自测、代码语法高亮、沙箱演练场与搜索功能均完全运行在浏览器客户端，无需连接外网。
+下载完整项目并打开 `cyberedu.html` 即可阅读课程、做随堂测验、查看 CTF 材料和使用工具箱。GitHub Pages 会缓存应用和已打开的课程包，断网后可重开。CDN 提供的语法高亮和图表需要首次联网加载。
 
 ### 方式二：本地服务运行（启用 AI 智能导师与 PWA）
 
@@ -144,7 +145,7 @@ node server.js
 # 启动后浏览器访问 http://127.0.0.1:8000
 ```
 
-> **安全内生设计**：本地服务默认**严格仅绑定 `127.0.0.1`**（绝不暴露给局域网其他设备），并严格校验 HTTP `Host` 请求头以杜绝 DNS 重绑定攻击，不开放跨域（CORS），安全可控。
+默认本地服务绑定回环地址，支持进度同步和 AI 导师。要执行自己信任的练习代码，先停止服务，再用 `npm run start:runner` 启动。该模式以本机账户权限运行代码，仅在回环地址生效。静态站和默认模式均提供自测参考。
 
 配置 AI 智能导师：点击右下角绿色终端悬浮按钮打开 AI 聊天面板，点击 ⚙ 齿轮图标即可填入您的 API Key：
 
@@ -152,7 +153,7 @@ node server.js
 |---|---|---|
 | **API 类型** | `OpenAI 兼容` 或 `Anthropic` | 支持几乎所有主流大模型协议 |
 | **API Base URL** | `https://api.deepseek.com` | 接口服务根地址 |
-| **API Key** | `sk-...` | 仅保存在浏览器本地 `localStorage`，不上传服务器 |
+| **API Key** | `sk-...` | 保存在当前标签页的会话存储，发送问题时由本地代理转交给配置的模型服务商 |
 | **模型名称** | `deepseek-chat`、`gpt-4o`、`qwen-plus`、`claude-3-5-sonnet` | 自定义调用的具体大模型 |
 
 ---

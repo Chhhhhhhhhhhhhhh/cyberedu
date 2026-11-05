@@ -6,6 +6,7 @@
   "private": true,
   "scripts": {
     "start": "node server.js",
+    "start:runner": "node server.js --enable-run",
     "test": "node tests/test-runner.js"
   },
   "keywords": [

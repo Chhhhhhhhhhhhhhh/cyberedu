@@ -1,21 +1,64 @@
 // ============================================================
 // STATE & PROGRESS
 // ============================================================
-let userProgress = defaultProgress();
+const progressSchema = typeof module !== 'undefined' && module.exports ? require('./progress.js') : CyberEduProgress;
 const PROGRESS_KEY = 'cyberedu_v2_progress';
+const defaultProgress = progressSchema.defaultProgress;
+let userProgress = defaultProgress();
+let localSession = null;
+let revision = '0', pendingBase = null, conflictRevision = null;
+let savingProgress = false, syncTimer;
 
-function defaultProgress() {
-  return {
-    agentName: 'OPERATIVE #1337',
-    completedSections: [],
-    ctfSolved: [],
-    moduleProgress: {},
-    timeline: [],
-    streak: 0,
-    lastVisit: '',
-    unlockedBadges: [],
-    commandCount: 0
-  };
+async function discoverLocalServer() {
+  if (!/^https?:$/.test(location.protocol) || location.hostname.endsWith('.github.io')) return null;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 2000);
+  try {
+    const res = await fetch('./api/session', {cache: 'no-store', signal: controller.signal});
+    if (!res.ok || !res.headers.get('content-type')?.includes('application/json')) return null;
+    const info = await res.json();
+    return /^[a-f0-9]{64}$/.test(info.token) ? info : null;
+  } catch { return null; } finally { clearTimeout(timeout); }
+}
+
+async function postLocal(path, body, options = {}) {
+  if (!localSession) throw new Error(t('local.required'));
+  const send = () => fetch('./api/' + path, {
+    method: 'POST', signal: options.signal,
+    headers: {'Content-Type': 'application/json', 'X-CyberEdu-Token': localSession.token, ...options.headers},
+    body: JSON.stringify(body)
+  });
+  const response = await send();
+  if (response.status !== 403) return response;
+  const fresh = await discoverLocalServer();
+  if (!fresh || fresh.token === localSession?.token) return response;
+  localSession = fresh;
+  return send();
+}
+
+function persistSnapshot() {
+  localStorage.setItem(PROGRESS_KEY, JSON.stringify({...userProgress, revision, pendingBase}));
+}
+
+// A late acknowledgement from one tab must not overwrite a newer snapshot in another.
+function persistAcknowledgement() {
+  const saved = JSON.parse(localStorage.getItem(PROGRESS_KEY) || 'null');
+  if (!saved || saved.revision === revision) persistSnapshot();
+}
+
+function showSyncStatus() {
+  const el = document.getElementById('sync-status');
+  if (!el) return;
+  el.textContent = conflictRevision ? t('progress.conflict') : pendingBase && localSession ? t('progress.pending') : '';
+  document.getElementById('sync-resolve').hidden = !conflictRevision;
+  document.getElementById('sync-use-server').hidden = !conflictRevision;
+}
+
+function restoreSnapshot(data) {
+  userProgress = progressSchema.normalizeProgress(data, MODULES, CTF_CHALLENGES);
+  revision = data.revision || '0';
+  pendingBase = typeof data.pendingBase === 'string' ? data.pendingBase : null;
+  recalcModuleProgress();
 }
 
 function recordActiveDay() {
@@ -36,50 +79,92 @@ function recordActiveDay() {
   }
 }
 
-function initProgress() {
-  if (typeof localStorage === 'undefined' || typeof fetch === 'undefined') return;
-  let local = null;
+async function initProgress() {
+  let stored;
   try {
-    const raw = localStorage.getItem(PROGRESS_KEY);
-    if (raw) local = JSON.parse(raw);
-  } catch(e) {
-    console.warn('Malformed local progress, falling back:', e);
-  }
-  fetch('/api/progress').then(r => r.json()).then(server => {
-    if (server && server.completedSections) {
-      userProgress = Object.assign(defaultProgress(), server);
-    } else if (local) {
-      userProgress = Object.assign(defaultProgress(), local);
-    } else {
-      userProgress = defaultProgress();
+    stored = JSON.parse(localStorage.getItem(PROGRESS_KEY) || 'null');
+    if (stored) restoreSnapshot(stored);
+  } catch { stored = null; }
+  localSession = await discoverLocalServer();
+  if (!localSession) return;
+  try {
+    const response = await fetch('./api/progress', {cache:'no-store'});
+    if (!response.ok) throw new Error('Progress unavailable');
+    const server = await response.json();
+    if (pendingBase !== null) {
+      if (server.revision === revision) { pendingBase = null; persistAcknowledgement(); }
+      else await syncProgress();
+    } else if (Array.isArray(server.completedSections)) {
+      restoreSnapshot(server);
+      persistSnapshot();
+    } else if (stored) {
+      saveProgress();
     }
-    // Ensure critical array properties are actually arrays
-    ['completedSections','ctfSolved','timeline','unlockedBadges'].forEach(k => {
-      if (!Array.isArray(userProgress[k])) userProgress[k] = [];
-    });
-    if (typeof userProgress.streak !== 'number') userProgress.streak = 0;
-    if (typeof userProgress.commandCount !== 'number') userProgress.commandCount = 0;
-    if (typeof userProgress.agentName !== 'string' || !userProgress.agentName) userProgress.agentName = 'OPERATIVE #1337';
-    if (!userProgress.moduleProgress) userProgress.moduleProgress = {};
-    localStorage.setItem(PROGRESS_KEY, JSON.stringify(userProgress));
-    recalcModuleProgress();
-    updateStatusBar();
+  } catch { /* The local snapshot remains available offline. */ }
+}
+
+async function syncProgress() {
+  if (!localSession || pendingBase === null || savingProgress || conflictRevision) return;
+  clearTimeout(syncTimer);
+  savingProgress = true;
+  const sentRevision = revision;
+  let delay = 200;
+  try {
+    const res = await postLocal('progress', {...userProgress, revision: sentRevision}, {headers:{'X-CyberEdu-Base': pendingBase}});
+    if (res.status === 409) {
+      conflictRevision = (await res.json()).revision;
+    } else if (res.ok) {
+      if ((await res.json()).revision !== sentRevision) throw new Error('Unconfirmed revision');
+      pendingBase = revision === sentRevision ? null : sentRevision;
+      persistAcknowledgement();
+    } else {
+      delay = res.status === 429 ? 60000 : 15000;
+    }
+  } catch { delay = 15000; }
+  finally {
+    savingProgress = false;
+    showSyncStatus();
+    if (pendingBase !== null && !conflictRevision) syncTimer = setTimeout(syncProgress, delay);
+  }
+}
+
+function resolveProgressConflict() {
+  if (!conflictRevision || !confirm(t('progress.keepConfirm'))) return;
+  pendingBase = conflictRevision;
+  conflictRevision = null;
+  persistSnapshot();
+  syncProgress();
+}
+
+async function useServerProgress() {
+  if (!conflictRevision || !confirm(t('progress.useServerConfirm'))) return;
+  const before = revision;
+  try {
+    const response = await fetch('./api/progress', {cache:'no-store'});
+    if (!response.ok || revision !== before) return;
+    const server = await response.json();
+    if (revision !== before || !Array.isArray(server.completedSections)) return;
+    restoreSnapshot(server);
+    conflictRevision = null;
+    persistSnapshot();
+    renderProgress();
     updateSidebar();
-  }).catch(() => {
-    userProgress = local ? Object.assign(defaultProgress(), local) : defaultProgress();
-    ['completedSections','ctfSolved','timeline','unlockedBadges'].forEach(k => {
-      if (!Array.isArray(userProgress[k])) userProgress[k] = [];
-    });
-    if (typeof userProgress.streak !== 'number') userProgress.streak = 0;
-    if (typeof userProgress.commandCount !== 'number') userProgress.commandCount = 0;
-    if (typeof userProgress.agentName !== 'string' || !userProgress.agentName) userProgress.agentName = 'OPERATIVE #1337';
-    recalcModuleProgress();
-  });
+    showSyncStatus();
+  } catch { showSyncStatus(); }
 }
-if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
-  initProgress();
-  initReducedMotion();
-}
+
+if (typeof window !== 'undefined') window.addEventListener('storage', event => {
+  if (event.key !== PROGRESS_KEY || !event.newValue || savingProgress || (localSession && pendingBase !== null)) return;
+  try {
+    const latest = JSON.parse(event.newValue);
+    restoreSnapshot(latest);
+    if (currentView === 'progress') renderProgress();
+    if (currentView === 'home') renderHome();
+    updateSidebar();
+    updateStatusBar();
+    showSyncStatus();
+  } catch { /* Keep the last readable snapshot. */ }
+});
 
 function initReducedMotion() {
   try {
@@ -99,10 +184,13 @@ function toggleReducedMotion() {
 }
 
 function saveProgress() {
-  userProgress.moduleProgress = {};
   recalcModuleProgress();
-  localStorage.setItem(PROGRESS_KEY, JSON.stringify(userProgress));
-  fetch('/api/progress', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(userProgress) }).catch(() => {});
+  if (pendingBase === null) pendingBase = revision;
+  revision = Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2,'0')).join('');
+  persistSnapshot();
+  clearTimeout(syncTimer);
+  if (localSession) syncTimer = setTimeout(syncProgress, 200);
+  showSyncStatus();
 }
 function getSectionDone(id) { return userProgress.completedSections.includes(id); }
 function setSectionDone(id) {
@@ -148,13 +236,15 @@ function recalcModuleProgress() {
 // ============================================================
 let currentView = null, currentModuleId = null, currentSectionId = null, currentPracticeIdx = 0, currentCTFId = null;
 
-function navigate(view, moduleId, sectionId) {
-  if (currentView === view && !moduleId && currentSectionId) return;
-  // Cyberpunk nav transition glitch overlay
-  cyberNavTransition(() => {
+let navSequence = 0;
+function navigate(view, moduleId, sectionId, replace = false) {
+  const sequence = ++navSequence;
+  const renderView = () => {
+    if (sequence !== navSequence) return;
     const sidebar = document.getElementById('sidebar');
     const main = document.getElementById('main-content');
     const noSidebar = ['home','progress','tools','ctf'];
+    document.body.classList.toggle('has-catalog', !noSidebar.includes(view));
     if (noSidebar.includes(view)) { sidebar.classList.add('hidden'); main.classList.add('no-sidebar'); }
     else {
       sidebar.classList.remove('hidden'); main.classList.remove('no-sidebar');
@@ -196,21 +286,18 @@ function navigate(view, moduleId, sectionId) {
     updateSidebar();
     updateStatusBar();
     scrollReveal();
-    try {
-      if (view === 'hub' && (moduleId || currentModuleId)) {
-        const mId = moduleId || currentModuleId;
-        const sId = sectionId || currentSectionId;
-        history.replaceState(null, '', '#' + view + '/' + mId + (sId ? '/' + sId : ''));
-      } else {
-        history.replaceState(null, '', '#' + view);
-      }
-    } catch(e) {}
+    const route = view === 'hub' && currentModuleId ? '#hub/' + currentModuleId + '/' + currentSectionId : '#' + view;
+    if (location.hash !== route) history[replace ? 'replaceState' : 'pushState'](null, '', route);
     // Auto-close sidebar on mobile after navigation
     if (window.innerWidth <= 768) {
       const sidebar = document.getElementById('sidebar');
       if (!sidebar.classList.contains('hidden')) sidebar.classList.add('hidden');
     }
-  }, view);
+    document.getElementById('mobile-catalog').setAttribute('aria-expanded', 'false');
+  };
+  if (view === currentView || replace || window.matchMedia('(prefers-reduced-motion: reduce)').matches ||
+      document.documentElement.classList.contains('reduced-motion')) renderView();
+  else cyberNavTransition(renderView, view);
 }
 
 // ============================================================
@@ -374,6 +461,12 @@ function cyberNavTransition(callback, targetView) {
   requestAnimationFrame(animate);
 }
 
+function toggleMobileCatalog() {
+  const sidebar = document.getElementById('sidebar');
+  sidebar.classList.remove('collapsed');
+  const open = !sidebar.classList.toggle('hidden');
+  document.getElementById('mobile-catalog').setAttribute('aria-expanded', String(open));
+}
 function toggleSidebar() {
   const sidebar = document.getElementById('sidebar');
   if (sidebar.classList.contains('collapsed')) {
@@ -804,7 +897,7 @@ function renderHome() {
     const stars = '★'.repeat(diff) + '☆'.repeat(5-diff);
     const totalSecs = m.chapters.flatMap(c => c.sections).length;
     const doneSecs = m.chapters.flatMap(c => c.sections).filter(s => userProgress.completedSections.includes(s.id)).length;
-    return `<div class="module-card reveal" onclick="loadModule('${m.id}')">
+    return `<a class="module-card reveal" href="#hub/${m.id}">
       <div class="module-card-icon">${getModuleIconSvg(m.id, m.icon)}</div>
       <h3>${getModField(m,'title')}</h3>
       <p>${getModField(m,'desc')}</p>
@@ -817,7 +910,7 @@ function renderHome() {
         <span class="card-prog-pct">${prog}%</span>
       </div>
       <div class="card-prog-mini"><div class="card-prog-mini-fill" style="width:${prog}%"></div></div>
-    </div>`;
+    </a>`;
   }).join('');
   renderResumeLearning();
   // Render learning path
@@ -872,7 +965,7 @@ function renderResumeLearning() {
     }
   }
 
-  if (!targetModId || !targetSecId) {
+  if (!targetModTitle || !targetTitle) {
     wrap.innerHTML = '';
     return;
   }
@@ -916,13 +1009,25 @@ function renderLearningPath() {
       { icon: '🚩', title: getModField(modMap['ctf-guide'] || {title:'CTF 实战',titleEn:'CTF Practice'},'title'), desc: 'Crypto/Web/PWN/Reverse/Forensics', id: 'ctf-guide' }
     ]}
   ];
-  document.getElementById('learning-path').innerHTML = stages.map((stage) => {
+  let recommendation = '';
+  const selected = localStorage.getItem('cyberedu_target_track');
+  const track = selected && evaluateDiagnosticTrack([0,0,0,0,0]).find(item => item.id === selected);
+  if (track) {
+    for (const id of track.priorityModules) {
+      const sec = modMap[id]?.chapters.flatMap(c => c.sections).find(s => !getSectionDone(s.id));
+      if (!sec) continue;
+      recommendation = '<a class="track-next" href="#hub/' + id + '/' + sec.id + '">' +
+        t(track.titleKey) + ' · ' + t('path.nextLesson') + ' ' + _escHtml(getSectionField(sec, 'title')) + '</a>';
+      break;
+    }
+  }
+  document.getElementById('learning-path').innerHTML = recommendation + stages.map((stage) => {
     return '<div style="margin-bottom:24px">' +
       '<div style="font-family:var(--font-mono);font-size:12px;color:' + stage.color + ';letter-spacing:2px;margin-bottom:12px;font-weight:600" class="cyber-text">' + stage.label + '</div>' +
       '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px">' +
         stage.items.map((item) => {
           const p = userProgress.moduleProgress[item.id] || 0;
-          return '<div class="module-card reveal" onclick="loadModule(\'' + item.id + '\')" style="padding:18px 20px;cursor:pointer">' +
+          return '<a class="module-card reveal" href="#hub/' + item.id + '" style="padding:18px 20px;cursor:pointer">' +
             '<div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">' +
               '<span class="path-item-icon">' + getModuleIconSvg(item.id, item.icon) + '</span>' +
               '<div><div style="font-family:var(--font-mono);font-size:14px;font-weight:600;color:var(--text-main)">' + item.title + '</div>' +
@@ -930,7 +1035,7 @@ function renderLearningPath() {
               '<span style="margin-left:auto;font-family:var(--font-mono);font-size:11px;color:var(--color-green)">' + p + '%</span>' +
             '</div>' +
             '<div class="card-prog-mini"><div class="card-prog-mini-fill" style="width:' + p + '%"></div></div>' +
-          '</div>';
+          '</a>';
         }).join('') +
       '</div></div>';
   }).join('');
@@ -992,16 +1097,33 @@ function updateSidebar() {
 // MODULE / SECTION LOADING
 // ============================================================
 function _loadModuleContent(moduleId, sectionId) {
-  currentModuleId = moduleId;
-  const m = MODULES.find(x => x.id === moduleId);
-  if (!m) return;
-  const sec = sectionId ? m.chapters.flatMap(c => c.sections).find(s => s.id === sectionId) : m.chapters[0]?.sections[0];
-  if (sec) loadSection(moduleId, sec.id);
+  const m = MODULES.find(mod => mod.id === moduleId) || MODULES[0];
+  const sections = m.chapters.flatMap(chapter => chapter.sections);
+  const sec = sections.find(section => section.id === sectionId) || sections[0];
+  if (sec) renderSection(m.id, sec.id);
 }
 
-function loadModule(moduleId, sectionId) {
-  currentModuleId = moduleId;
-  navigate('hub', moduleId, sectionId);
+function loadModule(moduleId, sectionId) { navigate('hub', moduleId, sectionId); }
+function loadSection(moduleId, sectionId) { navigate('hub', moduleId, sectionId); }
+
+const loadingPacks = new Map();
+function loadLessonPack(moduleId, lang) {
+  const path = './lessons/' + moduleId + '.' + lang + '.js';
+  if (!loadingPacks.has(path)) {
+    loadingPacks.set(path, new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = path;
+      script.onload = () => {
+        if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+          navigator.serviceWorker.ready.then(reg => reg.active?.postMessage({lesson: path})).catch(() => {});
+        }
+        resolve();
+      };
+      script.onerror = () => { loadingPacks.delete(path); script.remove(); reject(new Error('Lesson unavailable')); };
+      document.head.appendChild(script);
+    }));
+  }
+  return loadingPacks.get(path);
 }
 
 // ============================================================
@@ -1017,21 +1139,28 @@ function renderCheckpoints(sectionContentKey) {
 
   const placeholders = document.querySelectorAll('.checkpoint[data-cp]');
   const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
-  const makeCardHtml = (cp, idx) => `
+  const makeCardHtml = (cp, idx) => {
+    const order = cp.options.map((_, i) => i);
+    for (let i = order.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [order[i], order[j]] = [order[j], order[i]];
+    }
+    return `
     <div class="checkpoint-card" id="cp-${sectionContentKey}-${idx}">
       <div class="checkpoint-header">
         <div class="checkpoint-icon">?</div>
         <div class="checkpoint-title">CHECKPOINT ${idx + 1}</div>
       </div>
-      <div class="checkpoint-question">${cp.question}</div>
+      <div class="checkpoint-question">${_escHtml(cp.question)}</div>
       <div class="checkpoint-options">
-        ${cp.options.map((opt, i) => `
+        ${order.map((i, position) => `
           <button class="checkpoint-option" data-cp-key="${sectionContentKey}" data-cp-idx="${idx}" data-opt="${i}" onclick="handleCheckpointAnswer(this)">
-            <span class="opt-letter">${letters[i]}</span>
-            <span>${opt}</span>
+            <span class="opt-letter">${letters[position]}</span>
+            <span>${_escHtml(cp.options[i])}</span>
           </button>`).join('')}
       </div>
     </div>`;
+  };
 
   if (placeholders.length) {
     placeholders.forEach(el => {
@@ -1064,6 +1193,7 @@ function handleCheckpointAnswer(btn) {
 
   const allOpts = card.querySelectorAll('.checkpoint-option');
   const isCorrect = opt === cp.answer;
+  const correctButton = card.querySelector('[data-opt="' + cp.answer + '"]');
   const icon = card.querySelector('.checkpoint-icon');
 
   // Disable all options
@@ -1075,7 +1205,7 @@ function handleCheckpointAnswer(btn) {
     icon.textContent = '✓';
   } else {
     btn.classList.add('wrong');
-    allOpts[cp.answer].classList.add('correct');
+    correctButton.classList.add('correct');
     card.classList.add('answered-wrong');
     icon.textContent = '✗';
   }
@@ -1086,9 +1216,10 @@ function handleCheckpointAnswer(btn) {
   const correctBadge = t('checkpoint.correct') || '✓ 正确！';
   const wrongBadge = t('checkpoint.wrong') || '✗ 不对哦';
   const ansPrefix = isEn ? 'Correct answer is ' : '正确答案是 ';
-  expDiv.innerHTML = isCorrect
-    ? `<strong>${correctBadge}</strong> ${cp.explanation}`
-    : `<strong>${wrongBadge}</strong> — ${ansPrefix}${['A','B','C','D','E','F'][cp.answer]}。${cp.explanation}`;
+  const badge = document.createElement('strong');
+  badge.textContent = isCorrect ? correctBadge : wrongBadge;
+  const label = correctButton.querySelector('.opt-letter').textContent;
+  expDiv.append(badge, (isCorrect ? ' ' : ' — ' + ansPrefix + label + '. ') + cp.explanation);
   if (!isCorrect) {
     const aiBtn = document.createElement('button');
     aiBtn.className = 'cp-ask-ai-btn';
@@ -1101,7 +1232,7 @@ function handleCheckpointAnswer(btn) {
   // Allow retry on wrong answer after 2s
   if (!isCorrect) {
     setTimeout(() => {
-      allOpts.forEach(o => { o.classList.remove('disabled','wrong'); });
+      allOpts.forEach(o => { o.classList.remove('disabled','wrong','correct'); });
       card.classList.remove('answered-wrong');
       icon.textContent = '?';
       card.querySelector('.checkpoint-title').textContent = `CHECKPOINT ${idx + 1}`;
@@ -1131,22 +1262,41 @@ if (typeof injectGlossary !== 'function') {
   else globalThis.injectGlossary = _injectGlossaryFallback;
 }
 
-function loadSection(moduleId, sectionId) {
+async function renderSection(moduleId, sectionId) {
   currentModuleId = moduleId;
   currentSectionId = sectionId;
   const m = MODULES.find(x => x.id === moduleId);
   const sec = m?.chapters.flatMap(c => c.sections).find(s => s.id === sectionId);
   if (!sec || !m) return;
+  const lang = currentLang === 'en' ? 'en' : 'zh';
+  const articles = lang === 'en' ? SECTION_CONTENT_EN : SECTION_CONTENT;
+  if (!articles[sec.contentKey]) {
+    const article = document.getElementById('article-body');
+    article.textContent = t('app.loading');
+    try { await loadLessonPack(moduleId, lang); }
+    catch {
+      if (currentSectionId === sectionId && currentLang === lang) {
+        const retry = document.createElement('button');
+        retry.textContent = t('lesson.retry');
+        retry.onclick = () => renderSection(moduleId, sectionId);
+        article.replaceChildren(retry);
+      }
+      return;
+    }
+  }
+  if (currentView !== 'hub' || currentSectionId !== sectionId || currentModuleId !== moduleId || currentLang !== lang) return;
 
   // Persist last visited section for resume learning
   try {
-    userProgress.lastSection = { modId: moduleId, secId: sectionId, time: Date.now() };
-    localStorage.setItem(PROGRESS_KEY, JSON.stringify(userProgress));
+    if (userProgress.lastSection?.secId !== sectionId) {
+      userProgress.lastSection = { modId: moduleId, secId: sectionId, time: Date.now() };
+      saveProgress();
+    }
   } catch(e) {}
 
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById('view-hub').classList.add('active');
-  document.getElementById('sidebar').classList.remove('hidden');
+  if (window.innerWidth > 768) document.getElementById('sidebar').classList.remove('hidden');
   document.getElementById('main-content').classList.remove('no-sidebar');
 
   document.getElementById('hub-breadcrumbs').innerHTML = `${t('hub.breadcrumb')} / <span>${getModField(m,'title')}</span>`;
@@ -1205,7 +1355,8 @@ function loadSection(moduleId, sectionId) {
     </div>`;
 
   setTimeout(() => {
-    if (window.Prism) Prism.highlightAll();
+    if (currentView !== 'hub' || currentSectionId !== sectionId || currentLang !== lang) return;
+    if (window.Prism) Prism.highlightAllUnder(document.getElementById('article-body'));
     bindGlossaryEvents();
     renderCheckpoints(sec.contentKey);
     renderPlaygrounds(sec.contentKey);
@@ -1625,7 +1776,7 @@ function openCTF(id) {
   }
 
   // Header
-  document.getElementById('modal-title').textContent = c.title;
+  document.getElementById('modal-title').textContent = currentLang === 'en' && c.titleEn ? c.titleEn : c.title;
   const stars = Array.from({length:5}, (_,i) => `<span style="color:${i<c.difficulty?'var(--color-green)':'var(--text-muted)'}">★</span>`).join('');
   const cTags = currentLang==='en' && c.tagsEn ? c.tagsEn : (c.tags||[]);
   const tagBadges = cTags.map(t => `<span style="font-size:10px;padding:2px 8px;background:rgba(255,255,255,0.04);border:1px solid var(--border-subtle);border-radius:3px;color:var(--text-muted)">${t}</span>`).join('');
@@ -1655,7 +1806,11 @@ function openCTF(id) {
   }
 
   // Tabs visibility
-  const hasCode = c.codeable || c.category === 'Crypto';
+  const executable = c.codeable || c.category === 'Crypto';
+  const hasCode = Boolean(c.starterCode || executable);
+  document.getElementById('ctf-code-actions').hidden = !executable;
+  document.getElementById('ctf-tab-code').textContent = t(executable ? 'ctf.codeTab' : 'ctf.material');
+  document.getElementById('ctf-code-editor').readOnly = !executable;
   const hasTerm = c.simulated || c.category === 'Web';
   document.getElementById('ctf-tab-code').style.display = hasCode ? '' : 'none';
   document.getElementById('ctf-tab-terminal').style.display = hasTerm ? '' : 'none';
@@ -1733,24 +1888,16 @@ function switchCTFTab(tab) {
   if (tab === 'terminal') document.getElementById('ctf-term-input').focus();
 }
 
-function runCTFCode() {
-  const code = document.getElementById('ctf-code-editor').value;
+async function runCTFCode() {
   const output = document.getElementById('ctf-code-output');
-  output.innerHTML = '<span style="color:var(--color-cyan)">' + t('code.ctfCompiling') + '</span>';
-  fetch('/api/run', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ code, lang: ctfCurrentChallenge?.lang || 'Python' })
-  }).then(r => r.json()).then(data => {
-    if (data.error) {
-      output.innerHTML = `<span style="color:var(--color-red)">// Error:</span>\n${esc(data.error)}`;
-    } else {
-      let text = '';
-      if (data.stdout) text += esc(data.stdout);
-      if (data.stderr) text += (text ? '\n' : '') + `<span style="color:var(--color-yellow)">// stderr:</span>\n${esc(data.stderr)}`;
-      output.innerHTML = text || '<span style="color:var(--text-muted)">' + t('code.noOutput') + '</span>';
-    }
-  }).catch(() => { output.textContent = t('code.serverError'); });
+  if (!localSession?.runEnabled) { output.textContent = t('code.enableRunner'); return; }
+  const challenge = ctfCurrentChallenge;
+  output.textContent = t('code.ctfCompiling');
+  try {
+    const res = await postLocal('run', {code: document.getElementById('ctf-code-editor').value, lang: challenge?.lang || 'Python'});
+    const result = await res.json();
+    if (challenge === ctfCurrentChallenge) output.textContent = result.error || [result.stdout, result.stderr].filter(Boolean).join('\n') || t('code.noOutput');
+  } catch (err) { if (challenge === ctfCurrentChallenge) output.textContent = err.message; }
 }
 
 function resetCTFCode() {
@@ -1901,11 +2048,7 @@ async function sendCTFTerminal() {
   if (typeof checkAndUnlockAchievements === 'function') checkAndUnlockAchievements('command');
 
   try {
-    const resp = await fetch('/api/ctf-sim', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ challengeId: currentCTFId, input: cmd })
-    });
+    const resp = await postLocal('ctf-sim', {challengeId: currentCTFId, input: cmd});
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     const data = await resp.json();
     if (data.output) {
@@ -2024,7 +2167,7 @@ function initCodeMirror() {
   cmEditor.setSize('100%', 'auto');
 }
 
-function renderPractice(idx) {
+function renderPractice(idx, keepDraft = false) {
   currentPracticeIdx = idx;
   const p = PRACTICES[idx];
   if (!p) return;
@@ -2041,63 +2184,53 @@ function renderPractice(idx) {
   document.getElementById('practice-meta').innerHTML = `<span class="badge">${pCat}</span><span class="badge cyan">${t('practice.difficulty')}: ${'★'.repeat(p.difficulty)}${'☆'.repeat(5-p.difficulty)}</span>`;
   document.getElementById('practice-question').textContent = pQ;
   const starterCode = currentLang==='en' && p.starterEn ? p.starterEn : p.starter;
+  const previousCode = cmEditor ? cmEditor.getValue() : document.getElementById('code-editor').value;
+  const keepChanges = keepDraft && previousCode !== p.starter && previousCode !== p.starterEn;
   if (cmEditor) {
     cmEditor.setOption('mode', CM_MODE_MAP[p.lang] || 'python');
-    cmEditor.setValue(starterCode);
+    if (!keepChanges) cmEditor.setValue(starterCode);
     setTimeout(() => cmEditor.refresh(), 50);
   } else {
-    document.getElementById('code-editor').value = starterCode;
+    if (!keepChanges) document.getElementById('code-editor').value = starterCode;
   }
   document.getElementById('editor-lang').textContent = p.lang;
-  document.getElementById('code-output').textContent = t('practice.clickRun');
+  const output = document.getElementById('code-output');
+  output.textContent = localSession?.runEnabled ? t('practice.clickRun') : practiceReference(p);
+  document.querySelector('[onclick="runCode()"]').textContent = t(localSession?.runEnabled ? 'practice.runCode' : 'code.selfTest');
   document.getElementById('practice-hint-box').style.display = 'none';
   updateSidebar();
 }
-function runCode() {
-  const output = document.getElementById('code-output');
-  const p = PRACTICES[currentPracticeIdx];
-  if (!p) return;
-  userProgress.commandCount = (userProgress.commandCount || 0) + 1;
-  saveProgress();
-  if (typeof checkAndUnlockAchievements === 'function') checkAndUnlockAchievements('command');
-  const code = cmEditor ? cmEditor.getValue() : document.getElementById('code-editor').value;
-  const lang = p.lang || 'Python';
-  output.innerHTML = '<div style="color:var(--color-cyan);font-size:12px">' + t('code.compiling') + '<span class="spin">...</span></div>';
+function practiceReference(practice) {
+  const reference = practice.expected ?? t('code.liveDns');
+  return t('code.enableRunner') + '\n\n' + t('code.expectedOutput') + '\n' + reference;
+}
 
-  fetch('/api/run', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ code, lang })
-  }).then(r => r.json()).then(data => {
-    if (data.error) {
-      output.innerHTML = '<div style="color:var(--color-red);font-size:12px">' + t('code.runError') + '</div><pre style="color:var(--color-red);font-size:12px;white-space:pre-wrap;margin:4px 0;font-family:var(--font-mono)">' + esc(data.error) + '</pre>';
-      const tests = PRACTICE_TESTS[p.id];
-      if (tests?.expected) output.innerHTML += '<div style="color:var(--color-yellow);font-size:12px;margin-top:8px">' + t('code.expectedRef') + '</div><pre style="font-size:12px;white-space:pre-wrap;margin:4px 0;color:var(--text-dim);font-family:var(--font-mono)">' + esc(tests.expected) + '</pre>';
-    } else {
-      let html = '';
-      if (data.stdout) html += '<pre style="color:var(--color-green);font-size:12px;white-space:pre-wrap;margin:4px 0;font-family:var(--font-mono)">' + esc(data.stdout) + '</pre>';
-      if (data.stderr) html += '<div style="color:var(--color-yellow);font-size:11px;margin-top:2px">// stderr:</div><pre style="color:var(--text-dim);font-size:11px;white-space:pre-wrap;margin:4px 0;font-family:var(--font-mono)">' + esc(data.stderr) + '</pre>';
-      const tests = PRACTICE_TESTS[p.id];
-      if (tests?.expected && data.stdout) {
-        const trimmed = data.stdout.trim();
-        const expected = tests.expected.trim();
-        if (trimmed === expected || tests.cases?.some(c => trimmed === c.output)) {
-          html += '<div style="color:var(--color-green);font-size:12px;margin-top:8px;font-weight:500">' + t('code.matchOk') + '</div>';
-        } else {
-          html += '<div style="color:var(--color-yellow);font-size:12px;margin-top:8px">' + t('code.expectedRef') + '</div><pre style="font-size:12px;white-space:pre-wrap;margin:4px 0;color:var(--text-dim);font-family:var(--font-mono)">' + esc(expected) + '</pre>';
-        }
-      }
-      output.innerHTML = html || '<div style="color:var(--text-dim);font-size:12px">' + t('code.noOutput') + '</div>';
-    }
-  }).catch(() => {
-    const tests = PRACTICE_TESTS[p.id];
-    output.innerHTML = '<div style="color:var(--color-cyan);font-weight:600;font-size:12px">' + t('code.selfTest') + '</div>' +
-      '<div style="color:var(--text-dim);font-size:12px;margin-bottom:8px">' + t('code.selfTestDesc').replace('{lang}', lang) + '</div>' +
-      '<div style="color:var(--color-green);font-size:12px;margin-bottom:4px">' + t('code.expectedOutput') + '</div>' +
-      '<pre style="color:var(--text-main);padding:8px;background:rgba(0,255,65,0.05);border:1px solid var(--border-subtle);font-size:12px;margin-bottom:12px;white-space:pre-wrap;font-family:var(--font-mono)">' + esc(tests?.expected || p.expected || t('code.runCodeCompare')) + '</pre>' +
-      (tests?.cases?.length ? '<div style="color:var(--color-yellow);font-size:12px;margin-bottom:4px">' + t('code.testCases') + '</div>' +
-        tests.cases.map((tc, i) => '<div style="padding:4px 0;font-size:12px;color:var(--text-dim)"><span style="color:var(--color-cyan)">' + t('code.case').replace('{n}', i+1) + ':</span> ' + t('code.input') + ' <code style="color:var(--color-green)">' + esc(tc.input||'') + '</code> → ' + esc(tc.output||tc.hint||'') + '</div>').join('') : '');
-  });
+let practiceRun = 0;
+async function runCode() {
+  const p = PRACTICES[currentPracticeIdx];
+  const output = document.getElementById('code-output');
+  if (!localSession?.runEnabled) { output.textContent = practiceReference(p); return; }
+  const request = ++practiceRun;
+  userProgress.commandCount++;
+  saveProgress();
+  checkAndUnlockAchievements('command');
+  const code = cmEditor ? cmEditor.getValue() : document.getElementById('code-editor').value;
+  output.textContent = t('code.compiling');
+  try {
+    const response = await postLocal('run', {code, lang: p.lang});
+    const result = await response.json();
+    if (request !== practiceRun || p !== PRACTICES[currentPracticeIdx]) return;
+    if (!response.ok || result.error) throw new Error(result.error || 'HTTP ' + response.status);
+    const lines = [result.stdout?.trimEnd(), result.stderr?.trimEnd()].filter(Boolean);
+    if (!lines.length) lines.push(t('code.noOutput'));
+    if (result.exitCode !== 0) lines.push(t('code.exitStatus') + ' ' + result.exitCode);
+    else if (p.expected == null) lines.push(t('code.liveDns'));
+    else if (result.stdout.trim() === p.expected.trim()) lines.push(t('code.matchOk'));
+    else lines.push(t('code.expectedRef') + '\n' + p.expected);
+    output.textContent = lines.join('\n\n');
+  } catch (err) {
+    if (request === practiceRun && p === PRACTICES[currentPracticeIdx]) output.textContent = t('code.runError') + '\n' + err.message;
+  }
 }
 function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 function showPracticeHint() {
@@ -2654,14 +2787,23 @@ function renderProgress() {
   if (!timeline.length) {
     tl.innerHTML = '<div class="empty-state">' + t('progress.emptyTimeline') + '</div>';
   } else {
-    tl.innerHTML = timeline.slice(0, 12).map(item => `
-      <div class="timeline-item"><span class="timeline-date">${item.date}</span><div class="timeline-dot"></div><span class="timeline-text">${item.text}</span></div>`).join('');
+    tl.replaceChildren(...timeline.slice(0, 12).map(item => {
+      const row = document.createElement('div');
+      row.className = 'timeline-item';
+      for (const [cls, text] of [['timeline-date', item.date], ['timeline-dot', ''], ['timeline-text', item.text]]) {
+        const span = document.createElement('span');
+        span.className = cls;
+        span.textContent = text;
+        row.appendChild(span);
+      }
+      return row;
+    }));
   }
 }
 
 function exportProgress() {
   try {
-    const data = localStorage.getItem(PROGRESS_KEY);
+    const data = JSON.stringify(userProgress);
     if (!data) { alert(t('progress.exportConfirm')); return; }
     const blob = new Blob([data], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -2680,6 +2822,7 @@ function importProgress() {
   input.onchange = function(e) {
     const file = e.target.files[0];
     if (!file) return;
+    if (file.size > 100 * 1024) { alert(t('progress.importError')); return; }
     const reader = new FileReader();
     reader.onload = function(ev) {
       try {
@@ -2688,14 +2831,7 @@ function importProgress() {
           alert(t('progress.importError')); return;
         }
         if (!confirm(t('progress.importConfirm'))) return;
-        userProgress = Object.assign(defaultProgress(), data);
-        ['completedSections','ctfSolved','timeline','unlockedBadges'].forEach(k => {
-          if (!Array.isArray(userProgress[k])) userProgress[k] = [];
-        });
-        if (typeof userProgress.streak !== 'number') userProgress.streak = 0;
-        if (typeof userProgress.commandCount !== 'number') userProgress.commandCount = 0;
-        if (typeof userProgress.agentName !== 'string' || !userProgress.agentName) userProgress.agentName = 'OPERATIVE #1337';
-        if (!userProgress.moduleProgress || typeof userProgress.moduleProgress !== 'object') userProgress.moduleProgress = {};
+        userProgress = progressSchema.normalizeProgress(data, MODULES, CTF_CHALLENGES);
         saveProgress();
         renderProgress();
         updateStatusBar();
@@ -4031,6 +4167,7 @@ function initAIDock() {
 }
 
 function toggleAISettings() {
+  if (!localSession) { addAIMsg('system', t('local.required')); return; }
   const panel = document.getElementById('ai-chat-panel');
   const settings = document.getElementById('ai-settings');
   const opening = settings.classList.contains('hidden');
@@ -4049,13 +4186,15 @@ function saveAISettings() {
   try {
     localStorage.setItem('cyberedu_ai_type',        apiType);
     localStorage.setItem('cyberedu_ai_url',         url);
-    localStorage.setItem('cyberedu_ai_key',          key);
+    sessionStorage.setItem('cyberedu_ai_key', key);
     localStorage.setItem('cyberedu_ai_model',        model);
     localStorage.setItem('cyberedu_ai_temp',         document.getElementById('ai-temperature').value);
     localStorage.setItem('cyberedu_ai_max_tokens',   document.getElementById('ai-max-tokens').value.trim());
     localStorage.setItem('cyberedu_ai_thinking',      document.getElementById('ai-thinking').checked ? '1' : '0');
   } catch(e) {}
   document.getElementById('ai-settings').classList.add('hidden');
+  document.getElementById('ai-chat-panel').classList.remove('settings-open');
+  document.getElementById('ai-input').focus();
   addAIMsg('system', t('ai.saved'));
 }
 
@@ -4063,7 +4202,12 @@ function loadAISettings() {
   try {
     const apiType = localStorage.getItem('cyberedu_ai_type')      || 'openai';
     const url     = localStorage.getItem('cyberedu_ai_url')       || '';
-    const key     = localStorage.getItem('cyberedu_ai_key')       || '';
+    const legacy = localStorage.getItem('cyberedu_ai_key');
+    if (legacy) {
+      if (localSession && !sessionStorage.getItem('cyberedu_ai_key')) sessionStorage.setItem('cyberedu_ai_key', legacy);
+      localStorage.removeItem('cyberedu_ai_key');
+    }
+    const key = sessionStorage.getItem('cyberedu_ai_key') || '';
     const model   = localStorage.getItem('cyberedu_ai_model')     || '';
     const temp    = localStorage.getItem('cyberedu_ai_temp')      || '0.7';
     const mt      = localStorage.getItem('cyberedu_ai_max_tokens') || '4096';
@@ -4084,7 +4228,7 @@ function getAIConfig() {
   return {
     apiType:   document.getElementById('ai-api-type')?.value || 'openai',
     apiUrl:    (document.getElementById('ai-api-url').value.trim()    || localStorage.getItem('cyberedu_ai_url')   || '').trim(),
-    apiKey:    (document.getElementById('ai-api-key').value.trim()    || localStorage.getItem('cyberedu_ai_key')   || '').trim(),
+    apiKey:    (document.getElementById('ai-api-key').value.trim()    || sessionStorage.getItem('cyberedu_ai_key')   || '').trim(),
     model:     (document.getElementById('ai-model').value.trim()      || localStorage.getItem('cyberedu_ai_model') || '').trim(),
     temperature: parseFloat(document.getElementById('ai-temperature').value)   || 0.7,
     max_tokens: parseInt(document.getElementById('ai-max-tokens').value, 10)    || 4096,
@@ -4230,6 +4374,7 @@ async function sendAIMessage(forcedText) {
   const text  = (forcedText !== undefined) ? forcedText : input.value.trim();
   if (!text) return;
 
+  if (!localSession) { addAIMsg('system', t('local.required')); return; }
   const config = getAIConfig();
   if (!config.apiUrl || !config.apiKey || !config.model) {
     toggleAISettings();
@@ -4238,7 +4383,7 @@ async function sendAIMessage(forcedText) {
   }
 
   // ── Build messages with system prompt + context ──
-  const sysPrompt = AI_SYS_PROMPT.slice();
+  let sysPrompt = AI_SYS_PROMPT;
   const curTitle = document.querySelector('.module-card.active h3, .section-card.active h3');
   if (curTitle) sysPrompt += '\n当前学习章节：' + curTitle.textContent.trim();
 
@@ -4282,12 +4427,8 @@ async function sendAIMessage(forcedText) {
   let contentStarted = false;
 
   try {
-    const endpoint = config.apiType === 'anthropic' ? '/api/chat/anthropic' : '/api/chat';
-    const res = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      signal: aiAbortController.signal,
-      body: JSON.stringify({
+    const endpoint = config.apiType === 'anthropic' ? 'chat/anthropic' : 'chat';
+    const res = await postLocal(endpoint, {
         apiUrl:     config.apiUrl,
         apiType:    config.apiType || 'openai',
         apiKey:      config.apiKey,
@@ -4296,8 +4437,7 @@ async function sendAIMessage(forcedText) {
         temperature: config.temperature,
         max_tokens:  config.max_tokens,
         thinking:    config.thinking ? { type: 'enabled' } : { type: 'disabled' },
-      }),
-    });
+    }, { signal: aiAbortController.signal });
 
     if (!res.ok) {
       const errJ = await res.json().catch(() => ({}));
@@ -5400,9 +5540,8 @@ function askAICheckpoint(key, idx, opt) {
     : (typeof SECTION_CHECKPOINTS !== 'undefined' ? SECTION_CHECKPOINTS[key] : null);
   const cp = cpSet ? cpSet[idx] : null;
   const curTitle = document.getElementById('hub-title')?.textContent || (isEn ? 'Current Section' : '当前章节');
-  const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
-  const userChoice = cp?.options[opt] ? `${letters[opt]}. ${cp.options[opt]}` : (isEn ? 'Option' : '选项');
-  const correctChoice = cp?.options[cp.answer] ? `${letters[cp.answer]}. ${cp.options[cp.answer]}` : (isEn ? 'Correct Answer' : '正确选项');
+  const userChoice = cp?.options[opt] || '';
+  const correctChoice = cp?.options[cp.answer] || '';
 
   const prompt = isEn
     ? `I am studying "${curTitle}" and selected the wrong answer on quiz question #${idx + 1}.\nQuestion: ${cp ? cp.question : ''}\nMy incorrect answer: ${userChoice}\nCorrect answer: ${correctChoice}\nExplanation: ${cp ? cp.explanation : ''}\nPlease analyze why I fell into this trap, and explain the core cybersecurity principle so I can master it.`
@@ -5801,6 +5940,7 @@ function applyTargetTrack(trackId, cardEl) {
   const isEn = typeof currentLang !== 'undefined' && currentLang === 'en';
   try {
     localStorage.setItem('cyberedu_target_track', trackId);
+    renderLearningPath();
   } catch (e) {}
   document.querySelectorAll('.diag-track-card').forEach(c => c.classList.remove('active'));
   if (cardEl) cardEl.classList.add('active');
@@ -5819,9 +5959,9 @@ const LAB_RECIPES = {
     desc: '推荐在本地使用 Docker 快速拉起标准 Web 漏洞演练镜像（隔离、开箱即用）：',
     descEn: 'Recommended Docker commands to spin up isolated, out-of-the-box web vulnerability practice targets:',
     commands: [
-      { name: 'OWASP Juice Shop (现代化漏洞靶场)', nameEn: 'OWASP Juice Shop (Modern Vulnerable Web App)', cmd: 'docker run -d -p 3000:3000 bkimminich/juice-shop' },
-      { name: 'DVWA (经典 Web 漏洞演练平台)', nameEn: 'DVWA (Classic Vulnerable Web App)', cmd: 'docker run -d -p 8080:80 vulnerables/web-dvwa' },
-      { name: 'SQLi-Labs (专攻 SQL 注入练习)', nameEn: 'SQLi-Labs (Dedicated SQL Injection Practice)', cmd: 'docker run -d -p 8081:80 acgpiano/sqli-labs' }
+      { name: 'OWASP Juice Shop (现代化漏洞靶场)', nameEn: 'OWASP Juice Shop (Modern Vulnerable Web App)', cmd: 'docker run -d -p 127.0.0.1:3000:3000 bkimminich/juice-shop' },
+      { name: 'DVWA (经典 Web 漏洞演练平台)', nameEn: 'DVWA (Classic Vulnerable Web App)', cmd: 'docker run -d -p 127.0.0.1:8080:80 vulnerables/web-dvwa' },
+      { name: 'SQLi-Labs (专攻 SQL 注入练习)', nameEn: 'SQLi-Labs (Dedicated SQL Injection Practice)', cmd: 'docker run -d -p 127.0.0.1:8081:80 acgpiano/sqli-labs' }
     ]
   },
   'network': {
@@ -5918,7 +6058,10 @@ function closeLabDrawer() {
 // ============================================================
 // INIT
 // ============================================================
-function initApp() {
+async function initApp() {
+  initReducedMotion();
+  await initProgress();
+  showSyncStatus();
   // Hide loading overlay
   const loadingOverlay = document.getElementById('loading-overlay');
   if (loadingOverlay) { loadingOverlay.style.opacity = '0'; setTimeout(() => loadingOverlay.remove(), 500); }
@@ -5947,25 +6090,7 @@ function initApp() {
     setTimeout(triggerCountUp, 4500);
   } catch(e) { console.error('Init error:', e); }
   // Route based on URL hash if present, otherwise default to home
-  let isDirectHash = false;
-  try {
-    const hash = (window.location.hash || '').replace(/^#\/?/, '');
-    const parts = hash.split('/');
-    const viewName = parts[0];
-    const validViews = ['home', 'hub', 'practice', 'ctf', 'progress', 'tools'];
-    if (validViews.includes(viewName)) {
-      isDirectHash = (viewName !== 'home');
-      if (viewName === 'hub' && parts[1]) {
-        navigate('hub', parts[1], parts[2]);
-      } else {
-        navigate(viewName);
-      }
-    } else {
-      navigate('home');
-    }
-  } catch(e) {
-    try { navigate('home'); } catch(err) {}
-  }
+  const isDirectHash = routeFromHash() !== 'home';
   try { initCyberLetters(); } catch(e) { console.error('CyberLetters error:', e); }
   const introAlreadySeen = (() => {
     try { return sessionStorage.getItem('cyberedu_intro_seen') === '1'; } catch(e) { return false; }
@@ -5977,22 +6102,13 @@ function initApp() {
   }
 }
 
-// Global hashchange router listener
-if (typeof window !== 'undefined') {
-  window.addEventListener('hashchange', () => {
-    const hash = (window.location.hash || '').replace(/^#\/?/, '');
-    const parts = hash.split('/');
-    const viewName = parts[0];
-    const validViews = ['home', 'hub', 'practice', 'ctf', 'progress', 'tools'];
-    if (validViews.includes(viewName) && viewName !== currentView) {
-      if (viewName === 'hub' && parts[1]) {
-        navigate('hub', parts[1], parts[2]);
-      } else {
-        navigate(viewName);
-      }
-    }
-  });
+function routeFromHash() {
+  const [requested, mod, sec] = location.hash.replace(/^#\/?/, '').split('/');
+  const view = ['home','hub','practice','ctf','progress','tools'].includes(requested) ? requested : 'home';
+  navigate(view, mod, sec, true);
+  return view;
 }
+if (typeof window !== 'undefined') window.addEventListener('hashchange', routeFromHash);
 // Run init when DOM is ready
 if (typeof document !== 'undefined') {
   if (document.readyState === 'loading') {
@@ -6002,20 +6118,8 @@ if (typeof document !== 'undefined') {
   }
 }
 
-// ── Service Worker Disabled: Auto-Unregister & Clear Caches ──
-if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then(registrations => {
-    for (const registration of registrations) {
-      registration.unregister().catch(() => {});
-    }
-  });
-}
-if (typeof window !== 'undefined' && 'caches' in window) {
-  caches.keys().then(names => {
-    for (const name of names) {
-      caches.delete(name).catch(() => {});
-    }
-  });
+if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator && location.protocol !== 'file:') {
+  navigator.serviceWorker.register('./sw.js').catch(err => console.warn('Offline cache unavailable:', err.message));
 }
 
 // Node.js module export for unit testing

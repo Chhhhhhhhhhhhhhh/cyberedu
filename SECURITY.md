@@ -6,18 +6,19 @@ CyberEdu takes security seriously. This document explains the threat model and h
 
 | Version | Supported |
 |---------|-----------|
-| 2.6.x   | ✅        |
-| < 2.6   | ❌ — please upgrade |
+| 2.8.x   | ✅        |
+| < 2.8   | ❌ — please upgrade |
 
 ## Security Model（安全模型）
 
 CyberEdu is a **local-first, single-user learning platform**. Its local server assumes a loopback-only deployment:
 
 - The server binds to `127.0.0.1` by default and validates the `Host` header, which blocks DNS-rebinding attacks from websites you visit.
-- No CORS headers are emitted anywhere: third-party origins cannot drive any API in your browser.
-- `/api/run` executes submitted practice code **unsandboxed by design** — it must never be reachable from untrusted networks. Do not set `CYBEREDU_HOST=0.0.0.0` unless you fully understand the consequences.
-- CTF answers are stored only as SHA-256 digests (`flags-hash.js`). Answers for the five simulator-based challenges are derivable *by performing the simulated technique* — that is inherent to their design.
-- A Content-Security-Policy ships both as an HTTP header and as an HTML `<meta>` tag, so GitHub Pages deployments get equivalent protection. `script-src` intentionally allows `'unsafe-inline'` because the app is a zero-build architecture with ~830 inline event-handler attributes (`onclick=…`) in its markup and content data — the other strict directives (no `unsafe-eval`, no objects/plugins, same-origin-only connections, anti-framing) still apply. All rendered content is self-authored static data, and AI model output is HTML-escaped before insertion.
+- The browser obtains a per-start token from the same-origin local server. API writes check the request origin, JSON media type and token. The server provides no cross-origin read or preflight grants.
+- Code execution is off by default. On a loopback binding, `npm run start:runner` enables the host interpreter for code you trust. Use a separate isolated environment for untrusted code.
+- AI credentials use per-tab session storage. Only the local proxy forwards them to the chosen provider.
+- CTF submissions are checked against SHA-256 digests. Training artifacts and walkthroughs may themselves contain the answer.
+- A Content-Security-Policy ships as an HTTP header locally and as an HTML `<meta>` tag on static deployments. Both restrict resources, plugins and connections; framing protection additionally requires the headers supplied by the local server. `script-src` allows `'unsafe-inline'` for the app's inline event handlers. Imported progress is validated and rendered as text, and AI output is HTML-escaped before insertion.
 
 ## Reporting a Vulnerability
 

@@ -1,13 +1,12 @@
 // CyberEdu Local Server v2.8.0 - Multi-Model AI Proxy
 // Usage: node server.js   (serves on http://127.0.0.1:8000)
 //
-// Security model (v2.6):
-//   • Binds to 127.0.0.1 by default — never exposes code execution to the LAN.
-//     Override deliberately with CYBEREDU_HOST=0.0.0.0 if you know what you need.
+// Security model:
+//   • Binds to 127.0.0.1 by default. Native execution requires explicit opt-in
+//     and is disabled on non-loopback bindings.
 //   • Host header allow-list blocks DNS-rebinding from hostile websites.
-//   • No CORS headers: the page is always served same-origin, so browsers are
-//     no longer able to drive these APIs from third-party sites.
-//   • Static file serving uses a block-list (repo internals, tests, git data).
+//   • API writes require the same Origin, a session token, and JSON content type.
+//   • Static file serving allows only public application assets.
 //   • CTF answers verified as SHA-256 digests only (see flags-hash.js).
 
 const http = require('http');
@@ -20,21 +19,16 @@ const { URL } = require('url');
 const zlib = require('zlib');
 const crypto = require('crypto');
 
-process.on('uncaughtException', (err) => {
-  console.error('[FATAL] Uncaught exception:', err.message);
-  if (err.code === 'EADDRINUSE') {
-    console.error('Port ' + PORT + ' is in use. Run: netstat -ano | findstr :' + PORT);
-  }
-});
-process.on('unhandledRejection', (reason) => {
-  console.error('[WARN] Unhandled rejection:', reason);
-});
-
 const PORT      = parseInt(process.env.CYBEREDU_PORT, 10) || 8000;
 const BIND_HOST = process.env.CYBEREDU_HOST || '127.0.0.1';
 const ROOT      = __dirname;
 const PROGRESS_FILE = path.join(ROOT, 'progress.json');
 const AUTO_OPEN = process.env.CYBEREDU_NO_OPEN !== '1';
+const LOOPBACK = ['127.0.0.1', 'localhost', '::1'].includes(BIND_HOST);
+const RUN_ENABLED = LOOPBACK && (process.argv.includes('--enable-run') || process.env.CYBEREDU_ENABLE_RUN === '1');
+const SESSION_TOKEN = crypto.randomBytes(32).toString('hex');
+const { normalizeProgress } = require('./progress.js');
+const { MODULES, CTF_CHALLENGES } = require('./content.js');
 
 // ── Content-Security-Policy ──────────────────────────────────
 // Sent as a header here and mirrored as a <meta> tag in cyberedu.html so the
@@ -79,12 +73,12 @@ function jsonHdrs() {
 // interface we assume intentional LAN exposure and stop enforcing.
 const HOST_ALLOWED = new Set(['localhost:' + PORT, '127.0.0.1:' + PORT, '[::1]:' + PORT]);
 function hostIsAllowed(hostHeader) {
-  return !hostHeader || HOST_ALLOWED.has(String(hostHeader).toLowerCase());
+  return HOST_ALLOWED.has(String(hostHeader).toLowerCase());
 }
 
 // ── Request body reader with hard size cap ───────────────────
 function readJsonBody(req, res, maxBytes, cb) {
-  let body = '';
+  const chunks = [];
   let size = 0;
   req.on('data', chunk => {
     size += chunk.length;
@@ -94,12 +88,15 @@ function readJsonBody(req, res, maxBytes, cb) {
       req.destroy();
       return;
     }
-    body += chunk;
+    chunks.push(chunk);
   });
   req.on('end', () => {
     if (res.writableEnded) return;
     let parsed;
-    try { parsed = JSON.parse(body); }
+    try {
+      parsed = JSON.parse(Buffer.concat(chunks).toString('utf8'));
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('Expected object');
+    }
     catch {
       res.writeHead(400, jsonHdrs());
       return res.end(JSON.stringify({ error: 'JSON 格式错误' }));
@@ -147,6 +144,7 @@ const DEFAULT_ALLOWED_API_HOSTS = [
   'api.mistral.ai',
   'localhost',
   '127.0.0.1',
+  '[::1]',
 ];
 
 const CUSTOM_ALLOWED_HOSTS = (process.env.CYBEREDU_ALLOWED_HOSTS || '')
@@ -183,7 +181,7 @@ function getMime(filePath) {
 // ── Runtime detection ──────────────────────────────────────
 function checkRuntime(name, args) {
   return new Promise((resolve) => {
-    execFile(name, args, { timeout: 3000, stdio: 'ignore' }, () => resolve(true));
+    execFile(name, args, { timeout: 3000, stdio: 'ignore' }, err => resolve(!err));
   });
 }
 
@@ -199,13 +197,23 @@ const ERR_ZH = {
 };
 
 // ── Proxy /api/chat  →  upstream AI API (SSE streaming) ─────
+function allowedUpstream(url) {
+  if (!ALLOWED_API_HOSTS.includes(url.hostname)) return false;
+  return url.protocol === 'https:' || (url.protocol === 'http:' && ['localhost','127.0.0.1','[::1]'].includes(url.hostname));
+}
+function validChatInput(apiKey, apiUrl, messages) {
+  return typeof apiKey === 'string' && apiKey.length > 0 && /^[\x20-\x7e]+$/.test(apiKey) &&
+    typeof apiUrl === 'string' && Array.isArray(messages) && messages.length > 0 &&
+    messages.every(message => message && typeof message === 'object' && !Array.isArray(message) &&
+      typeof message.role === 'string' && (typeof message.content === 'string' || Array.isArray(message.content)));
+}
 function proxyChat(req, res) {
   readJsonBody(req, res, 256 * 1024, (parsed) => {
     const { apiKey, apiUrl, model, messages,
             temperature, max_tokens, top_p, stop,
             thinking, stream_options } = parsed;
 
-    if (!apiKey || !apiUrl || !messages || !Array.isArray(messages)) {
+    if (!validChatInput(apiKey, apiUrl, messages)) {
       res.writeHead(400, jsonHdrs());
       return res.end(JSON.stringify({ error: '缺少必要参数：apiKey / apiUrl / messages' }));
     }
@@ -221,7 +229,7 @@ function proxyChat(req, res) {
       targetUrl.pathname = targetUrl.pathname.replace(/\/+$/, '') + '/chat/completions';
     }
     // Validate upstream URL against allowed hosts
-    if (!ALLOWED_API_HOSTS.includes(targetUrl.hostname)) {
+    if (!allowedUpstream(targetUrl)) {
       res.writeHead(403, jsonHdrs());
       return res.end(JSON.stringify({ error: '不允许的 API 地址。仅支持已知的 AI 服务提供商。' }));
     }
@@ -243,7 +251,7 @@ function proxyChat(req, res) {
     const isHttps  = targetUrl.protocol === 'https:';
     const lib      = isHttps ? https : http;
     const options  = {
-      hostname: targetUrl.hostname,
+      hostname: targetUrl.hostname.replace(/^\[|\]$/g, ''),
       port:     targetUrl.port || (isHttps ? 443 : 80),
       path:     targetUrl.pathname + targetUrl.search,
       method:    'POST',
@@ -313,7 +321,7 @@ function proxyAnthropic(req, res) {
     const { apiKey, apiUrl, model, messages,
             temperature, max_tokens, system } = parsed;
 
-    if (!apiKey || !apiUrl || !messages || !Array.isArray(messages)) {
+    if (!validChatInput(apiKey, apiUrl, messages)) {
       res.writeHead(400, jsonHdrs());
       return res.end(JSON.stringify({ error: 'Missing required fields: apiKey / apiUrl / messages' }));
     }
@@ -324,11 +332,12 @@ function proxyAnthropic(req, res) {
       res.writeHead(400, jsonHdrs());
       return res.end(JSON.stringify({ error: 'Invalid API URL' }));
     }
+    if (targetUrl.pathname === '/' && targetUrl.hostname === 'api.anthropic.com') targetUrl.pathname = '/v1';
     if (!targetUrl.pathname.endsWith('/messages')) {
       targetUrl.pathname = targetUrl.pathname.replace(/\/+$/, '') + '/messages';
     }
     // Validate upstream URL against allowed hosts
-    if (!ALLOWED_API_HOSTS.includes(targetUrl.hostname)) {
+    if (!allowedUpstream(targetUrl)) {
       res.writeHead(403, jsonHdrs());
       return res.end(JSON.stringify({ error: 'API host not allowed. Only known AI service providers are supported.' }));
     }
@@ -358,7 +367,7 @@ function proxyAnthropic(req, res) {
     const isHttps = targetUrl.protocol === 'https:';
     const lib = isHttps ? https : http;
     const options = {
-      hostname: targetUrl.hostname,
+      hostname: targetUrl.hostname.replace(/^\[|\]$/g, ''),
       port:     targetUrl.port || (isHttps ? 443 : 80),
       path:     targetUrl.pathname + targetUrl.search,
       method:   'POST',
@@ -396,6 +405,7 @@ function proxyAnthropic(req, res) {
       }));
 
       let buf = '';
+      upRes.setEncoding('utf8');
       upRes.on('data', chunk => {
         buf += chunk.toString();
         const lines = buf.split('\n');
@@ -473,20 +483,24 @@ const RUN_TIMEOUT = 8000;
 function handleRunCode(req, res) {
   readJsonBody(req, res, 256 * 1024, (parsed) => {
     const { code, lang } = parsed;
-    if (!code || !lang) {
+    if (typeof code !== 'string' || !code.trim() || typeof lang !== 'string') {
       res.writeHead(400, jsonHdrs());
       return res.end(JSON.stringify({ error: '缺少 code 或 lang 参数' }));
     }
 
     const langMap = { Python: '.py', JavaScript: '.js', C: '.c', Bash: '.sh' };
-    const ext = langMap[lang];
+    const ext = Object.prototype.hasOwnProperty.call(langMap, lang) && langMap[lang];
     if (!ext) {
       res.writeHead(400, jsonHdrs());
       return res.end(JSON.stringify({ error: '不支持的语言: ' + lang + '。支持: Python, JavaScript, C, Bash' }));
     }
 
     const tmpFile = path.join(os.tmpdir(), 'cyberedu_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8) + ext);
-    fs.writeFileSync(tmpFile, code, 'utf-8');
+    try { fs.writeFileSync(tmpFile, code, 'utf-8'); }
+    catch {
+      res.writeHead(500, jsonHdrs());
+      return res.end(JSON.stringify({ error: 'Unable to create a temporary code file' }));
+    }
 
     function respond(payload) {
       res.writeHead(200, jsonHdrs());
@@ -505,7 +519,7 @@ function handleRunCode(req, res) {
         }
         execFile(outFile, [], { timeout: RUN_TIMEOUT }, (err2, stdout2, stderr2) => {
           cleanup([tmpFile, outFile]);
-          respond({ stdout: stdout2, stderr: stderr2, exitCode: err2 ? 1 : 0 });
+          respond(runResult(err2, stdout2, stderr2));
         });
       });
     } else if (lang === 'Bash') {
@@ -514,7 +528,7 @@ function handleRunCode(req, res) {
         if (err && err.code === 'ENOENT') {
           return respond({ error: 'Bash is not installed on this server.\n\nInstall it to run shell exercises:\n  • Windows: Git Bash (https://git-scm.com) or WSL\n  • macOS/Linux: already installed\n\nIn the meantime, use the Self-Test mode.' });
         }
-        respond({ stdout, stderr, exitCode: err ? 1 : 0 });
+        respond(runResult(err, stdout, stderr));
       });
     } else {
       const cmd = lang === 'Python' ? 'python' : process.execPath;
@@ -523,12 +537,16 @@ function handleRunCode(req, res) {
         if (err && err.code === 'ENOENT') {
           return respond({ error: 'Python is not installed on this server.\n\nInstall Python 3 to run exercises:\n  • https://python.org/downloads/\n\nIn the meantime, use the Self-Test mode to compare your output with the expected result.' });
         }
-        respond({ stdout, stderr, exitCode: err ? 1 : 0 });
+        respond(runResult(err, stdout, stderr));
       });
     }
 
     function cleanup(files) {
       files.forEach(f => { try { fs.unlinkSync(f); } catch {} });
+    }
+    function runResult(error, stdout, stderr) {
+      if (error?.killed) stderr += '\nExecution stopped after exceeding the time or output limit.';
+      return { stdout, stderr, exitCode: error ? (Number.isInteger(error.code) ? error.code : 1) : 0 };
     }
   });
 }
@@ -663,11 +681,11 @@ function escHtml(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,
 function handleCTFSim(req, res) {
   readJsonBody(req, res, 64 * 1024, (parsed) => {
     const { challengeId, input: userInput } = parsed;
-    if (!challengeId || !userInput) {
+    if (typeof challengeId !== 'string' || typeof userInput !== 'string' || !userInput) {
       res.writeHead(400, jsonHdrs());
       return res.end(JSON.stringify({ error: '缺少 challengeId 或 input' }));
     }
-    const sim = CTF_SIM[challengeId];
+    const sim = Object.prototype.hasOwnProperty.call(CTF_SIM, challengeId) && CTF_SIM[challengeId];
     if (!sim) {
       res.writeHead(200, jsonHdrs());
       return res.end(JSON.stringify({ error: '该题目暂不支持模拟环境。请根据题目描述在本地或远程环境中操作。' }));
@@ -684,7 +702,7 @@ function handleCTFSim(req, res) {
 const { FLAG_HASHES, normalizeFlagInput } = require('./flags-hash.js');
 
 function verifyFlag(challengeId, flag) {
-  const expectedHash = FLAG_HASHES[challengeId];
+  const expectedHash = Object.prototype.hasOwnProperty.call(FLAG_HASHES, challengeId) && FLAG_HASHES[challengeId];
   if (!expectedHash) return null;               // unknown challenge
   const got = crypto.createHash('sha256')
     .update(normalizeFlagInput(flag), 'utf8').digest('hex');
@@ -694,7 +712,7 @@ function verifyFlag(challengeId, flag) {
 function handleCTFVerify(req, res) {
   readJsonBody(req, res, 16 * 1024, (parsed) => {
     const { challengeId, flag } = parsed;
-    if (!challengeId || !flag) {
+    if (typeof challengeId !== 'string' || typeof flag !== 'string' || !flag) {
       res.writeHead(400, jsonHdrs());
       return res.end(JSON.stringify({ error: '缺少 challengeId 或 flag' }));
     }
@@ -709,31 +727,22 @@ function handleCTFVerify(req, res) {
 }
 
 // ── Static files ─────────────────────────────────────────────
-// Block-list of paths that must never be served over HTTP. The app itself
-// needs none of these; they exist for developers, CI and git.
-const STATIC_BLOCK_RULES = [
-  /^\/\.git/i, /^\/\.github/i, /^\/\.mailmap$/i, /^\/\.gitignore$/i,
-  /^\/server\.js$/i, /^\/progress\.json$/i, /^\/package(-lock)?\.json$/i,
-  /^\/restart_server\.bat$/i,
-  /^\/(tests|scripts|versions)\//i,
-];
+const PUBLIC_FILES = new Set([
+  '/cyberedu.html', '/index.html', '/style.css', '/script.js', '/content.js', '/progress.js',
+  '/i18n.js', '/flags-hash.js', '/favicon.svg', '/manifest.json', '/sw.js', '/robots.txt',
+  '/sitemap.xml', '/docs/og-image.png', '/docs/features-showcase.png', '/README.md', '/README_zh.md',
+  ...MODULES.flatMap(m => ['zh', 'en'].map(lang => '/lessons/' + m.id + '.' + lang + '.js'))
+]);
 function isBlockedStatic(urlPath) {
-  if (/(^|\/)\./.test(path.posix.basename(urlPath))) return true;       // dotfiles
-  if (/\.(bak|bat|cmd|log|env|lock)$/i.test(urlPath)) return true;      // junk/env
-  return STATIC_BLOCK_RULES.some(re => re.test(urlPath));
+  return !PUBLIC_FILES.has(urlPath);
 }
 
 // Small FIFO cache of gzipped payloads keyed by path+size+mtime, so repeat
-// requests don't recompress multi-MB assets (content.js is ~3.6 MB).
+// requests don't recompress unchanged application assets and lesson packs.
 const GZIP_CACHE_MAX = 24;
 const gzipCache = new Map();
 
 function serveStatic(req, res, urlPath) {
-  // Block-list enforced twice: on the raw URL and on its decoded form, so
-  // neither direct paths nor percent-encoding tricks can reach repo internals.
-  if (isBlockedStatic(urlPath)) {
-    res.writeHead(403, securityHeaders()); return res.end('Forbidden');
-  }
   // Decode once; malformed encodings are rejected outright.
   let decoded;
   try { decoded = decodeURIComponent(urlPath); }
@@ -803,7 +812,7 @@ function serveStatic(req, res, urlPath) {
 const server = http.createServer((req, res) => {
 
   // Host header gate (DNS rebinding): applied before anything else.
-  if (!(BIND_HOST === '127.0.0.1' ? hostIsAllowed(req.headers.host) : true)) {
+  if (LOOPBACK && !hostIsAllowed(req.headers.host)) {
     res.writeHead(403, jsonHdrs());
     return res.end(JSON.stringify({ error: 'Forbidden host' }));
   }
@@ -818,43 +827,57 @@ const server = http.createServer((req, res) => {
   const ts = new Date().toISOString().slice(11, 23);
   console.log(`[${ts}] ${req.method} ${req.url}`);
 
-  // Rate limit check for POST requests
-  const clientIp = req.socket.remoteAddress;
-  if (req.method === 'POST' && !checkRateLimit(clientIp)) {
-    res.writeHead(429, jsonHdrs());
-    return res.end(JSON.stringify({ error: '请求过于频繁，请稍后重试。' }));
+  const urlOnly = (req.url.split('?')[0]) || '/';
+  const apiHeaders = { ...jsonHdrs(), 'Cache-Control': 'no-store' };
+  function reply(status, body) {
+    res.writeHead(status, apiHeaders);
+    res.end(JSON.stringify(body));
+  }
+  if (urlOnly === '/api/session' && req.method === 'GET') {
+    return reply(200, { token: SESSION_TOKEN, runEnabled: RUN_ENABLED });
+  }
+  if (req.method === 'POST' && urlOnly.startsWith('/api/')) {
+    if (req.headers.origin !== 'http://' + req.headers.host || req.headers['x-cyberedu-token'] !== SESSION_TOKEN) {
+      return reply(403, { error: 'Invalid request origin or session. Reload CyberEdu.' });
+    }
+    if ((req.headers['content-type'] || '').split(';')[0].trim().toLowerCase() !== 'application/json') {
+      return reply(415, { error: 'Expected application/json' });
+    }
+    if (!checkRateLimit(req.socket.remoteAddress)) return reply(429, { error: 'Too many requests' });
   }
 
-  const urlOnly = (req.url.split('?')[0]) || '/';
-
-  // ── API: progress persistence ───────────────────────────────
   if (urlOnly === '/api/progress') {
+    function readProgress() {
+      try { return JSON.parse(fs.readFileSync(PROGRESS_FILE, 'utf8')); }
+      catch (err) { if (err.code === 'ENOENT') return {}; throw err; }
+    }
     if (req.method === 'GET') {
-      if (!fs.existsSync(PROGRESS_FILE)) {
-        res.writeHead(200, jsonHdrs());
-        return res.end('{}');
-      }
-      return fs.readFile(PROGRESS_FILE, (err, data) => {
-        res.writeHead(200, jsonHdrs());
-        res.end(err ? '{}' : data);
-      });
+      try { return reply(200, readProgress()); }
+      catch { return reply(500, { error: 'Unable to read saved progress' }); }
     }
     if (req.method === 'POST') {
-      return readJsonBody(req, res, 1024 * 100, (data) => {
-        if (typeof data !== 'object' || data === null || Array.isArray(data)) {
-          res.writeHead(400, jsonHdrs());
-          return res.end(JSON.stringify({ error: '无效的进度数据格式' }));
+      return readJsonBody(req, res, 100 * 1024, data => {
+        if (typeof data.revision !== 'string' || !/^[a-f0-9]{32}$/.test(data.revision) || !Array.isArray(data.completedSections)) {
+          return reply(400, { error: 'Invalid progress snapshot' });
         }
-        // Re-serialize the validated object rather than storing raw input.
-        fs.writeFileSync(PROGRESS_FILE, JSON.stringify(data), 'utf-8');
-        res.writeHead(200, jsonHdrs());
-        res.end(JSON.stringify({ ok: true }));
+        try {
+          const current = readProgress().revision || '0';
+          if (data.revision === current) return reply(200, { revision: current });
+          if (req.headers['x-cyberedu-base'] !== current) return reply(409, { revision: current });
+          const clean = normalizeProgress(data, MODULES, CTF_CHALLENGES);
+          clean.revision = data.revision;
+          fs.writeFileSync(PROGRESS_FILE + '.tmp', JSON.stringify(clean));
+          fs.renameSync(PROGRESS_FILE + '.tmp', PROGRESS_FILE);
+          return reply(200, { revision: clean.revision });
+        } catch { return reply(500, { error: 'Unable to save progress' }); }
       });
     }
+    return reply(405, { error: 'Method not allowed' });
   }
 
   // ── API: run code ──────────────────────────────────────────
   if (req.method === 'POST' && urlOnly === '/api/run') {
+    if (!RUN_ENABLED) return reply(403, { error: 'Local execution is disabled. Start with npm run start:runner on loopback.' });
     return handleRunCode(req, res);
   }
 
@@ -872,15 +895,21 @@ const server = http.createServer((req, res) => {
   if (req.method === 'POST' && urlOnly === '/api/chat/anthropic') {
     return proxyAnthropic(req, res);
   }
-  if (req.method === 'POST' && urlOnly.startsWith('/api/chat')) {
+  if (req.method === 'POST' && urlOnly === '/api/chat') {
     return proxyChat(req, res);
   }
 
   // ── Static files ───────────────────────────────────────────
+  if (urlOnly.startsWith('/api/')) return reply(404, { error: 'Unknown API endpoint' });
+  if (!['GET', 'HEAD'].includes(req.method)) return reply(405, { error: 'Method not allowed' });
   serveStatic(req, res, urlOnly === '/' ? '/cyberedu.html' : urlOnly);
 });
 
 if (require.main === module) {
+  server.on('error', err => {
+    console.error('Unable to start CyberEdu:', err.message);
+    process.exitCode = 1;
+  });
   server.listen(PORT, BIND_HOST, async () => {
     const hasPython = await checkRuntime('python', ['--version']);
     const hasGCC    = await checkRuntime('gcc', ['--version']);
@@ -890,6 +919,7 @@ if (require.main === module) {
     console.log('  ║   http://' + BIND_HOST + ':' + PORT + '                    ║');
     console.log('  ╚══════════════════════════════════════════════╝');
     console.log('');
+    console.log(RUN_ENABLED ? '  Local execution enabled for trusted code.' : '  Local execution is off. Opt in with npm run start:runner.');
     console.log('  Runtime detection for practice exercises:');
     console.log('    Python  ' + (hasPython ? '✓ found' : '✗ NOT FOUND — Python exercises will show errors'));
     console.log('    GCC     ' + (hasGCC ? '✓ found' : '✗ NOT FOUND — C exercises will show errors'));
@@ -917,7 +947,6 @@ module.exports = {
   PORT,
   BIND_HOST,
   MIME,
-  STATIC_BLOCK_RULES,
   isBlockedStatic,
   HOST_ALLOWED,
   hostIsAllowed,
