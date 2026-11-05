@@ -56,13 +56,12 @@ function rerenderCurrentView() {
     case "home": if (typeof renderHome === "function") renderHome(); break;
     case "hub":
       // Hub view — reload current section content if one is active
-      if (typeof currentModuleId !== "undefined" && typeof currentSectionId !== "undefined" && typeof loadSection === "function") {
-        loadSection(currentModuleId, currentSectionId);
+      if (typeof currentModuleId !== "undefined" && typeof currentSectionId !== "undefined" && typeof renderSection === "function") {
+        renderSection(currentModuleId, currentSectionId);
       }
       break;
     case "practice":
-      if (typeof currentPracticeIdx !== "undefined" && currentPracticeIdx !== null && typeof loadPractice === "function")
-        loadPractice(currentPracticeIdx);
+      if (typeof renderPractice === "function") renderPractice(currentPracticeIdx, true);
       break;
     case "ctf": if (typeof renderCTF === "function") renderCTF(); break;
     case "progress": if (typeof renderProgress === "function") renderProgress(); break;
@@ -76,6 +75,20 @@ function rerenderCurrentView() {
 // ============================================================
 const LANG = {
   zh: {
+    'progress.useServer': '采用服务器记录',
+    'progress.useServerConfirm': '确定用服务器进度替换本机待同步的记录？',
+    'local.required': "AI 导师需要本地服务。请在项目目录运行 npm start，然后打开终端中显示的本地地址。",
+    'code.enableRunner': "自测模式。要运行自己信任的代码，请在本机用 npm run start:runner 启动，打开终端中的本地地址。",
+    'code.liveDns': "DNS 记录会变化。请将 A 和 MX 的结果与同一解析器的实时结果核对。",
+    'code.exitStatus': "程序退出码",
+    'hub.catalog': "目录",
+    'ctf.material': "题目材料",
+    'lesson.retry': "课程未能加载，点击重试",
+    'path.nextLesson': "推荐下一节",
+    'progress.pending': "已保存在此设备，等待同步。",
+    'progress.conflict': "服务器有另一份进度。此设备的记录已保留，可先导出备份。",
+    'progress.keepLocal': "用本机记录同步",
+    'progress.keepConfirm': "确定用此设备的进度替换服务器上的记录？",
     // Head
     'head.title': 'CyberEdu — 网络空间安全综合学习站',
 
@@ -462,6 +475,20 @@ const LANG = {
   },
 
   en: {
+    'progress.useServer': 'Use server copy',
+    'progress.useServerConfirm': 'Replace this device’s pending changes with the server copy?',
+    'local.required': "AI Tutor requires the local server. Run npm start in the project and open the local URL printed in the terminal.",
+    'code.enableRunner': "Self-test mode. To run trusted code on your computer, use npm run start:runner and open the local URL in the terminal.",
+    'code.liveDns': "DNS records vary. Compare the A and MX results with the same live resolver.",
+    'code.exitStatus': "Process exit code",
+    'hub.catalog': "Catalog",
+    'ctf.material': "Challenge material",
+    'lesson.retry': "Could not load this lesson. Retry",
+    'path.nextLesson': "Next recommended lesson",
+    'progress.pending': "Saved on this device. Sync pending.",
+    'progress.conflict': "The server has another revision. Your local progress is retained and can be exported.",
+    'progress.keepLocal': "Sync this device’s copy",
+    'progress.keepConfirm': "Replace the server’s progress with the copy on this device?",
     // Head
     'head.title': 'CyberEdu — Cybersecurity Learning Platform',
 
@@ -865,5 +892,6 @@ document.title = (LANG[currentLang] || LANG.zh)['head.title'] || document.title;
     if (val) el.title = val;
   });
   var _btn = document.getElementById('lang-toggle');
-  if (_btn) _btn.textContent = '中';
+  if (_btn) _btn.textContent = currentLang === 'zh' ? 'EN' : '中';
+  document.documentElement.lang = currentLang === 'en' ? 'en' : 'zh-CN';
 }

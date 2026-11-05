@@ -14,7 +14,7 @@
   <img src="https://img.shields.io/badge/modules-9_core-00e5ff?style=flat-square" alt="Modules">
   <img src="https://img.shields.io/badge/lessons-171_atomic-00ff41?style=flat-square" alt="Lessons">
   <img src="https://img.shields.io/badge/bilingual-100%25_EN%2FZH-00e5ff?style=flat-square" alt="Bilingual">
-  <img src="https://img.shields.io/badge/tests-114_passed-00ff41?style=flat-square" alt="Tests">
+  <img src="https://img.shields.io/badge/tests-117_passed-00ff41?style=flat-square" alt="Tests">
   <img src="https://img.shields.io/badge/license-MIT-00e5ff?style=flat-square" alt="License">
   <img src="https://img.shields.io/github/stars/Chhhhhhhhhhhhhhh/cyberedu?style=social" alt="Stars">
 </p>
@@ -43,7 +43,7 @@
 | 🚩 **28 CTF Challenges** | Mathematically and technically verified challenges across Web, Reverse, PWN, Crypto, Misc, and Forensics — SHA-256 hashed verification |
 | 🎮 **Gamification & Ranks** | 5-tier hacker rank progression (LV.1 Script Kiddie → LV.5 Cyber Sovereign), dynamic EXP engine, daily streaks, unlockable achievements, and celebration effects |
 | 🤖 **AI Tutor & Copilot** | Built-in streaming SSE chat assistant supporting DeepSeek, OpenAI, Qwen, Claude, Ollama, and Groq with full-screen conversation drawer |
-| 💻 **In-Browser Code Playground** | Embedded CodeMirror 5 with syntax highlighting for Python, JS, C, and Bash + 10 executable challenges with auto-verification |
+| 💻 **In-Browser Code Playground** | Embedded CodeMirror 5 with syntax highlighting for Python, JS, C, and Bash + 10 exercises with local execution, sample-output checks and a live DNS exercise |
 | 📱 **PWA & Offline Support** | Native PWA with `manifest.json` and Service Worker offline caching; neo-brutalist cyber terminal UI with WCAG AA contrast compliance |
 | 🔍 **Global Navigation** | Ctrl+K fuzzy search, prerequisite tracking, difficulty star ratings, and persistent progress backup (JSON export/import) |
 
@@ -71,20 +71,23 @@
 ```
 cyberedu/
 ├── cyberedu.html          # Main application entry point
-├── content.js             # 171 atomic micro-lessons (CN) + 342 checkpoints + CTF metadata
+├── content.js             # Course catalog, exercises and CTF metadata
+├── lessons/               # Lesson text and quizzes, split by module and language
 ├── script.js              # Application core (state management, views, gamification, AI chat)
 ├── style.css              # Neo-brutalist cyber terminal styles (WCAG AA compliant)
 ├── i18n.js                # Dual-language localization system (~250+ translation pairs)
 ├── manifest.json          # Progressive Web App (PWA) manifest
 ├── sw.js                  # Service Worker offline cache engine
 ├── server.js              # Zero-dependency local Node.js server (loopback-only AI proxy & CTF verification)
-├── flags-hash.js          # CTF answer SHA-256 digests — zero plaintext answers shipped
+├── flags-hash.js          # CTF submission digests
 ├── package.json           # Project manifest, scripts & metadata
 ├── favicon.svg            # CyberEdu vector terminal icon
-├── tests/                 # Zero-dependency regression test suite (114 checks)
-│   ├── test-runner.js     # Custom ANSI color test runner
+├── progress.js            # Shared progress schema for backups and server sync
+├── tests/                 # Unit tests and Playwright browser regression checks
+│   ├── test-runner.js     # Dependency-free asynchronous test runner
 │   ├── server.test.js     # Server security, host guards, traversal & rate limiter tests
-│   └── utils.test.js      # Client utilities, gamification engine, playgrounds & WCAG AA contrast tests
+│   ├── utils.test.js      # Client utilities, gamification engine, playgrounds & contrast checks
+│   └── browser_smoke.py   # Real server, static site, AI proxy, offline and mobile flows
 ├── scripts/               # Quality verification & automation tooling
 │   ├── verify-content-quality.js # Automated 342/342 lesson template & structure validator
 │   ├── verify-ctf-solvable.js    # Mathematical & programmatic CTF solvability verifier
@@ -105,10 +108,10 @@ cyberedu/
 
 ## 🧪 Quality Gates & Automated Testing
 
-The platform enforces four automated CI quality gates:
+CI runs the unit, content, CTF, privacy, syntax and browser checks:
 
 ```bash
-# 1. Run unit test suite (114 tests covering security, gamification, sandboxes & contrast)
+# 1. Run unit test suite (tests covering security, gamification, sandboxes & contrast)
 npm test
 
 # 2. Verify mathematical solvability of CTF challenges (21/21 verified)
@@ -121,7 +124,10 @@ node scripts/verify-content-quality.js
 node scripts/privacy-scan.js
 
 # 5. Static syntax verification across all core files
-node --check server.js && node --check script.js && node --check content.js && node --check i18n.js && node --check flags-hash.js
+node --check server.js && node --check script.js && node --check content.js && node --check i18n.js && node --check flags-hash.js && node --check progress.js && node --check sw.js
+
+# 6. Browser regression (install the Playwright version pinned in CI and Chromium first)
+python tests/browser_smoke.py
 ```
 
 ---
@@ -130,7 +136,7 @@ node --check server.js && node --check script.js && node --check content.js && n
 
 ### Option 1: Static Offline Browsing (No Server Required)
 
-Simply double-click `cyberedu.html` or open it in any modern browser. All 171 micro-lessons, interactive checkpoints, code highlighting, search, and sandboxes work completely client-side without internet connectivity.
+With a complete checkout, open `cyberedu.html` to read courses and use checkpoints, CTF materials and the toolbox. On GitHub Pages the service worker caches the application and lesson packs you have opened. CDN-based highlighting and charts need their libraries on first use.
 
 ### Option 2: Local Server (Full AI Tutor & PWA Support)
 
@@ -141,7 +147,7 @@ node server.js
 # Then open http://127.0.0.1:8000 in your browser
 ```
 
-> **Security by Design**: The local server binds strictly to `127.0.0.1` (loopback only, never exposed to your local network), enforces `Host` header whitelisting against DNS rebinding, and rejects cross-origin requests.
+The default server binds to loopback and supports progress sync and AI chat. For **trusted practice code**, stop it and run `npm run start:runner`. This opt-in interpreter runs with your OS account's permissions and only works on loopback. Static sites and the default server provide self-test examples.
 
 To configure your AI Tutor, click the green terminal button at the bottom-right and open Settings (⚙):
 
@@ -149,7 +155,7 @@ To configure your AI Tutor, click the green terminal button at the bottom-right 
 |-------|---------|-------------|
 | **API Type** | `OpenAI Compatible` or `Anthropic` | Protocol selection |
 | **API Base URL** | `https://api.deepseek.com` | Endpoint base address |
-| **API Key** | `sk-...` | Stored strictly in browser `localStorage` |
+| **API Key** | `sk-...` | Kept in this browser tab’s session storage and forwarded by the local proxy to the configured provider |
 | **Model** | `deepseek-chat`, `gpt-4o`, `qwen-plus`, `claude-3-5-sonnet` | Model identifier |
 
 ---
@@ -176,7 +182,7 @@ To configure your AI Tutor, click the green terminal button at the bottom-right 
 | **Code Highlighting** | [Prism.js](https://prismjs.com/) v1.29.0 | Cyberpunk theme syntax highlighting |
 | **Code Editor** | [CodeMirror 5](https://codemirror.net/) | Python, JavaScript, C, and Bash modes |
 | **AI Stream Engine** | Server-Sent Events (SSE) | Multi-provider streaming parser with fallback |
-| **Flag Verification** | Web Crypto SHA-256 | Zero plaintext answers in frontend or git tree |
+| **Flag Verification** | Web Crypto SHA-256 | Checks normalized submissions against answer digests |
 | **PWA Engine** | Service Worker + Web App Manifest | Offline first, installable desktop/mobile experience |
 | **Local Proxy** | Node.js native `http` module | DNS rebinding protection, zero external server deps |
 

@@ -122,6 +122,7 @@
 <header role="banner">
 <nav id="topnav" role="navigation" aria-label="主导航">
   <div class="nav-logo">CYBER<span>EDU</span></div>
+  <button id="mobile-catalog" aria-controls="sidebar" aria-expanded="false" data-i18n="hub.catalog" onclick="toggleMobileCatalog()">Catalog</button>
   <ul class="nav-links">
     <li><button class="nav-link" data-i18n="nav.home" onclick="navigate('home')">◈ 首页</button></li>
     <li><button class="nav-link" data-i18n="nav.hub" onclick="navigate('hub')">▸ 学习中心</button></li>
@@ -310,8 +311,8 @@
           </div>
           <!-- Tab: Code Editor -->
           <div class="ctf-panel" id="ctf-panel-code" role="tabpanel" aria-labelledby="ctf-tab-code" style="display:none">
-            <div id="ctf-code-editor" style="width:100%;height:260px;border:1px solid var(--border-subtle);border-radius:6px;font-size:13px;font-family:var(--font-mono);background:var(--bg-card);color:var(--text-main);padding:12px;resize:vertical;white-space:pre;overflow:auto;tab-size:4"></div>
-            <div style="display:flex;gap:8px;margin-top:8px">
+            <textarea aria-label="CTF code or challenge material" spellcheck="false" id="ctf-code-editor" style="width:100%;height:260px;border:1px solid var(--border-subtle);border-radius:6px;font-size:13px;font-family:var(--font-mono);background:var(--bg-card);color:var(--text-main);padding:12px;resize:vertical;white-space:pre;overflow:auto;tab-size:4"></textarea>
+            <div id="ctf-code-actions" style="display:flex;gap:8px;margin-top:8px">
               <button class="run-btn" data-i18n="ctf.run" onclick="runCTFCode()" style="font-size:11px;padding:5px 16px">▶ 运行</button>
               <button class="run-btn" data-i18n="ctf.reset" onclick="resetCTFCode()" style="font-size:11px;padding:5px 16px;opacity:0.7">↺ 重置</button>
             </div>
@@ -344,6 +345,8 @@
         <div class="view-title" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
           <span data-i18n="progress.title">学习进度仪表盘</span>
           <span style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">
+            <span id="sync-status" role="status"></span><button id="sync-resolve" hidden onclick="resolveProgressConflict()" data-i18n="progress.keepLocal">Keep local copy</button>
+            <button id="sync-use-server" hidden onclick="useServerProgress()" data-i18n="progress.useServer">Use server copy</button>
             <button class="run-btn" data-i18n="progress.export" onclick="exportProgress()" style="font-size:10px;padding:4px 14px">↓ 导出进度</button>
             <button class="run-btn" data-i18n="progress.import" onclick="importProgress()" style="font-size:10px;padding:4px 14px">↑ 导入进度</button>
             <button class="run-btn btn-danger-soft" data-i18n="progress.resetBtn" onclick="openResetProgressModal()" style="font-size:10px;padding:4px 14px">↺ 重置进度</button>
@@ -580,6 +583,7 @@
 <script src="flags-hash.js" defer></script>
 <script src="content.js" defer></script>
 <script src="i18n.js" defer></script>
+<script src="progress.js" defer></script>
 <script src="script.js" defer></script>
 </body>
 </html>

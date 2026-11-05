@@ -176,7 +176,7 @@ module.exports = async function() {
 
   // ─── Debounce / Throttle Logic ─────────────────────────────
   describe('Debounce / Throttle Logic', function() {
-    it('should debounce: only last call within window fires', function(done) {
+    it('should debounce: only last call within window fires', async function() {
       let callCount = 0;
       function debounce(fn, ms) {
         let timer;
@@ -188,10 +188,8 @@ module.exports = async function() {
       const inc = debounce(() => { callCount++; }, 10);
       inc(); inc(); inc(); inc(); inc();
       // After 50ms, only 1 call should have fired
-      setTimeout(() => {
-        assert.strictEqual(callCount, 1);
-        done();
-      }, 50);
+      await new Promise(resolve => setTimeout(resolve, 50));
+      assert.strictEqual(callCount, 1);
     });
   });
 
@@ -588,35 +586,31 @@ module.exports = async function() {
   });
 
   describe('Glossary Injection & Client Content Integrity', function() {
-    const fs = require('fs');
-    const vm = require('vm');
-    const contentCode = fs.readFileSync(require('path').join(__dirname, '../content.js'), 'utf8');
-    const ctx = vm.createContext({});
-    vm.runInContext(contentCode + '; globalThis.__GLOSSARY = GLOSSARY; globalThis.__MODULES = MODULES; globalThis.__SC = SECTION_CONTENT; globalThis.__ig = typeof injectGlossary !== "undefined" ? injectGlossary : null;', ctx);
+    const {injectGlossary, MODULES, SECTION_CONTENT} = require('../content.js');
 
     it('should provide injectGlossary function in content.js', function() {
-      assert.strictEqual(typeof ctx.__ig, 'function', 'injectGlossary must be declared as a function in content.js');
+      assert.strictEqual(typeof injectGlossary, 'function', 'injectGlossary must be declared as a function in content.js');
     });
 
     it('should inject glossary spans around matching terms', function() {
       const sample = '<p>这里提到了 XSS 漏洞和 WAF 防护。</p>';
-      const output = ctx.__ig(sample);
+      const output = injectGlossary(sample);
       assert(output.includes('data-term="XSS"'), 'should wrap XSS with glossary span');
       assert(output.includes('data-term="WAF"'), 'should wrap WAF with glossary span');
     });
 
     it('should safely handle empty or null strings', function() {
-      assert.strictEqual(ctx.__ig(''), '');
-      assert.strictEqual(ctx.__ig(null), '');
-      assert.strictEqual(ctx.__ig(undefined), '');
+      assert.strictEqual(injectGlossary(''), '');
+      assert.strictEqual(injectGlossary(null), '');
+      assert.strictEqual(injectGlossary(undefined), '');
     });
 
     it('should have non-empty content for every section across all modules', function() {
-      const sections = ctx.__MODULES.flatMap(m => m.chapters.flatMap(c => c.sections));
+      const sections = MODULES.flatMap(m => m.chapters.flatMap(c => c.sections));
       assert(sections.length >= 52, `Expected at least 52 sections, found ${sections.length}`);
       for (const sec of sections) {
         const hasDirect = Boolean(sec.content && sec.content.trim());
-        const hasKey = Boolean(sec.contentKey && ctx.__SC[sec.contentKey] && ctx.__SC[sec.contentKey].trim());
+        const hasKey = Boolean(sec.contentKey && SECTION_CONTENT[sec.contentKey] && SECTION_CONTENT[sec.contentKey].trim());
         assert(hasDirect || hasKey, `Section ${sec.id} (${sec.title}) must have non-empty content or SECTION_CONTENT mapping`);
       }
     });

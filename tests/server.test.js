@@ -4,7 +4,6 @@ const crypto = require('crypto');
 const serverModule = require('../server.js');
 const {
   MIME,
-  STATIC_BLOCK_RULES,
   isBlockedStatic,
   HOST_ALLOWED,
   hostIsAllowed,

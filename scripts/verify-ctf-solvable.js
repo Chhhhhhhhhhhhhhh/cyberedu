@@ -1,24 +1,9 @@
 #!/usr/bin/env node
 // CTF derivability verifier — format-agnostic (uses VM execution to load
 // content.js and access the actual runtime objects).
-const fs = require('fs');
-const path = require('path');
 const crypto = require('crypto');
-const vm = require('vm');
 const { FLAG_HASHES, normalizeFlagInput } = require('../flags-hash.js');
-
-// ── load content.js in a VM and get runtime bindings ──
-const code = fs.readFileSync(path.join(__dirname, '..', 'content.js'), 'utf8');
-const sandbox = { console: { log() {}, warn() {}, error() {} } };
-vm.createContext(sandbox);
-// top-level const in vm scripts → lexical scope, NOT globalThis; use explicit export
-vm.runInContext(code + `
-;globalThis.__V = {
-  CTF: CTF_CHALLENGES, SC: SECTION_CONTENT, SCE: SECTION_CONTENT_EN
-};`, sandbox);
-const CTF = sandbox.__V.CTF;
-const SC = sandbox.SECTION_CONTENT;
-const SCE = sandbox.SECTION_CONTENT_EN;
+const { CTF_CHALLENGES: CTF } = require('../content.js');
 
 function getChallenge(id) { return CTF.find(c => c.id === id); }
 function challengeText(c) {
@@ -29,7 +14,7 @@ function challengeText(c) {
 const results = [];
 function report(id, method, derived, ok) {
   results.push({ id, method, derived, ok });
-  console.log(`${ok ? '✓' : '✗'} ${id} [${method}] ${ok ? derived : 'DERIVED=' + derived + ' != official'}`);
+  console.log((ok ? '✓ ' : '✗ ') + id + ' [' + method + ']');
 }
 const sha = s => crypto.createHash('sha256').update(normalizeFlagInput(s), 'utf8').digest('hex');
 const okHash = (id, ans) => sha(ans) === FLAG_HASHES[id];
@@ -43,7 +28,7 @@ const artifactIds = ['ctf-005','ctf-006','ctf-010','ctf-013','ctf-015','ctf-018'
                      'ctf-021','ctf-023','ctf-024','ctf-025','ctf-026','ctf-027','ctf-028'];
 for (const id of artifactIds) {
   const ch = getChallenge(id);
-  const text = JSON.stringify(ch);
+  const text = ch.starterCode || '';
   const m = text.match(/flag\{[a-z0-9_]+\}/i);
   report(id, 'artifact-grep', m && m[0], !!m && okHash(id, m[0]));
 }
@@ -174,4 +159,4 @@ const bnBytes = bn => Buffer.from(bn.toString(16).padStart(Math.ceil(bn.toString
 const realFails = results.filter(r => !r.ok && !String(r.derived).startsWith('ERR:'));
 const skipped = results.filter(r => String(r.derived).startsWith('ERR:'));
 console.log(`\nderivability: ${results.length - realFails.length - skipped.length}/${results.length} verified + ${skipped.length} skipped (extraction limitation)`);
-if (realFails.length) { console.log('FAILURES:', JSON.stringify(realFails, null, 1)); process.exit(2); }
+if (realFails.length || skipped.length) { console.log('FAILURES:', JSON.stringify(realFails, null, 1)); process.exit(2); }

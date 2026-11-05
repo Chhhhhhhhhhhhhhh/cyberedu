@@ -3814,3 +3814,20 @@ html.reduced-motion * {
 }
 
 
+
+#main-content { min-width: 0; }
+a.module-card { display: block; color: inherit; text-decoration: none; }
+a.module-card:focus-visible { outline: 2px solid var(--color-cyan); }
+#mobile-catalog { display: none; }
+@media (max-width: 768px) {
+  .has-catalog #mobile-catalog { display: inline-block; }
+  #sidebar-toggle { display: none; }
+  .nav-links { min-width: 0; }
+  .reading-time { flex-wrap: wrap; }
+  .article-content pre { max-width: 100%; overflow-x: auto; }
+  .article-content table { display: block; max-width: 100%; overflow-x: auto; }
+  .article-content { overflow-wrap: anywhere; }
+}
+
+#ctf-code-actions[hidden] { display: none !important; }
+#code-output { white-space: pre-wrap; overflow-wrap: anywhere; }

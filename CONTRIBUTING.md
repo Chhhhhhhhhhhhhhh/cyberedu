@@ -20,13 +20,14 @@ Thanks for your interest! Here's how to contribute.
 
 ```
 ├── cyberedu.html    # Main HTML page (UI layout + inline styles)
-├── content.js       # All teaching content (modules, chapters, exercises, CTF, glossary)
+├── content.js       # Course catalog, exercises, CTF and glossary
+├── lessons/         # Bilingual module packs (HTML and checkpoints)
 ├── script.js        # Interactive logic (navigation, search, theme, AI chat)
 ├── style.css        # Stylesheet (dark/light themes, animations, layout)
 ├── i18n.js          # Bilingual EN/ZH localization (~140 translation pairs)
 ├── server.js        # Local Node.js proxy (AI chat, code execution)
 ├── favicon.svg      # Browser tab icon
-└── versions/        # Historical version archives
+└── versions/        # Version changelog
 ```
 
 ## How to Contribute
@@ -63,18 +64,9 @@ To improve English or Chinese translations:
 
 ## Adding New Content
 
-To add a new chapter or module:
+Add the module, chapter and section metadata to `content.js`. Each section’s `contentKey` must exist in both `lessons/<module>.en.js` and `lessons/<module>.zh.js` with its HTML and two checkpoints. Use `node scripts/replace-section.js <key> <zh-file> [en-file]` to update an existing article. Run `node scripts/verify-content-quality.js` and open the lesson in both languages.
 
-1. Open `content.js`
-2. Follow the existing `SECTION_CONTENT` / `SECTION_CONTENT_EN` structure
-3. Each section needs:
-   - `id`: unique identifier (e.g., `crypto-rsa-deep`)
-   - `title` / `titleEn`: bilingual titles
-   - `body` / `bodyEn`: HTML content
-   - `tags`: relevant keywords
-   - `code`: optional code snippet(s)
-4. Add the section to the corresponding module's chapters
-5. Run `node server.js` and navigate to verify
+For the browser regression suite install the Playwright version pinned in the CI workflow, run `python -m playwright install chromium`, then `python tests/browser_smoke.py`. The tests use disposable loopback servers and a temporary browser profile.
 
 ## Reporting Issues
 
