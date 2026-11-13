@@ -6,13 +6,13 @@
 
 <p align="center">
   An interactive cybersecurity learning platform and reference manual — from absolute beginner to advanced red/blue team operations.<br>
-  <strong>9 Core Modules · 55 Chapters · 171 Atomic Micro-Lessons · 342 Bilingual Articles · 342 Interactive Checkpoints · 28 CTF Challenges · AI Tutor</strong>
+  <strong>9 Core Modules · 55 Chapters · 173 Atomic Micro-Lessons · 346 Bilingual Articles · 346 Interactive Checkpoints · 28 CTF Challenges · AI Tutor</strong>
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/version-v2.8.0-00ff41?style=flat-square" alt="Version">
   <img src="https://img.shields.io/badge/modules-9_core-00e5ff?style=flat-square" alt="Modules">
-  <img src="https://img.shields.io/badge/lessons-171_atomic-00ff41?style=flat-square" alt="Lessons">
+  <img src="https://img.shields.io/badge/lessons-173_atomic-00ff41?style=flat-square" alt="Lessons">
   <img src="https://img.shields.io/badge/bilingual-100%25_EN%2FZH-00e5ff?style=flat-square" alt="Bilingual">
   <img src="https://img.shields.io/badge/tests-117_passed-00ff41?style=flat-square" alt="Tests">
   <img src="https://img.shields.io/badge/license-MIT-00e5ff?style=flat-square" alt="License">
@@ -36,9 +36,9 @@
 
 | Category | Details |
 |----------|---------|
-| 📚 **Atomic Micro-Lessons** | 171 structured micro-lessons across 9 core domains, equipped with "What You'll Learn", reproducible exploit/defense steps, folded exercises, and summary cheatsheets |
-| 🌐 **100% Bilingual Manual** | Complete side-by-side English and Chinese technical manuals across all 171 lessons (342 total articles) with one-click seamless switching |
-| 🎯 **342 Interactive Checkpoints** | 2 self-assessment checkpoints per lesson with immediate feedback, detailed technical explanations, and one-click "Ask AI Tutor" |
+| 📚 **Atomic Micro-Lessons** | 173 structured micro-lessons across 9 core domains, equipped with "What You'll Learn", reproducible exploit/defense steps, folded exercises, and summary cheatsheets |
+| 🌐 **100% Bilingual Manual** | Complete side-by-side English and Chinese technical manuals across all 173 lessons (346 total articles) with one-click seamless switching |
+| 🎯 **346 Interactive Checkpoints** | 2 self-assessment checkpoints per lesson with immediate feedback, detailed technical explanations, and one-click "Ask AI Tutor" |
 | 🛠️ **6 Security Tools & Sandboxes** | Interactive SQLi injection simulator, XSS entity filter tester, Command injection visualizer, Hash avalanche bit analyzer, 5-point Radar skill evaluator, and hands-on Lab Drawer |
 | 🚩 **28 CTF Challenges** | Mathematically and technically verified challenges across Web, Reverse, PWN, Crypto, Misc, and Forensics — SHA-256 hashed verification |
 | 🎮 **Gamification & Ranks** | 5-tier hacker rank progression (LV.1 Script Kiddie → LV.5 Cyber Sovereign), dynamic EXP engine, daily streaks, unlockable achievements, and celebration effects |
@@ -48,6 +48,13 @@
 | 🔍 **Global Navigation** | Ctrl+K fuzzy search, prerequisite tracking, difficulty star ratings, and persistent progress backup (JSON export/import) |
 
 ---
+
+
+## Learning experience
+
+Start with the five-step Python path and build a small login-log analyzer. The homepage resumes your last lesson; optional advanced material stays collapsed. Reading marks are self-reported, quiz results and in-lesson output exercises are recorded separately, and missed quiz items appear in a persistent review list. A five-question self-check reports answers by topic; it does not measure skill percentages.
+
+The PCAP and PNG challenges now include downloadable synthetic files. Transcript-only tasks are labeled **Case study**. See [content review scope and authoring guidance](docs/content-review.md) for the reviewed lessons and remaining work. Structural checks do not certify the accuracy of every article.
 
 ## 📚 9 Core Modules & Curriculum Matrix
 
@@ -60,9 +67,9 @@
 | 5 | **Malware Analysis & Reverse** | `malware` | 5 | 15 | Static Analysis & PE Architecture, Dynamic Sandboxing & Behavioral Analysis, Disassembly & Decompilation (IDA/Ghidra), Anti-Debugging & Evasion, Threat Intel & MITRE ATT&CK |
 | 6 | **Cloud-Native & Container** | `cloudsec` | 5 | 15 | Docker Container Isolation & Escape Defense, Kubernetes Cluster Hardening, Cloud IAM & Metadata Security, Microservices & Service Mesh, CI/CD Pipeline & Supply Chain Security |
 | 7 | **Blue Team DFIR & SOC** | `dfir` | 5 | 15 | SOC Architecture & SIEM Triage, Windows & Linux Host Artifact Forensics, Volatility Memory Forensics, Threat Hunting with Sigma Rules, Incident Response SOP & Ransomware Playbooks |
-| 8 | **Programming Fundamentals** | `programming` | 7 | 18 | Python Exploit Scripting, C Language & Memory Layout, Bash Automation & Regex, Go Concurrency Tools, Wasm & JS Security, x86/x64 Assembly, Secure Coding & Memory Safety |
+| 8 | **Programming Fundamentals** | `programming` | 7 | 20 | Python Exploit Scripting, C Language & Memory Layout, Bash Automation & Regex, Go Concurrency Tools, Wasm & JS Security, x86/x64 Assembly, Secure Coding & Memory Safety |
 | 9 | **CTF Arena & AWD Strategy** | `ctf-guide` | 7 | 21 | CTF Architecture & Arsenal, PWN Stack Frames & ROP Chains, Reverse Engineering Anti-Decompilation, Advanced Web Exploit Chains, Cryptanalysis, Misc Forensics, AWD Attack & Defense Strategy |
-| **Σ** | **All 9 Modules** | **Complete** | **55** | **171** | **342 Bilingual Lessons · 342 Checkpoints · 28 CTF Challenges · 6 Interactive Sandboxes** |
+| **Σ** | **All 9 Modules** | **Complete** | **55** | **173** | **346 Bilingual Lessons · 346 Checkpoints · 28 CTF Challenges · 6 Interactive Sandboxes** |
 
 ---
 
@@ -89,7 +96,7 @@ cyberedu/
 │   ├── utils.test.js      # Client utilities, gamification engine, playgrounds & contrast checks
 │   └── browser_smoke.py   # Real server, static site, AI proxy, offline and mobile flows
 ├── scripts/               # Quality verification & automation tooling
-│   ├── verify-content-quality.js # Automated 342/342 lesson template & structure validator
+│   ├── verify-content-quality.js # Automated 346/346 lesson template & structure validator
 │   ├── verify-ctf-solvable.js    # Mathematical & programmatic CTF solvability verifier
 │   ├── privacy-scan.js           # Pre-push zero-leak privacy & credential scanner
 │   ├── gen-flag-hashes.js        # Answer digest rotation tool
@@ -117,7 +124,7 @@ npm test
 # 2. Verify mathematical solvability of CTF challenges (21/21 verified)
 node scripts/verify-ctf-solvable.js
 
-# 3. Validate structural completeness of all 342 micro-lessons (342/342 OK)
+# 3. Validate structural completeness of all 346 micro-lessons (346/346 OK)
 node scripts/verify-content-quality.js
 
 # 4. Scan repository for personal identifiers and sensitive leaks

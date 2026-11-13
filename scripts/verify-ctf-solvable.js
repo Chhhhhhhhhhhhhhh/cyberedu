@@ -24,13 +24,55 @@ const rot13 = s => s.replace(/[a-z]/gi, ch => {
 });
 
 // ── artifact challenges ──
-const artifactIds = ['ctf-005','ctf-006','ctf-010','ctf-013','ctf-015','ctf-018',
-                     'ctf-021','ctf-023','ctf-024','ctf-025','ctf-026','ctf-027','ctf-028'];
+const artifactIds = ['ctf-005','ctf-010','ctf-013','ctf-015','ctf-018',
+                     'ctf-023','ctf-024','ctf-025','ctf-026','ctf-027','ctf-028'];
 for (const id of artifactIds) {
   const ch = getChallenge(id);
   const text = ch.starterCode || '';
   const m = text.match(/flag\{[a-z0-9_]+\}/i);
-  report(id, 'artifact-grep', m && m[0], !!m && okHash(id, m[0]));
+  report(id, 'case-transcript', m && m[0], !!m && okHash(id, m[0]));
+}
+
+// Extract from the downloadable files, not descriptions or worked answers.
+{
+  const data = require('fs').readFileSync(require('path').join(__dirname, '../training/capture.pcap'));
+  require('assert').strictEqual(data.readUInt32LE(0), 0xa1b2c3d4);
+  let offset = 24, stream = '';
+  while (offset < data.length) {
+    const length = data.readUInt32LE(offset+8);
+    const frame = data.subarray(offset+16, offset+16+length);
+    require('assert').strictEqual(frame.readUInt16BE(12), 0x0800);
+    const ip = 14, tcp = ip+(frame[ip] & 15)*4;
+    if (frame[ip+9] === 6) stream += frame.subarray(tcp+(frame[tcp+12] >> 4)*4).toString('ascii');
+    offset += 16+length;
+  }
+  const flag = stream.match(/X-Backup-Note: (flag\{[a-z0-9_]+\})/i)?.[1];
+  report('ctf-006', 'pcap-http-header', flag, !!flag && okHash('ctf-006',flag));
+}
+{
+  const data = require('fs').readFileSync(require('path').join(__dirname, '../training/landscape.png'));
+  const assert = require('assert'), parts = [];
+  assert.strictEqual(data.subarray(0,8).toString('hex'),'89504e470d0a1a0a');
+  let width, height;
+  for (let offset=8; offset<data.length;) {
+    const size=data.readUInt32BE(offset), type=data.toString('ascii',offset+4,offset+8);
+    const payload=data.subarray(offset+8,offset+8+size);
+    if (type==='IHDR') {
+      width=payload.readUInt32BE(0); height=payload.readUInt32BE(4);
+      assert.strictEqual(payload[8],8); assert.strictEqual(payload[9],2); assert.strictEqual(payload[12],0);
+    }
+    if (type==='IDAT') parts.push(payload);
+    offset += size+12;
+  }
+  const pixels=require('zlib').inflateSync(Buffer.concat(parts));
+  assert.strictEqual(pixels.length,height*(1+width*3));
+  let bits='';
+  for (let y=0;y<height;y++) {
+    assert.strictEqual(pixels[y*(1+width*3)],0,'fixture must use PNG filter None');
+    for (let x=0;x<width;x++) bits += pixels[y*(1+width*3)+1+x*3] & 1;
+  }
+  const text=bits.match(/.{8}/g).map(byte=>String.fromCharCode(parseInt(byte,2))).join('').split('\0')[0];
+  report('ctf-021','png-red-lsb',text,okHash('ctf-021',text));
 }
 
 // ── 002: ROT13 ──

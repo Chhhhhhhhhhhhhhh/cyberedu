@@ -1,9 +1,10 @@
 // Keep each deployment's shell and previously opened lessons available offline.
 const scope = self.registration.scope;
 const prefix = 'cyberedu:' + scope + ':';
-const version = prefix + 'v2.8.1-1';
+const version = prefix + 'learning-experience-1';
 const shell = ['index.html', 'cyberedu.html', 'style.css', 'content.js', 'progress.js',
-  'i18n.js', 'script.js', 'flags-hash.js', 'favicon.svg', 'manifest.json'];
+  'i18n.js', 'script.js', 'flags-hash.js', 'favicon.svg', 'manifest.json',
+  'training/login-sample.log', 'training/capture.pcap', 'training/landscape.png'];
 const shellURLs = new Set(shell.map(file => new URL(file, scope).href));
 const lesson = /^lessons\/[a-z0-9-]+\.(en|zh)\.js$/;
 

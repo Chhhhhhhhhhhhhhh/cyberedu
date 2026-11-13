@@ -21,6 +21,9 @@ progress.json
 # Dependencies
 node_modules/
 
+# Python test imports
+__pycache__/
+
 # OS files
 .DS_Store
 Thumbs.db

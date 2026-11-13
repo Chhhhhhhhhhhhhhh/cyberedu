@@ -170,6 +170,8 @@ const MIME = {
   '.mp4':  'video/mp4',
   '.webm': 'video/webm',
   '.txt':  'text/plain; charset=utf-8',
+  '.log':  'text/plain; charset=utf-8',
+  '.pcap': 'application/vnd.tcpdump.pcap',
   '.xml':  'application/xml; charset=utf-8',
   '.md':   'text/markdown; charset=utf-8',
 };
@@ -730,6 +732,7 @@ function handleCTFVerify(req, res) {
 const PUBLIC_FILES = new Set([
   '/cyberedu.html', '/index.html', '/style.css', '/script.js', '/content.js', '/progress.js',
   '/i18n.js', '/flags-hash.js', '/favicon.svg', '/manifest.json', '/sw.js', '/robots.txt',
+  '/training/login-sample.log', '/training/capture.pcap', '/training/landscape.png',
   '/sitemap.xml', '/docs/og-image.png', '/docs/features-showcase.png', '/README.md', '/README_zh.md',
   ...MODULES.flatMap(m => ['zh', 'en'].map(lang => '/lessons/' + m.id + '.' + lang + '.js'))
 ]);

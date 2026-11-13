@@ -17,6 +17,7 @@ from contextlib import ExitStack, contextmanager
 from urllib.parse import urlsplit
 
 from playwright.sync_api import expect, sync_playwright
+from learning_experience import learning_experience
 
 ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ("cyberedu.html", "index.html", "style.css", "script.js", "content.js",
@@ -92,6 +93,10 @@ class StaticSite(http.server.SimpleHTTPRequestHandler):
 
 def http_guards(base, enabled):
     session = json.loads(request(base, "/api/session")[1])
+    for name in ("login-sample.log", "capture.pcap", "landscape.png"):
+        status, body = request(base, "/training/" + name)
+        assert status == 200 and body == (ROOT / "training" / name).read_bytes()
+
     assert session["runEnabled"] is enabled
     trusted = {"Origin": base, "Content-Type": "application/json", "X-CyberEdu-Token": session["token"]}
     code = {"lang": "JavaScript", "code": "console.log('local-ok')"}
@@ -267,6 +272,10 @@ def smoke(browser, static, local, app):
     try:
         page.reload(wait_until="domcontentloaded")
         expect(page.locator(".complete-btn")).to_be_visible()
+        assert page.evaluate("""async()=> (await Promise.all(
+          ['login-sample.log','capture.pcap','landscape.png'].map(async name=>{
+            const res=await fetch('training/'+name); return res.ok && (await res.arrayBuffer()).byteLength>0;
+          }))).every(Boolean)""")
     finally:
         ctx.set_offline(False)
     open_view((app / "cyberedu.html").as_uri(), "hub/programming/prog-01-01")
@@ -283,6 +292,7 @@ def main():
         for file in (*ASSETS, "server.js"):
             shutil.copyfile(ROOT / file, app / file)
         shutil.copytree(ROOT / "lessons", app / "lessons")
+        shutil.copytree(ROOT / "training", app / "training")
         sibling = root / "sibling"
         sibling.mkdir()
         (sibling / "index.html").write_text("<title>Sibling</title>")
@@ -300,6 +310,7 @@ def main():
             browser = pw.chromium.launch()
             try:
                 smoke(browser, f"http://127.0.0.1:{site.server_port}", local, app)
+                learning_experience(browser, f"http://127.0.0.1:{site.server_port}/cyberedu/cyberedu.html", local)
             finally:
                 browser.close()
     print("HTTP boundaries, learning flows, progress, mobile, offline and file mode passed")
