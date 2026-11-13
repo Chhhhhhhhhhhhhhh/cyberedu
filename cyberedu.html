@@ -4,16 +4,24 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' cdnjs.cloudflare.com fonts.googleapis.com; font-src 'self' cdnjs.cloudflare.com fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>
+// Resolve a complete theme before the first paint. Explicit choices override the OS.
+try {
+  const saved = localStorage.getItem('cyberedu_theme');
+  document.documentElement.dataset.theme = ['dark','light'].includes(saved)
+    ? saved : (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+} catch { document.documentElement.dataset.theme = 'dark'; }
+</script>
 <title>CyberEdu — 网络空间安全综合学习站</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#00ff41">
-<meta name="description" content="CyberEdu — Interactive enterprise cybersecurity learning platform. 171 chapters covering programming, cryptography, networking, web security, pentesting, cloud & container security, malware analysis, blue team DFIR, and CTF. Bilingual (EN/ZH) with AI tutor.">
+<meta name="description" content="CyberEdu — Interactive enterprise cybersecurity learning platform. 173 chapters covering programming, cryptography, networking, web security, pentesting, cloud & container security, malware analysis, blue team DFIR, and CTF. Bilingual (EN/ZH) with AI tutor.">
 <meta name="robots" content="index, follow">
 <meta name="author" content="Chhhhhhhhhhhhhhh">
 <meta name="keywords" content="cybersecurity, learning, CTF, penetration testing, web security, cryptography, cloud security, DFIR, education, hacking">
 <meta property="og:title" content="CyberEdu — Cybersecurity Learning Platform">
-<meta property="og:description" content="Interactive enterprise cybersecurity learning platform with 104 chapters, 28 CTF challenges, AI tutor, and bilingual EN/ZH support.">
+<meta property="og:description" content="Interactive enterprise cybersecurity learning platform with 173 lessons, 28 CTF challenges, AI tutor, and bilingual EN/ZH support.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://chhhhhhhhhhhhhhh.github.io/cyberedu/">
 <meta property="og:image" content="https://chhhhhhhhhhhhhhh.github.io/cyberedu/docs/og-image.png">
@@ -49,7 +57,7 @@
   "@context": "https://schema.org",
   "@type": "Course",
   "name": "CyberEdu — Cybersecurity Learning Platform",
-  "description": "Interactive cybersecurity learning platform with 171 chapters, 28 CTF challenges, bilingual EN/ZH support, and AI tutor.",
+  "description": "Interactive cybersecurity learning platform with 173 chapters, 28 CTF challenges, bilingual EN/ZH support, and AI tutor.",
   "provider": {
     "@type": "Organization",
     "name": "CyberEdu",
@@ -62,7 +70,6 @@
 </script>
 </head>
 <body>
-<a href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:0;z-index:9999;padding:8px 16px;background:var(--color-green);color:#000;font-weight:700;text-decoration:none;border-radius:0 0 4px 0;opacity:0;transition:opacity 0.2s" onfocus="this.style.left='0';this.style.opacity='1'" onblur="this.style.left='-9999px';this.style.opacity='0'">Skip to content</a>
 
 <!-- SKIP LINK -->
 <a href="#main-content" class="skip-link" data-i18n="a11y.skipToContent">Skip to content</a>
@@ -121,15 +128,17 @@
 <!-- TOP NAV -->
 <header role="banner">
 <nav id="topnav" role="navigation" aria-label="主导航">
-  <div class="nav-logo">CYBER<span>EDU</span></div>
+  <a class="nav-logo" href="#home" aria-label="CyberEdu home">CYBER<span>EDU</span></a>
+  <button id="nav-menu-toggle" aria-controls="nav-menu" aria-expanded="false" data-i18n="nav.menu" onclick="toggleNavigationMenu()">Menu</button>
   <button id="mobile-catalog" aria-controls="sidebar" aria-expanded="false" data-i18n="hub.catalog" onclick="toggleMobileCatalog()">Catalog</button>
-  <ul class="nav-links">
+  <ul class="nav-links" id="nav-menu">
     <li><button class="nav-link" data-i18n="nav.home" onclick="navigate('home')">◈ 首页</button></li>
     <li><button class="nav-link" data-i18n="nav.hub" onclick="navigate('hub')">▸ 学习中心</button></li>
     <li><button class="nav-link" data-i18n="nav.practice" onclick="navigate('practice')">⌨ 练习题</button></li>
     <li><button class="nav-link" data-i18n="nav.ctf" onclick="navigate('ctf')">🚩 CTF挑战</button></li>
     <li><button class="nav-link" data-i18n="nav.progress" onclick="navigate('progress')">◉ 进度</button></li>
     <li><button class="nav-link" data-i18n="nav.tools" onclick="navigate('tools')">⚙ 工具箱</button></li>
+    <li class="mobile-search-item"><button class="nav-link" data-i18n="nav.search" onclick="closeNavigationMenu();openSearch()">Search</button></li>
   </ul>
   <div class="nav-search-wrap">
     <span class="nav-search-icon" aria-hidden="true">⌕</span>
@@ -163,6 +172,7 @@
 
 <!-- APP SHELL -->
 <div id="app-shell">
+  <button id="catalog-scrim" hidden aria-label="Close catalog" onclick="closeMobileCatalog()"></button>
   <aside id="sidebar" role="navigation" aria-label="模块导航">
     <canvas id="glitch-canvas" aria-hidden="true"></canvas>
     <button id="sidebar-toggle" onclick="toggleSidebar()" data-i18n-title="hub.sidebarToggle" title="收起侧边栏" aria-label="收起侧边栏" aria-expanded="true" aria-controls="sidebar-content">«</button>
@@ -173,17 +183,14 @@
     <!-- HOME -->
     <div id="view-home" class="view">
       <section class="hero">
-        <div class="hero-eyebrow">// Comprehensive Cybersecurity Learning</div>
-        <h1 class="hero-title">
-          Break the <span class="hl-green">Surface</span>, find the <span class="hl-cyan">Truth</span><br>
-          Every <span class="glitch" data-text="vulnerability">vulnerability</span> has a story
-        </h1>
-        <div id="typewriter" aria-hidden="true"></div>
-        <div class="hero-ctas">
-          <button class="btn-primary" onclick="navigate('hub')">ENTER ▸</button>
-          <button class="btn-outline" data-i18n="home.viewProgress" onclick="navigate('progress')">查看进度</button>
-        </div>
+        <div class="hero-eyebrow">CYBEREDU / LEARN · PRACTICE · REVIEW</div>
+        <h1 class="hero-title" data-i18n="home.headline">Build your first security tool, one step at a time.</h1>
+        <p class="hero-sub" data-i18n="home.intro">Start with five short Python lessons. Read, test your understanding, then work with real training files.</p>
         <div id="resume-learning-wrap" class="resume-learning-wrap"></div>
+        <div class="hero-secondary">
+          <a href="#modules-grid" onclick="event.preventDefault();document.getElementById('modules-grid').scrollIntoView()" data-i18n="home.browse">Browse all subjects</a>
+          <button onclick="openSkillDiagnostic()" data-i18n="diag.startBtn">Take the entry self-check</button>
+        </div>
         <div class="hero-stats">
           <div class="hero-stat"><span class="hero-stat-num" id="stat-chapters" data-count="0">0</span><span class="hero-stat-label" data-i18n="home.chapters">知识章节</span></div>
           <div class="hero-stat"><span class="hero-stat-num" id="stat-exercises" data-count="0">0</span><span class="hero-stat-label" data-i18n="home.exercises">练习题目</span></div>
@@ -208,17 +215,7 @@
       <button id="zen-exit-btn" class="zen-exit-btn" onclick="toggleZenMode(false)" data-i18n-title="zen.exit" title="退出专注模式 (Esc)" aria-label="Exit Zen Mode">✕ <span data-i18n="zen.exitText">退出专注 (Esc)</span></button>
       <div class="view-header">
         <div class="breadcrumb" id="hub-breadcrumbs" data-i18n="hub.breadcrumb">学习中心</div>
-        <div class="view-title" id="hub-title" data-i18n="hub.selectModule">选择一个模块开始学习</div>
-      </div>
-      <div id="diagnostic-banner-wrap" class="diagnostic-banner">
-        <div class="diagnostic-banner-text">
-          <h4>⚡ <span data-i18n="diag.bannerTitle">智能能力摸底与学习路线定制</span></h4>
-          <p data-i18n="diag.bannerDesc">只需 5 道题，测出你的网安五维能力雷达图，并推荐专属突破路径！</p>
-        </div>
-        <div class="diagnostic-banner-actions">
-          <button class="diagnostic-banner-btn" data-i18n="diag.startBtn" onclick="openSkillDiagnostic()">🎯 开始 5 分钟能力摸底</button>
-          <button class="diag-dismiss-btn" onclick="dismissDiagBanner(event)" data-i18n-title="diag.dismiss" title="收起此横幅" aria-label="Dismiss">✕</button>
-        </div>
+        <h1 class="view-title" id="hub-title" data-i18n="hub.selectModule">选择一个模块开始学习</h1>
       </div>
       <div class="hub-main-container">
         <div class="article-content" id="article-body">
@@ -306,6 +303,7 @@
           <!-- Tab: Description -->
           <div class="ctf-panel" id="ctf-panel-desc" role="tabpanel" aria-labelledby="ctf-tab-desc">
             <div class="modal-desc" id="modal-desc"></div>
+        <div id="ctf-material-info"></div>
             <div id="modal-hints"></div>
             <div class="ctf-writeup" id="modal-writeup" style="display:none"></div>
           </div>
@@ -355,6 +353,10 @@
       </div>
       <div class="agent-profile-wrap" id="agent-profile-wrap"></div>
       <div class="stats-grid" id="progress-stats"></div>
+      <section class="chart-card" style="margin:20px 40px">
+        <h2 class="chart-title" data-i18n="learning.reviewTitle">Review queue</h2>
+        <div class="review-list" id="review-list"></div>
+      </section>
       <div class="charts-row">
         <div class="chart-card"><div class="chart-title" data-i18n="progress.moduleProgress">// 各模块掌握度</div><canvas id="radar-chart" style="max-height:260px"></canvas></div>
         <div class="chart-card"><div class="chart-title" data-i18n="progress.overview">// 学习进度一览</div><div class="module-progress-list" id="module-prog-list"></div></div>
@@ -444,7 +446,7 @@
         <input type="checkbox" class="reset-scope-checkbox" id="check-reset-sections" checked onchange="onResetOptionChange()">
         <div class="reset-scope-text">
           <div class="reset-scope-title" data-i18n="resetModal.scopeSections">知识章节学习进度</div>
-          <div class="reset-scope-desc" data-i18n="resetModal.scopeSectionsDesc">清空 171 个小节已学标记、模块完成率与断点续学记录</div>
+          <div class="reset-scope-desc" data-i18n="resetModal.scopeSectionsDesc">清除章节已读、测验、课内练习与继续学习记录</div>
         </div>
       </label>
 

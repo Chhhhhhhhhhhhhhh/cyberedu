@@ -243,6 +243,8 @@ function navigate(view, moduleId, sectionId, replace = false) {
     if (sequence !== navSequence) return;
     const sidebar = document.getElementById('sidebar');
     const main = document.getElementById('main-content');
+    closeNavigationMenu();
+    document.body.dataset.view = view;
     const noSidebar = ['home','progress','tools','ctf'];
     document.body.classList.toggle('has-catalog', !noSidebar.includes(view));
     if (noSidebar.includes(view)) { sidebar.classList.add('hidden'); main.classList.add('no-sidebar'); }
@@ -293,9 +295,9 @@ function navigate(view, moduleId, sectionId, replace = false) {
       const sidebar = document.getElementById('sidebar');
       if (!sidebar.classList.contains('hidden')) sidebar.classList.add('hidden');
     }
-    document.getElementById('mobile-catalog').setAttribute('aria-expanded', 'false');
+    closeMobileCatalog();
   };
-  if (view === currentView || replace || window.matchMedia('(prefers-reduced-motion: reduce)').matches ||
+  if (view === 'hub' || currentView === 'hub' || view === currentView || replace || window.matchMedia('(prefers-reduced-motion: reduce)').matches ||
       document.documentElement.classList.contains('reduced-motion')) renderView();
   else cyberNavTransition(renderView, view);
 }
@@ -461,11 +463,54 @@ function cyberNavTransition(callback, targetView) {
   requestAnimationFrame(animate);
 }
 
+function closeNavigationMenu(focus = false) {
+  document.body.classList.remove('mobile-nav-open');
+  const toggle = document.getElementById('nav-menu-toggle');
+  if (toggle) {
+    toggle.setAttribute('aria-expanded', 'false');
+    if (focus) toggle.focus();
+  }
+}
+function toggleNavigationMenu() {
+  closeMobileCatalog();
+  const open = document.body.classList.toggle('mobile-nav-open');
+  document.getElementById('nav-menu-toggle').setAttribute('aria-expanded', String(open));
+}
+function closeMobileCatalog(focus = false) {
+  const sidebar = document.getElementById('sidebar');
+  const mobile = window.innerWidth <= 768;
+  if (mobile) sidebar.classList.add('hidden');
+  sidebar.inert = sidebar.classList.contains('hidden');
+  document.getElementById('catalog-scrim').hidden = true;
+  document.getElementById('mobile-catalog').setAttribute('aria-expanded', 'false');
+  if (focus) document.getElementById('mobile-catalog').focus();
+}
 function toggleMobileCatalog() {
+  closeNavigationMenu();
   const sidebar = document.getElementById('sidebar');
   sidebar.classList.remove('collapsed');
   const open = !sidebar.classList.toggle('hidden');
+  sidebar.inert = !open;
   document.getElementById('mobile-catalog').setAttribute('aria-expanded', String(open));
+  document.getElementById('catalog-scrim').hidden = !open;
+}
+function initNavigationMenu() {
+  document.addEventListener('pointerdown', event => {
+    if (!event.target.closest('#topnav')) closeNavigationMenu();
+  });
+  document.addEventListener('keydown', event => {
+    if (event.key !== 'Escape') return;
+    if (document.body.classList.contains('mobile-nav-open')) closeNavigationMenu(true);
+    if (!document.getElementById('catalog-scrim').hidden) closeMobileCatalog(true);
+  });
+  window.matchMedia('(max-width: 768px)').addEventListener('change', event => {
+    closeNavigationMenu();
+    closeMobileCatalog();
+    if (!event.matches && document.body.classList.contains('has-catalog')) {
+      document.getElementById('sidebar').classList.remove('hidden');
+      document.getElementById('sidebar').inert = false;
+    }
+  });
 }
 function toggleSidebar() {
   const sidebar = document.getElementById('sidebar');
@@ -937,52 +982,92 @@ function renderHome() {
 function renderResumeLearning() {
   const wrap = document.getElementById('resume-learning-wrap');
   if (!wrap) return;
-  let targetModId = null;
-  let targetSecId = null;
-  let targetTitle = '';
-  let targetModTitle = '';
+  const all = MODULES.flatMap(m => m.chapters.flatMap(c => c.sections.map(sec => ({mod: m, sec}))));
+  const last = all.find(x => x.sec.id === userProgress.lastSection?.secId);
+  const next = all.find(x => BEGINNER_LESSONS.includes(x.sec.id) && !getSectionDone(x.sec.id));
+  const target = last && !getSectionDone(last.sec.id) ? last :
+    last ? (all[all.indexOf(last) + 1] || last) : next || all[0];
+  const started = !!last || userProgress.completedSections.length > 0;
+  wrap.innerHTML = '<div class="learning-start"><div class="eyebrow">' +
+    t(started ? 'home.continueLabel' : 'home.startLabel') + '</div><h2>' +
+    _escHtml(started ? getSectionField(target.sec, 'title') : t('home.firstProject')) + '</h2>' +
+    '<p>' + t(started ? 'home.continueHint' : 'home.firstProjectHint') + '</p>' +
+    '<a class="btn-primary" id="home-primary" href="#hub/' + target.mod.id + '/' + target.sec.id + '">' +
+    t(started ? 'home.continueBtn' : 'home.startBtn') + ' →</a>' +
+    '<ol class="starter-steps">' + BEGINNER_LESSONS.map((id,i) =>
+      '<li><a class="' + (getSectionDone(id) ? 'is-read' : '') + '" href="#hub/programming/' + id + '">' +
+      (getSectionDone(id) ? '✓' : i + 1) + ' ' + t('home.step' + (i+1)) + '</a></li>').join('') + '</ol></div>';
+}
 
-  if (userProgress.lastSection && userProgress.lastSection.modId && userProgress.lastSection.secId) {
-    targetModId = userProgress.lastSection.modId;
-    targetSecId = userProgress.lastSection.secId;
-    const mod = MODULES.find(m => m.id === targetModId);
-    const sec = mod?.chapters.flatMap(c => c.sections).find(s => s.id === targetSecId);
-    if (sec && mod) {
-      targetTitle = getSectionField(sec, 'title');
-      targetModTitle = getModField(mod, 'title');
+function updateLessonStatus() {
+  const el = document.getElementById('lesson-status');
+  if (!el) return;
+  const key = currentSectionId;
+  const quiz = userProgress.quizProgress[key];
+  const read = getSectionDone(key);
+  const passed = progressSchema.quizPassed(userProgress, key);
+  el.replaceChildren();
+  const items = [t(read ? 'learning.read' : 'learning.unread'),
+    passed ? t('learning.quizPassed') : t('learning.quizCount', {n: quiz?.passed.length || 0})];
+  if (BEGINNER_LESSONS.includes(key)) items.push(t(userProgress.exercisePassed.includes(key) ? 'learning.taskPassed' : 'learning.taskPending'));
+  items.forEach(label => {
+    const span = document.createElement('span');
+    span.textContent = label;
+    el.appendChild(span);
+  });
+}
+
+function renderLessonTask(key) {
+  const task = (currentLang === 'en' ? SECTION_TASKS_EN : SECTION_TASKS)[key];
+  if (!task || document.getElementById('lesson-task')) return;
+  const form = document.createElement('form');
+  form.id = 'lesson-task';
+  form.className = 'lesson-task';
+  form.innerHTML = '<h2>' + t('learning.taskTitle') + '</h2><p>' + _escHtml(task.prompt) + '</p>' +
+    task.fields.map((field,i) => '<label for="task-field-' + i + '">' + _escHtml(field.label) + '</label>' +
+      '<input id="task-field-' + i + '" name="answer' + i + '" autocomplete="off" required maxlength="100">').join('') +
+    '<button type="submit">' + t('learning.checkTask') + '</button><div class="task-feedback" role="status"></div>';
+  const feedback = form.querySelector('.task-feedback');
+  if (userProgress.exercisePassed.includes(key)) feedback.textContent = t('learning.taskPassed');
+  form.onsubmit = event => {
+    event.preventDefault();
+    const matches = task.fields.map((field,i) => form.elements['answer' + i].value.trim() === field.answer);
+    task.fields.forEach((field,i) => form.elements['answer' + i].setAttribute('aria-invalid', String(!matches[i])));
+    userProgress.exercisePassed = userProgress.exercisePassed.filter(id => id !== key);
+    if (matches.every(Boolean)) {
+      userProgress.exercisePassed.push(key);
+      feedback.textContent = t('learning.taskSuccess');
+    } else {
+      feedback.textContent = t('learning.taskRetry') + ' ' + task.hint;
+      form.elements['answer' + matches.indexOf(false)].focus();
     }
-  } else if (userProgress.completedSections && userProgress.completedSections.length > 0) {
-    const lastDoneId = userProgress.completedSections[userProgress.completedSections.length - 1];
-    for (const m of MODULES) {
-      const s = m.chapters.flatMap(c => c.sections).find(sec => sec.id === lastDoneId);
-      if (s) {
-        targetModId = m.id;
-        targetSecId = s.id;
-        targetTitle = getSectionField(s, 'title');
-        targetModTitle = getModField(m, 'title');
-        break;
-      }
-    }
+    saveProgress();
+    updateLessonStatus();
+  };
+  document.querySelector('#article-body .separator').before(form);
+}
+
+function renderReviewQueue() {
+  const el = document.getElementById('review-list');
+  if (!el) return;
+  const keys = Object.keys(userProgress.quizProgress).filter(key => userProgress.quizProgress[key].review.length);
+  el.replaceChildren();
+  const note = document.createElement('p');
+  note.textContent = t('learning.progressNote', {n: userProgress.exercisePassed.length});
+  el.appendChild(note);
+  if (!keys.length) {
+    const empty = document.createElement('p');
+    empty.textContent = t('learning.noReview');
+    el.appendChild(empty);
   }
-
-  if (!targetModTitle || !targetTitle) {
-    wrap.innerHTML = '';
-    return;
-  }
-
-  const isDone = getSectionDone(targetSecId);
-  const statusBadge = isDone ? '✓ ' + t('section.completed') : '⚡ ' + t('home.resumeLearning');
-
-  wrap.innerHTML = `
-    <div class="resume-learning-card" onclick="navigate('hub','${targetModId}','${targetSecId}')" role="button" tabindex="0">
-      <div class="resume-learning-info">
-        <div class="resume-learning-badge">${statusBadge}</div>
-        <div class="resume-learning-title"><span>${targetModTitle}</span> <span style="opacity:0.35">/</span> <span>${targetTitle}</span></div>
-        <div class="resume-learning-sub">${t('home.resumeSub')}</div>
-      </div>
-      <button class="resume-learning-btn">${t('home.continueBtn')}</button>
-    </div>
-  `;
+  keys.forEach(key => {
+    const mod = MODULES.find(m => m.chapters.some(c => c.sections.some(s => s.id === key)));
+    if (!mod) return;
+    const link = document.createElement('a');
+    link.href = '#hub/' + mod.id + '/' + key;
+    link.textContent = getSecTitle(key) + ' · ' + t('learning.reviewCount', {n: userProgress.quizProgress[key].review.length});
+    el.appendChild(link);
+  });
 }
 
 function renderLearningPath() {
@@ -1193,11 +1278,15 @@ function handleCheckpointAnswer(btn) {
 
   const allOpts = card.querySelectorAll('.checkpoint-option');
   const isCorrect = opt === cp.answer;
+  const section = MODULES.flatMap(m => m.chapters.flatMap(c => c.sections)).find(s => s.contentKey === key);
+  progressSchema.recordQuizAnswer(userProgress, key, idx, isCorrect, section?.quizVersion || 1);
+  saveProgress();
+  updateLessonStatus();
   const correctButton = card.querySelector('[data-opt="' + cp.answer + '"]');
   const icon = card.querySelector('.checkpoint-icon');
 
   // Disable all options
-  allOpts.forEach(o => o.classList.add('disabled'));
+  allOpts.forEach(o => { o.classList.add('disabled'); o.disabled = true; });
 
   if (isCorrect) {
     btn.classList.add('correct');
@@ -1229,15 +1318,20 @@ function handleCheckpointAnswer(btn) {
   }
   card.appendChild(expDiv);
 
-  // Allow retry on wrong answer after 2s
+  // Keep the explanation available until the learner explicitly retries.
   if (!isCorrect) {
-    setTimeout(() => {
-      allOpts.forEach(o => { o.classList.remove('disabled','wrong','correct'); });
+    const retry = document.createElement('button');
+    retry.className = 'quiz-retry';
+    retry.textContent = t('checkpoint.retry');
+    retry.onclick = () => {
+      allOpts.forEach(o => { o.classList.remove('disabled','wrong','correct'); o.disabled = false; });
       card.classList.remove('answered-wrong');
       icon.textContent = '?';
-      card.querySelector('.checkpoint-title').textContent = `CHECKPOINT ${idx + 1}`;
+      card.querySelector('.checkpoint-title').textContent = 'CHECKPOINT ' + (idx + 1);
       expDiv.remove();
-    }, 2500);
+      allOpts[0].focus();
+    };
+    expDiv.appendChild(retry);
   }
 }
 
@@ -1327,22 +1421,31 @@ async function renderSection(moduleId, sectionId) {
     contentSource = sec.content || '';
   }
   const igFn = typeof injectGlossary === 'function' ? injectGlossary : _injectGlossaryFallback;
-  const contentWithGlossary = igFn(contentSource);
+  const template = document.createElement('template');
+  template.innerHTML = contentSource;
+  const firstHeading = template.content.querySelector('h1,h2');
+  if (firstHeading) firstHeading.remove();
+  const contentWithGlossary = igFn(template.innerHTML);
 
   // Reading time estimate (Chinese ~500 chars/min, English ~250 words/min)
-  const plainText = (contentSource || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
-  const readMin = Math.max(1, Math.round(plainText.length / 500));
+  const readingCopy = template.content.cloneNode(true);
+  readingCopy.querySelectorAll('.advanced-reading, .lesson-sources').forEach(el => el.remove());
+  const plainText = readingCopy.textContent.trim();
+  const readMin = Math.max(1, Math.ceil(isEn ? plainText.split(/\s+/).length / 250 : plainText.length / 500));
 
   document.getElementById('article-body').innerHTML = `
     <div class="reading-time">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-      ${readMin} min read ${starsHtml} ${prereqHtml}
-      <button class="lab-badge-btn" onclick="openLabDrawer('${sec.contentKey}')" style="margin-left:12px">📦 ${t('lab.drawerTitle')}</button>
+      ${t('lesson.readTime', {n: readMin})} ${starsHtml}
+      <details class="reading-options"><summary>${t('lesson.settings')}</summary>
+      ${BEGINNER_LESSONS.includes(sectionId) ? '' : `<button class="lab-badge-btn" onclick="openLabDrawer('${sec.contentKey}')">📦 ${t('lab.drawerTitle')}</button>`}
       <div class="reading-controls-group">
         <button class="reading-tool-btn font-size-btn" onclick="cycleArticleFontSize()" title="${t('reading.fontSize')}" aria-label="Toggle Font Size">🗛 <span class="font-size-label">${getFontSizeLabel()}</span></button>
         <button class="reading-tool-btn zen-toggle-btn" onclick="toggleZenMode()" title="${t('zen.tooltip')}" aria-label="Toggle Zen Mode">👁️ ${t('zen.enable')}</button>
-      </div>
+      </div></details>
     </div>
+    <div class="lesson-status" id="lesson-status" role="status"></div>
+    ${BEGINNER_LESSONS.includes(sectionId) ? '<p class="lesson-roadmap">' + t('lesson.beginnerStep', {n: BEGINNER_LESSONS.indexOf(sectionId)+1}) + '</p>' : ''}
     ${contentWithGlossary}
     ${renderSectionCTFCard(sectionId)}
     <div class="separator"></div>
@@ -1358,10 +1461,13 @@ async function renderSection(moduleId, sectionId) {
     if (currentView !== 'hub' || currentSectionId !== sectionId || currentLang !== lang) return;
     if (window.Prism) Prism.highlightAllUnder(document.getElementById('article-body'));
     bindGlossaryEvents();
+    renderLessonTask(sec.contentKey);
     renderCheckpoints(sec.contentKey);
+    updateLessonStatus();
     renderPlaygrounds(sec.contentKey);
     renderDiagrams(sec.contentKey);
     attachCodeAITools();
+    document.querySelectorAll('#article-body .advanced-reading').forEach(el => el.addEventListener('toggle', buildTableOfContents));
     buildTableOfContents();
   }, 80);
   updateSidebar();
@@ -1372,6 +1478,7 @@ async function renderSection(moduleId, sectionId) {
 function markDone(sectionId, btn) {
   setSectionDone(sectionId);
   btn.textContent = t('section.completed');
+  updateLessonStatus();
   btn.classList.add('done');
   updateStatusBar();
   updateSidebar();
@@ -1391,7 +1498,8 @@ function buildTableOfContents() {
   const articleBody = document.getElementById('article-body');
   if (!articleBody) return;
 
-  const targets = articleBody.querySelectorAll('h2, h3, .checkpoint-card, .interactive-sandbox, .playground-box, .section-ctf-card, .complete-btn');
+  const targets = [...articleBody.querySelectorAll('h2, h3, .checkpoint-card, .interactive-sandbox, .playground-box, .section-ctf-card, .complete-btn')]
+    .filter(el => !el.closest('details:not([open])'));
   if (!targets.length) {
     tocWrap.style.display = 'none';
     return;
@@ -1433,7 +1541,7 @@ function buildTableOfContents() {
       levelClass = 'level-special';
       icon = '🎯';
     } else if (el.classList.contains('complete-btn')) {
-      title = currentLang === 'en' ? 'Chapter Completion' : '章节考核完成';
+      title = currentLang === 'en' ? 'Mark as read' : '标记已读';
       levelClass = 'level-special';
       icon = '✓';
     }
@@ -1713,14 +1821,15 @@ function renderCTF() {
   grid.innerHTML = filtered.map(c => {
     const solved = userProgress.ctfSolved.includes(c.id);
     const stars = Array.from({length:5}, (_,i) => `<span class="${i<c.difficulty?'f':''}">★</span>`).join('');
-    return `<div class="ctf-card ${solved?'solved':''}" onclick="openCTF('${c.id}')">
-      <div class="ctf-title">${c.title}${(c.codeable||c.category==='Crypto')?' <span style="font-size:9px;opacity:0.5;margin-left:4px">⌨</span>':''}${(c.simulated||c.category==='Web')?' <span style="font-size:9px;opacity:0.5;margin-left:4px">⌐</span>':''}</div>
+    return `<button type="button" class="ctf-card ${solved?'solved':''}" onclick="openCTF('${c.id}')">
+      <div class="ctf-title">${esc(currentLang === 'en' ? (c.titleEn || c.title) : c.title)}${(c.materialType!=='case' && (c.codeable||c.category==='Crypto'))?' <span style="font-size:9px;opacity:0.5;margin-left:4px">⌨</span>':''}${(c.simulated||c.category==='Web')?' <span style="font-size:9px;opacity:0.5;margin-left:4px">⌐</span>':''}</div>
       <div class="ctf-meta">
         <span class="badge">${c.category}</span>
+        ${c.materialType ? '<span class="badge material-type">' + t('ctf.' + c.materialType) + '</span>' : ''}
         <span class="badge cyan diff-stars">${stars}</span>
         <span class="badge green">${c.points} pts</span>
       </div>
-    </div>`;
+    </button>`;
   }).join('');
 }
 function filterCTF(cat, btn) {
@@ -1784,6 +1893,21 @@ function openCTF(id) {
 
   // Description
   document.getElementById('modal-desc').textContent = currentLang==='en' && c.descEn ? c.descEn : c.desc;
+  const material = document.getElementById('ctf-material-info');
+  material.replaceChildren();
+  if (c.materialType) {
+    const note = document.createElement('p');
+    note.textContent = t('ctf.' + c.materialType + 'Note');
+    material.append(note);
+  }
+  if (c.artifact) {
+    const download = document.createElement('a');
+    download.href = c.artifact;
+    download.download = c.artifact.split('/').pop();
+    download.className = 'btn btn-secondary';
+    download.textContent = t('ctf.download') + ' · ' + download.download;
+    material.append(download);
+  }
 
   // Hints: progressive
   const hintsEl = document.getElementById('modal-hints');
@@ -1806,7 +1930,7 @@ function openCTF(id) {
   }
 
   // Tabs visibility
-  const executable = c.codeable || c.category === 'Crypto';
+  const executable = c.materialType !== 'case' && (c.codeable || c.category === 'Crypto');
   const hasCode = Boolean(c.starterCode || executable);
   document.getElementById('ctf-code-actions').hidden = !executable;
   document.getElementById('ctf-tab-code').textContent = t(executable ? 'ctf.codeTab' : 'ctf.material');
@@ -1821,7 +1945,7 @@ function openCTF(id) {
   // Code editor init
   if (hasCode) {
     const editor = document.getElementById('ctf-code-editor');
-    editor.value = c.starterCode || (currentLang === 'en' ? '# Write your Python code here\nprint("Hello CTF")\n' : '# 在这里写你的 Python 代码\nprint("Hello CTF")\n');
+    editor.value = (currentLang === 'en' && c.starterCodeEn ? c.starterCodeEn : c.starterCode) || (currentLang === 'en' ? '# Write your Python code here\nprint("Hello CTF")\n' : '# 在这里写你的 Python 代码\nprint("Hello CTF")\n');
     document.getElementById('ctf-code-output').textContent = '';
   }
 
@@ -2161,15 +2285,17 @@ function initCodeMirror() {
     tabSize: 4,
     indentWithTabs: false,
     lineWrapping: false,
-    theme: isLight ? 'eclipse' : 'material-darker',
+    theme: isLight ? 'default' : 'material-darker',
     extraKeys: { Tab: function(cm) { cm.replaceSelection('    ', 'end'); } }
   });
   cmEditor.setSize('100%', 'auto');
 }
 
+let lessonExample = null;
 function renderPractice(idx, keepDraft = false) {
+  if (!keepDraft) lessonExample = null;
   currentPracticeIdx = idx;
-  const p = PRACTICES[idx];
+  const p = lessonExample || PRACTICES[idx];
   if (!p) return;
   const pTitle = currentLang==='en' && p.titleEn ? p.titleEn : p.title;
   const pCat = currentLang==='en' && p.categoryEn ? p.categoryEn : p.category;
@@ -2207,7 +2333,7 @@ function practiceReference(practice) {
 
 let practiceRun = 0;
 async function runCode() {
-  const p = PRACTICES[currentPracticeIdx];
+  const p = lessonExample || PRACTICES[currentPracticeIdx];
   const output = document.getElementById('code-output');
   if (!localSession?.runEnabled) { output.textContent = practiceReference(p); return; }
   const request = ++practiceRun;
@@ -2219,7 +2345,7 @@ async function runCode() {
   try {
     const response = await postLocal('run', {code, lang: p.lang});
     const result = await response.json();
-    if (request !== practiceRun || p !== PRACTICES[currentPracticeIdx]) return;
+    if (request !== practiceRun || p !== (lessonExample || PRACTICES[currentPracticeIdx])) return;
     if (!response.ok || result.error) throw new Error(result.error || 'HTTP ' + response.status);
     const lines = [result.stdout?.trimEnd(), result.stderr?.trimEnd()].filter(Boolean);
     if (!lines.length) lines.push(t('code.noOutput'));
@@ -2229,13 +2355,13 @@ async function runCode() {
     else lines.push(t('code.expectedRef') + '\n' + p.expected);
     output.textContent = lines.join('\n\n');
   } catch (err) {
-    if (request === practiceRun && p === PRACTICES[currentPracticeIdx]) output.textContent = t('code.runError') + '\n' + err.message;
+    if (request === practiceRun && p === (lessonExample || PRACTICES[currentPracticeIdx])) output.textContent = t('code.runError') + '\n' + err.message;
   }
 }
 function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 function showPracticeHint() {
   const box = document.getElementById('practice-hint-box');
-  const p = PRACTICES[currentPracticeIdx];
+  const p = lessonExample || PRACTICES[currentPracticeIdx];
   const pHint = currentLang==='en' && p?.hintEn ? p.hintEn : (p?.hint || t('practice.noHint'));
   box.innerHTML = '<strong>' + t('practice.hintLabel') + '</strong>' + pHint;
   box.style.display = 'block';
@@ -2740,6 +2866,7 @@ function renderProgress() {
   recalcModuleProgress();
   renderAgentProfile();
   renderBadges();
+  renderReviewQueue();
   updateStatusBar();
   const total = MODULES.flatMap(m => m.chapters.flatMap(c => c.sections)).length;
   const done = userProgress.completedSections.length;
@@ -2747,7 +2874,7 @@ function renderProgress() {
 
   document.getElementById('progress-stats').innerHTML = `
     <div class="stat-card"><div class="stat-card-label">${t('progress.completed')}</div><div class="stat-card-value" style="color:var(--color-green)">${done}</div><div class="stat-card-sub">${t('progress.total').replace('{n}', total)}</div></div>
-    <div class="stat-card"><div class="stat-card-label">${t('progress.overall')}</div><div class="stat-card-value" style="color:var(--color-cyan)">${pct}%</div><div class="stat-card-sub">${t('progress.overallSub')}</div></div>
+    <div class="stat-card"><div class="stat-card-label">${t('learning.quizPassed')}</div><div class="stat-card-value" style="color:var(--color-cyan)">${Object.keys(userProgress.quizProgress).filter(key => progressSchema.quizPassed(userProgress, key)).length}</div><div class="stat-card-sub">${t('learning.quizHint')}</div></div>
     <div class="stat-card"><div class="stat-card-label">${t('progress.ctfSolved')}</div><div class="stat-card-value" style="color:var(--color-green)">${userProgress.ctfSolved.length}</div><div class="stat-card-sub">${t('progress.ctfTotal').replace('{n}', CTF_CHALLENGES.length)}</div></div>
     <div class="stat-card"><div class="stat-card-label">${t('progress.streak')}</div><div class="stat-card-value" style="color:var(--color-yellow)">${userProgress.streak}</div><div class="stat-card-sub">${t('progress.days')}</div></div>`;
 
@@ -2867,6 +2994,8 @@ function resetProgressData(current, options = {}) {
   if (opt.sections) {
     next.completedSections = [];
     next.moduleProgress = {};
+    next.quizProgress = {};
+    next.exercisePassed = [];
     delete next.lastSection;
   }
   if (opt.ctf) {
@@ -2884,7 +3013,7 @@ function resetProgressData(current, options = {}) {
   }
 
   // Ensure arrays and required types
-  ['completedSections','ctfSolved','timeline','unlockedBadges'].forEach(k => {
+  ['completedSections','ctfSolved','timeline','unlockedBadges','exercisePassed'].forEach(k => {
     if (!Array.isArray(next[k])) next[k] = [];
   });
   if (typeof next.streak !== 'number') next.streak = 0;
@@ -3228,7 +3357,7 @@ function animateCountUp(el, target, duration){
 }
 function triggerCountUp(){
   const statTargets = {
-    'stat-chapters': (typeof MODULES !== 'undefined') ? MODULES.flatMap(m => m.chapters.flatMap(c => c.sections)).length : 171,
+    'stat-chapters': (typeof MODULES !== 'undefined') ? MODULES.flatMap(m => m.chapters.flatMap(c => c.sections)).length : 0,
     'stat-exercises': (typeof PRACTICES !== 'undefined') ? PRACTICES.length : 10,
     'stat-ctf': (typeof CTF_CHALLENGES !== 'undefined') ? CTF_CHALLENGES.length : 28,
     'stat-tools': (typeof TOOLS !== 'undefined') ? TOOLS.length : 6
@@ -3288,7 +3417,7 @@ function updateStatusBar(){
 // TYPEWRITER
 // ============================================================
 function getTwLines(){
-  const totalCh = (typeof MODULES !== 'undefined') ? MODULES.flatMap(m => m.chapters.flatMap(c => c.sections)).length : 171;
+  const totalCh = (typeof MODULES !== 'undefined') ? MODULES.flatMap(m => m.chapters.flatMap(c => c.sections)).length : 0;
   return [
     '> Break the surface, own the stack',
     `> ${totalCh} chapters. Zero to hero.`,
@@ -3375,6 +3504,7 @@ function initMatrix(){
   const fontSize=14,columns=Math.floor(c.width/fontSize);
   const drops=Array(columns).fill(1);
   function draw(){
+    if (document.hidden || currentView === 'hub' || document.documentElement.classList.contains('reduced-motion') || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     ctx.fillStyle='rgba(6,6,9,0.05)';
     ctx.fillRect(0,0,c.width,c.height);
     ctx.fillStyle='rgba(0,229,255,0.45)';
@@ -3425,6 +3555,7 @@ if (typeof window !== 'undefined') window.addEventListener('scroll',scrollReveal
   if (typeof document === 'undefined') return;
   let trailTimeout;
   document.addEventListener('mousemove', function(e) {
+    if (currentView === 'hub' || document.documentElement.classList.contains('reduced-motion') || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     if (trailTimeout) return;
     trailTimeout = setTimeout(() => { trailTimeout = null; }, 40);
     const dot = document.createElement('div');
@@ -3840,21 +3971,24 @@ if (typeof document !== 'undefined') {
 // ============================================================
 // THEME TOGGLE
 // ============================================================
-function toggleTheme(){
-  const html=document.documentElement;
-  const isLight=html.getAttribute('data-theme')==='light';
-  html.setAttribute('data-theme',isLight?'':'light');
-  document.getElementById('theme-toggle').textContent=isLight?'☀':'☾';
-  if(cmEditor) cmEditor.setOption('theme', isLight?'material-darker':'eclipse');
-  try{localStorage.setItem('cyberedu_theme',isLight?'dark':'light')}catch(e){}
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  const button = document.getElementById('theme-toggle');
+  button.textContent = theme === 'light' ? '☾' : '☀';
+  button.setAttribute('aria-pressed', String(theme === 'light'));
+  if (cmEditor) cmEditor.setOption('theme', theme === 'light' ? 'default' : 'material-darker');
 }
-function initTheme(){
-  const saved=localStorage.getItem('cyberedu_theme');
-  if(saved==='light'){
-    document.documentElement.setAttribute('data-theme','light');
-    const btn=document.getElementById('theme-toggle');
-    if(btn)btn.textContent='☾';
-  }
+function toggleTheme() {
+  const theme = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+  applyTheme(theme);
+  try { localStorage.setItem('cyberedu_theme', theme); } catch {}
+}
+function initTheme() {
+  applyTheme(document.documentElement.dataset.theme || 'dark');
+  matchMedia('(prefers-color-scheme: light)').addEventListener('change', event => {
+    try { if (localStorage.getItem('cyberedu_theme')) return; } catch {}
+    applyTheme(event.matches ? 'light' : 'dark');
+  });
 }
 
 // ============================================================
@@ -5654,22 +5788,25 @@ function attachCodeAITools() {
     runBtn.setAttribute('type', 'button');
     runBtn.setAttribute('title', t('code.runInPractice') || 'Run in Practice Lab');
     runBtn.innerHTML = `🚀 <span>${t('code.runInPractice') || '在练习场运行'}</span>`;
-    runBtn.onclick = (e) => {
-      e.stopPropagation();
-      const code = cb.querySelector('code')?.textContent || cb.querySelector('pre')?.textContent || '';
-      navigate('practice');
-      setTimeout(() => {
-        if (typeof window !== 'undefined' && window.codeEditor && typeof window.codeEditor.setValue === 'function') {
-          window.codeEditor.setValue(code);
-        } else if (typeof cmEditor !== 'undefined' && cmEditor && typeof cmEditor.setValue === 'function') {
-          cmEditor.setValue(code);
-        } else {
-          const textarea = document.getElementById('code-input');
-          if (textarea) textarea.value = code;
-        }
-      }, 150);
-    };
-    toolbar.appendChild(runBtn);
+    const runnable = cb.querySelector('code.language-python[data-expected]');
+    if (runnable) {
+      runBtn.onclick = (e) => {
+        e.stopPropagation();
+        const title = document.getElementById('hub-title').textContent;
+        const example = {lang: 'Python', title, titleEn: title, category: t('lesson.example'),
+          categoryEn: t('lesson.example'), difficulty: 1, starter: runnable.textContent,
+          starterEn: runnable.textContent, expected: runnable.dataset.expected,
+          question: t('lesson.exampleHint'), questionEn: t('lesson.exampleHint')};
+        currentPracticeIdx = 0;
+        navigate('practice');
+        lessonExample = example;
+        renderPractice(0, true);
+        if (cmEditor) cmEditor.setValue(example.starter);
+        else document.getElementById('code-editor').value = example.starter;
+      };
+      toolbar.appendChild(runBtn);
+    }
+
 
     cb.insertBefore(toolbar, cb.firstChild);
 
@@ -5866,74 +6003,21 @@ function handleDiagnosticAnswer(choice) {
 }
 
 function renderDiagnosticResults(container) {
-  const isEn = typeof currentLang !== 'undefined' && currentLang === 'en';
-  const scores = [0, 0, 0, 0, 0];
-  DIAGNOSTIC_QUESTIONS.forEach((q, i) => {
-    const isCorrect = (diagUserAnswers[i] === q.answer);
-    scores[i] = isCorrect ? 90 : 35;
-  });
-
-  const polygonPoints = calculateRadarPolygon(scores, 90, 140, 110);
-  const tracks = evaluateDiagnosticTrack(scores);
-  const categories = isEn
-    ? ['Web Security', 'Network Protocols', 'Cryptography', 'System Privilege', 'CTF Offense']
-    : ['Web安全', '网络协议', '密码分析', '系统特权', 'CTF攻防'];
-
-  let catBadges = categories.map((cat, i) => `
-    <div style="display:flex;justify-content:space-between;font-size:11px;font-family:var(--font-mono);padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
-      <span style="color:var(--text-muted)">${cat}:</span>
-      <span style="color:${scores[i] > 50 ? 'var(--color-green)' : 'var(--color-orange)'};font-weight:700">${scores[i]} ${isEn ? 'pts' : '分'}</span>
-    </div>`).join('');
-
-  container.innerHTML = `
-    <div class="diag-modal-backdrop" onclick="if(event.target===this)closeSkillDiagnostic()">
-      <div class="diag-modal-card" style="max-width:720px">
-        <button class="diag-close-btn" onclick="closeSkillDiagnostic()">&times;</button>
-        <div style="text-align:center;margin-bottom:16px;padding-right:32px">
-          <span class="badge green">EVALUATION COMPLETE</span>
-          <h3 style="font-size:18px;color:var(--text-main);margin:8px 0 4px 0">${t('diag.modalTitle')}</h3>
-          <p style="font-size:12px;color:var(--text-muted)">${isEn ? 'Based on your diagnostic answers across 5 core cybersecurity domains, here is your skill radar and optimal learning path:' : '基于您对 5 道核心攻防命题的判断，已为您生成五维技能雷达与匹配路线：'}</p>
-        </div>
-
-        <div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap;justify-content:center;margin:16px 0">
-          <svg width="280" height="220" viewBox="0 0 280 220">
-            <!-- Background Polygons -->
-            <polygon points="${calculateRadarPolygon([20,20,20,20,20], 90, 140, 110)}" fill="none" stroke="rgba(255,255,255,0.08)"/>
-            <polygon points="${calculateRadarPolygon([40,40,40,40,40], 90, 140, 110)}" fill="none" stroke="rgba(255,255,255,0.08)"/>
-            <polygon points="${calculateRadarPolygon([60,60,60,60,60], 90, 140, 110)}" fill="none" stroke="rgba(255,255,255,0.08)"/>
-            <polygon points="${calculateRadarPolygon([80,80,80,80,80], 90, 140, 110)}" fill="none" stroke="rgba(255,255,255,0.08)"/>
-            <polygon points="${calculateRadarPolygon([100,100,100,100,100], 90, 140, 110)}" fill="none" stroke="rgba(0,240,255,0.2)"/>
-            <!-- User Data Polygon -->
-            <polygon points="${polygonPoints}" fill="rgba(0,255,65,0.2)" stroke="var(--color-green)" stroke-width="2"/>
-            <!-- Labels -->
-            <text x="140" y="14" fill="#00f0ff" font-size="10" font-family="monospace" text-anchor="middle">${categories[0]}</text>
-            <text x="240" y="80" fill="#00f0ff" font-size="10" font-family="monospace" text-anchor="middle">${categories[1]}</text>
-            <text x="210" y="195" fill="#00f0ff" font-size="10" font-family="monospace" text-anchor="middle">${categories[2]}</text>
-            <text x="70" y="195" fill="#00f0ff" font-size="10" font-family="monospace" text-anchor="middle">${categories[3]}</text>
-            <text x="40" y="80" fill="#00f0ff" font-size="10" font-family="monospace" text-anchor="middle">${categories[4]}</text>
-          </svg>
-          <div style="flex:1;min-width:180px">
-            <h4 style="font-size:13px;color:var(--text-main);margin-bottom:8px">${isEn ? 'Skill Dimension Breakdown' : '能力维度得分明细'}</h4>
-            ${catBadges}
-          </div>
-        </div>
-
-        <h4 style="font-size:14px;color:var(--text-main);margin:18px 0 8px 0">${isEn ? '🎯 Recommended Attack & Defense Learning Track:' : '🎯 为您智能推荐的攻坚路径:'}</h4>
-        <div class="diag-tracks-grid">
-          ${tracks.map((tr, idx) => `
-            <div class="diag-track-card ${idx === 0 ? 'active' : ''}" onclick="applyTargetTrack('${tr.id}', this)">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-                <span class="diag-track-title">${t(tr.titleKey)}</span>
-                <span class="badge ${idx === 0 ? 'green' : 'cyan'}">${tr.match}% ${isEn ? 'Match' : '契合'}</span>
-              </div>
-              <div class="diag-track-desc">${t(tr.descKey)}</div>
-              <button class="practice-link-btn" style="width:100%;margin-top:10px;justify-content:center;padding:6px" onclick="event.stopPropagation();applyTargetTrack('${tr.id}', this.parentElement)">
-                ${t('diag.setTrack')}
-              </button>
-            </div>`).join('')}
-        </div>
-      </div>
-    </div>`;
+  const isEn = currentLang === 'en';
+  const categories = isEn ? ['Web security', 'Networks', 'Cryptography', 'System privileges', 'CTF'] :
+    ['Web 安全', '网络协议', '密码学', '系统权限', 'CTF'];
+  const links = ['websec/web-01-01','network/net-01-01','cryptography/crypto-01-01','pentest/pentest-02-02','ctf-guide/ctfg-01-01'];
+  const correct = DIAGNOSTIC_QUESTIONS.map((q,i) => diagUserAnswers[i] === q.answer);
+  const tracks = evaluateDiagnosticTrack([0,0,0,0,0]);
+  container.innerHTML = '<div class="diag-modal-backdrop" onclick="if(event.target===this)closeSkillDiagnostic()"><div class="diag-modal-card">' +
+    '<button class="diag-close-btn" onclick="closeSkillDiagnostic()" aria-label="Close">×</button>' +
+    '<h2>' + t('diag.modalTitle') + '</h2><p class="progress-note">' + t('diag.resultNote') + '</p>' +
+    '<p>' + t('diag.resultCount', {n: correct.filter(Boolean).length}) + '</p><ul class="diagnostic-results">' +
+    DIAGNOSTIC_QUESTIONS.map((q,i) => '<li><strong>' + categories[i] + ' · ' + t(correct[i] ? 'diag.correct' : 'diag.review') + '</strong>' +
+      '<p>' + _escHtml((isEn ? q.optionsEn : q.options)[q.answer]) + '</p><a href="#hub/' + links[i] + '" onclick="closeSkillDiagnostic()">' + t('diag.reviewLesson') + '</a></li>').join('') +
+    '</ul><h3>' + t('diag.chooseTrack') + '</h3><div class="diag-tracks-grid">' +
+    tracks.map(tr => '<button class="diag-track-card" onclick="applyTargetTrack(\'' + tr.id + '\',this)"><span class="diag-track-title">' +
+      t(tr.titleKey) + '</span><span class="diag-track-desc">' + t(tr.descKey) + '</span></button>').join('') + '</div></div></div>';
 }
 
 function applyTargetTrack(trackId, cardEl) {
@@ -5945,8 +6029,8 @@ function applyTargetTrack(trackId, cardEl) {
   document.querySelectorAll('.diag-track-card').forEach(c => c.classList.remove('active'));
   if (cardEl) cardEl.classList.add('active');
   alert(isEn
-    ? '✓ Successfully set this track as your primary goal! Learning Hub will prioritize relevant chapters for you.'
-    : '✓ 已成功将此路线设为您的专属学习目标！学习中心将为您优先推荐对应章节。');
+    ? '✓ Successfully set this track as your primary goal! Your next lesson for this path is now shown on the home page.'
+    : '✓ 已成功将此路线设为您的专属学习目标！首页将显示该路线的下一节课程。');
   closeSkillDiagnostic();
 }
 
@@ -6078,7 +6162,7 @@ async function initApp() {
     initAIChat();
     initAIDock();
     initSelectionToolbar();
-    checkDiagBannerState();
+    initNavigationMenu();
     applyFontSize(getSavedFontSize());
     initMatrix();
     renderHome();
@@ -6095,7 +6179,7 @@ async function initApp() {
   const introAlreadySeen = (() => {
     try { return sessionStorage.getItem('cyberedu_intro_seen') === '1'; } catch(e) { return false; }
   })();
-  if (!isDirectHash && !introAlreadySeen) {
+  if (!isDirectHash && !introAlreadySeen && !matchMedia('(prefers-reduced-motion: reduce)').matches && !document.documentElement.classList.contains('reduced-motion')) {
     playIntro();
   } else {
     skipIntro(true);
